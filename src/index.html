@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Capture Widget/Sketchpad</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            cursor: crosshair;
+        }
+        button {
+            padding: 10px;
+        }
+    </style>
+    <script src='jquery-1.10.2.min.js'></script>
+    <script src='capture-widget.js'></script>
+    <script>
+        var CW;
+        $(document).ready(function(){
+
+            CW = new capture_widget({
+                canvas_id: 'sketchpad'
+            });
+            CW.start_recording()
+        })
+    </script>
+</head>
+
+<body>
+        <div>
+            <button id="clear" onclick="CW.clear();">Clear</button>
+            <button onclick="CW.set_active_visual_type('stroke')">Strokes</button>
+            <button onclick="CW.set_active_visual_type('dots')">Dots</button>
+            <button onclick="CW.undo()">undo</button>
+        </div>
+        <div>
+            <canvas id='sketchpad'></canvas>
+        </div>
+</body>
+</html>
