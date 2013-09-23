@@ -15,16 +15,23 @@ function time() {
 // paint_widget encapsulates drawing primitives for HTML5 canvas
 function paint_widget(canvas_id){
 
-    var canvas_id = canvas_id
-    var default_line_color = '#333'
-    var default_line_width = 2
-    var default_point_color = '#222'
+    var canvas_id = canvas_id;
+    var default_line_color = '#777';
+    var default_line_width = 2;
+    var default_point_color = '#222';
+
+    //this properties object needs to be propogated to the smart widget
+    this.properties = {
+        line_color: undefined,
+        line_width: undefined,
+        point_color: undefined
+    };
 
     function get_ctx() {
-        return $(canvas_id).get(0).getContext('2d'); // todo replace with static ctx?
+        return $(canvas_id).get(0).getContext('2d'); // todo replace with static ctx? yes?
     }
 
-     this.draw_line = function(line) {
+    this.draw_line = function(line) {
          /*
             line = {
                 from: point,
@@ -38,9 +45,9 @@ function paint_widget(canvas_id){
         ctx.moveTo(line.from.x, line.from.y);
         ctx.lineTo(line.to.x, line.to.y);
 
-        ctx.strokeStyle = (line.color == undefined) ? default_line_color : line.color
-        ctx.lineWidth = (line.width == undefined) ? default_line_width : line.width
-        ctx.lineCap = 'round'
+        ctx.strokeStyle = (line.properties == undefined || line.properties.line_color == undefined) ? default_line_color : line.properties.line_color;
+        ctx.lineWidth = (line.properties == undefined || line.properties.line_width == undefined) ? default_line_width : line.properties.line_width;
+        ctx.lineCap = 'round';
 
         ctx.stroke();
     }
@@ -48,12 +55,12 @@ function paint_widget(canvas_id){
     this.draw_point = function(coord) {
         var ctx = get_ctx()
         ctx.beginPath();
-        ctx.fillStyle = default_point_color
-        ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3)
+        ctx.fillStyle = default_point_color;
+        ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
     }
 
     this.clear = function(){
-        var ctx = get_ctx()
+        var ctx = get_ctx();
         ctx.clearRect(0, 0, $(canvas_id).width(), $(canvas_id).height())
     }
 
@@ -62,11 +69,10 @@ function paint_widget(canvas_id){
             x: event.pageX - $(canvas_id).offset().left, // todo fix if canvas not in corner
             y: event.pageY - $(canvas_id).offset().top,
             t: time()
-        }
+        };
 
-        return pt
+        return pt;
     }
-
 
     this.resize_canvas = function() {
         var iw = $(window).width();
@@ -117,9 +123,9 @@ function smart_paint_widget(canvas_id){
     }
 
     this.relative_point = function(event){
-        var pt = canvas.relative_point(event)
-        pt.pressure  = event.pressure
-        return pt
+        var pt = canvas.relative_point(event);
+        pt.pressure  = event.pressure;
+        return pt;
     }
 
     this.draw_point = canvas.draw_point
@@ -136,28 +142,29 @@ function smart_paint_widget(canvas_id){
 
 function capture_widget(init){
 
-    var canvas_dom_id = init.canvas_id
-    var canvas_id = '#' + canvas_dom_id
-    var canvas // drawing widget
+    var canvas_dom_id = init.canvas_id;
+    var canvas_id = '#' + canvas_dom_id;
+    var canvas; // drawing widget
 
     var recording_start_time;
     var recording_stop_time;
     var is_recording = false;
 
-    var lmb_down = false  // is the left mouse button down
-    var inline = false   // are we currently drawing a stroke
-    var last_point;      // last coordinate of move or click evebt
+    var lmb_down = false;  // is the left mouse button down
+    //var inline = false   // are we currently drawing a stroke
+    var last_point;      // last coordinate of move or click event
     var VisualTypes = {
         dots: 'dots',
         stroke: 'stroke'
-    }
-    var active_visual_type = VisualTypes['stroke']
+    };
+    var active_visual_type = VisualTypes['stroke'];
 
 
-    var PEN = false // pointer enabled device
+    var PEN; // pointer enabled device, unused for now
 
 
-    var VISUALS = []
+    var VISUALS = [];
+    var PROPERTY_CHANGES = [];
     var current_visual;
 
 
@@ -168,7 +175,7 @@ function capture_widget(init){
             tDeletion: 0,
             tEndEdit: 0,
             tMin: 0,
-            properties:[],
+            properties: JSON.parse(JSON.stringify(canvas.properties)), //copy the current properties of the canvas object
             vertices:[]
         }
     }
@@ -176,19 +183,18 @@ function capture_widget(init){
     function on_mousedown(event) {
         if (! is_recording){return;}
 
-        event.preventDefault()
-        lmb_down = true
-        inline = true
+        event.preventDefault();
+        lmb_down = true;
         //console.log('mousedown')
 
-        current_visual = empty_visual()
-        current_visual.type = active_visual_type
-        last_point = canvas.relative_point(event)
+        current_visual = empty_visual();
+        current_visual.type = active_visual_type;
+        last_point = canvas.relative_point(event);
 
-        current_visual.vertices.push(last_point)
+        current_visual.vertices.push(last_point);
 
         if (active_visual_type == VisualTypes.dots) {
-            canvas.draw_point(last_point)
+            canvas.draw_point(last_point);
         }
 
     }
@@ -205,57 +211,55 @@ function capture_widget(init){
             else if (active_visual_type == VisualTypes.stroke) {
                 canvas.draw_line({
                         from: cur_point,
-                        to: last_point
-                    })
+                        to: last_point,
+                        properties: current_visual.properties
+                });
             }
             else {
-                alert("unknown drawing mode")
+                console.log("unknown drawing mode");
             }
 
-            last_point = cur_point
-            current_visual.vertices.push(last_point)
+            last_point = cur_point;
+            current_visual.vertices.push(last_point);
         }
 
     }
     function on_mouseup(event) {
         if (! is_recording){return;}
-        event.preventDefault()
+        event.preventDefault();
 
         if (lmb_down) {
-            VISUALS.push(current_visual)
+            VISUALS.push(current_visual);
         }
 
-        lmb_down = false
-        inline = false
+        lmb_down = false;
+        //inline = false
 
         //console.log('mouseup')
-
     }
-
 
     function draw_visuals(visuals){
         for (var i=0; i<visuals.length; i++){
-            var visual = visuals[i]
+            var visual = visuals[i];
 
             if (visual.type == VisualTypes.dots){
                 for(var j=0; j<visual.vertices.length; j++){
                     var vertex = visual.vertices[j]
                     canvas.draw_point(vertex)
                 }
-            }
-            else if(visual.type == VisualTypes.stroke){
+            } else if(visual.type == VisualTypes.stroke){
                 for(var j=1; j<visual.vertices.length; j++){
                     var from = visual.vertices[j-1]
                     var to = visual.vertices[j]
                     var line = {
                         from: from,
-                        to: to
-                    }
-                    canvas.draw_line(line)
+                        to: to,
+                        properties: visual.properties
+                    };
+                    canvas.draw_line(line);
                 }
-            }
-            else {
-                console.log('unknown visual type')
+            } else {
+                console.log('unknown visual type');
             }
         }
     }
@@ -357,47 +361,43 @@ function capture_widget(init){
 
             var version = parseInt(ie10[1])
             if (version >= 10) {
-                ie10 = true
+                ie10 = true;
             }
             else {
-                ie10 = false
+                ie10 = false;
             }
         }
         else {
-            ie10 = false
+            ie10 = false;
         }
 
-        var pointer = navigator.msPointerEnabled ? true : false
+        var pointer = navigator.msPointerEnabled ? true : false;
 
         if (ie10 && pointer) {
-            return true
+            return true;
         }
         else {
-            return false
+            return false;
         }
     }
 
 
     // Initialize the widget (this function is called right after it is defined)
     function widget_init() {
-
-        PEN = ie10_tablet_pointer()
-
-        if (PEN) {
-            console.log('Pointer Enabled Device')
-            canvas = new smart_paint_widget(canvas_id)
+        if (ie10_tablet_pointer()) {
+            console.log('Pointer Enabled Device');
+            canvas = new smart_paint_widget(canvas_id);
 
             var c = document.getElementById(canvas_dom_id);
             c.addEventListener("MSPointerUp", on_mouseup, false);
             c.addEventListener("MSPointerMove", on_mousemove, false);
             c.addEventListener("MSPointerDown", on_mousedown, false);
-        }
-        else {
-            console.log('Pointer Disabled Device')
-            canvas = new paint_widget(canvas_id)
-            $(canvas_id).mousedown(on_mousedown)
-            $(canvas_id).mousemove(on_mousemove)
-            $(window).mouseup(on_mouseup)
+        } else {
+            console.log('Pointer Disabled Device');
+            canvas = new paint_widget(canvas_id);
+            $(canvas_id).mousedown(on_mousedown);
+            $(canvas_id).mousemove(on_mousemove);
+            $(window).mouseup(on_mouseup);
         }
 
 
@@ -416,7 +416,7 @@ function capture_widget(init){
     }
 
     //Initialize the widget
-    widget_init()
+    widget_init();
 
     /* *************************************************************************
      *  Public Methods
@@ -435,18 +435,17 @@ function capture_widget(init){
     }
 
     this.undo=function(){
-
         if(VISUALS.length > 0){
-            VISUALS.pop()
-            canvas.clear()
-            draw_visuals(VISUALS)
+            VISUALS.pop();
+            canvas.clear();
+            draw_visuals(VISUALS);
         }
 
     }
 
     this.get_recording = function(){
-        var pentimento_record = export_recording_to_pentimento_format()
-        return pentimento_record
+        var pentimento_record = export_recording_to_pentimento_format();
+        return pentimento_record;
     }
 
     this.start_recording = function (){
@@ -457,6 +456,14 @@ function capture_widget(init){
     this.stop_recording = function(){
         is_recording = false;
         recording_stop_time = time();
+    }
+
+    this.change_property = function(change) {
+        if(!is_recording) { return; }
+        change.time = time();
+        PROPERTY_CHANGES.push(change);
+        canvas.properties[change['property']] = change['value'];
+        console.log(change);
     }
 
 }

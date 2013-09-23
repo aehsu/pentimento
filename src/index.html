@@ -10,30 +10,75 @@
         button {
             padding: 10px;
         }
+
+        #slider{
+            width:300px;
+            float:left;
+            margin-top:-5px;
+            border-radius:0;
+            height:5px;
+            position:absolute;
+        }
+
+        #slider .tick {
+            z-index:1;
+            background: #4f3;
+            border: none;
+            position: absolute;
+            height: 100%;
+            width: 2px;
+            left: 0%;
+            opacity: .3;
+        }
+
+        #slider .ui-slider-handle {
+            width: 0.6em;
+            border: none;
+            background: #999;
+            height: 300%;
+            margin-top:-5px;
+            top: 0;
+            margin-left: -0.3em;
+        }
+
+        .hidden {
+            display:none;
+        }
     </style>
     <script src='jquery-1.10.2.min.js'></script>
+    <script src='http://code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
     <script src='capture-widget.js'></script>
     <script>
         var CW;
         $(document).ready(function(){
-
             CW = new capture_widget({
                 canvas_id: 'sketchpad'
             });
-            CW.start_recording()
         })
     </script>
 </head>
 
 <body>
         <div>
+            <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');CW.start_recording();">Record</button>
+            <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');CW.stop_recording();">Stop Record</button>
             <button id="clear" onclick="CW.clear();">Clear</button>
             <button onclick="CW.set_active_visual_type('stroke')">Strokes</button>
             <button onclick="CW.set_active_visual_type('dots')">Dots</button>
             <button onclick="CW.undo()">undo</button>
+
+            <button onclick="CW.change_property({property: 'line_color', value: '#000'});">Black</button>
+            <button onclick="CW.change_property({property: 'line_color', value: '#F00'});">Red</button> <button onclick="CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
+            <button onclick="CW.change_property({property: 'line_color', value: '#00F'});">Blue</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>
+        </div>
+        <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false" style="width: 638px;">
+            <div class="ui-slider-range ui-widget-header ui-slider-range-max" style="width: 37.57279373706485%;"></div>
+            <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 62.42720626293515%;"></a>
+            <div class="tick ui-widget-content" style="width: 64.98375034684597%;"></div>
         </div>
 </body>
 </html>
