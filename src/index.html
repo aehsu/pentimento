@@ -55,6 +55,15 @@
             CW = new capture_widget({
                 canvas_id: 'sketchpad'
             });
+
+            $('#slider').slider({
+                disabled: true,
+                max:300
+            });
+            $('#slider').width($('canvas').width());
+            $('#ticker').css('position', 'absolute');
+            $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px');
+            $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
         })
     </script>
 </head>
@@ -63,22 +72,23 @@
         <div>
             <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');CW.start_recording();">Record</button>
             <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');CW.stop_recording();">Stop Record</button>
+
             <button id="clear" onclick="CW.clear();">Clear</button>
             <button onclick="CW.set_active_visual_type('stroke')">Strokes</button>
             <button onclick="CW.set_active_visual_type('dots')">Dots</button>
             <button onclick="CW.undo()">undo</button>
+            <button onclick="CW.redo()">redo</button>
 
             <button onclick="CW.change_property({property: 'line_color', value: '#000'});">Black</button>
-            <button onclick="CW.change_property({property: 'line_color', value: '#F00'});">Red</button> <button onclick="CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
+            <button onclick="CW.change_property({property: 'line_color', value: '#F00'});">Red</button>
+            <button onclick="CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
             <button onclick="CW.change_property({property: 'line_color', value: '#00F'});">Blue</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>
         </div>
-        <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all" aria-disabled="false" style="width: 638px;">
-            <div class="ui-slider-range ui-widget-header ui-slider-range-max" style="width: 37.57279373706485%;"></div>
-            <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 62.42720626293515%;"></a>
-            <div class="tick ui-widget-content" style="width: 64.98375034684597%;"></div>
-        </div>
+        
+        <br/>
+        <div id="slider"></div><span id="ticker">00:00</span>
 </body>
 </html>

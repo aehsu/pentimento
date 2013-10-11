@@ -20,7 +20,7 @@ function paint_widget(canvas_id){
     var default_line_width = 2;
     var default_point_color = '#222';
 
-    //this properties object needs to be propogated to the smart widget
+    //this properties object needs to be propagated to the smart widget
     this.properties = {
         line_color: undefined,
         line_width: undefined,
@@ -40,7 +40,7 @@ function paint_widget(canvas_id){
                 width: int    // optional
             }
           */
-        var ctx = get_ctx()
+        var ctx = get_ctx();
         ctx.beginPath();
         ctx.moveTo(line.from.x, line.from.y);
         ctx.lineTo(line.to.x, line.to.y);
@@ -98,7 +98,7 @@ function smart_paint_widget(canvas_id){
             line = {
                from: point,
                to: point,
-               ...
+                ...
             }
          */
 
@@ -166,7 +166,7 @@ function capture_widget(init){
     var VISUALS = [];
     var PROPERTY_CHANGES = [];
     var current_visual;
-
+    var REDO_STACK = [];
 
     function empty_visual(){
         return {
@@ -206,7 +206,7 @@ function capture_widget(init){
             var cur_point = canvas.relative_point(event)
 
             if (active_visual_type == VisualTypes.dots) {
-                canvas.draw_point(cur_point)
+                canvas.draw_point(cur_point);
             }
             else if (active_visual_type == VisualTypes.stroke) {
                 canvas.draw_line({
@@ -260,6 +260,26 @@ function capture_widget(init){
                 }
             } else {
                 console.log('unknown visual type');
+            }
+        }
+    }
+
+    function draw_visual(visual) {
+        if (visual.type == VisualTypes.dots) {
+            for(var j=0; j<visual.vertices.length; j++) {
+                var vertex = visual.vertices[j];
+                canvas.draw_point(vertex);
+            }
+        } else if(visual.type == VisualTypes.stroke) {
+            for(var j=1; j<visual.vertices.length; j++){
+                var from = visual.vertices[j-1]
+                var to = visual.vertices[j]
+                var line = {
+                    from: from,
+                    to: to,
+                    properties: visual.properties
+                };
+                canvas.draw_line(line);
             }
         }
     }
@@ -355,11 +375,11 @@ function capture_widget(init){
     // Returns true if this Internet Explorer 10 or greater, running on a device
     // with msPointer events enabled (like the ms surface pro)
     function ie10_tablet_pointer() {
-        var ie10 = /MSIE (\d+)/.exec(navigator.userAgent)
+        var ie10 = /MSIE (\d+)/.exec(navigator.userAgent);
 
         if (ie10 != null) {
 
-            var version = parseInt(ie10[1])
+            var version = parseInt(ie10[1]);
             if (version >= 10) {
                 ie10 = true;
             }
@@ -383,6 +403,7 @@ function capture_widget(init){
 
 
     // Initialize the widget (this function is called right after it is defined)
+    // sets the canvas variable to be a (smart_)paint_widget
     function widget_init() {
         if (ie10_tablet_pointer()) {
             console.log('Pointer Enabled Device');
@@ -436,11 +457,22 @@ function capture_widget(init){
 
     this.undo=function(){
         if(VISUALS.length > 0){
-            VISUALS.pop();
+            var undo = VISUALS.pop();
             canvas.clear();
             draw_visuals(VISUALS);
+            REDO_STACK.push(undo);
+            console.log(undo);
         }
 
+    }
+
+    this.redo = function() {
+        if(REDO_STACK.length>0) {
+            var redo = REDO_STACK.pop();
+            console.log(redo);
+            VISUALS.push(redo);
+            draw_visual(redo);
+        }
     }
 
     this.get_recording = function(){
@@ -453,9 +485,18 @@ function capture_widget(init){
         recording_start_time = time();
     }
 
+    function updateSlider() {
+
+    }
+
+    function updateTicker() {
+        
+    }
+
     this.stop_recording = function(){
         is_recording = false;
         recording_stop_time = time();
+        $('#slider').slider('enable');//replace with some global
     }
 
     this.change_property = function(change) {
