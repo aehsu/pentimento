@@ -61,8 +61,8 @@
                 max:300
             });
             $('#slider').width($('canvas').width());
-            $('#ticker').css('position', 'absolute');
-            $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px');
+            $('#ticker').css('position', 'absolute'); //so many bad things.
+            $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
             $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
         })
     </script>
