@@ -41,6 +41,10 @@
             margin-left: -0.3em;
         }
 
+        #slider .ui-slider-range {
+            background:green;
+        }
+
         .hidden {
             display:none;
         }
@@ -48,18 +52,37 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='http://code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
+    <script src='operation_manager.js'></script>
     <script src='capture-widget.js'></script>
     <script>
-        var CW;
+        var CW, lec;
         $(document).ready(function(){
+            lec = new lecture({
+                canvas_id: 'sketchpad'
+            });
+
             CW = new capture_widget({
                 canvas_id: 'sketchpad'
             });
 
             $('#slider').slider({
                 disabled: true,
-                max:300
+                step:1,
+                range: 'min'
             });
+
+            $('#slider').on('slide', function(event, ui) {
+                var minute = Math.floor(ui.value/60);
+                if(minute<10) {
+                    minute = '0'+minute;
+                }
+                var second = ui.value % 60;
+                if(second < 10) {
+                    second = '0'+second;
+                }
+                $('#ticker').text(minute + ':' + second);
+            });
+
             $('#slider').width($('canvas').width());
             $('#ticker').css('position', 'absolute'); //so many bad things.
             $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
@@ -70,8 +93,8 @@
 
 <body>
         <div>
-            <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');CW.start_recording();">Record</button>
-            <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');CW.stop_recording();">Stop Record</button>
+            <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');lec.start_recording();">Record</button>
+            <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');lec.stop_recording();">Stop Record</button>
 
             <button id="clear" onclick="CW.clear();">Clear</button>
             <button onclick="CW.set_active_visual_type('stroke')">Strokes</button>
@@ -89,6 +112,6 @@
         </div>
         
         <br/>
-        <div id="slider"></div><span id="ticker">00:00</span>
+        <div id="slider"></div><span id="ticker">00:00.00</span>
 </body>
 </html>

@@ -4,13 +4,61 @@
 
  */
 
-
-// get a timestamp
-function time() {
+//GLOBAL HELPER FUNCTIONS
+function global_time() {
     var d = new Date();
-    return d.getTime();
+    return d.getTime(); //milliseconds
 }
 
+function lecture(init) {
+    var lec_begin_time, lec_end_time;
+    var time_cursor, last_stop_time;
+    var is_recording = false;
+    var slides = [];
+    var current_slide=null;
+
+    this.CW = new capture_widget(init); //a lecture owns a canvas. separate visuals from the logical object itself
+
+    function get_lecture_time() {
+        
+    }
+
+    function get_slide_time() {
+        if(current_slide==null) {
+            alert('holy crap, something went terribly wrong.');
+        }
+        return 
+    }
+
+    this.start_recording = function() {
+        this.is_recording = true;
+        if(current_slide==null) {
+            current_slide = new slide();
+            slides.push(current_slide);
+            lec_begin_time = current_slide.begin_time = global_time();
+        } else {
+
+        }
+    }
+
+    this.stop_recording = function() {
+        this.is_recording = false;
+        if(current_slide.end_time == null) {
+            current_slide.end_time = last_stop_time = time_cursor = global_time(); //not sure about time_cursor
+        } else {
+            //need to shift everything over by some amount...
+            var time_shift = global_time() - last_stop_time;
+
+        }
+    }
+}
+
+function slide() {
+    this.begin_time = null;
+    this.end_time = null;
+    this.VISUALS = [];
+
+}
 
 // paint_widget encapsulates drawing primitives for HTML5 canvas
 function paint_widget(canvas_id){
@@ -133,7 +181,6 @@ function smart_paint_widget(canvas_id){
     this.resize_canvas = canvas.resize_canvas
 }
 
-
 /* *****************************************************************************
  *  capture_widget captures and displays input
  *  uses either paint_widget or smart_paint_widget depending on the capabilities
@@ -141,14 +188,17 @@ function smart_paint_widget(canvas_id){
  * ****************************************************************************/
 
 function capture_widget(init){
-
     var canvas_dom_id = init.canvas_id;
     var canvas_id = '#' + canvas_dom_id;
     var canvas; // drawing widget
+    //var operation_manager = new operation_manager();
 
     var recording_start_time;
     var recording_stop_time;
     var is_recording = false;
+    var total_time = 0;
+    var ticker_interval;
+    var slide_begin_time;
 
     var lmb_down = false;  // is the left mouse button down
     //var inline = false   // are we currently drawing a stroke
@@ -455,7 +505,7 @@ function capture_widget(init){
         active_visual_type = VisualTypes[type_str]
     }
 
-    this.undo=function(){
+    this.undo=function(){ //needs to change
         if(VISUALS.length > 0){
             var undo = VISUALS.pop();
             canvas.clear();
@@ -482,26 +532,45 @@ function capture_widget(init){
 
     this.start_recording = function (){
         is_recording = true;
-        recording_start_time = time();
-    }
-
-    function updateSlider() {
-
+        recording_start_time = global_time();
+        ticker_interval = setInterval(updateTicker, 1000);
     }
 
     function updateTicker() {
-        
+        var t = $('#ticker').text().split(':');//replace with some global
+        if(t[1]==59) {
+            if(t[0]>=9) {
+                t[0] = parseInt(t[0])+1;
+                t[1] = '00';
+                $('#ticker').text(t.join(':'));
+            } else {
+                t[0] = '0' + (parseInt(t[0])+1);
+                t[1] = '00';
+                $('#ticker').text(t.join(':'));
+            }
+        } else if(t[1]>=9) {
+            t[1] = parseInt(t[1])+1;
+            $('#ticker').text(t.join(':'));
+        } else {
+            t[1] = '0'+(parseInt(t[1])+1);
+            $('#ticker').text(t.join(':'));//performance?
+        }
     }
 
     this.stop_recording = function(){
         is_recording = false;
-        recording_stop_time = time();
+        recording_stop_time = global_time(); //hmmmmmm
+        clearInterval(ticker_interval);
+        //update slider
         $('#slider').slider('enable');//replace with some global
+        var t = $('#ticker').text().split(':');
+        $('#slider').slider('option', 'max', parseInt(t[0])*60+parseInt(t[1]));
+        $('#slider').slider('value', parseInt(t[0])*60+parseInt(t[1]))
     }
 
     this.change_property = function(change) {
         if(!is_recording) { return; }
-        change.time = time();
+        change.time = global_time();
         PROPERTY_CHANGES.push(change);
         canvas.properties[change['property']] = change['value'];
         console.log(change);
