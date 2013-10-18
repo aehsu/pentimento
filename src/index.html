@@ -71,18 +71,6 @@
                 range: 'min'
             });
 
-            $('#slider').on('slide', function(event, ui) {
-                var minute = Math.floor(ui.value/60);
-                if(minute<10) {
-                    minute = '0'+minute;
-                }
-                var second = ui.value % 60;
-                if(second < 10) {
-                    second = '0'+second;
-                }
-                $('#ticker').text(minute + ':' + second);
-            });
-
             $('#slider').width($('canvas').width());
             $('#ticker').css('position', 'absolute'); //so many bad things.
             $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
@@ -96,16 +84,16 @@
             <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');lec.start_recording();">Record</button>
             <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');lec.stop_recording();">Stop Record</button>
 
-            <button id="clear" onclick="CW.clear();">Clear</button>
-            <button onclick="CW.set_active_visual_type('stroke')">Strokes</button>
-            <button onclick="CW.set_active_visual_type('dots')">Dots</button>
+            <button id="clear" onclick="lec.CW.clear();">Clear</button>
+            <button onclick="lec.CW.set_active_visual_type('stroke')">Strokes</button>
+            <button onclick="lec.CW.set_active_visual_type('dots')">Dots</button>
             <button onclick="CW.undo()">undo</button>
             <button onclick="CW.redo()">redo</button>
 
-            <button onclick="CW.change_property({property: 'line_color', value: '#000'});">Black</button>
-            <button onclick="CW.change_property({property: 'line_color', value: '#F00'});">Red</button>
-            <button onclick="CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
-            <button onclick="CW.change_property({property: 'line_color', value: '#00F'});">Blue</button>
+            <button onclick="lec.CW.change_property({property: 'line_color', value: '#000'});">Black</button>
+            <button onclick="lec.CW.change_property({property: 'line_color', value: '#F00'});">Red</button>
+            <button onclick="lec.CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
+            <button onclick="lec.CW.change_property({property: 'line_color', value: '#00F'});">Blue</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>

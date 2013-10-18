@@ -11,23 +11,63 @@ function global_time() {
 }
 
 function lecture(init) {
-    var lec_begin_time, lec_end_time;
-    var time_cursor, last_stop_time;
+    var lec_begin_time;
+    var time_cursor;
+    var restart_time = null; //time when you last started recording again
     var is_recording = false;
     var slides = [];
     var current_slide=null;
+    var ticker;
 
     this.CW = new capture_widget(init); //a lecture owns a canvas. separate visuals from the logical object itself
+    this.CW.initialize();
 
-    function get_lecture_time() {
-        
+    function get_lecture_time() { //returns the current time in the lecture in milliseconds
+        if(restart_time==null) {
+            return global_time() - lec_begin_time;
+        } else {
+            return time_cursor + (global_time() - restart_time); //DANGER DANGER. should this change based on recording or not?
+        }
     }
 
-    function get_slide_time() {
-        if(current_slide==null) {
-            alert('holy crap, something went terribly wrong.');
+    function countTicker(time) {//PSEUDO DANGER. HOURS?
+        var minutes = Math.floor(time/60000);
+        if(minutes < 10) {
+            minutes = '0'+minutes;
         }
-        return 
+        time = time % 60000;
+        var seconds = Math.floor(time/1000);
+        if(seconds<10) {
+            seconds = '0'+seconds;
+        }
+        var ms = time % 1000;
+        if(ms<10) {
+            ms = '00'+ms;
+        } else if(ms<100) {
+            ms = '0'+ms;
+        }
+
+        $('#ticker').text(minutes + ':' + seconds + '.' + ms);
+    }
+
+    function updateSliderRange() {
+        //slider ID should really be passed into init
+        var range = current_slide.end_time;
+        $('#slider');
+    }
+
+    function syncSliderTicker() {
+        $('#slider').on('slide', function(event, ui) {
+            var minute = Math.floor(ui.value/60000);
+            if(minute<10) {
+                minute = '0'+minute;
+            }
+            var second = ui.value % 60;
+            if(second < 10) {
+                second = '0'+second;
+            }
+            $('#ticker').text(minute + ':' + second);
+        });
     }
 
     this.start_recording = function() {
@@ -37,18 +77,48 @@ function lecture(init) {
             slides.push(current_slide);
             lec_begin_time = current_slide.begin_time = global_time();
         } else {
-
+            restart_time = global_time(); //DANGER DANGER ??
         }
+        ticker = setInterval(function( ) {countTicker(get_lecture_time());},80);
+        this.CW.enable();
+        $('#slider').slider({ disabled: true });
     }
 
     this.stop_recording = function() {
         this.is_recording = false;
+        clearInterval(ticker);
+        ticker = null;
         if(current_slide.end_time == null) {
-            current_slide.end_time = last_stop_time = time_cursor = global_time(); //not sure about time_cursor
+            current_slide.end_time = global_time(); //not sure about time_cursor or last_stop_time
         } else {
             //need to shift everything over by some amount...
-            var time_shift = global_time() - last_stop_time;
+            var time_shift = global_time() - restart_time;
+            //for everything after time_cursor, shift it by this. only need to shift the slides themselves
+        }
+        this.CW.disable();
+        $('#slider').slider({ disabled: false });
+        //update the slider
+    }
 
+    //should be moved out of here into some operation manager
+    this.undo=function(){ //needs to change
+        if(VISUALS.length > 0){
+            var undo = VISUALS.pop();
+            canvas.clear();
+            draw_visuals(VISUALS);
+            REDO_STACK.push(undo);
+            console.log(undo);
+        }
+
+    }
+
+    //should be moved out of here into some operation manager
+    this.redo = function() {
+        if(REDO_STACK.length>0) {
+            var redo = REDO_STACK.pop();
+            console.log(redo);
+            VISUALS.push(redo);
+            draw_visual(redo);
         }
     }
 }
@@ -58,6 +128,9 @@ function slide() {
     this.end_time = null;
     this.VISUALS = [];
 
+    this.current_time = function() {
+        //return current time inside of this slide...
+    }
 }
 
 // paint_widget encapsulates drawing primitives for HTML5 canvas
@@ -191,15 +264,8 @@ function capture_widget(init){
     var canvas_dom_id = init.canvas_id;
     var canvas_id = '#' + canvas_dom_id;
     var canvas; // drawing widget
-    //var operation_manager = new operation_manager();
 
-    var recording_start_time;
-    var recording_stop_time;
-    var is_recording = false;
-    var total_time = 0;
-    var ticker_interval;
-    var slide_begin_time;
-
+    var enabled = false;
     var lmb_down = false;  // is the left mouse button down
     //var inline = false   // are we currently drawing a stroke
     var last_point;      // last coordinate of move or click event
@@ -211,12 +277,7 @@ function capture_widget(init){
 
 
     var PEN; // pointer enabled device, unused for now
-
-
-    var VISUALS = [];
-    var PROPERTY_CHANGES = [];
     var current_visual;
-    var REDO_STACK = [];
 
     function empty_visual(){
         return {
@@ -231,7 +292,7 @@ function capture_widget(init){
     }
 
     function on_mousedown(event) {
-        if (! is_recording){return;}
+        if (! enabled){return;}
 
         event.preventDefault();
         lmb_down = true;
@@ -249,7 +310,7 @@ function capture_widget(init){
 
     }
     function on_mousemove(event) {
-        if (! is_recording){return;}
+        if (! enabled){return;}
         event.preventDefault()
 
         if (lmb_down) {
@@ -275,14 +336,14 @@ function capture_widget(init){
 
     }
     function on_mouseup(event) {
-        if (! is_recording){return;}
+        if (! enabled){return;}
         event.preventDefault();
 
         if (lmb_down) {
-            VISUALS.push(current_visual);
+            lmb_down = false;
+            return current_visual;
         }
 
-        lmb_down = false;
         //inline = false
 
         //console.log('mouseup')
@@ -428,16 +489,13 @@ function capture_widget(init){
         var ie10 = /MSIE (\d+)/.exec(navigator.userAgent);
 
         if (ie10 != null) {
-
             var version = parseInt(ie10[1]);
             if (version >= 10) {
                 ie10 = true;
-            }
-            else {
+            } else {
                 ie10 = false;
             }
-        }
-        else {
+        } else {
             ie10 = false;
         }
 
@@ -445,8 +503,7 @@ function capture_widget(init){
 
         if (ie10 && pointer) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -480,92 +537,28 @@ function capture_widget(init){
          canvas.addEventListener('touchstart', on_mousedown, false);
          canvas.addEventListener('touchmove', on_mousemove, false);
          window.addEventListener('touchend', on_mouseup, false);
-
          */
 
        canvas.resize_canvas();
     }
 
-    //Initialize the widget
-    widget_init();
-
     /* *************************************************************************
      *  Public Methods
      * *************************************************************************/
-
 
     // Erases the entire canvas
     this.clear = function(){
         canvas.clear()
     }
 
-
     // Change the interpolation mode
     this.set_active_visual_type = function(type_str){
         active_visual_type = VisualTypes[type_str]
     }
 
-    this.undo=function(){ //needs to change
-        if(VISUALS.length > 0){
-            var undo = VISUALS.pop();
-            canvas.clear();
-            draw_visuals(VISUALS);
-            REDO_STACK.push(undo);
-            console.log(undo);
-        }
-
-    }
-
-    this.redo = function() {
-        if(REDO_STACK.length>0) {
-            var redo = REDO_STACK.pop();
-            console.log(redo);
-            VISUALS.push(redo);
-            draw_visual(redo);
-        }
-    }
-
     this.get_recording = function(){
         var pentimento_record = export_recording_to_pentimento_format();
         return pentimento_record;
-    }
-
-    this.start_recording = function (){
-        is_recording = true;
-        recording_start_time = global_time();
-        ticker_interval = setInterval(updateTicker, 1000);
-    }
-
-    function updateTicker() {
-        var t = $('#ticker').text().split(':');//replace with some global
-        if(t[1]==59) {
-            if(t[0]>=9) {
-                t[0] = parseInt(t[0])+1;
-                t[1] = '00';
-                $('#ticker').text(t.join(':'));
-            } else {
-                t[0] = '0' + (parseInt(t[0])+1);
-                t[1] = '00';
-                $('#ticker').text(t.join(':'));
-            }
-        } else if(t[1]>=9) {
-            t[1] = parseInt(t[1])+1;
-            $('#ticker').text(t.join(':'));
-        } else {
-            t[1] = '0'+(parseInt(t[1])+1);
-            $('#ticker').text(t.join(':'));//performance?
-        }
-    }
-
-    this.stop_recording = function(){
-        is_recording = false;
-        recording_stop_time = global_time(); //hmmmmmm
-        clearInterval(ticker_interval);
-        //update slider
-        $('#slider').slider('enable');//replace with some global
-        var t = $('#ticker').text().split(':');
-        $('#slider').slider('option', 'max', parseInt(t[0])*60+parseInt(t[1]));
-        $('#slider').slider('value', parseInt(t[0])*60+parseInt(t[1]))
     }
 
     this.change_property = function(change) {
@@ -575,7 +568,8 @@ function capture_widget(init){
         canvas.properties[change['property']] = change['value'];
         console.log(change);
     }
+    this.initialize = function() { widget_init(); }
+    this.enable = function() { is_recording = true; }
+    this.disable = function() { is_recording = false; }
 
 }
-
-
