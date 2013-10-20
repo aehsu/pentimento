@@ -11,9 +11,9 @@ function global_time() {
 }
 
 function lecture(init) {
-    var lec_begin_time;
-    var time_cursor;
-    var restart_time = null; //time when you last started recording again
+    var lec_begin_time; //global time of lecture beginning
+    var time_cursor; //relative to beginning of lecture
+    var restart_time = null; //time when you last started recording again, global time
     var is_recording = false;
     var slides = [];
     var current_slide=null;
@@ -22,7 +22,7 @@ function lecture(init) {
     this.CW = new capture_widget(init); //a lecture owns a canvas. separate visuals from the logical object itself
     this.CW.initialize();
 
-    function get_lecture_time() { //returns the current time in the lecture in milliseconds
+    function get_lecture_time() { //returns the current time in the lecture in milliseconds, relative to beginning of the lecture
         if(restart_time==null) {
             return global_time() - lec_begin_time;
         } else {
@@ -53,22 +53,26 @@ function lecture(init) {
     function updateSliderRange() {
         //slider ID should really be passed into init
         var range = current_slide.end_time;
-        $('#slider');
+        $('#slider').slider("option", "max", current_slide.end_time);
+        $('#slider').slider("value", current_slide.end_time);//DANGER DANGER. need to sync ticker and text
     }
 
-    function syncSliderTicker() {
-        $('#slider').on('slide', function(event, ui) {
-            var minute = Math.floor(ui.value/60000);
-            if(minute<10) {
-                minute = '0'+minute;
-            }
-            var second = ui.value % 60;
-            if(second < 10) {
-                second = '0'+second;
-            }
-            $('#ticker').text(minute + ':' + second);
-        });
-    }
+    //    function syncSliderTicker() {
+    $('#slider').on('slide', function(event, ui) {
+        time_cursor = ui.value;
+        var minute = Math.floor(ui.value/60000);
+        if(minute<10) {
+            minute = '0'+minute;
+        }
+        var second = ui.value % 60000;
+        var ms = second % 1000; // IMPROVEMENT. CAN JUST DIVIDE
+        second = Math.floor(second/1000);
+        if(second < 10) {
+            second = '0'+second;
+        }
+        $('#ticker').text(minute + ':' + second + '.' + ms);
+    });
+    //    }
 
     this.start_recording = function() {
         this.is_recording = true;
@@ -79,7 +83,7 @@ function lecture(init) {
         } else {
             restart_time = global_time(); //DANGER DANGER ??
         }
-        ticker = setInterval(function( ) {countTicker(get_lecture_time());},80);
+        ticker = setInterval(function( ) {countTicker(get_lecture_time());},50);
         this.CW.enable();
         $('#slider').slider({ disabled: true });
     }
@@ -89,15 +93,18 @@ function lecture(init) {
         clearInterval(ticker);
         ticker = null;
         if(current_slide.end_time == null) {
-            current_slide.end_time = global_time(); //not sure about time_cursor or last_stop_time
+            current_slide.end_time = global_time()-lec_begin_time; //not sure about time_cursor or last_stop_time
         } else {
             //need to shift everything over by some amount...
             var time_shift = global_time() - restart_time;
+            current_slide.end_time += time_shift;
+            //foreach slide, shift begin_time. for this slide, shift end time.
             //for everything after time_cursor, shift it by this. only need to shift the slides themselves
         }
         this.CW.disable();
         $('#slider').slider({ disabled: false });
-        //update the slider
+        updateSliderRange();
+        time_cursor = $('#slider').slider('value');
     }
 
     //should be moved out of here into some operation manager
@@ -123,9 +130,9 @@ function lecture(init) {
     }
 }
 
-function slide() {
-    this.begin_time = null;
-    this.end_time = null;
+function slide() { //slides should be blind and oblivious to anything outside of them if possible
+    this.begin_time = null;//global in time? relative to lecture? should be relative to the lecture.
+    this.end_time = null;//relative to the slide. basically the length of the slide
     this.VISUALS = [];
 
     this.current_time = function() {
@@ -189,7 +196,7 @@ function paint_widget(canvas_id){
         var pt = {
             x: event.pageX - $(canvas_id).offset().left, // todo fix if canvas not in corner
             y: event.pageY - $(canvas_id).offset().top,
-            t: time()
+            t: global_time()
         };
 
         return pt;
@@ -562,14 +569,12 @@ function capture_widget(init){
     }
 
     this.change_property = function(change) {
-        if(!is_recording) { return; }
+        if(!enabled) { return; }
         change.time = global_time();
-        PROPERTY_CHANGES.push(change);
         canvas.properties[change['property']] = change['value'];
         console.log(change);
     }
     this.initialize = function() { widget_init(); }
-    this.enable = function() { is_recording = true; }
-    this.disable = function() { is_recording = false; }
-
+    this.enable = function() { enabled = true; }
+    this.disable = function() { enabled = false; }
 }
