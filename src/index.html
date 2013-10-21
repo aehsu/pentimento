@@ -67,11 +67,14 @@
             });
             //temporary one-time off's to do initialization correctly..."correctly"
 
-            var lec_control = new pentimento.lecture_controller();
-            var slide_control = lec_control.create_slide_with_controller();
+            var lec = new pentimento.lecture();
+            var lecture_control = new pentimento.lecture_controller(lec);
+            var slide_control = lecture_control.create_slide_with_controller();
             var recording_control = new pentimento.recording_controller({
                 canvas_id: 'sketchpad',
                 slider_id: 'slider',
+                recording_buttons: 'recording-options',
+                lecture_control: lecture_control
             });
         })
     </script>
@@ -79,8 +82,8 @@
 
 <body>
         <div>
-            <button class="recording-options" onclick="$('.recording-options').toggleClass('hidden');lec.start_recording();">Record</button>
-            <button class="recording-options hidden" onclick="$('.recording-options').toggleClass('hidden');lec.stop_recording();">Stop Record</button>
+            <button class="recording-options">Record</button>
+            <button class="recording-options hidden">Stop Record</button>
 
             <button id="clear" onclick="lec.CW.clear();">Clear</button>
             <button onclick="lec.CW.set_active_visual_type('stroke')">Strokes</button>
