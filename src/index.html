@@ -52,29 +52,27 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='http://code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
-    <script src='operation_manager.js'></script>
-    <script src='capture-widget.js'></script>
-    <script>
-        var CW, lec;
+    <script type='text/javascript' src='operation_manager.js'></script>
+    <script type='text/javascript' src='capture-widget3.js'></script>
+    <script type='text/javascript'>
         $(document).ready(function(){
-            lec = new lecture({
-                canvas_id: 'sketchpad'
-            });
-
-            CW = new capture_widget({
-                canvas_id: 'sketchpad'
-            });
-
+            $('#slider').width($('canvas').width());
+            $('#ticker').css('position', 'absolute'); //so many bad things.
+            $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
+            $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
             $('#slider').slider({
                 disabled: true,
                 step:1,
                 range: 'min'
             });
+            //temporary one-time off's to do initialization correctly..."correctly"
 
-            $('#slider').width($('canvas').width());
-            $('#ticker').css('position', 'absolute'); //so many bad things.
-            $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
-            $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
+            var lec_control = new pentimento.lecture_controller();
+            var slide_control = lec_control.create_slide_with_controller();
+            var recording_control = new pentimento.recording_controller({
+                canvas_id: 'sketchpad',
+                slider_id: 'slider',
+            });
         })
     </script>
 </head>
