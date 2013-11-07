@@ -52,14 +52,6 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='http://code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
-    <script type='text/javascript' src="global.js"></script>
-    <!-- IMPORT MODELS FIRST -->
-    <script type='text/javascript' src="pentimento_state.js"></script>
-    <script type='text/javascript' src="pentimento_lecture.js"></script>
-
-    <!-- IMPORT MODELS FIRST -->
-    <script type='text/javascript' src="pentimento_lecture_controller.js"></script>
-    <script type='text/javascript' src="uiux_controller.js"></script>
     <script type='text/javascript'>
         $(document).ready(function(){
             $('#slider').width($('canvas').width());
@@ -72,10 +64,9 @@
                 range: 'min'
             });
             //temporary one-time off's to do initialization correctly..."correctly"
-
-            var lecture_control = new pentimento.lecture_controller();
         })
     </script>
+    <script type='text/javascript' src="pentimento_loader.js"></script>
 </head>
 
 <body>
