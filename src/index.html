@@ -52,8 +52,15 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='http://code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
-    <script type='text/javascript' src='operation_manager.js'></script>
-    <script type='text/javascript' src='capture-widget3.js'></script>
+    <script type='text/javascript' src="global.js"></script>
+    <!-- IMPORT MODELS FIRST -->
+    <script type='text/javascript' src="pentimento_state.js"></script>
+    <script type='text/javascript' src="pentimento_lecture.js"></script>
+
+    <!-- IMPORT MODELS FIRST -->
+    <script type='text/javascript' src="pentimento_lecture_controller.js"></script>
+    <script type='text/javascript' src="uiux_controller.js"></script>
+    <script type='text/javascript' src=""></script>
     <script type='text/javascript'>
         $(document).ready(function(){
             $('#slider').width($('canvas').width());
@@ -67,15 +74,7 @@
             });
             //temporary one-time off's to do initialization correctly..."correctly"
 
-            var lec = new pentimento.lecture();
-            var lecture_control = new pentimento.lecture_controller(lec);
-            var slide_control = lecture_control.create_slide_with_controller();
-            var recording_control = new pentimento.recording_controller({
-                canvas_id: 'sketchpad',
-                slider_id: 'slider',
-                recording_buttons: 'recording-options',
-                lecture_control: lecture_control
-            });
+            var lecture_control = new pentimento.lecture_controller();
         })
     </script>
 </head>
@@ -85,16 +84,9 @@
             <button class="recording-options">Record</button>
             <button class="recording-options hidden">Stop Record</button>
 
-            <button id="clear" onclick="lec.CW.clear();">Clear</button>
-            <button onclick="lec.CW.set_active_visual_type('stroke')">Strokes</button>
-            <button onclick="lec.CW.set_active_visual_type('dots')">Dots</button>
-            <button onclick="CW.undo()">undo</button>
-            <button onclick="CW.redo()">redo</button>
-
-            <button onclick="lec.CW.change_property({property: 'line_color', value: '#000'});">Black</button>
-            <button onclick="lec.CW.change_property({property: 'line_color', value: '#F00'});">Red</button>
-            <button onclick="lec.CW.change_property({property: 'line_color', value: '#0F0'});">Green</button>
-            <button onclick="lec.CW.change_property({property: 'line_color', value: '#00F'});">Blue</button>
+            <button onclick="" id="clear">Clear</button>
+            <button onclick="">Strokes</button>
+            <button onclick="">Dots</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>
