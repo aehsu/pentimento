@@ -5,5 +5,5 @@ pentimento.lecture_controller = function() {
 	};
 
 	var lecture = new pentimento.lecture();
-	var slide_control = new slide_controller(lecture.add_slide());	
+	var slide_control = new slide_controller(lecture.add_slide());
 };

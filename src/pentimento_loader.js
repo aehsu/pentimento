@@ -12,3 +12,4 @@ function global_time() {
  private methods not exposable through namespace
 *************************************************/
 var pentimento = new function() {};
+
