@@ -3,13 +3,20 @@
 *************************************************/
 
 pentimento.state = new function() {
-	this.audio_cursor = null;
-	this.video_cursor = null;
-	this.lecture_begin_time = null;
-	this.is_recording = false;
-	this.current_slide = null;
-	this.color = null;
-	this.current_tool = null;
+	this.audio_cursor;
+	this.video_cursor ;
+	this.lecture_begin_time;
+	this.is_recording;
+	this.current_slide;
+	this.color;
+	this.width;
+	this.current_tool;
+	this.lmb_down;
+	this.last_point;
+	this.context;
+	this.pressure;
+	this.pressure_color;
+	this.pressure_width;
 
 	this.change_state = function(attr, val) {
 		this[attr] = val;
