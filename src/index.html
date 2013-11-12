@@ -66,14 +66,21 @@
             //temporary one-time off's to do initialization correctly..."correctly"
         })
     </script>
-    <script type='text/javascript' src='pentimento_loader.js'></script>
-    
+    <!--<script type='text/javascript' src='pentimento_loader.js'></script>-->
+    <script type='text/javascript'>
+        pentimento = {};
+        function global_time() { return (new Date()).getTime(); }
+    </script>
+    <script type='text/javascript' src='pentimento_model_lecture.js'></script>
+    <script type='text/javascript' src='pentimento_model_state.js'></script>
+    <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
+    <script type='text/javascript' src='pentimento_controller_uiux.js'></script>
 </head>
 
 <body>
         <div>
-            <button class="recording-options">Record</button>
-            <button class="recording-options hidden">Stop Record</button>
+            <button class="recording-tool" data-label='begin'>Record</button>
+            <button class="recording-tool hidden" data-label='stop'>Stop Record</button>
 
             <button onclick="" id="clear">Clear</button>
             <button onclick="">Strokes</button>
