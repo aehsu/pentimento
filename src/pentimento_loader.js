@@ -11,7 +11,7 @@ function global_time() {
 			PENTIMENTO DECLARATION
  private methods not exposable through namespace
 *************************************************/
-var pentimento = {};//new function() {};
+pentimento = {};//new function() {};
 var ordered_files = ["pentimento_model_lecture.js", "pentimento_model_state.js", "pentimento_controller_lecture.js", "pentimento_controller_uiux.js"]; //order of the loading does matter
 
 (function() {

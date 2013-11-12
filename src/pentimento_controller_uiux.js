@@ -2,10 +2,13 @@ function initialize_uiux_controller() {
 	this.canvas = $('#sketchpad');
 	pentimento.state.is_recording = false;
 	pentimento.state.lmb_down = false; //move this to controller? very local.
-	pentmento.state.last_point = null; //move this to controller? very local.
+	pentimento.state.last_point = null; //move this to controller? very local.
 	pentimento.state.color = '#777';
 	pentimento.state.width = 2;
     pentimento.state.context = this.canvas[0].getContext('2d'); //move this to controller? very local.
+    pentimento.state.pressure = false;
+    pentimento.state.pressure_color = false;
+    pentimento.state.pressure_width = false;
 
 	function empty_visual(){
         return {
@@ -16,16 +19,58 @@ function initialize_uiux_controller() {
             tMin: 0,
             properties: {
             	'color': pentimento.state.color,
-
+                'width': pentimento.state.width,
             }, //copy the current properties of the canvas object
             vertices:[]
         }
+    }
+
+    this.draw_line = function(line) {
+        var ctx = pentimento.state.context;
+        ctx.beginPath();
+        ctx.moveTo(line.from.x, line.from.y);
+        ctx.lineTo(line.to.x, line.to.y);
+
+        if (pentimento.state.pressure) { //some fancy stuff based on pressure
+            /*var avg_pressure = 0.5 * (line.from.pressure + line.to.pressure)
+
+            if (pressure_color) {
+                var alpha = (1 - 0.5) + 0.5 * avg_pressure
+                line.color = 'rgba(32,32,32,' + alpha + ')' // todo use defaults
+            }
+            else {
+                line.color = 'rgba(64,64,64,1)'  // todo use defaults
+            }
+
+            if (pressure_width) {
+                line.width = 1 + Math.round(max_extra_line_width * avg_pressure) // todo use defaults
+            }
+            else {
+                line.width = 2 // todo use defaults
+            }
+
+            canvas.draw_line(line)*/
+        } else {
+            ctx.strokeStyle = pentimento.state.color;
+            ctx.lineWidth = pentimento.state.width;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+    }
+
+    this.draw_point = function(coord) { //PORTED
+        var ctx = get_ctx()
+        ctx.beginPath();
+        ctx.fillStyle = default_point_color;
+        ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
     }
 
     if (ie10_tablet_pointer()) {
         console.log('Pointer Enabled Device');
         //canvas = new smart_paint_widget(canvas_id);
         pentimento.state.pressure = true;
+        pentimento.state.pressure_color = true;
+        pentimento.state.pressure_width = true;
 
         var c = document.getElementById(canvas_dom_id);
         c.addEventListener("MSPointerUp", on_mouseup, false);
@@ -34,14 +79,28 @@ function initialize_uiux_controller() {
     } else {
         console.log('Pointer Disabled Device');
         pentimento.state.pressure = false;
-        pentimento.state.pressure_color = null;
-        pentimento.state.pressure_width = null;
+        pentimento.state.pressure_color = false;
+        pentimento.state.pressure_width = false;
         //canvas = new paint_widget(canvas_id);
         $(canvas_id).mousedown(on_mousedown);
         $(canvas_id).mousemove(on_mousemove);
         $(window).mouseup(on_mouseup);
     }
-    /*
+
+    this.relative_point = function(event){
+        var pt = {
+            x: event.pageX - $(canvas_id).offset().left, // todo fix if canvas not in corner
+            y: event.pageY - $(canvas_id).offset().top,
+            t: global_time()
+        };
+        if (pentimento.state.pressure) {
+            pt.pressure = event.pressure;
+        }
+
+        return pt;
+    }
+
+    /* PORTED
      //ignore touch events for now
      canvas = $("#canv")[0]
      canvas.addEventListener('touchstart', on_mousedown, false);
@@ -49,7 +108,10 @@ function initialize_uiux_controller() {
      window.addEventListener('touchend', on_mouseup, false);
      */
 
-
+    this.clear = function() { //PORTED
+        var ctx = get_ctx();
+        ctx.clearRect(0, 0, $(canvas_id).width(), $(canvas_id).height())
+    }
 
 	$('.live-tool').click(function() {
 		var tool = $(this).attr('data-tool-name');
@@ -145,7 +207,7 @@ function on_mouseup(event) {
     //console.log('mouseup')
 }
 
-function draw_visuals(visuals){
+function draw_visuals(visuals){ // PORTED
     for (var i=0; i<visuals.length; i++){
         var visual = visuals[i];
 
@@ -171,7 +233,7 @@ function draw_visuals(visuals){
     }
 }
 
-function draw_visual(visual) {
+function draw_visual(visual) { //PORTED
     if (visual.type == VisualTypes.dots) {
         for(var j=0; j<visual.vertices.length; j++) {
             var vertex = visual.vertices[j];
@@ -191,110 +253,13 @@ function draw_visual(visual) {
     }
 }
 
-// paint_widget encapsulates drawing primitives for HTML5 canvas
-paint_widget: function(canvas_id){
-    this.draw_line = function(line) {
-         /*
-            line = {
-                from: point,
-                to: point,
-                color: string  // optional
-                width: int    // optional
-            }
-          */
-        var ctx = get_ctx();
-        ctx.beginPath();
-        ctx.moveTo(line.from.x, line.from.y);
-        ctx.lineTo(line.to.x, line.to.y);
-
-        ctx.strokeStyle = (line.properties == undefined || line.properties.line_color == undefined) ? default_line_color : line.properties.line_color;
-        ctx.lineWidth = (line.properties == undefined || line.properties.line_width == undefined) ? default_line_width : line.properties.line_width;
-        ctx.lineCap = 'round';
-
-        ctx.stroke();
-    }
-
-    this.draw_point = function(coord) {
-        var ctx = get_ctx()
-        ctx.beginPath();
-        ctx.fillStyle = default_point_color;
-        ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
-    }
-
-    this.clear = function(){
-        var ctx = get_ctx();
-        ctx.clearRect(0, 0, $(canvas_id).width(), $(canvas_id).height())
-    }
-
-    this.relative_point = function(event){
-        var pt = {
-            x: event.pageX - $(canvas_id).offset().left, // todo fix if canvas not in corner
-            y: event.pageY - $(canvas_id).offset().top,
-            t: global_time()
-        };
-
-        return pt;
-    }
-
-    this.resize_canvas = function() {
+$(document).ready(function() {
+	pentimento.uiux_controller = new initialize_uiux_controller();
+    (function() {
         var iw = $(window).width();
         var ih = $(window).height();
 
         $(canvas_id)[0].width = 0.9 * iw
         $(canvas_id)[0].height = 0.8 * ih
-    }
-},
-
-// smart_paint_widget wraps paint_widget to modify the drawing primitives
-// to use advanced input sensors such as pressure
-smart_paint_widget: function(canvas_id){
-
-    var canvas = new paint_widget(canvas_id)
-    var pressure_color = false  // Change color of strokes dep on pressure?
-    var pressure_width = true  // Change width of strokes dep on pressure?
-    var max_extra_line_width = 4
-
-    this.draw_line = function(line) {
-
-        /*
-            line = {
-               from: point,
-               to: point,
-                ...
-            }
-         */
-
-        var avg_pressure = 0.5 * (line.from.pressure + line.to.pressure)
-
-        if (pressure_color) {
-            var alpha = (1 - 0.5) + 0.5 * avg_pressure
-            line.color = 'rgba(32,32,32,' + alpha + ')' // todo use defaults
-        }
-        else {
-            line.color = 'rgba(64,64,64,1)'  // todo use defaults
-        }
-
-        if (pressure_width) {
-            line.width = 1 + Math.round(max_extra_line_width * avg_pressure) // todo use defaults
-        }
-        else {
-            line.width = 2 // todo use defaults
-        }
-
-        canvas.draw_line(line)
-    }
-
-    this.relative_point = function(event){
-        var pt = canvas.relative_point(event);
-        pt.pressure  = event.pressure;
-        return pt;
-    }
-
-    this.draw_point = canvas.draw_point
-    this.clear = canvas.clear
-    this.resize_canvas = canvas.resize_canvas
-}
-
-$(document).ready(function() {
-	pentimento.uiux_controller = new initialize_uiux_controller();
+    })();
 })
