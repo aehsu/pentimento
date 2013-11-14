@@ -11,7 +11,7 @@ pentimento.lecture = function() {
 	var slide = function() {
 		this.begin_time = null; //unnecessary??
 		this.end_time = null;
-		this.VISUALS = [];
+		this.visuals = [];
 		this.current_time = null;
 
 		this.add_visual = function(visual) {
@@ -40,7 +40,7 @@ pentimento.lecture = function() {
 	this.add_slide = function() {
 		var new_slide = new slide();
 		this.slides.push(new_slide);
-		pentimento.state.change_state('current_slide', new_slide);
+		//pentimento.state.change_state('current_slide', new_slide);
 		return new_slide;
 	};
 
@@ -48,7 +48,7 @@ pentimento.lecture = function() {
 		var new_slide = new slide();
 		var before_index = this.slides.indexOf(pentimento.state.current_slide);
 		slides.insert(before_index+1, new_slide);
-		pentimento.state.change_state('current_slide', new_slide);
+		//pentimento.state.change_state('current_slide', new_slide);
 		return new_slide;
 	}
 };

@@ -76,16 +76,18 @@
     <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
     <script type='text/javascript' src='pentimento_controller_uiux_helpers.js'></script>
     <script type='text/javascript' src='pentimento_controller_uiux.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools.js'></script>
 </head>
 
 <body>
         <div>
             <button class="recording-tool" data-label='begin'>Record</button>
             <button class="recording-tool hidden" data-label='stop'>Stop Record</button>
-
-            <button onclick="" id="clear">Clear</button>
-            <button onclick="">Strokes</button>
-            <button onclick="">Dots</button>
+            
+            <button class="live-tool" data-toolname="clear">Clear</button>
+            <button class="live-tool" data-toolname="pen">Pen</button>
+            <button class="live-tool" data-toolname="dots">Dots</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>

@@ -19,6 +19,7 @@ pentimento.state = new function() {
 	this.pressure;
 	this.pressure_color; //false
 	this.pressure_width; //false
+        this.tool;
 
 	this.change_state = function(attr, val) {
 		this[attr] = val;

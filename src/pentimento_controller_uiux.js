@@ -46,30 +46,6 @@ function initialize_uiux_controller() {
      window.addEventListener('touchend', on_mouseup, false);
      */
 
-    this.clear = function() { //PORTED
-        var ctx = get_ctx();
-        ctx.clearRect(0, 0, $(canvas_id).width(), $(canvas_id).height())
-    }
-
-    $('.live-tool').click(function() {
-	var tool = $(this).attr('data-tool-name');
-	//keep recording and switch tools
-     });
-
-    $('.nonlive-tool').click(function() {
-	var tool = $(this).attr('data-tool-name');
-	//stop recording and switch tools
-    });
-
-    $('.recording-tool').click(function(event) {
-        var elt = $(event.target);
-        if (elt.attr('data-label')==='begin') {
-            pentimento.state.is_recording=true;
-        } else {
-            pentimento.state.is_recording = false;
-        }
-        $('.recording-tool').toggleClass('hidden');
-    });
 };//function() {};
 
 $(document).ready(function() {
