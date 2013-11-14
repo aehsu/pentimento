@@ -1,5 +1,5 @@
 function live_tool_handler(event) {
-    var tool = $(event).attr('data-toolname');
+    var tool = $(event.target).attr('data-toolname');
     console.log(this);
     console.log(event);
     pentimento.state.tool = tool;
@@ -69,10 +69,10 @@ function nonlive_tool_handler(event) {
 }
 
 $(document).ready(function() {
-    $('.live-tool').click(function(event) {
+    $('.live-tool').click(/*function(event) {
          console.log('getting ready in tools controller');
-         live_tool_handler(event));
-    });            
+         live_tool_handler(event);
+    }*/live_tool_handler);            
     $('.nonlive-tool').click(function(event) {
         var tool = $(this).attr('data-tool-name');
         //stop recording and switch tools
