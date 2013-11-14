@@ -24,18 +24,18 @@ function initialize_uiux_controller() {
         pentimento.state.pressure_width = true;
 
 	//why is this different?!
-        var c = pentimento.state.canvas[0];
-        c.addEventListener("MSPointerUp", canvas_mouseup, false);
-        c.addEventListener("MSPointerMove", canvas_mousemove, false);
-        c.addEventListener("MSPointerDown", canvas_mousedown, false);
+        //var c = pentimento.state.canvas[0];
+        //c.addEventListener("MSPointerUp", canvas_mouseup, false);
+        //c.addEventListener("MSPointerMove", canvas_mousemove, false);
+        //c.addEventListener("MSPointerDown", canvas_mousedown, false);
     } else {
         console.log('Pointer Disabled Device');
         pentimento.state.pressure = false;
         pentimento.state.pressure_color = false;
         pentimento.state.pressure_width = false;
-        pentimento.state.canvas.mousedown(canvas_mousedown);
-        pentimento.state.canvas.mousemove(canvas_mousemove);
-        $(window).mouseup(canvas_mouseup);
+        //pentimento.state.canvas.mousedown(canvas_mousedown);
+        //pentimento.state.canvas.mousemove(canvas_mousemove);
+        //$(window).mouseup(canvas_mouseup);
     }
 
     /* PORTED
