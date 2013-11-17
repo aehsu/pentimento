@@ -1,4 +1,8 @@
 function live_tool_handler(event) {
+    //event.stopImmediatePropagation(); difference?!
+    event.stopPropagation(); 
+    console.log('EVENT: ');
+    console.log(event);
     var tool = $(event.target).attr('data-toolname');
     //keep recording and switch tools
     //might need to do different clearings of events
@@ -10,12 +14,23 @@ function live_tool_handler(event) {
     	case 'pen':
 		    pentimento.state.canvas.mousedown(pen_mousedown);
             pentimento.state.canvas.mousemove(pen_mousemove);
-    		$(window).mouseup(pen_mouseup);
+    		//var visual = $(window).mouseup(pen_mouseup);
+            $(window).mouseup(function(event) {
+                console.log("MOUSEUPEVENT:");
+                console.log(event);
+                var visual = pen_mouseup(event);
+                pentimento.lecture_controller.add_visual(visual);
+            }); //could coalesce these
             break;
     	case 'dots':
             pentimento.state.canvas.mousedown(dots_mousedown);
             pentimento.state.canvas.mousemove(dots_mousemove);
-            $(window).mouseup(dots_mouseup);
+            $(window).mouseup(function(event) {
+                console.log("MOUSEUPEVENT:");
+                console.log(event);
+                var visual = dots_mouseup(event);
+                pentimento.lecture_controller.add_visual(visual);
+            }); //could coalesce these
     		break;
     	case 'shape':
     		break;
@@ -83,7 +98,9 @@ $(document).ready(function() {
         var elt = $(event.target);
         if (elt.attr('data-label')==='begin') {
             if(!pentimento.state.tool) {
+                console.log('pentimento state tool pre- something');
                 $('button[data-toolname="pen"]').click();
+                console.log('pentimento state tool post- something');
             }
             pentimento.state.is_recording=true;
         } else {

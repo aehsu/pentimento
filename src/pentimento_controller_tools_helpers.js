@@ -38,7 +38,7 @@ function clear_previous_handlers(new_tool) {
         return;
     } else {
         //clear some handlers
-        console.log('gotta clear some handlers correctly. maybe switch statement;');
+        console.log('gotta clear some handlers correctly. maybe switch statements depending on what the old tool was');
         pentimento.state.canvas.off('mousedown');
         pentimento.state.canvas.off('mousemove');
         $(window).off('mouseup');
@@ -75,19 +75,6 @@ function pen_mousemove(event) {
             from: state.last_point,
             to: cur_point,
         });
-        //if (active_visual_type == VisualTypes.dots) {
-        //    canvas.draw_point(cur_point);
-        //}
-        //else if (active_visual_type == VisualTypes.stroke) {
-        //    canvas.draw_line({
-        //            from: cur_point,
-        //            to: last_point,
-        //            properties: current_visual.properties
-        //    });
-        //}
-        //else {
-        //    console.log("unknown drawing mode");
-        //} 
         
         state.last_point = cur_point;
         state.current_visual.vertices.push(cur_point);
@@ -97,6 +84,7 @@ function pen_mousemove(event) {
 function pen_mouseup(event) {
     if (! pentimento.state.is_recording){return;}
     event.preventDefault();
+    console.log('pen_mouseup');
 
     var state = pentimento.state;
     if (state.lmb_down) {
@@ -104,7 +92,7 @@ function pen_mouseup(event) {
         var visual = state.current_visual;
         state.current_visual = null;
         state.last_point = null;
-        return visual;
+        return visual; // why need to return?
     }
 }
 
@@ -118,9 +106,9 @@ function dots_mousedown(event) {
 
     state.current_visual = empty_visual();
     state.current_visual.type = 'dots';//active_visual_type; have to do something based on the current tool
-    state.last_point = get_canvas_point(event);
-
-    state.current_visual.vertices.push(state.last_point);
+    var coord = get_canvas_point(event)
+    
+    state.current_visual.vertices.push(coord);
 
     //draw_point
     var ctx = pentimento.state.context;
@@ -137,21 +125,21 @@ function dots_mousemove(event) {
     
     var state = pentimento.state; //reference
     if (state.lmb_down) {
-        var cur_point = get_canvas_point(event);
+        var coord = get_canvas_point(event);
         //draw_point
         var ctx = pentimento.state.context;
         ctx.beginPath();
         ctx.fillStyle = state.color;
         ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
         
-        state.last_point = cur_point;
-        state.current_visual.vertices.push(cur_point);
+        state.current_visual.vertices.push(coord);
     }
 }
 
 function dots_mouseup(event) {
     if (! pentimento.state.is_recording){return;}
     event.preventDefault();
+    console.log('dots_mouseup');
 
     var state = pentimento.state;
     if (state.lmb_down) {
