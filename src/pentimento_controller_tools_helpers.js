@@ -56,6 +56,7 @@ function pen_mousedown(event) {
     state.current_visual = empty_visual();
     state.current_visual.type = 'stroke';//active_visual_type; have to do something based on the current tool
     state.last_point = get_canvas_point(event);
+    state.last_point['t'] = global_time() - pentimento.state.lecture_begin_time;//can move into get_canvas_point() function.
 
     state.current_visual.vertices.push(state.last_point);
 //    if (active_visual_type == VisualTypes.dots) {
@@ -77,6 +78,7 @@ function pen_mousemove(event) {
         });
         
         state.last_point = cur_point;
+        state.last_point['t'] = global_time() - pentimento.state.lecture_begin_time;//can move into get_canvas_point() function.
         state.current_visual.vertices.push(cur_point);
     }
 }
@@ -84,7 +86,7 @@ function pen_mousemove(event) {
 function pen_mouseup(event) {
     if (! pentimento.state.is_recording){return;}
     event.preventDefault();
-    console.log('pen_mouseup');
+    //console.log('pen_mouseup');
 
     var state = pentimento.state;
     if (state.lmb_down) {

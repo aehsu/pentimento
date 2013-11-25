@@ -28,7 +28,7 @@ function get_canvas_point(event){
     var pt = {
         x: event.pageX - pentimento.state.canvas.offset().left, // todo fix if canvas not in corner
         y: event.pageY - pentimento.state.canvas.offset().top,
-        t: global_time()
+        //t: global_time()
     };
 
     if (pentimento.state.pressure) {

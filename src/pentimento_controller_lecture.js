@@ -58,12 +58,23 @@ pentimento.lecture_controller = new function() {
 
     this.add_visual = function(visual) {
         slide_control.add_visual(visual);
-        console.log(visual);
-        console.log(lecture);
-        console.log(slide_control);
+        //console.log(visual);
+        //console.log(lecture);
+        //console.log(slide_control);
     };
 
+    //DEBUGGING PURPOSES ONLY
+    function log_lecture() {
+        console.log(lecture);
+    }
+    $(document).ready(function() {
+        var logger = $('<button>LOG-LECTURE</button>');
+        $(logger).click(log_lecture);
+        $('body div:first').append(logger);
+    });
+
     lecture = new pentimento.lecture();
+    pentimento.state.lecture_begin_time = global_time();
     console.log('lecture created');
     slide_control = new slide_controller(this.add_slide());
 };

@@ -1,8 +1,8 @@
 function live_tool_handler(event) {
     //event.stopImmediatePropagation(); difference?!
     event.stopPropagation(); 
-    console.log('EVENT: ');
-    console.log(event);
+    //console.log('EVENT: ');
+    //console.log(event);
     var tool = $(event.target).attr('data-toolname');
     //keep recording and switch tools
     //might need to do different clearings of events
@@ -12,12 +12,14 @@ function live_tool_handler(event) {
     	case 'emphasis':
     		break;
     	case 'pen':
+            //all timing is done insidie of these handlers
+            //could potentially move these things out
 		    pentimento.state.canvas.mousedown(pen_mousedown);
             pentimento.state.canvas.mousemove(pen_mousemove);
     		//var visual = $(window).mouseup(pen_mouseup);
             $(window).mouseup(function(event) {
                 console.log("MOUSEUPEVENT:");
-                console.log(event);
+                //console.log(event);
                 var visual = pen_mouseup(event);
                 pentimento.lecture_controller.add_visual(visual);
             }); //could coalesce these
@@ -46,7 +48,7 @@ function live_tool_handler(event) {
 		    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
     		break;
     	default:
-		pentimento.state.tool = null;
+		    pentimento.state.tool = null;
     		console.log('Unrecognized tool clicked, live tools');
     		console.log(this);
     }
@@ -80,6 +82,9 @@ function nonlive_tool_handler(event) {
     	case 'redraw':
     		break;
     	case 'insert':
+            pentimento.state.is_recording = false;
+            pentimento.state.lmb_down = false; //necessary?
+            
     		break;
     	case 'pan':
     		break;
@@ -98,9 +103,9 @@ $(document).ready(function() {
         var elt = $(event.target);
         if (elt.attr('data-label')==='begin') {
             if(!pentimento.state.tool) {
-                console.log('pentimento state tool pre- something');
+                //console.log('pentimento state tool pre- something');
                 $('button[data-toolname="pen"]').click();
-                console.log('pentimento state tool post- something');
+                //console.log('pentimento state tool post- something');
             }
             pentimento.state.is_recording=true;
         } else {
