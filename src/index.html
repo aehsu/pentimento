@@ -54,10 +54,16 @@
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
     <script type='text/javascript'>
         $(document).ready(function(){
+            var iw = $(window).width();
+            var ih = $(window).height();
+            $('#sketchpad')[0].width = 0.9 * iw;
+            $('#sketchpad')[0].height = 0.8 * ih;
+
             $('#slider').width($('canvas').width());
             $('#ticker').css('position', 'absolute'); //so many bad things.
             $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
             $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
+            console.log('top o the mornin to ya:'+$('#slider').position().top);
             $('#slider').slider({
                 disabled: true,
                 step:1,
@@ -88,6 +94,9 @@
             <button class="live-tool" data-toolname="clear">Clear</button>
             <button class="live-tool" data-toolname="pen">Pen</button>
             <button class="live-tool" data-toolname="dots">Dots</button>
+            <button class="nonlive-tool" data-toolname="rewind">Rewind[nl]</button>
+            <button class="nonlive-tool" data-toolname="play">Play[nl]</button>
+            <button class="nonlive-tool" data-toolname="stop">Stop[nl]</button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>

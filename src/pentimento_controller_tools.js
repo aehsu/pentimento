@@ -6,7 +6,7 @@ function live_tool_handler(event) {
     var tool = $(event.target).attr('data-toolname');
     //keep recording and switch tools
     //might need to do different clearings of events
-    clear_previous_handlers(tool);
+    clear_previous_handlers(tool); //need the name of the newly selected tool? should just clear all?
 
     switch(tool) {
     	case 'emphasis':
@@ -15,10 +15,10 @@ function live_tool_handler(event) {
             //all timing is done insidie of these handlers
             //could potentially move these things out
 		    pentimento.state.canvas.mousedown(pen_mousedown);
-            pentimento.state.canvas.mousemove(pen_mousemove);
+            pentimento.state.canvas.mousemove(pen_mousemove); //
     		//var visual = $(window).mouseup(pen_mouseup);
             $(window).mouseup(function(event) {
-                console.log("MOUSEUPEVENT:");
+                //console.log("MOUSEUPEVENT:");
                 //console.log(event);
                 var visual = pen_mouseup(event);
                 pentimento.lecture_controller.add_visual(visual);
@@ -58,6 +58,7 @@ function live_tool_handler(event) {
 function nonlive_tool_handler(event) {
     switch(tool) {
     	case 'play':
+            
     		break;
     	case 'play-stop':
     		break;
@@ -92,11 +93,30 @@ function nonlive_tool_handler(event) {
                 shift everything by appropriate amount
             */
     		break;
+        case 'rewind':
+
+            break;
     	case 'pan':
     		break;
     	default:
     		console.log('Unrecognized tool clicked, non live tools');
     		console.log(this);
+    }
+}
+
+function breaking_tool_handler(event) {
+    if (pentimento.state.is_recording != true) {
+        console.log('something went wrong. a breaking tool was triggered when not recording');
+    }
+    event.stopPropagation(); 
+    var tool = $(event.target).attr('data-toolname');
+    switch(tool) {
+        case 'play':
+            $('.recording-tool').click();
+            $('.nonlive-tool[data-toolname="play"]').click();
+            break;
+        case 'insert':
+            break;
     }
 }
 
@@ -116,6 +136,8 @@ $(document).ready(function() {
             pentimento.state.is_recording=true;
         } else {
             pentimento.state.is_recording = false;
+            pentimento.lecture_controller.stop_recording();
+            clear_previous_handlers(null);
         }
         $('.recording-tool').toggleClass('hidden');
     });

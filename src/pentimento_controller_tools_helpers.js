@@ -1,3 +1,10 @@
+function draw_point(coord) { //PORTED
+    var ctx = pentimento.state.context;
+    ctx.beginPath();
+    ctx.fillStyle = default_point_color;
+    ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
+}
+
 function draw_line(line) {
     var ctx = pentimento.state.context;
     ctx.beginPath();
@@ -31,6 +38,85 @@ function draw_line(line) {
     }
 }
 
+
+// Returns the location of the event on the canvas, as opposed to on the page
+function get_canvas_point(event){
+    var pt = {
+        x: event.pageX - pentimento.state.canvas.offset().left, // todo fix if canvas not in corner
+        y: event.pageY - pentimento.state.canvas.offset().top,
+        //t: global_time()
+    };
+
+    if (pentimento.state.pressure) {
+        pt.pressure = event.pressure;
+    }
+
+    return pt;
+}
+
+// Initializes a dummy visual
+function empty_visual(){
+    return {
+        type: '',
+        doesItGetDeleted: false,
+        tDeletion: 0,
+        tEndEdit: 0,
+        tMin: 0,
+        properties: {
+            'color': pentimento.state.color,
+            'width': pentimento.state.width,
+        },
+        vertices:[]
+    }
+}
+
+function draw_visuals(visuals){ // PORTED
+    for (var i=0; i<visuals.length; i++){
+        var visual = visuals[i];
+        
+        if (visual.type == VisualTypes.dots){
+            for(var j=0; j<visual.vertices.length; j++){
+                var vertex = visual.vertices[j]
+                draw_point(vertex);
+            }   
+        } else if(visual.type == VisualTypes.stroke){
+            for(var j=1; j<visual.vertices.length; j++){
+                var from = visual.vertices[j-1]
+                var to = visual.vertices[j]
+                var line = {
+                    from: from,
+                    to: to,
+                    properties: visual.properties
+                };  
+                draw_line(line);
+            }   
+        } else {
+            console.log('unknown visual type');
+        }   
+    }   
+}
+
+function draw_visual(visual) { //PORTED
+    if (visual.type == VisualTypes.dots) {
+        for(var j=0; j<visual.vertices.length; j++) {
+            var vertex = visual.vertices[j];
+            draw_point(vertex);
+        }   
+    } else if(visual.type == VisualTypes.stroke) {
+        for(var j=1; j<visual.vertices.length; j++){
+            var from = visual.vertices[j-1]
+            var to = visual.vertices[j]
+            var line = {
+                from: from,
+                to: to,
+                properties: visual.properties
+            };  
+            draw_line(line);
+        }   
+    }   
+}
+
+
 function clear_previous_handlers(new_tool) {
     var benign = ['clear', 'color', 'width'];
 
@@ -46,7 +132,7 @@ function clear_previous_handlers(new_tool) {
 }
 
 // Handler function for a mousedown on the canvas
-function pen_mousedown(event) {
+function pen_mousedown(event) { //pass off to mouse controller before coming here?
     if (! pentimento.state.is_recording){return;}
     var state = pentimento.state; //reference
 
