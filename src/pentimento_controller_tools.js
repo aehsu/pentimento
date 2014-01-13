@@ -20,8 +20,10 @@ function live_tool_handler(event) {
             $(window).mouseup(function(event) {
                 //console.log("MOUSEUPEVENT:");
                 //console.log(event);
-                var visual = pen_mouseup(event);
-                pentimento.lecture_controller.add_visual(visual);
+                if(pentimento.state.lmb_down) {
+                    var visual = pen_mouseup(event);
+                    pentimento.lecture_controller.add_visual(visual);
+                }
             }); //could coalesce these
             break;
     	case 'dots':
@@ -56,9 +58,38 @@ function live_tool_handler(event) {
 }
 
 function nonlive_tool_handler(event) {
+    var tool = $(event.target).attr('data-toolname');
+
     switch(tool) {
     	case 'play':
-            
+            pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
+            var slide_idx = 0;
+            var slide;
+            var time;
+            var visuals;
+            var visuals_idx;
+            var visual;
+            while(slide_idx<pentimento.lecture_controller.get_slides_length()) {
+                slide = pentimento.lecture_controller.get_slide(slide_idx);
+                visuals = slide.visuals;
+                time = 0;
+                visuals_idx=0;
+                while(time < slide.duration) {
+                    while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - slide.begin_time < time)) {
+                        (function() {
+                            var timing = visuals_idx*1000;
+                            var visual = visuals[visuals_idx];
+                            setTimeout(function() {
+                                draw_visual(visual);
+                            }, timing)
+                        })();
+                        //draw_visual(visuals[visuals_idx]);
+                        visuals_idx++;
+                    }
+                    time+=100;//ms
+                }
+                slide_idx++;
+            }
     		break;
     	case 'play-stop':
     		break;

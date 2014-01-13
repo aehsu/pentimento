@@ -1,3 +1,8 @@
+var VisualTypes = {
+    stroke: 'stroke',
+    dots: 'dots',
+};//maybe properties...
+
 function draw_point(coord) { //PORTED
     var ctx = pentimento.state.context;
     ctx.beginPath();
@@ -61,7 +66,7 @@ function empty_visual(){
         doesItGetDeleted: false,
         tDeletion: 0,
         tEndEdit: 0,
-        tMin: 0,
+        tMin: global_time(),
         properties: {
             'color': pentimento.state.color,
             'width': pentimento.state.width,
@@ -140,7 +145,7 @@ function pen_mousedown(event) { //pass off to mouse controller before coming her
     state.lmb_down = true;
 
     state.current_visual = empty_visual();
-    state.current_visual.type = 'stroke';//active_visual_type; have to do something based on the current tool
+    state.current_visual.type = VisualTypes.stroke;//active_visual_type; have to do something based on the current tool
     state.last_point = get_canvas_point(event);
     state.last_point['t'] = global_time() - pentimento.state.lecture_begin_time;//can move into get_canvas_point() function.
 

@@ -1,6 +1,7 @@
 pentimento.lecture_controller = new function() {
     var lecture;
     var slide_control;
+    var duration = 0;
 
     // function slide_controller(live_slide) {
     //     var slide = live_slide;
@@ -47,6 +48,7 @@ pentimento.lecture_controller = new function() {
 
     this.add_slide = function() {
         var new_slide = new slide();
+        new_slide.begin_time = global_time();
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide;
     };
@@ -77,6 +79,14 @@ pentimento.lecture_controller = new function() {
         //console.log(slide_control);
     };
 
+    this.get_slides_length = function() {
+        return lecture.slides.length;
+    }
+
+    this.get_slide = function(index) {
+        return lecture.slides[index];
+    }
+
     //DEBUGGING PURPOSES ONLY
     function log_lecture() {
         console.log(lecture);
@@ -90,6 +100,7 @@ pentimento.lecture_controller = new function() {
 
     lecture = new pentimento.lecture();
     pentimento.state.last_start = global_time();
+    this.add_slide();
     console.log('lecture created');
     //slide_control = new slide_controller(this.add_slide());
 };
