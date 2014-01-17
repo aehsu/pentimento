@@ -1,7 +1,6 @@
 pentimento.lecture_controller = new function() {
     var lecture;
     var slide_control;
-    var duration = 0;
 
     // function slide_controller(live_slide) {
     //     var slide = live_slide;
@@ -18,8 +17,8 @@ pentimento.lecture_controller = new function() {
 
     //move to elsewhere? high level function?
     function slide() {
-        this.begin_time = null; //unnecessary??
-        this.end_time = null;
+        this.last_start = null;
+        //this.end_time = null;
         this.visuals = [];
         this.duration = 0;
 
@@ -48,12 +47,12 @@ pentimento.lecture_controller = new function() {
 
     this.add_slide = function() {
         var new_slide = new slide();
-        new_slide.begin_time = global_time();
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide;
+        new_slide.last_start = global_time();//necessary? YES.
     };
 
-    this.insert_slide = function() {
+    this.insert_slide = function() { //TODO FIX.
         var new_slide = new slide();
         var before_index = this.slides.indexOf(pentimento.state.current_slide);
         slides.insert(before_index+1, new_slide);
@@ -66,9 +65,9 @@ pentimento.lecture_controller = new function() {
     };
 
     this.stop_recording = function() {
-        var diff = global_time() - pentimento.state.last_start;
-        lecture.duration = lecture.duration + diff;
-        pentimento.state.current_slide.duration = pentimento.state.current_slide.duration + diff;
+        var diff = global_time() - pentimento.state.current_slide.last_start;
+        pentimento.state.current_slide.duration += diff;
+        lecture.duration += diff;
     }
 
     this.add_visual = function(visual) {
@@ -91,16 +90,14 @@ pentimento.lecture_controller = new function() {
     function log_lecture() {
         console.log(lecture);
     }
-
     $(document).ready(function() {
         var logger = $('<button>LOG-LECTURE</button>');
         $(logger).click(log_lecture);
         $('body div:first').append(logger);
     });
+    //DEBUGGING PURPOSES ONLY
 
     lecture = new pentimento.lecture();
-    pentimento.state.last_start = global_time();
     this.add_slide();
     console.log('lecture created');
-    //slide_control = new slide_controller(this.add_slide());
 };

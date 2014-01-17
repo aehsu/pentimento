@@ -77,11 +77,11 @@ function nonlive_tool_handler(event) {
                 while(time < slide.duration) {
                     while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - slide.begin_time < time)) {
                         (function() {
-                            var timing = visuals_idx*1000;
+                            //var timing = 500;
                             var visual = visuals[visuals_idx];
                             setTimeout(function() {
                                 draw_visual(visual);
-                            }, timing)
+                            }, 500+visuals_idx*100)
                         })();
                         //draw_visual(visuals[visuals_idx]);
                         visuals_idx++;
