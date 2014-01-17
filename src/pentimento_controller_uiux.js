@@ -1,8 +1,8 @@
 $(document).ready(function() {
-
-    pentimento.uiux_controller = new function() {
+    //pentimento.uiux_controller = new function() { //keeps state and visuals in line with each other
+        //a lot of this can be moved to just a $(document).ready function...
         pentimento.state.canvas = $('#sketchpad'); //local definition to the controller
-        pentimento.state.is_recording = false;
+        pentimento.state.is_recording = false; //WHY IS THIS HERE?!?!
         pentimento.state.lmb_down = false; //move this to controller? very local.
         pentimento.state.last_point = null; //move this to controller? very local.
         pentimento.state.color = '#777';
@@ -41,5 +41,38 @@ $(document).ready(function() {
          window.addEventListener('touchend', on_mouseup, false);
          */
 
-    };//function() {}; 
+    //};
 });
+
+pentimento.uiux_controller = new function() {
+    var state = pentimento.state; //reference
+    var interval;
+    this.stop_recording = function() {
+        clearInterval(interval);
+        interval = null;
+        //some logic to update the slider
+    }
+
+    this.begin_recording = function() {
+        interval = setInterval(function() { //maybe could be faster if just subtract.
+            var time = state.current_time;
+            var min = Math.floor(time/60000);
+            time -= min*60000;
+            var sec = Math.floor(time/1000);
+            //time -= sec*1000;
+            var ms = time % 1000; //same as subtracting.
+            if(min==0) {
+                min = '00';
+            } else if(min<10){
+                min = '0'+min;
+            }
+            if(sec==0){
+                sec = '00';
+            } else if(sec<10) {
+                sec = '0'+sec;
+            }
+
+            $('#ticker').val(min + ':' + sec + '.' + ms);
+        }, state.interval_timing);
+    }
+};

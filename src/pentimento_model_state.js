@@ -20,5 +20,7 @@ pentimento.state = new function() {
 	this.pressure_color; //false
 	this.pressure_width; //false
     this.tool;
+    this.current_time = 0;
+    this.interval_timing = 10;//ms
 };
 

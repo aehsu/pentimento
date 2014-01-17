@@ -1,6 +1,9 @@
 pentimento.lecture_controller = new function() {
     var lecture;
-    var slide_control;
+    var state = pentimento.state;
+    var interval;
+    //var slide_control;
+    //var slide; ########???????
 
     // function slide_controller(live_slide) {
     //     var slide = live_slide;
@@ -18,7 +21,6 @@ pentimento.lecture_controller = new function() {
     //move to elsewhere? high level function?
     function slide() {
         this.last_start = null;
-        //this.end_time = null;
         this.visuals = [];
         this.duration = 0;
 
@@ -49,7 +51,7 @@ pentimento.lecture_controller = new function() {
         var new_slide = new slide();
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide;
-        new_slide.last_start = global_time();//necessary? YES.
+        new_slide.last_start = global_time();//necessary? YES???
     };
 
     this.insert_slide = function() { //TODO FIX.
@@ -64,18 +66,25 @@ pentimento.lecture_controller = new function() {
 
     };
 
+    function begin_timing() {
+        state.current_time += state.interval_timing;
+    }
+    this.begin_recording = function() {
+        if(!state.current_slide) {
+            this.add_slide();
+        }
+        interval = setInterval(begin_timing, state.interval_timing);
+    }
+
     this.stop_recording = function() {
+        clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
         var diff = global_time() - pentimento.state.current_slide.last_start;
         pentimento.state.current_slide.duration += diff;
         lecture.duration += diff;
     }
 
     this.add_visual = function(visual) {
-        //slide_control.add_visual(visual);
         pentimento.state.current_slide.visuals.push(visual);
-        //console.log(visual);
-        //console.log(lecture);
-        //console.log(slide_control);
     };
 
     this.get_slides_length = function() {
@@ -98,6 +107,5 @@ pentimento.lecture_controller = new function() {
     //DEBUGGING PURPOSES ONLY
 
     lecture = new pentimento.lecture();
-    this.add_slide();
     console.log('lecture created');
 };

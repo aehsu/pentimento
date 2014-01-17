@@ -17,7 +17,7 @@ function live_tool_handler(event) {
 		    pentimento.state.canvas.mousedown(pen_mousedown);
             pentimento.state.canvas.mousemove(pen_mousemove); //
     		//var visual = $(window).mouseup(pen_mouseup);
-            $(window).mouseup(function(event) {
+            $(window).mouseup(function(event) { //TODO FIX THIS TO BE MORE THE SAME.
                 //console.log("MOUSEUPEVENT:");
                 //console.log(event);
                 if(pentimento.state.lmb_down) {
@@ -75,8 +75,12 @@ function nonlive_tool_handler(event) {
                 time = 0;
                 visuals_idx=0;
                 while(time < slide.duration) {
-                    while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - slide.begin_time < time)) {
-                        (function() {
+                    var begin_time = 0;
+                    for(var i=0; i<slide_idx; i++) {
+                        begin_time += pentimento.lecture_controller.get_slide(i).duration;
+                    }
+                    while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - begin_time < time)) {
+                        (function() { //this is the worst. but actually. TODO GET THIS OUT
                             //var timing = 500;
                             var visual = visuals[visuals_idx];
                             setTimeout(function() {
@@ -159,15 +163,18 @@ $(document).ready(function() {
     $('.recording-tool').click(function(event) {
         var elt = $(event.target);
         if (elt.attr('data-label')==='begin') {
+            pentimento.state.is_recording=true;
             if(!pentimento.state.tool) {
                 //console.log('pentimento state tool pre- something');
                 $('button[data-toolname="pen"]').click();
                 //console.log('pentimento state tool post- something');
             }
-            pentimento.state.is_recording=true;
+            pentimento.lecture_controller.begin_recording();
+            pentimento.uiux_controller.begin_recording();
         } else {
             pentimento.state.is_recording = false;
             pentimento.lecture_controller.stop_recording();
+            pentimento.uiux_controller.stop_recording();
             clear_previous_handlers(null);
         }
         $('.recording-tool').toggleClass('hidden');

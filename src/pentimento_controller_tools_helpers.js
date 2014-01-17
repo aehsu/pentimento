@@ -62,11 +62,11 @@ function get_canvas_point(event){
 // Initializes a dummy visual
 function empty_visual(){
     return {
-        type: '',
-        doesItGetDeleted: false,
-        tDeletion: 0,
-        tEndEdit: 0,
-        tMin: global_time(),
+        type: null,
+        doesItGetDeleted: null,
+        tDeletion: null,
+        tEndEdit: null,
+        tMin: pentimento.state.current_time,
         properties: {
             'color': pentimento.state.color,
             'width': pentimento.state.width,
@@ -142,12 +142,13 @@ function pen_mousedown(event) { //pass off to mouse controller before coming her
     var state = pentimento.state; //reference
 
     event.preventDefault();
-    state.lmb_down = true;
+    state.lmb_down = true; //FUCK TODO FIX.
 
-    state.current_visual = empty_visual();
-    state.current_visual.type = VisualTypes.stroke;//active_visual_type; have to do something based on the current tool
-    state.last_point = get_canvas_point(event);
-    state.last_point['t'] = global_time() - pentimento.state.lecture_begin_time;//can move into get_canvas_point() function.
+    state.current_visual = empty_visual(); //necessary? move to local?
+    //state.current_visual.tMin = global_time() - pentimento.state.current_slide.last_start; //refactor this. please refactor this.
+    state.current_visual.type = VisualTypes.stroke;//active_visual_type; move to state? update empty visual based on this
+    state.last_point = get_canvas_point(event); //necessary? move to local?
+    state.last_point['t'] = global_time() - pentimento.state.current_slide.last_start;//can move into get_canvas_point() function.
 
     state.current_visual.vertices.push(state.last_point);
 //    if (active_visual_type == VisualTypes.dots) {
@@ -169,7 +170,7 @@ function pen_mousemove(event) {
         });
         
         state.last_point = cur_point;
-        state.last_point['t'] = global_time() - pentimento.state.lecture_begin_time;//can move into get_canvas_point() function.
+        state.last_point['t'] = global_time() - pentimento.state.current_slide.last_start;//can move into get_canvas_point() function.
         state.current_visual.vertices.push(cur_point);
     }
 }
