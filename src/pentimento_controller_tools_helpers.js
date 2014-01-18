@@ -121,6 +121,26 @@ function draw_visual(visual) { //PORTED
     }   
 }
 
+function update_visuals(time) { //just always take for state.current_time?
+    clear();
+    var visuals = [];
+    var running_time = 0;
+    var slide;
+    for(var i=0; i<pentimento.lecture_controller.get_slides_length(); i++) {
+        slide = pentimento.lecture_controller.get_slide(i)
+        if(running_time + slide.duration < time) {
+            visuals = visuals.concat(slide.visuals);
+            running_time += slide.duration;
+        } else {
+            for(visual in slide.visuals) {
+                if(slide.visuals[visual].tMin + running_time <= time) {
+                    visuals.push(slide.visuals[visual]);
+                }
+            }
+        }
+    }
+    draw_visuals(visuals);
+}
 
 function clear_previous_handlers(new_tool) {
     var benign = ['clear', 'color', 'width'];
@@ -134,6 +154,10 @@ function clear_previous_handlers(new_tool) {
         pentimento.state.canvas.off('mousemove');
         $(window).off('mouseup');
     }
+}
+
+function clear() {
+    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
 }
 
 // Handler function for a mousedown on the canvas

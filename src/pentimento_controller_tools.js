@@ -47,7 +47,7 @@ function live_tool_handler(event) {
     	case 'pan':
     		break;
     	case 'clear':
-		    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
+		    clear();
     		break;
     	default:
 		    pentimento.state.tool = null;
@@ -62,38 +62,48 @@ function nonlive_tool_handler(event) {
 
     switch(tool) {
     	case 'play':
-            pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-            var slide_idx = 0;
-            var slide;
-            var time;
-            var visuals;
-            var visuals_idx;
-            var visual;
-            while(slide_idx<pentimento.lecture_controller.get_slides_length()) {
-                slide = pentimento.lecture_controller.get_slide(slide_idx);
-                visuals = slide.visuals;
-                time = 0;
-                visuals_idx=0;
-                while(time < slide.duration) {
-                    var begin_time = 0;
-                    for(var i=0; i<slide_idx; i++) {
-                        begin_time += pentimento.lecture_controller.get_slide(i).duration;
-                    }
-                    while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - begin_time < time)) {
-                        (function() { //this is the worst. but actually. TODO GET THIS OUT
-                            //var timing = 500;
-                            var visual = visuals[visuals_idx];
-                            setTimeout(function() {
-                                draw_visual(visual);
-                            }, 500+visuals_idx*100)
-                        })();
-                        //draw_visual(visuals[visuals_idx]);
-                        visuals_idx++;
-                    }
-                    time+=100;//ms
+            //LOLOLOLOL CODE THAT'S SHITTY BUT WORKS
+            // var slide_idx = 0;
+            // var slide;
+            // var time;
+            // var visuals;
+            // var visuals_idx;
+            // var visual;
+            // while(slide_idx<pentimento.lecture_controller.get_slides_length()) {
+            //     slide = pentimento.lecture_controller.get_slide(slide_idx);
+            //     visuals = slide.visuals;
+            //     time = 0;
+            //     visuals_idx=0;
+            //     while(time < slide.duration) {
+            //         var begin_time = 0;
+            //         for(var i=0; i<slide_idx; i++) {
+            //             begin_time += pentimento.lecture_controller.get_slide(i).duration;
+            //         }
+            //         while((visuals_idx<visuals.length) && (visuals[visuals_idx].tMin - begin_time < time)) {
+            //             (function() { //this is the worst. but actually. TODO GET THIS OUT
+            //                 //var timing = 500;
+            //                 var visual = visuals[visuals_idx];
+            //                 setTimeout(function() {
+            //                     draw_visual(visual);
+            //                 }, 500+visuals_idx*100)
+            //             })();
+            //             //draw_visual(visuals[visuals_idx]);
+            //             visuals_idx++;
+            //         }
+            //         time+=100;//ms
+            //     }
+            //     slide_idx++;
+            // }
+            //code that's also possibly shitty and may not work, but is cleaner
+            var interval = setInterval(function() {
+                if(pentimento.state.current_time + 10 <= pentimento.lecture_controller.get_lecture_duration()) {
+                    update_visuals(pentimento.state.current_time);
+                    pentimento.uiux_controller.update_time(pentimento.state.current_time);
+                    pentimento.state.current_time+=10;
+                } else {
+                    clearInterval(interval);
                 }
-                slide_idx++;
-            }
+            }, 10);
     		break;
     	case 'play-stop':
     		break;
@@ -129,7 +139,7 @@ function nonlive_tool_handler(event) {
             */
     		break;
         case 'rewind':
-
+            
             break;
     	case 'pan':
     		break;

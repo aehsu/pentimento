@@ -52,6 +52,7 @@ pentimento.lecture_controller = new function() {
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide;
         new_slide.last_start = global_time();//necessary? YES???
+        console.log(new_slide.last_start);
     };
 
     this.insert_slide = function() { //TODO FIX.
@@ -66,21 +67,23 @@ pentimento.lecture_controller = new function() {
 
     };
 
-    function begin_timing() {
+    function do_timing() {
         state.current_time += state.interval_timing;
+        state.current_slide.duration += state.interval_timing;
     }
+
     this.begin_recording = function() {
         if(!state.current_slide) {
             this.add_slide();
+        } else {
+            state.current_slide.last_start = global_time(); //not used.
         }
-        interval = setInterval(begin_timing, state.interval_timing);
+        interval = setInterval(do_timing, state.interval_timing);
     }
 
     this.stop_recording = function() {
         clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
-        var diff = global_time() - pentimento.state.current_slide.last_start;
-        pentimento.state.current_slide.duration += diff;
-        lecture.duration += diff;
+        //lecture.duration += diff;
     }
 
     this.add_visual = function(visual) {
@@ -93,6 +96,25 @@ pentimento.lecture_controller = new function() {
 
     this.get_slide = function(index) {
         return lecture.slides[index];
+    }
+
+    this.get_lecture_duration = function() {
+        var time = 0;
+        for(slide in lecture.slides) {
+            time += lecture.slides[slide].duration;
+        }
+        return time;
+    }
+
+    this.get_slide_from_time = function(time) {
+        var total_duration=0;
+        for(slide in lecture.slides) {
+            if(time > total_duration && time < total_duration+lecture[slide].duration) {
+                return lecture[slide];
+            } else {
+                total_duration += lecture.slides[slide].duration;
+            }
+        }
     }
 
     //DEBUGGING PURPOSES ONLY
