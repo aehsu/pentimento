@@ -36,6 +36,12 @@ function live_tool_handler(event) {
                 pentimento.lecture_controller.add_visual(visual);
             }); //could coalesce these
     		break;
+        case 'new-slide':
+            if(pentimento.state.is_recording) {
+                clear();
+                pentimento.recording_controller.add_slide();
+            }
+            break;
     	case 'shape':
     		break;
     	case 'color':

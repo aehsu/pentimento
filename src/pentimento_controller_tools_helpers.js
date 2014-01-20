@@ -121,7 +121,7 @@ function draw_visual(visual) { //PORTED
     }   
 }
 
-function update_visuals(time) { //just always take for state.current_time?
+function update_visuals(time) { //just always take for state.current_time? //need to change to support multiple slides?
     clear();
     var visuals = [];
     var running_time = 0;
@@ -129,7 +129,6 @@ function update_visuals(time) { //just always take for state.current_time?
     for(var i=0; i<pentimento.lecture_controller.get_slides_length(); i++) {
         slide = pentimento.lecture_controller.get_slide(i)
         if(running_time + slide.duration < time) {
-            visuals = visuals.concat(slide.visuals);
             running_time += slide.duration;
         } else {
             for(visual in slide.visuals) {
@@ -137,6 +136,7 @@ function update_visuals(time) { //just always take for state.current_time?
                     visuals.push(slide.visuals[visual]);
                 }
             }
+            running_time+= slide.duration;
         }
     }
     draw_visuals(visuals);

@@ -25,21 +25,36 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         }
     };
 
-    function slide_change(from_page, to_page, t_audio) { //should this live with t_audio????
+    function slide_change(from_page, to_page) { //should this live with t_audio????
         this.from_page = from_page;
         this.to_page = to_page;
-        this.t_audio = t_audio;
+        //this.t_audio = t_audio;
     };
 
-    function add_slide() {
+    this.add_slide = function() {
+    	//some checking for whether or not to insert a new slide_change??
+    	if(lecture.slides.length != 0) {
+    		var idx = lecture.slides.indexOf(pentimento.state.current_slide);
+    		lecture.slide_changes.push(new slide_change(idx, idx+1));
+    		end_slide();
+    	}
         var new_slide = new slide();
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide; //local???? probs
-        new_slide.last_start = pentimento.state.current_time;//necessary? YES???
+        new_slide.last_start = pentimento.state.current_time;//necessary? YES??? NO????
     };
 
-    function end_slide() {
-    	pentimento.state.current_slide.duration = pentimento.state.current_time - pentimento.state.current_slide.last_start;//so baddd
+    function end_slide() { //jesus save me.
+    	pentimento.state.current_slide.duration = pentimento.state.current_time - pentimento.state.current_slide.last_start;//jesus. save me
+    	var idx = lecture.slides.indexOf(pentimento.state.current_slide);
+    	var t = 0;
+    	for(var i=0; i<idx; i++) {
+    		t+=lecture.slides[i].duration;
+    	}
+    	for(visual in pentimento.state.current_slide.visuals) {
+    		pentimento.state.current_slide.visuals[visual].tMin -= t;
+    	}
+    	pentimento.state.current_slide = null;
     }
 
     this.insert_slide = function() { //TODO FIX.
@@ -61,7 +76,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 	this.do_record = function() {
 		lecture = new pentimento.lecture();
 		recording_params = pentimento.lecture_controller.get_recording_params();
-		add_slide();
+		this.add_slide();
 	};
 
 	this.stop_record = function() {

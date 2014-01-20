@@ -56,7 +56,7 @@ pentimento.lecture_controller = new function() {
         } else {
             var total_duration = 0;
             for(slide in lecture.slides) { //something...equals...something...
-                if (state.current_time > total_duration && state.current_time < total_duration+lecture[slide].duration) {
+                if (state.current_time >= total_duration && state.current_time < total_duration+lecture.slides[slide].duration) {
                     return {
                         'current_slide': slide,
                         'time_in_slide': state.current_time - total_duration
@@ -81,7 +81,7 @@ pentimento.lecture_controller = new function() {
             value.tMin += from_slide.duration;
         });
         to_slide.visuals = before.concat(from_slide.visuals.concat(after));
-
+        to_slide.duration += from_slide.duration;
         //update duration
     }
 
@@ -91,7 +91,7 @@ pentimento.lecture_controller = new function() {
         } else { //what if recording has slide_changes? ambiguous.
             var slide = lecture.slides[params['current_slide']];
 
-            insert_visuals_into_slide(slide, recording.slide[0], params['time_in_slide']);
+            insert_visuals_into_slide(slide, recording.slides[0], params['time_in_slide']);
             //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
             //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
             //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
