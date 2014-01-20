@@ -35,8 +35,13 @@ pentimento.uiux_controller = new function() {
     }
 
     this.begin_recording = function() {
-        interval = setInterval(function() { //maybe could be faster if just subtract.
-            update_ticker(pentimento.state.current_time);
+        $('#slider').slider("option", {
+            disabled: true
+        });
+
+        interval = setInterval(function() {
+            state.current_time += state.interval_timing;
+            update_ticker(state.current_time);
         }, state.interval_timing);
     }
 

@@ -153,6 +153,7 @@ function clear_previous_handlers(new_tool) {
         pentimento.state.canvas.off('mousedown');
         pentimento.state.canvas.off('mousemove');
         $(window).off('mouseup');
+        pentimento.state.tool = null;
     }
 }
 

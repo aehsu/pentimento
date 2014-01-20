@@ -22,7 +22,7 @@ function live_tool_handler(event) {
                 //console.log(event);
                 if(pentimento.state.lmb_down) {
                     var visual = pen_mouseup(event);
-                    pentimento.lecture_controller.add_visual(visual);
+                    pentimento.recording_controller.add_visual(visual);
                 }
             }); //could coalesce these
             break;
@@ -95,15 +95,15 @@ function nonlive_tool_handler(event) {
             //     slide_idx++;
             // }
             //code that's also possibly shitty and may not work, but is cleaner
-            var interval = setInterval(function() {
-                if(pentimento.state.current_time + 10 <= pentimento.lecture_controller.get_lecture_duration()) {
+            var interval = setInterval(function() { //TODO fix.
+                if(pentimento.state.current_time + 5 <= pentimento.lecture_controller.get_lecture_duration()) {
                     update_visuals(pentimento.state.current_time);
                     pentimento.uiux_controller.update_time(pentimento.state.current_time);
-                    pentimento.state.current_time+=10;
+                    pentimento.state.current_time+=5;
                 } else {
                     clearInterval(interval);
                 }
-            }, 10);
+            }, 5);
     		break;
     	case 'play-stop':
     		break;
@@ -179,11 +179,11 @@ $(document).ready(function() {
                 $('button[data-toolname="pen"]').click();
                 //console.log('pentimento state tool post- something');
             }
-            pentimento.lecture_controller.begin_recording();
+            pentimento.recording_controller.do_record();
             pentimento.uiux_controller.begin_recording();
         } else {
             pentimento.state.is_recording = false;
-            pentimento.lecture_controller.stop_recording();
+            pentimento.recording_controller.stop_record();
             pentimento.uiux_controller.stop_recording();
             clear_previous_handlers(null);
         }

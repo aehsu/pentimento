@@ -17,63 +17,8 @@ pentimento.lecture_controller = new function() {
     //         slide
     //     }
     // };
-
-    //move to elsewhere? high level function?
-    function slide() {
-        this.last_start = null;
-        this.visuals = [];
-        this.duration = 0;
-
-        this.add_visual = function(visual) {
-            this.VISUALS.push(visual);
-        }
-        this.get_visuals = function() {
-            return this.VISUALS;
-        }
-        this.get_visual_by_index = function(index) {
-            return this.VISUALS[index];
-        }
-        this.insert_visual_at_index = function(visual, index) {
-
-        }
-        this.insert_visual_at_time = function(visual, t_audio) { //t_audio, t_visual?
-
-        }
-    };
-
-    function slide_change(from_page, to_page, t_audio) { //should this live with t_audio????
-        this.from_page = from_page;
-        this.to_page = to_page;
-        this.t_audio = t_audio;
-    };
-
-    this.add_slide = function() {
-        var new_slide = new slide();
-        lecture.slides.push(new_slide);
-        pentimento.state.current_slide = new_slide;
-        new_slide.last_start = global_time();//necessary? YES???
-        console.log(new_slide.last_start);
-    };
-
-    this.insert_slide = function() { //TODO FIX.
-        var new_slide = new slide();
-        var before_index = this.slides.indexOf(pentimento.state.current_slide);
-        slides.insert(before_index+1, new_slide);
-        //pentimento.state.change_state('current_slide', new_slide);
-        return new_slide;
-    };
-
-    this.change_slide = function() {
-
-    };
-
-    function do_timing() {
-        state.current_time += state.interval_timing;
-        state.current_slide.duration += state.interval_timing;
-    }
-
     this.begin_recording = function() {
-        if(!state.current_slide) {
+        if(!state.current_slide) { //jesus save me
             this.add_slide();
         } else {
             state.current_slide.last_start = global_time(); //not used.
@@ -85,10 +30,6 @@ pentimento.lecture_controller = new function() {
         clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
         //lecture.duration += diff;
     }
-
-    this.add_visual = function(visual) {
-        pentimento.state.current_slide.visuals.push(visual);
-    };
 
     this.get_slides_length = function() {
         return lecture.slides.length;
@@ -106,11 +47,70 @@ pentimento.lecture_controller = new function() {
         return time;
     }
 
-    this.get_slide_from_time = function(time) {
+    this.get_recording_params = function() {
+        if(!state.current_slide) { //jesus save me. jesus, save me.
+            return {
+                'current_slide': null,
+                'time_in_slide': null
+            };
+        } else {
+            var total_duration = 0;
+            for(slide in lecture.slides) { //something...equals...something...
+                if (state.current_time > total_duration && state.current_time < total_duration+lecture[slide].duration) {
+                    return {
+                        'current_slide': slide,
+                        'time_in_slide': state.current_time - total_duration
+                    };
+                } else {
+                    total_duration += lecture.slides[slide].duration;
+                }
+            }
+            //alert('should never get here');
+            //return false;
+        }
+    }
+
+    function insert_visuals_into_slide(to_slide, from_slide, insertion_time) { //should have insert_audio?
+        var before = [];
+        var after = to_slide.visuals;
+
+        while(after.length!=0 && after[0].tMin < insertion_time) {
+            before.push(after.shift());
+        }
+        $.each(after, function(index, value) {//shift
+            value.tMin += from_slide.duration;
+        });
+        to_slide.visuals = before.concat(from_slide.visuals.concat(after));
+
+        //update duration
+    }
+
+    this.insert_recording = function(recording, params) {
+        if(params['current_slide']==null) {
+            lecture = recording;
+        } else { //what if recording has slide_changes? ambiguous.
+            var slide = lecture.slides[params['current_slide']];
+
+            insert_visuals_into_slide(slide, recording.slide[0], params['time_in_slide']);
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+            //TODO INSERT SOME VISUALS FROM DIFFERENT SLIDES RIGHT AFTER
+
+
+        }
+    }
+
+
+
+    this.get_slide_from_time = function(time) { //returns a copy; makes original immutable. necessary???
         var total_duration=0;
         for(slide in lecture.slides) {
             if(time > total_duration && time < total_duration+lecture[slide].duration) {
-                return lecture[slide];
+                return $.extend(true, {}, lecture[slide]); //private
             } else {
                 total_duration += lecture.slides[slide].duration;
             }
