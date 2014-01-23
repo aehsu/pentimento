@@ -45,7 +45,7 @@ pentimento.uiux_controller = new function() {
         }, state.interval_timing);
     }
 
-    this.update_time = function(time) {
+    this.update_time = function(time) { //need to add multi-slide support
         state.current_time = time;
         update_ticker(time);
         $('#slider').slider('value', time);
@@ -88,15 +88,20 @@ $(document).ready(function() {
         }
 
         $('#slider').slider({
-            slide: function(event, ui) {
-                pentimento.uiux_controller.update_time(ui.value);
-                update_visuals(ui.value);
-            },
-            stop: function(event, ui) {
-                pentimento.uiux_controller.update_time(ui.value);
-                update_visuals(pentimento.state.current_time);
-            }
-        });
+                disabled: true,
+                step:1,
+                range: 'min',
+                slide: function(event, ui) {
+                    pentimento.uiux_controller.update_time(ui.value);
+                    update_visuals(ui.value);
+                },
+                stop: function(event, ui) {
+                    pentimento.uiux_controller.update_time(ui.value);
+                    update_visuals(pentimento.state.current_time);
+                }
+            });
+
+        //$('#slider').slider();
         /* PORTED
          //ignore touch events for now
          canvas = $("#canv")[0]

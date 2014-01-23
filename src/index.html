@@ -64,11 +64,6 @@
             $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
             $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
             console.log('top o the mornin to ya:'+$('#slider').position().top);
-            $('#slider').slider({
-                disabled: true,
-                step:1,
-                range: 'min'
-            });
             //temporary one-time off's to do initialization correctly..."correctly"
         })
     </script>
@@ -92,13 +87,22 @@
             <button class="recording-tool" data-label='begin'>Record</button>
             <button class="recording-tool hidden" data-label='stop'>Stop Record</button>
             
-            <button class="live-tool" data-toolname="clear">Clear</button>
+            <button class="live-tool" data-toolname="clear">Clear</button> <!-- there should be two version of this..? maybe not. maybe just create new slides -->
             <button class="live-tool" data-toolname="pen">Pen</button>
             <button class="live-tool" data-toolname="dots">Dots</button>
-            <button class="live-tool" data-toolname="new-slide">New Slide</button>
-            <button class="nonlive-tool" data-toolname="rewind">Rewind[nl]</button>
+            <button class="live-tool" data-toolname="add-slide">Add Slide</button>
+
+            <!--<button class="live-tool" data-toolname="full-rewind"> |< </button>
+            <button class="live-tool" data-toolname="rewind"> < </button>
+            <button class="live-tool" data-toolname="fastforward"> > </button>
+            <button class="live-tool" data-toolname="full-fastforward"> >| </button>-->
+
+            <button class="nonlive-tool" data-toolname="full-rewind"> |< </button>
+            <button class="nonlive-tool" data-toolname="rewind"> < </button>
             <button class="nonlive-tool" data-toolname="play">Play[nl]</button>
-            <button class="nonlive-tool" data-toolname="stop">Stop[nl]</button>
+            <button class="nonlive-tool hidden" data-toolname="stop">Stop[nl]</button>
+            <button class="nonlive-tool" data-toolname="fastforward"> > </button>
+            <button class="nonlive-tool" data-toolname="full-fastforward"> >| </button>
         </div>
         <div>
             <canvas id='sketchpad'></canvas>

@@ -33,9 +33,10 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 
     this.add_slide = function() {
     	//some checking for whether or not to insert a new slide_change??
-    	if(lecture.slides.length != 0) {
+
+    	if(lecture.slides.length != 0) { //maybe we need a more robust check mechanism...???
     		var idx = lecture.slides.indexOf(pentimento.state.current_slide);
-    		lecture.slide_changes.push(new slide_change(idx, idx+1));
+    		lecture.slide_changes.push(new slide_change(idx, idx+1)); //at this point, if you insert a slide in the middle, this will mess up other slide_change events.
     		end_slide();
     	}
         var new_slide = new slide();
@@ -45,7 +46,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     };
 
     function end_slide() { //jesus save me.
-    	pentimento.state.current_slide.duration = pentimento.state.current_time - pentimento.state.current_slide.last_start;//jesus. save me
+    	pentimento.state.current_slide.duration += pentimento.state.current_time - pentimento.state.current_slide.last_start;//jesus. save me
     	var idx = lecture.slides.indexOf(pentimento.state.current_slide);
     	var t = 0;
     	for(var i=0; i<idx; i++) {

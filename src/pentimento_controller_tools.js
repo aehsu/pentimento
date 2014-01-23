@@ -1,8 +1,5 @@
 function live_tool_handler(event) {
-    //event.stopImmediatePropagation(); difference?!
     event.stopPropagation(); 
-    //console.log('EVENT: ');
-    //console.log(event);
     var tool = $(event.target).attr('data-toolname');
     //keep recording and switch tools
     //might need to do different clearings of events
@@ -18,8 +15,6 @@ function live_tool_handler(event) {
             pentimento.state.canvas.mousemove(pen_mousemove); //
     		//var visual = $(window).mouseup(pen_mouseup);
             $(window).mouseup(function(event) { //TODO FIX THIS TO BE MORE THE SAME.
-                //console.log("MOUSEUPEVENT:");
-                //console.log(event);
                 if(pentimento.state.lmb_down) {
                     var visual = pen_mouseup(event);
                     pentimento.recording_controller.add_visual(visual);
@@ -36,7 +31,7 @@ function live_tool_handler(event) {
                 pentimento.lecture_controller.add_visual(visual);
             }); //could coalesce these
     		break;
-        case 'new-slide':
+        case 'add-slide':
             if(pentimento.state.is_recording) {
                 clear();
                 pentimento.recording_controller.add_slide();
@@ -65,6 +60,7 @@ function live_tool_handler(event) {
 
 function nonlive_tool_handler(event) {
     var tool = $(event.target).attr('data-toolname');
+    var interval;
 
     switch(tool) {
     	case 'play':
@@ -101,17 +97,18 @@ function nonlive_tool_handler(event) {
             //     slide_idx++;
             // }
             //code that's also possibly shitty and may not work, but is cleaner
-            var interval = setInterval(function() { //TODO fix.
-                if(pentimento.state.current_time + 5 <= pentimento.lecture_controller.get_lecture_duration()) {
+            interval = setInterval(function() { //TODO fix.
+                if(pentimento.state.current_time + 95 <= pentimento.lecture_controller.get_lecture_duration()) {
                     update_visuals(pentimento.state.current_time);
                     pentimento.uiux_controller.update_time(pentimento.state.current_time);
-                    pentimento.state.current_time+=5;
+                    pentimento.state.current_time+=95;
                 } else {
                     clearInterval(interval);
                 }
-            }, 5);
+            }, 95);
     		break;
-    	case 'play-stop':
+    	case 'stop':
+            clearInterval(interval);
     		break;
     	case 'hyperlink':
     		break;
@@ -174,6 +171,7 @@ function breaking_tool_handler(event) {
 $(document).ready(function() {
     $('.live-tool').click(live_tool_handler);    
 
+    $('.live-tool').addClass('hidden');
     $('.nonlive-tool').click(nonlive_tool_handler);
     
     $('.recording-tool').click(function(event) {
@@ -194,5 +192,7 @@ $(document).ready(function() {
             clear_previous_handlers(null);
         }
         $('.recording-tool').toggleClass('hidden');
+        $('.live-tool').toggleClass('hidden');
+        $('.nonlive-tool').toggleClass('hidden');
     });
 });
