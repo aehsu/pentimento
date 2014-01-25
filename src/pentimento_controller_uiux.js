@@ -30,6 +30,13 @@ pentimento.uiux_controller = new function() {
         } else if(sec<10) {
             sec = '0'+sec;
         }
+        if(ms==0) {
+            ms = '000';
+        } else if(ms<10) {
+            ms = '00'+ms;
+        } else if(ms<100) {
+            ms = '0'+ms;
+        }
 
         $('#ticker').val(min + ':' + sec + '.' + ms);
     }

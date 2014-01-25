@@ -85,6 +85,14 @@ pentimento.lecture_controller = new function() {
             }
 
             lecture.slides = before.concat(recording.slides.concat(after));
+            //some logic. the timing is wrong for this
+            //if just one slide in recording.slides to begin with, no change.
+            //else we gotta shift 
+            if(recording.slides.length!=0) {
+                //accumulate times up to sum of all in params['current_slide'] and
+                //all of recording.slides
+                //TODO TODO TODO TODO TODO
+            }
 
             //shift slide_change events as well.
             //shift slide_change events as well.

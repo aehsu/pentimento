@@ -74,16 +74,25 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 	};
 
 	this.stop_record = function() {
+        console.log('stop_record function called');
+        console.log('recording params value {"current_slide":'+recording_params['current_slide']+', "time_in_slide":'+recording_params['time_in_slide']);
 		end_slide();
 
         var t = 0;
         for(var i=0; i<lecture.slides.length; i++) {
             var slide = lecture.slides[i];
+            console.log('the duration of slide '+i+' is:' +slide.duration);
             for(visual in slide.visuals) {
                 slide.visuals[visual].tMin-=t;
             }
             t+=slide.duration;
         }
+        console.log('some sanity checking happening');
+        if(lecture.slides[0].visuals[0] && lecture.slides[1].visuals[1]) {
+            console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' lecture.slides[0].visuals[1].tMin);
+        }
+        var tmp = lecture.slides[lecture.slides.length-1].visuals;
+        console.log('tMin for last visual' + tmp[tmp.length-1].tMin);
 
 		pentimento.lecture_controller.insert_recording(lecture, recording_params);
 		recording_params = null;
