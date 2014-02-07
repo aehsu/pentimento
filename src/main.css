@@ -1,0 +1,87 @@
+canvas {
+    border: 1px solid black;
+    cursor: crosshair;
+}
+button {
+    padding: 10px;
+}
+
+#slider{
+    width:300px;
+    float:left;
+    margin-top:-5px;
+    border-radius:0;
+    height:5px;
+    position:absolute;
+}
+
+#slider .tick {
+    z-index:1;
+    background: #4f3;
+    border: none;
+    position: absolute;
+    height: 100%;
+    width: 2px;
+    left: 0%;
+    opacity: .3;
+}
+
+#slider .ui-slider-handle {
+    width: 0.6em;
+    border: none;
+    background: #999;
+    height: 300%;
+    margin-top:-5px;
+    top: 0;
+    margin-left: -0.3em;
+}
+
+#slider .ui-slider-range {
+    background:green;
+}
+
+.hidden {
+    display:none;
+}
+
+.top-menu{
+    display:inline;
+    vertical-align: middle;
+}
+
+.top-button{
+    vertical-align: middle;
+}
+
+fieldset > *{
+    display:inline-block;
+}
+
+.inline{
+    display: inline;
+}
+.center{
+    vertical-align: middle;
+    height: 40px;
+}
+
+label{
+    word-wrap: normal;
+    width: 50px;
+}
+.left-col{
+    width: 15%;
+    text-align: center;
+    float:left;
+}
+
+.container{
+    overflow: hidden;
+}
+
+/*input .image{
+    width:40px;
+}*/
+/*.side-menu{
+    display:inline-block;
+}*/
