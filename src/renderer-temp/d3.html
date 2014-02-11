@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script src="deblur2/deblur2.js"></script>
+        <style>
+            .clickable {
+                cursor: pointer;
+                opacity: 0;
+            }
+            .clickable:hover {
+                opacity: 0.2;
+            }
+        </style>
+    </head>
+    <body style="text-align:center;padding:0;margin:0">
+        <svg style="height:100%;padding:0;margin:0"></svg>
+    </body>
+    <script>
+        var svg = d3.select('svg');
+        var g = svg.append('g');
+        svg.style('width', parseInt(svg.style('height'))/9*16);
+        
+        var visuals = [];
+        for (var i in lecture.visuals)
+            if (lecture.visuals[i].type === 'stroke')
+                visuals.push(lecture.visuals[i]);
+        var scale = parseInt(svg.style('width'))/lecture.width;
+        
+        g.attr('transform', 'scale('+scale+')');
+        
+        var brush = d3.svg.line()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return lecture.height-d.y; });
+        var calligraphize = function(visual) {
+            var points = [];
+            var pointsr = [];
+            for (var i in visual.vertices) {
+                var width = visual.vertices[i].pressure*2;
+                points.push({x: visual.vertices[i].x+width, y: visual.vertices[i].y+width});
+                pointsr.push({x: visual.vertices[i].x-width, y: visual.vertices[i].y-width});
+            }
+            pointsr.reverse();
+            return points.concat(pointsr);
+        };
+        var strokes = g.selectAll('.stroke')
+            .data(visuals)
+            .enter().append('path')
+            .attr('class', 'stroke')
+            .datum(calligraphize)
+            .attr('d', brush)
+            .attr('stroke', 'black')
+            .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 1)
+            .attr('fill', 'black');
+        var strokes = g.selectAll('.clickable')
+            .data(visuals)
+            .enter().append('path')
+            .attr('class', 'stroke clickable')
+            .datum(calligraphize)
+            .attr('d', brush)
+            .attr('stroke', 'black')
+            .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 10)
+            .attr('fill', 'black')
+            .on('click', function(d) {
+            });
+        
+        d3.select(window).on('resize', function() {
+            svg.style('width', parseInt(svg.style('height'))/9*16);
+            scale = parseInt(svg.style('width'))/lecture.width;
+            g.attr('transform', 'scale('+scale+')');
+        });
+        
+        var dx=0, dy=0;
+        d3.select(window).on('mousewheel', function() {
+            dx += d3.event.wheelDeltaX;
+            dy += d3.event.wheelDeltaY;
+            g.attr('transform', g.attr('transform').replace(/translate\(.*\)/, '')+' translate('+dx+','+dy+')');
+        });
+    </script>
+</html>
