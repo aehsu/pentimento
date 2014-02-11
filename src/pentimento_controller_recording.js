@@ -89,7 +89,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         }
         console.log('some sanity checking happening');
         if(lecture.slides[0].visuals[0] && lecture.slides[1].visuals[1]) {
-            console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' lecture.slides[0].visuals[1].tMin);
+            console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' + lecture.slides[0].visuals[1].tMin);
         }
         var tmp = lecture.slides[lecture.slides.length-1].visuals;
         console.log('tMin for last visual' + tmp[tmp.length-1].tMin);
