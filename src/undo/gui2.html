@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="gui2.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src = "gui2.js"></script>
+    <script src = 'undo.js'></script>
+    <script src = 'compatibility.js'></script>
+    <script src = 'helpers_and_globals.js'></script>
+    <script src = 'helpers_tests.js'></script>
+    <script src = 'errors.js'></script>
+    <script src = 'gui2_test.js'></script>
+    <script>
+        $(document).ready(function(){
+            gui2test();
+        });
+    </script>
+</head>
+
+<body>
+    <div id='edit-controls'>
+        Text-color: textColorDropdown &nbsp; 
+        Font-size: sizeDropdown &nbsp; 
+        Background-color: bgColorDropdown
+    </div>
+    <div id='example-text'>
+        Example text.
+    </div>
+    <div id='undo-controls'>
+        <button type='button' class='undo'>Undo </button>
+        <button type='button' class='redo'>Redo </button>
+        <br/>
+        <button type='button' id='start' class='group1'>Start Group1</button>
+        <button type='button' id='end' class='group1'>End Group1</button>
+        <button type='button' id='undo' class='group1'>Undo Group1</button>
+        <button type='button' id='redo' class='group1'>Redo Group1</button>
+        <br/>
+        <button type='button' id='start' class='group2'>Start Group2</button>
+        <button type='button' id='end' class='group2'>End Group2</button>
+        <button type='button' id='undo' class='group2'>Undo Group2</button>
+        <button type='button' id='redo' class='group2'>Redo Group2</button>
+        <br/>
+        <button type='button' id='start' class='group3'>Start Group3</button>
+        <button type='button' id='end' class='group3'>End Group3</button>
+        <button type='button' id='undo' class='group3'>Undo Group3</button>
+        <button type='button' id='redo' class='group3'>Redo Group3</button>
+    </div>
+
+
+
+
+</body>
+</html>
