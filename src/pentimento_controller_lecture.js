@@ -1,21 +1,6 @@
 pentimento.lecture_controller = new function() {
     var lecture;
     var state = pentimento.state;
-    var interval;
-
-    this.begin_recording = function() {
-        if(!state.current_slide) { //jesus save me
-            this.add_slide();
-        } else {
-            state.current_slide.last_start = global_time(); //not used.
-        }
-        interval = setInterval(do_timing, state.interval_timing);
-    }
-
-    this.stop_recording = function() {
-        clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
-        //lecture.duration += diff;
-    }
 
     this.get_slides_length = function() {
         return lecture.slides.length;
@@ -25,12 +10,44 @@ pentimento.lecture_controller = new function() {
         return lecture.slides[index];
     }
 
+    this.get_slide_duration = function(index) {
+        return lecture.slides[index].duration;
+    }
+
+    this.get_slide_from_time = function(time) { //returns a copy; makes original immutable. necessary???
+        var total_duration=0; //something...something...equals
+        for(slide in lecture.slides) {
+            if(time >= total_duration && time <= total_duration+lecture.slides[slide].duration) {
+                return lecture.slides[slide];
+                //return $.extend(true, {}, lecture[slide]); //private
+            } else {
+                total_duration += lecture.slides[slide].duration;
+            }
+        }
+    }
+
     this.get_lecture_duration = function() {
         var time = 0;
         for(slide in lecture.slides) {
             time += lecture.slides[slide].duration;
         }
         return time;
+    }
+
+    this.rewind = function() {
+        //should really seek a more previous slide change
+        var idx = lecture.slides.indexOf(state.current_slide);
+        var t = 0;
+        for(var i=0; i<idx; i++) {
+            t += lecture.slides[i].duration;
+        }
+        state.current_time = t+1;//so hackish
+    }
+
+    this.full_rewind = function() {
+        state.current_time = 0;
+        //check if slide
+        state.current_slide = lecture.slides[0];
     }
 
     this.get_recording_params = function() {
@@ -57,16 +74,19 @@ pentimento.lecture_controller = new function() {
     }
 
     function insert_visuals_into_slide(to_slide, from_slide, insertion_time) { //should have insert_audio?
-        var before = [];
-        var after = to_slide.visuals;
+        var before_visuals = [];
+        var after_visuals = to_slide.visuals;
 
-        while(after.length!=0 && after[0].tMin < insertion_time) {
-            before.push(after.shift());
+        while(after_visuals.length!=0 && after_visuals[0].tMin < insertion_time) {
+            before_visuals.push(after_visuals.shift());
         }
-        $.each(after, function(index, value) {//shift
+        $.each(after_visuals, function(index, value) {//shift
             value.tMin += from_slide.duration;
         });
-        to_slide.visuals = before.concat(from_slide.visuals.concat(after));
+        $.each(from_slide.visuals, function(index, value) {
+            value.tMin += insertion_time;
+        })
+        to_slide.visuals = before_visuals.concat(from_slide.visuals.concat(after_visuals));
         to_slide.duration += from_slide.duration;
     }
 
@@ -107,21 +127,10 @@ pentimento.lecture_controller = new function() {
             //need to shift the current slide change also. more such to fixxxxx
         }
 
-        pentimento.state.current_slide = get_slide_from_time(state.current_time);
+        pentimento.state.current_slide = this.get_slide_from_time(pentimento.state.current_time);
     }
 
 
-    function get_slide_from_time(time) { //returns a copy; makes original immutable. necessary???
-        var total_duration=0; //something...something...equals
-        for(slide in lecture.slides) {
-            if(time >= total_duration && time <= total_duration+lecture.slides[slide].duration) {
-                return lecture.slides[slide];
-                //return $.extend(true, {}, lecture[slide]); //private
-            } else {
-                total_duration += lecture.slides[slide].duration;
-            }
-        }
-    }
 
     //DEBUGGING PURPOSES ONLY
     function log_lecture() {
