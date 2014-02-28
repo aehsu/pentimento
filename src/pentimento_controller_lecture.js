@@ -4,6 +4,7 @@ pentimento.lecture_controller = new function() {
     var interval;
     var audio_timeline_scale = 10;
     var wavesurfer = Object.create(WaveSurfer);
+    var recordRTC = RecordRTC(mediaStream);
 
     this.begin_recording = function() {
         if(!state.current_slide) { //jesus save me
@@ -11,12 +12,22 @@ pentimento.lecture_controller = new function() {
         } else {
             state.current_slide.last_start = global_time(); //not used.
         }
+
+        // Start the audio recording
+        recordRTC.startRecording();
+
         interval = setInterval(do_timing, state.interval_timing);
     }
 
     this.stop_recording = function() {
         clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
         //lecture.duration += diff;
+
+        // Stop the audio recording
+        recordRTC.stopRecording(function(audioURL) {
+           mediaElement.src = audioURL;
+           console.log(mediaElement)
+        });
     }
 
     this.get_slides_length = function() {
@@ -177,7 +188,6 @@ pentimento.lecture_controller = new function() {
         // Test
         var test_audio_track = new Audio_track();
         var test_segment = new Audio_segment("clair_de_lune.mp3", 0, 500, 0, 500);
-        console.log(test_audio_track);
         test_audio_track.audio_segments = [test_segment];
         create_audio_track(test_audio_track);
         create_audio_segment(test_segment);
