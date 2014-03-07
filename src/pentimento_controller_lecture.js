@@ -109,6 +109,44 @@ pentimento.lecture_controller = new function() {
         to_slide.duration += from_slide.duration;
     }
 
+    this.create_audio_track = function(audio_track) {
+        var new_track_id = "track-" + $("#audio_timeline").children(".audio_track").length;
+        var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
+        new_track.data(audio_track);
+        $("#audio_timeline").append(new_track);
+    };
+
+    this.create_audio_segment = function(audio_segment) {
+        var new_segment_id = "segment-" + $("#track-0").children(".audio_segment").length;
+        var clip = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"}).data(audio_segment);
+        $("#track-0").append(clip);
+
+        clip.css({ "padding": 0, "width": "600", "height": $("#audio_timeline").height()/2 });
+        clip.draggable({
+            containment: "#track-0",
+            axis: "x"
+        })
+        .resizable({handles: "e, w", minWidth: 1});
+
+        
+        //load waveform
+        var wavesurfer = Object.create(WaveSurfer);
+        console.log("#" + new_segment_id)
+
+        wavesurfer.init({
+            container: document.querySelector("#" + new_segment_id),
+            waveColor: 'violet',
+            progressColor: 'purple',
+            height: $("#audio_timeline").height()/2
+        });
+
+        wavesurfer.on('ready', function () {
+            wavesurfer.play();
+        });
+
+        wavesurfer.load(audio_segment.audio_resource);
+    }
+
     this.insert_recording = function(recording, params) {
         if(params['current_slide']==null) {
             lecture = recording;
@@ -149,69 +187,29 @@ pentimento.lecture_controller = new function() {
         pentimento.state.current_slide = this.get_slide_from_time(pentimento.state.current_time);
     }
 
+};
 
 
-    //DEBUGGING PURPOSES ONLY
-    function log_lecture() {
-        console.log(lecture);
-        window.lec = lecture;
-    }
-    $(document).ready(function() {
-        var logger = $('<button>LOG-LECTURE</button>');
-        $(logger).click(log_lecture);
-        $('body div:first').append(logger);
+//DEBUGGING PURPOSES ONLY
+function log_lecture() {
+    console.log(lecture);
+    window.lec = lecture;
+}
 
-
-        var create_audio_track = function(audio_track) {
-            var new_track_id = "track-" + $("#audio_timeline").children(".audio_track").length;
-            var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
-            new_track.data(audio_track);
-            $("#audio_timeline").append(new_track);
-        };
-
-        var create_audio_segment = function(audio_segment) {
-            var new_segment_id = "segment-" + $("#track-0").children(".audio_segment").length;
-            var clip = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"}).data(audio_segment);
-            $("#track-0").append(clip);
-
-            clip.css({ "padding": 0, "width": "600", "height": $("#audio_timeline").height()/2 });
-            clip.draggable({
-                containment: "#track-0",
-                axis: "x"
-            })
-            .resizable({handles: "e, w", minWidth: 1});
-
-            
-            //load waveform
-            var wavesurfer = Object.create(WaveSurfer);
-            console.log("#" + new_segment_id)
-
-            wavesurfer.init({
-                container: document.querySelector("#" + new_segment_id),
-                waveColor: 'violet',
-                progressColor: 'purple',
-                height: $("#audio_timeline").height()/2
-            });
-
-            wavesurfer.on('ready', function () {
-                wavesurfer.play();
-            });
-
-            wavesurfer.load(audio_segment.audio_resource);
-        }
-
-        // Test
-        var test_audio_track = new Audio_track();
-        var test_segment = new Audio_segment("clair_de_lune.mp3", 0, 500, 0, 500);
-        test_audio_track.audio_segments = [test_segment];
-        create_audio_track(test_audio_track);
-        create_audio_segment(test_segment);
-    });
-    //DEBUGGING PURPOSES ONLY
-
+$(document).ready(function() {
     lecture = new pentimento.lecture();
     console.log('lecture created');
+    
+    var logger = $('<button>LOG-LECTURE</button>');
+    $(logger).click(log_lecture);
+    $('body div:first').append(logger);
 
-
-};
+    // Test
+    // var test_audio_track = new Audio_track();
+    // var test_segment = new Audio_segment("clair_de_lune.mp3", 0, 500.0, 0, 500.0);
+    // test_audio_track.audio_segments = [test_segment];
+    // create_audio_track(test_audio_track);
+    // create_audio_segment(test_segment);
+});
+//DEBUGGING PURPOSES ONLY
 

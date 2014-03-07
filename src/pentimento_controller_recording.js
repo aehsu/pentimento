@@ -79,7 +79,28 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         // Stop the audio recording
         recordRTC.stopRecording(function(audioURL) {
            console.log(audioURL);
+
+            // Insert an audio track if there isn't one yet
+            var track = lecture.audio_tracks[0];
+            if (typeof track === 'undefined') {
+                track = new Audio_track();
+                lecture.audio_tracks.push(track);
+                pentimento.lecture_controller.create_audio_track(track);
+            };
+
+            // Get information about the audio track from looking at the lecture state
+            var start_time = pentimento.state.last_time_update;
+            var current_time = global_time();
+            var audio_duration = current_time - start_time;
+            console.log("Recorded audio of length: " + audio_duration);
+
+            // Insert the audio segment into the track
+            var segment = new Audio_segment(audioURL, 0, audio_duration, start_time, current_time);
+            lecture.audio_tracks.push(segment);
+            pentimento.lecture_controller.create_audio_segment(segment);
         });
+
+
 
         console.log('stop_record function called');
         console.log('recording params value {"current_slide":'+recording_params['current_slide']+', "time_in_slide":'+recording_params['time_in_slide']);
@@ -90,7 +111,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' + lecture.slides[0].visuals[1].tMin);
         }
         var tmp = lecture.slides[lecture.slides.length-1].visuals;
-        console.log('tMin for last visual' + tmp[tmp.length-1].tMin);
 
 		pentimento.lecture_controller.insert_recording(lecture, recording_params);
 		recording_params = null;
