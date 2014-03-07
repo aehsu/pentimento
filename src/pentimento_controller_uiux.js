@@ -12,6 +12,7 @@ pentimento.uiux_controller = new function() {
         });
         update_ticker(state.current_time);
         $('#slider').slider('value', state.current_time);
+        state.last_time_update = null;
     }
 
     function update_ticker(time) {
@@ -47,7 +48,8 @@ pentimento.uiux_controller = new function() {
         });
 
         interval = setInterval(function() {
-            state.current_time += state.interval_timing;
+            state.current_time += global_time() - state.last_time_update;
+            state.last_time_update = global_time();
             update_ticker(state.current_time);
         }, state.interval_timing);
     }
@@ -105,6 +107,7 @@ $(document).ready(function() {
                 stop: function(event, ui) {
                     pentimento.uiux_controller.update_time(ui.value);
                     update_visuals(pentimento.state.current_time);
+                    pentimento.state.current_slide = pentimento.lecture_controller.get_slide_from_time(pentimento.state.current_time);
                 }
             });
 

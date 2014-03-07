@@ -21,6 +21,7 @@ pentimento.state = new function() {
 	this.pressure_width; //false
     this.tool;
     this.current_time = 0;
-    this.interval_timing = 95;//ms hmmmmm might need a calibration metric.
+    this.last_time_update = null;
+    this.interval_timing = 50;//ms hmmmmm sure?
 };
 

@@ -1,6 +1,11 @@
 pentimento.recording_controller = new function() {//records little mini-lectures, which is all a lecture is.
 	var lecture = null;
 	var recording_params;
+    var recordRTC = null;
+    navigator.getUserMedia({audio: true}, function(mediaStream) {
+       recordRTC = RecordRTC(mediaStream);
+       recordRTC.startRecording();
+    });
 
 	//move to elsewhere? high level function?
     function slide() {
@@ -43,21 +48,13 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         var new_slide = new slide();
         lecture.slides.push(new_slide);
         pentimento.state.current_slide = new_slide; //local???? probs
-        new_slide.last_start = pentimento.state.current_time;//necessary? YES??? NO????
+        new_slide.last_start = global_time();
     };
 
     function end_slide() { //jesus save me.
-    	pentimento.state.current_slide.duration += pentimento.state.current_time - pentimento.state.current_slide.last_start;//jesus. save me
+    	pentimento.state.current_slide.duration += global_time() - pentimento.state.current_slide.last_start;//jesus. save me
     	pentimento.state.current_slide = null;
     }
-
-    // this.insert_slide = function() { //TODO FIX.
-    //     var new_slide = new slide();
-    //     var before_index = this.slides.indexOf(pentimento.state.current_slide);
-    //     slides.insert(before_index+1, new_slide);
-    //     //pentimento.state.change_state('current_slide', new_slide);
-    //     return new_slide;
-    // };
 
     this.change_slide = function() {
 
@@ -71,28 +68,49 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 		lecture = new pentimento.lecture();
 		recording_params = pentimento.lecture_controller.get_recording_params();
 		this.add_slide();
+        pentimento.state.last_time_update = global_time();
+
+
+        // Start the audio recording
+        recordRTC.startRecording();
 	};
 
 	this.stop_record = function() {
+        // Stop the audio recording
+        recordRTC.stopRecording(function(audioURL) {
+           console.log(audioURL);
+
+            // Insert an audio track if there isn't one yet
+            var track = lecture.audio_tracks[0];
+            if (typeof track === 'undefined') {
+                track = new Audio_track();
+                lecture.audio_tracks.push(track);
+                pentimento.lecture_controller.create_audio_track(track);
+            };
+
+            // Get information about the audio track from looking at the lecture state
+            var start_time = pentimento.state.last_time_update;
+            var current_time = global_time();
+            var audio_duration = current_time - start_time;
+            console.log("Recorded audio of length: " + audio_duration);
+
+            // Insert the audio segment into the track
+            var segment = new Audio_segment(audioURL, 0, audio_duration, start_time, current_time);
+            lecture.audio_tracks.push(segment);
+            pentimento.lecture_controller.create_audio_segment(segment);
+        });
+
+
+
         console.log('stop_record function called');
         console.log('recording params value {"current_slide":'+recording_params['current_slide']+', "time_in_slide":'+recording_params['time_in_slide']);
 		end_slide();
 
-        var t = 0;
-        for(var i=0; i<lecture.slides.length; i++) {
-            var slide = lecture.slides[i];
-            console.log('the duration of slide '+i+' is:' +slide.duration);
-            for(visual in slide.visuals) {
-                slide.visuals[visual].tMin-=t;
-            }
-            t+=slide.duration;
-        }
         console.log('some sanity checking happening');
         if(lecture.slides[0].visuals[0] && lecture.slides[0].visuals[1]) {
             console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' + lecture.slides[0].visuals[1].tMin);
         }
         var tmp = lecture.slides[lecture.slides.length-1].visuals;
-        console.log('tMin for last visual' + tmp[tmp.length-1].tMin);
 
 		pentimento.lecture_controller.insert_recording(lecture, recording_params);
 		recording_params = null;

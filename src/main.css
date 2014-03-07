@@ -79,6 +79,65 @@ label{
     overflow: hidden;
 }
 
+
+#audio_timeline {
+    height: 500px;
+    width: 1000px;
+    border-style: solid;
+    border-color: black;
+    /*disable text selection*/
+    -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
+
+}
+.draggable-box {
+    width: 100px; 
+    height: 100px;
+    padding: 0.5em;
+    border-style: solid;
+    border-color: black;
+    margin: 0 10px 10px 0;
+    z-index: 10;
+}
+.audio_segment {
+    width: 100px; 
+    height: 100px;
+    border-style: solid;
+    border-color: black;
+}
+
+.audio_segment > wave {
+    position: absolute;
+    left:0;
+    right: 0;
+}
+
+.ui-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.audio_track {
+    padding: 0;
+    width: 600;
+    height: 300;
+}
+
+.ui-resizable-handle {
+height: 100%;
+width: 5px;
+position: absolute;
+font-size: 0.1px;
+display: block;
+}
+.ui-resizable-w {
+    cursor: w-resize;
+}
+.ui-resizable-e {
+    cursor: e-resize;
+    top:0px;
+    right: -5px;
+}
+
+
 /*input .image{
     width:40px;
 }*/
