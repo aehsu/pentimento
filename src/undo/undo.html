@@ -9,7 +9,34 @@
 <script src='errors.js'></script>
 <script>
     $(document).ready(function(){
-        //undoManager = getUndoManager(['group1', 'group2', 'group3']);
+        // um = getUndoManager(['group1', 'group2', 'group3'], false);
+
+        // var getBodyColorTitle = function (color) {
+        //     if (color in rgbNames) {
+        //         color = rgbNames[color];
+        //     }
+        //     return 'bodyColor: ' + color;
+        // }
+        
+        // //Changes the body font color to the color that is passed in. This action is stored in the undo manager.
+        // //This will be used to perform actions in the test scenarios.
+        // //color - must be an acceptable value for the body color
+        // var changeBodyColor = function (color) {
+        //     var orig = $('body').css('color');
+        //     $('body').css('color', color);
+            
+        //     //add to the undo stack
+        //     um.add(
+        //         function(){changeBodyColor(orig)}, //the function that will undo the color change
+        //         getBodyColorTitle(color) //the title of the actions
+        //     );
+        // };
+
+        // um.startHierarchy('group1');
+        // changeBodyColor('blue');
+        // changeBodyColor('green')
+        // um.endHierarchy('group1');
+        // um.undoHierarchy('group1');
         testUM();
         
     try{
@@ -19,7 +46,8 @@
     }
 
     });
-</script>
+</script></head>
+<body>text</body></html>
 
 
 
@@ -30,10 +58,6 @@ Said that redoing a group should put it back to the state immediately before und
 indiviudally? s1 a1 a2 a3 a4 ua4 ua3 ua2 ua1 r1, would result in s1 a1
 
     audio still there for audio & visual recordings. Might be reasonable to redo all if just visuals. Talk to Kenny and Jonathan
-
-Wait, said no overlapping groups, and should auto-close same groups. Also auto-close different groups?
-
-    same as before, throw warning in debug mode
 
 Scenario a1 a2 a3 ua3 ua2 s1 ra2 ra3 a4, should a2 and a3 be inside the group? If not, should a4 be in the group?
 

@@ -2,10 +2,12 @@
 //TODO: think about cases where methods on stack refer to things that no longer exist. Is this possible, or will the things
 // be re-created before getting to that point on the stack?
 
-var getUndoManager = function(groupTypes) {
+var getUndoManager = function(groupTypes, debug) {
     'use strict';
 
-    var debug = false; // keeps track of whether debug mode is on or off
+    if (isUndefined(debug)){
+        debug = false; // keeps track of whether debug mode is on or off
+    } 
 
     // Displays a warning in the console if debug mode is on.
     // msg - the message to display in the warning
@@ -175,6 +177,123 @@ var getUndoManager = function(groupTypes) {
         }
     }
 
+    // Undoes the last action that was added to the undo stack.
+    // hierMode - a boolean that is true when called from within a hierarchy-related function, should be falsy otherwise
+    var undo = function(hierMode) {
+        if (undoStack.length === 0) {
+            throw undoError();
+        }
+
+        undoing = true;
+
+        var actionObj = undoStack.pop();
+        actionObj.action(); // undoes the performed action
+
+        // the relevant action object is now on the redo stack, but some properties haven't been defined yet.
+        // they should be the same as they were before the action was undone.
+        var nextRedo = getNextRedo();
+        nextRedo['title'] = actionObj.title;
+        nextRedo['inGroups'] = actionObj.inGroups;
+        nextRedo['atStartOfGroups'] = actionObj.atStartOfGroups;
+        nextRedo['atEndOfGroups'] = actionObj.atEndOfGroups;
+
+        // If the end of a group has been individually undone, label the action before it as the end of the group.
+        // This way, if the group is undone and redone, it will be exactly the way it was before it was undone.
+        if (!hierMode && undoStack.length > 0) {
+            var nextUndo = getNextUndo();
+            for (var i in actionObj.atEndOfGroups) { // loop over all the groups that ended with the undone action
+                group = actionObj.atEndOfGroups[i];
+                if (actionObj.atStartOfGroups.indexOf(group) === -1) { // make sure it wasn't the start of the group
+                    nextUndo.atEndOfGroups.push(group);
+                }
+            }
+        }
+
+        undoing = false;
+
+        // fire appropriate events
+
+        updateStatuses();
+
+        var title = '';
+        if (undoStack.length > 0) {
+            title = getNextUndo().title;
+        }
+
+        fireEvent({type: 'actionUndone', undoTitle: title, redoTitle: actionObj.title});
+        
+        return that;
+    };
+    // Redoes the last action added to the redo stack.
+    // hierMode - a boolean that is true when called from within a hierarchy-related function, should be falsy otherwise
+    var redo = function(hierMode) {
+        if (redoStack.length <= 0) {
+            throw redoError();
+        }
+        if (!hierMode && getNextRedo().atStartOfGroups.length > 0) {
+            throw redoError(); // can't individually redo the start of a group, must redo the entire group
+        };
+
+        redoing = true;
+
+        var initialNextUndo;
+        if (undoStack.length > 0) {
+            initialNextUndo = getNextUndo();
+        }
+
+        var actionObj = redoStack.pop();
+        actionObj.action(); // redoes the undone action
+
+        // The relevant action object is now on the undo stack, but some properties were defined as if the action were
+        // initially performed in the undoManager's current state. Instead, the properties should be the same as they were
+        // before the action was redone.
+        var currentNextUndo = getNextUndo();
+        currentNextUndo.inGroups = actionObj.inGroups;
+        currentNextUndo.atStartOfGroups = actionObj.atStartOfGroups;
+        currentNextUndo.atEndOfGroups = actionObj.atEndOfGroups;         
+
+        // fix some grouping things
+
+        if (initialNextUndo) {
+            // backwards for loop to avoid indexing problems with splicing
+            for (var i = initialNextUndo.atEndOfGroups.length-1; i >= 0; i--) {
+                group = initialNextUndo.atEndOfGroups[i];
+                // if the action just redone is supposed to be in a group with initialNextUndo, 
+                // it should be made the current end of that group
+                if (currentNextUndo.inGroups.indexOf(group) !== -1 && currentNextUndo.atStartOfGroups.indexOf(group) === -1) {
+                        unorderedSplice(initialNextUndo.atEndOfGroups, i, 1);
+                        if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) {
+                            currentNextUndo.atEndOfGroups.push(group);
+                        }
+                }
+            }
+        }
+
+        // update the open groups to be those that the redone action is in
+        openGroups = [];
+        for (var i in actionObj.inGroups) {
+            group = actionObj.inGroups[i];
+            if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) { // don't add the group if it ends at the redone action
+                openGroups.push(group);
+            }
+        }
+
+        redoing = false; 
+
+        // fire the appropriate events  
+
+        var title = '';
+        if (redoStack.length > 0) {
+            title = getNextRedo().title;
+        }         
+
+        updateStatuses();
+
+        fireEvent({type: 'actionRedone', undoTitle: actionObj.title, redoTitle: title});
+
+        return that;
+    };
+
     // Holds the public functions of the undoManager, will be returned at the end of this getUndoManager() function
     // For chaining opportunities, the 'that' object is returned in any of these functions that wouldn't otherwise return anything.
     var that = {
@@ -215,122 +334,6 @@ var getUndoManager = function(groupTypes) {
 
             groupsJustStarted = []; // an action happened, so the groups are no longer 'just started'
             
-            return that;
-        },
-        // Undoes the last action that was added to the undo stack.
-        // hierMode - a boolean that is true when called from within a hierarchy-related function, should be falsy otherwise
-        undo: function(hierMode) {
-            if (undoStack.length === 0) {
-                throw undoError();
-            }
-
-            undoing = true;
-
-            var actionObj = undoStack.pop();
-            actionObj.action(); // undoes the performed action
-
-            // the relevant action object is now on the redo stack, but some properties haven't been defined yet.
-            // they should be the same as they were before the action was undone.
-            var nextRedo = getNextRedo();
-            nextRedo['title'] = actionObj.title;
-            nextRedo['inGroups'] = actionObj.inGroups;
-            nextRedo['atStartOfGroups'] = actionObj.atStartOfGroups;
-            nextRedo['atEndOfGroups'] = actionObj.atEndOfGroups;
-
-            // If the end of a group has been individually undone, label the action before it as the end of the group.
-            // This way, if the group is undone and redone, it will be exactly the way it was before it was undone.
-            if (!hierMode && undoStack.length > 0) {
-                var nextUndo = getNextUndo();
-                for (var i in actionObj.atEndOfGroups) { // loop over all the groups that ended with the undone action
-                    group = actionObj.atEndOfGroups[i];
-                    if (actionObj.atStartOfGroups.indexOf(group) === -1) { // make sure it wasn't the start of the group
-                        nextUndo.atEndOfGroups.push(group);
-                    }
-                }
-            }
-
-            undoing = false;
-
-            // fire appropriate events
-
-            updateStatuses();
-
-            var title = '';
-            if (undoStack.length > 0) {
-                title = getNextUndo().title;
-            }
-
-            fireEvent({type: 'actionUndone', undoTitle: title, redoTitle: actionObj.title});
-            
-            return that;
-        },
-        // Redoes the last action added to the redo stack.
-        // hierMode - a boolean that is true when called from within a hierarchy-related function, should be falsy otherwise
-        redo: function(hierMode) {
-            if (redoStack.length <= 0) {
-                throw redoError();
-            }
-            if (!hierMode && getNextRedo().atStartOfGroups.length > 0) {
-                throw redoError(); // can't individually redo the start of a group, must redo the entire group
-            };
-
-            redoing = true;
-
-            var initialNextUndo;
-            if (undoStack.length > 0) {
-                initialNextUndo = getNextUndo();
-            }
-
-            var actionObj = redoStack.pop();
-            actionObj.action(); // redoes the undone action
-
-            // The relevant action object is now on the undo stack, but some properties were defined as if the action were
-            // initially performed in the undoManager's current state. Instead, the properties should be the same as they were
-            // before the action was redone.
-            var currentNextUndo = getNextUndo();
-            currentNextUndo.inGroups = actionObj.inGroups;
-            currentNextUndo.atStartOfGroups = actionObj.atStartOfGroups;
-            currentNextUndo.atEndOfGroups = actionObj.atEndOfGroups;         
-
-            // fix some grouping things
-
-            if (initialNextUndo) {
-                // backwards for loop to avoid indexing problems with splicing
-                for (var i = initialNextUndo.atEndOfGroups.length-1; i >= 0; i--) {
-                    group = initialNextUndo.atEndOfGroups[i];
-                    // if the action just redone is supposed to be in a group with initialNextUndo, 
-                    // it should be made the current end of that group
-                    if (currentNextUndo.inGroups.indexOf(group) !== -1 && currentNextUndo.atStartOfGroups.indexOf(group) === -1) {
-                            unorderedSplice(initialNextUndo.atEndOfGroups, i, 1);
-                            if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) {
-                                currentNextUndo.atEndOfGroups.push(group);
-                            }
-                    }
-                }
-            }
-
-            // update the open groups to be those that the redone action is in
-            openGroups = [];
-            for (var i in actionObj.inGroups) {
-                group = actionObj.inGroups[i];
-                if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) { // don't add the group if it ends at the redone action
-                    openGroups.push(group);
-                }
-            }
-
-            redoing = false; 
-
-            // fire the appropriate events  
-
-            var title = '';
-            if (redoStack.length > 0) {
-                title = getNextRedo().title;
-            }         
-
-            updateStatuses();
-
-            fireEvent({type: 'actionRedone', undoTitle: actionObj.title, redoTitle: title});
-
             return that;
         },
         // Opens a group/hierarchy level
@@ -417,7 +420,7 @@ var getUndoManager = function(groupTypes) {
                 if (getNextUndo().atStartOfGroups.indexOf(group) !== -1) {
                     reachedStart = true;
                 }
-                that.undo(true);
+                undo(true);
             }
 
             // Undoing the group may have undone part of other groups.
@@ -450,7 +453,7 @@ var getUndoManager = function(groupTypes) {
                 if (getNextRedo().atEndOfGroups.indexOf(group) !== -1) {
                     reachedEnd = true;
                 }
-                that.redo(true);
+                redo(true);
             }
 
             fireEvent({type: 'groupRedone', group: group, undoTitle: '', redoTitle: ''});
@@ -601,6 +604,11 @@ var getUndoManager = function(groupTypes) {
             return null;
         }
     };
+
+    if (debug) {
+        that['undo'] = undo;
+        that['redo'] = redo;
+    }
     
     return that;  // return the public functions
 };

@@ -14,6 +14,7 @@
         If a group is opened while already open, the first one should be automatically closed - Test 24
         If an outer group is closed while inner groups are still open, auto-close them (no overlapping groups allowed) - Test 25
         A group can be opened even if it's already opened - Tests 3, 10, 14.5
+        If a group is started and then a previous action is undone/redone, the group is effectively gone - Test 28, 29
 
 
     Note that undoing a group before it's ended will automatically end it. If it's redone and then other actions are performed, 
@@ -23,7 +24,7 @@
 
 var testUM = function (guiFunctions) {
     'use strict';
-    var um = getUndoManager(['group1', 'group2', 'group3'], guiFunctions);
+    var um = getUndoManager(['group1', 'group2', 'group3'], true);
     
     //will hold an array for each test scenario, which will in turn hold the failed functions for that particular scenario
     var failedScenarios = {};    
@@ -95,7 +96,7 @@ var testUM = function (guiFunctions) {
         var results = {};
         for (var key in getUMfunctions()){
             try {
-                um = getUndoManager(['group1', 'group2', 'group3'], guiFunctions); //get a clean undo manager
+                um = getUndoManager(['group1', 'group2', 'group3'], true); //get a clean undo manager
                 scenario();
                 results[key] = [ignoreErrors(getUMfunctions()[key])];
                 results[key][1] = um.getUndoLength();
@@ -960,7 +961,7 @@ var testUM = function (guiFunctions) {
 
     /*
         TEST 20
-        empty group2 formed
+        action performed, empty group2 formed
         test that group2 was not added to the stack (undoing should undo the first action)
     */
 
@@ -1277,6 +1278,86 @@ var testUM = function (guiFunctions) {
 
     failedScenarios['test27'] = getFailedFunctions(expectedResults, scenario);
 
+    /*
+        TEST 28
+        actions performed, actions undone, group started, actions redone
+        test that group no longer exists
+    */
+
+    scenario = function () {        
+        changeBodyColor('red');
+        changeBodyColor('blue');
+        changeBodyColor('green');
+        um.undo();
+        um.undo();
+        um.startHierarchy('group1');
+        um.redo();
+        um.redo();
+        changeBodyColor('black');
+    };
+    
+    standardResults = [4, 0, getBodyColorTitle('black'), null];
+
+    expectedResults = {
+        undo: [true, 3, 1, getBodyColorTitle('green'), getBodyColorTitle('black')],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [errorNames['undoH1']],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [errorNames['endH2']],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test28'] = getFailedFunctions(expectedResults, scenario);
+
+     /*
+        TEST 29
+        actions performed, group started, actions undone
+        test that group no longer exists
+    */
+
+    scenario = function () {        
+        changeBodyColor('red');
+        changeBodyColor('blue');
+        changeBodyColor('green');
+        um.startHierarchy('group1');
+        um.undo();
+        um.undo();
+    };
+    
+    standardResults = [1, 2, getBodyColorTitle('red'), getBodyColorTitle('blue')];
+
+    expectedResults = {
+        undo: [true, 0, 3, null, getBodyColorTitle('red')],
+        redo: [true, 2, 1, getBodyColorTitle('blue'), getBodyColorTitle('green')],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [errorNames['undoH1']],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [errorNames['endH2']],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test29'] = getFailedFunctions(expectedResults, scenario);
+
+    
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 
@@ -1294,7 +1375,7 @@ var testUM = function (guiFunctions) {
         console.log("All tests passed!");
     }
     else{
-        console.log(nonEmptyFailedScenarios); //TODO: currently failing: Test27 (redoH1)
+        console.log(nonEmptyFailedScenarios); //TODO: currently failing: Test27 (redoH1), Test29 (endH1)
     }
 };
 
