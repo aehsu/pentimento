@@ -102,6 +102,7 @@ function nonlive_tool_handler(event) {
             pentimento.state.is_recording = false;
             pentimento.state.lmb_down = false; //necessary?
             /*
+            
                 get the current time of the lecture.
                 begin recording
                 end recording
