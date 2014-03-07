@@ -186,6 +186,18 @@ var getUndoManager = function(groupTypes, debug) {
 
         undoing = true;
 
+        // remove any groups started, but not populated, right before the undo
+        for (var i in groupsJustStarted) { //TODO: helper
+            group = groupsJustStarted[i];
+            var index = openGroups.indexOf(group);
+            if (index !== -1) {
+                unorderedSplice(openGroups, index, 1);
+                fireEvent({type:'groupEnded', group: group, title: null}); // group effectively ended, fire groupEnded event
+            }
+
+        }
+        groupsJustStarted = [];
+
         var actionObj = undoStack.pop();
         actionObj.action(); // undoes the performed action
 
@@ -236,6 +248,18 @@ var getUndoManager = function(groupTypes, debug) {
 
         redoing = true;
 
+        // remove any groups started, but not populated, right before the undo
+        for (var i in groupsJustStarted) { //TODO: helper
+            group = groupsJustStarted[i];
+            var index = openGroups.indexOf(group);
+            if (index !== 0) {
+                unorderedSplice(openGroups, index, 1);
+                fireEvent({type:'groupEnded', group: group, title: null}); // group effectively ended, fire groupEnded event
+            }
+
+        }
+        groupsJustStarted = [];
+
         var initialNextUndo;
         if (undoStack.length > 0) {
             initialNextUndo = getNextUndo();
@@ -277,7 +301,7 @@ var getUndoManager = function(groupTypes, debug) {
                 openGroups.push(group);
             }
         }
-
+        
         redoing = false; 
 
         // fire the appropriate events  
@@ -365,7 +389,7 @@ var getUndoManager = function(groupTypes, debug) {
                     groupOpen = true;
                 }
             }
-            if (openGroups.indexOf(group) !== -1) {
+            if (!groupOpen && openGroups.indexOf(group) !== -1) {
                 groupOpen = true;
             }
             if (!groupOpen) {

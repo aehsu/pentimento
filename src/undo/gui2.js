@@ -69,7 +69,7 @@ $(document).ready(function(){
 
     // create an undoManager with 3 groups
     var groups = ['group1', 'group2', 'group3'];
-    undoManager = getUndoManager(groups);
+    undoManager = getUndoManager(groups, true);
 
     // Disable the undoManager-related buttons that should be disabled before any actions are taken
     // (i.e. all buttons except the ones that start groups)

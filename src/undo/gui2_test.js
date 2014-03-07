@@ -102,7 +102,7 @@ var gui2test = function() {
                     expectedTexts['undo'] = 'Undo background-color: red';
                     checkButtonText(expectedTexts);
     
-    undoManager.undo();
+    undoManager.undo(); // undoManager defined in gui2.js
     
                     expectedDisability['redo'] = false;
                     checkButtonDisability(expectedDisability);
@@ -190,15 +190,24 @@ var gui2test = function() {
                     expectedDisability['end group2'] = true;
                     checkButtonDisability(expectedDisability);
 
+    undoManager.startHierarchy('group1');
+
+                    expectedDisability['end group1'] = false;
+                    checkButtonDisability(expectedDisability);
+
     undoManager.undoHierarchy('group2');
+
 
                     expectedDisability['undo group1'] = false;
                     expectedDisability['undo group2'] = true;
                     expectedDisability['undo group3'] = true;
                     expectedDisability['redo group2'] = false;
                     expectedDisability['redo'] = true;
+                    expectedDisability['end group1'] = true;
                     checkButtonDisability(expectedDisability);
 
     console.log('passed!');
     
 }
+
+//TODO: better testing method? like, checks for what should be disabled by checking what functions produce errors?
