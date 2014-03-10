@@ -192,7 +192,9 @@ var getUndoManager = function(groupTypes, debug) {
             var index = openGroups.indexOf(group);
             if (index !== -1) {
                 unorderedSplice(openGroups, index, 1);
-                fireEvent({type:'groupEnded', group: group, title: null}); // group effectively ended, fire groupEnded event
+                // group effectively ended, fire groupEnded event and debugWarning about autoClosed
+                fireEvent({type:'groupEnded', group: group, title: null}); 
+                displayDebugWarning(groupAutoClose(group));
             }
 
         }
@@ -254,7 +256,9 @@ var getUndoManager = function(groupTypes, debug) {
             var index = openGroups.indexOf(group);
             if (index !== 0) {
                 unorderedSplice(openGroups, index, 1);
-                fireEvent({type:'groupEnded', group: group, title: null}); // group effectively ended, fire groupEnded event
+                // group effectively ended, fire groupEnded event and debugWarning about autoClosed
+                fireEvent({type:'groupEnded', group: group, title: null}); 
+                displayDebugWarning(groupAutoClose(group));
             }
 
         }

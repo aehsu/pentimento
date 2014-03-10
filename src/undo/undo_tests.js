@@ -1375,7 +1375,7 @@ var testUM = function (guiFunctions) {
         console.log("All tests passed!");
     }
     else{
-        console.log(nonEmptyFailedScenarios); //TODO: currently failing: Test27 (redoH1), Test29 (endH1)
+        console.log(nonEmptyFailedScenarios); //TODO: currently failing: Test27 (redoH1)
     }
 };
 
