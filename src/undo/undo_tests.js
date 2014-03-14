@@ -5,16 +5,16 @@
 
     Specific Requirements:
         Undoing a group before it has ended should undo the entire group - Test 3
-        Actions undone before a group ended and redone after the group ended should be inside the group - Test 16, 22, 23
+        Actions undone before a group ended and redone after the group ended should be inside the group - Test 17, 23, 24
         Starting a group cannot be undone - Test 10
         If right before group, can only redo the entire group, not individual actions - Test 9
         Empty groups don't throw errors - Test 10
-        Empty groups aren't added to the stack - Test 20
-        Redoing a group puts it back to the way it was immediately before the undo - Test 21
-        If a group is opened while already open, the first one should be automatically closed - Test 24
-        If an outer group is closed while inner groups are still open, auto-close them (no overlapping groups allowed) - Test 25
-        A group can be opened even if it's already opened - Tests 3, 10, 14.5
-        If a group is started and then a previous action is undone/redone, the group is effectively gone - Test 28, 29
+        Empty groups aren't added to the stack - Test 21
+        Redoing a group puts it back to the way it was immediately before the undo - Test 22
+        If a group is opened while already open, the first one should be automatically closed - Test 25
+        If an outer group is closed while inner groups are still open, auto-close them (no overlapping groups allowed) - Test 26
+        A group can be opened even if it's already opened - Tests 3, 10, 15
+        If a group is started and then a previous action is undone/redone, the group is effectively gone - Test 29, 30
 
 
     Note that undoing a group before it's ended will automatically end it. If it's redone and then other actions are performed, 
@@ -719,7 +719,7 @@ var testUM = function (guiFunctions) {
     failedScenarios['test14'] = getFailedFunctions(expectedResults, scenario);
     
     /*
-        TEST 14.5
+        TEST 15
         Almost identical to Test 14, except the group is not explicitly ended.
     */
     
@@ -758,10 +758,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test14.5'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test15'] = getFailedFunctions(expectedResults, scenario);
     
     /*
-        TEST 15
+        TEST 16
         group1 formed, undo all but one through single undo, redo one action, perform another action
         test that extra performed action isn't considered part of group
     */
@@ -799,10 +799,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test15'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test16'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 16
+        TEST 17
         group1 started, actions performed, last action undone, group ended
         test that undone action can be redone after group ended (and is still part of the group) 
         and that undoing previous action still works
@@ -839,10 +839,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test16'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test17'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 17
+        TEST 18
         group3 formed, all but one action undone individually, a separate action performed then undone
         test that remaining action is considered all of group3 (i.e. undoing group3 should be posssible)
     */
@@ -880,10 +880,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test17'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test18'] = getFailedFunctions(expectedResults, scenario);
     
     /*
-        TEST 18
+        TEST 19
         actions performed, group2 formed, group 2 undone, another action undone
         test that group2 cannot be redone from here  //TODO: what's desired for redo group behavior?
     */
@@ -919,10 +919,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test18'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test19'] = getFailedFunctions(expectedResults, scenario);
     
     /*
-        TEST 19
+        TEST 20
         actions performed, group2 formed, another action performed
         test that group2 cannot be undone from here  //TODO: this should match redo behavior
     */
@@ -957,10 +957,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test19'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test20'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 20
+        TEST 21
         action performed, empty group2 formed
         test that group2 was not added to the stack (undoing should undo the first action)
     */
@@ -992,10 +992,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test20'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test21'] = getFailedFunctions(expectedResults, scenario);
 
     /*  
-        TEST 21
+        TEST 22
         group3 formed, all but one action undone individually, group3 undone
         test that redoing group puts it back to the way it was immediately before the undo (i.e. just one action in it)
     */
@@ -1032,10 +1032,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test21'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test22'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 22
+        TEST 23
         group1 started, actions performed, last action undone, group ended, action redone, new action performed
         test that new action is not considered part of the group (only the redone action should be part of the group, 
         relevant to Test 16)
@@ -1073,14 +1073,14 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test22'] = getFailedFunctions(expectedResults, scenario);    
+    failedScenarios['test23'] = getFailedFunctions(expectedResults, scenario);    
 
     /*
-        TEST 23
+        TEST 24
         group1 started, actions performed, last action undone, group ended, action redone,
         new action performed and undone, group undone
         test that redoing the group goes to the proper action (the one that was redone immediately after the group was ended)
-        (relevant to Test 22 and 16)
+        (relevant to Test 23 and 17)
     */
     
     scenario = function () {
@@ -1117,10 +1117,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test23'] = getFailedFunctions(expectedResults, scenario); 
+    failedScenarios['test24'] = getFailedFunctions(expectedResults, scenario); 
 
     /*
-        TEST 24
+        TEST 25
         group1 started, actions performed, group1 started again, actions performed, group1 undone
         test that the first group1 was automatically closed and is recognized as a separate group
     */
@@ -1157,10 +1157,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test24'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test25'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 25
+        TEST 26
         group3 and group2 started, group3 ended, extra action performed
         test that group2 is automatically closed, the extra action should not be in group2
     */
@@ -1198,10 +1198,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test25'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test26'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 26
+        TEST 27
         group1 started, actions performed, group2 started, actions performed, group1 ended, group 2 undone
         test that group1 can still be undone
     */
@@ -1226,7 +1226,7 @@ var testUM = function (guiFunctions) {
         startH1: [true],
         endH1: [errorNames['endH1']],
         undoH1: [true, 0, 5, null, getBodyColorTitle('red')],
-        redoH1: [true, 5, 0, getBodyColorTitle('orange'), null],
+        redoH1: [errorNames['redoH1']],
         startH2: [true],
         endH2: [errorNames['endH2']],
         undoH2: [errorNames['undoH2']],
@@ -1238,13 +1238,12 @@ var testUM = function (guiFunctions) {
     }; 
 
     concatStandardRes();
-
-    failedScenarios['test26'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test27'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 27
+        TEST 28
         group1 started, actions performed, undo last action
-        test that group1 can be redone   //TODO: desired?
+        test that group1 can't be redone
     */
 
     scenario = function () {
@@ -1263,7 +1262,7 @@ var testUM = function (guiFunctions) {
         startH1: [true],
         endH1: [true],
         undoH1: [true, 0, 3, null, getBodyColorTitle('red')],
-        redoH1: [true, 3, 0, getBodyColorTitle('green'), null],
+        redoH1: [errorNames['redoH1']],
         startH2: [true],
         endH2: [errorNames['endH2']],
         undoH2: [errorNames['undoH2']],
@@ -1276,10 +1275,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test27'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test28'] = getFailedFunctions(expectedResults, scenario);
 
     /*
-        TEST 28
+        TEST 29
         actions performed, actions undone, group started, actions redone
         test that group no longer exists
     */
@@ -1317,10 +1316,10 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test28'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test29'] = getFailedFunctions(expectedResults, scenario);
 
      /*
-        TEST 29
+        TEST 30
         actions performed, group started, actions undone
         test that group no longer exists
     */
@@ -1355,7 +1354,7 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test29'] = getFailedFunctions(expectedResults, scenario);
+    failedScenarios['test30'] = getFailedFunctions(expectedResults, scenario);
 
     
 
@@ -1375,7 +1374,7 @@ var testUM = function (guiFunctions) {
         console.log("All tests passed!");
     }
     else{
-        console.log(nonEmptyFailedScenarios); //TODO: currently failing: Test27 (redoH1)
+        console.log(nonEmptyFailedScenarios);
     }
 };
 

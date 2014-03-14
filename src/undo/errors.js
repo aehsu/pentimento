@@ -23,6 +23,14 @@ var buttonTextError = function(key) {
     }
 };
 
+var concatFunctionError = function() {
+    return {
+        name: 'concatFunctionError',
+        message: "Both arguments to concatFunction() must be functions",
+        toString: getMessage
+    }
+}
+
 var groupEndError = function(group) {
     return {
         name: 'groupEndError',
@@ -43,6 +51,14 @@ var groupUndoError = function(group) {
     return {
         name: 'groupUndoError',
         message: "Cannot currently undo " + group,
+        toString: getMessage
+    };
+};
+
+var indexOutOfBoundsError = function(index) {
+    return {
+        name: 'indexOutOfBoundsError',
+        message: "Index " + index + " is out of bounds.",
         toString: getMessage
     };
 };
@@ -79,6 +95,14 @@ var noEventTypeError = function() {
     };
 };
 
+var notEndOfGroupError = function(group, index) {
+    return {
+        name: 'notEndOfGroupError',
+        message: "The group '" + group + "' does not end at index " + index + ".",
+        toString: getMessage
+    };
+};
+
 var notGroupError = function(group) {
     return {
         name: 'notGroupError',
@@ -87,13 +111,13 @@ var notGroupError = function(group) {
     };
 };
 
-var concatFunctionError = function() {
+var notInGroupError = function(group) {
     return {
-        name: 'concatFunctionError',
-        message: "Both arguments to concatFunction() must be functions",
+        name: 'notInGroupError', 
+        message: "The action is not in the group '" + group + "'.",
         toString: getMessage
-    }
-}
+    };
+};
 
 var setUpError = function() {
     return {

@@ -116,6 +116,14 @@ $(document).ready(function(){
     };
     undoManager.addListener('groupStarted', enableEnd);
 
+    var changeGroupTitles = function(evt) {
+        console.log(evt.redoTitle);
+        $("#undo." + evt.group).html("Undo " + evt.undoTitle);
+        $("#redo." + evt.group).html("Redo " + evt.redoTitle);
+    }
+    undoManager.addListener('groupUndone', changeGroupTitles);
+    undoManager.addListener('groupRedone', changeGroupTitles);
+
     // Set up the event handler for the dropdowns. Changing the value changes the corresponding css value
     // for the example text.
     $('select').on('change', function(){
@@ -133,8 +141,8 @@ $(document).ready(function(){
         var inverse = function() {
             $('#'+prop).val(origVal).trigger('change');
         };
-        var undoTitle = prop + ": " + newVal;
-        var redoTitle = prop + ": " + origVal;
+        var undoTitle = prop;// + ": " + newVal;
+        var redoTitle = prop;// + ": " + origVal;
         undoManager.add(inverse, undoTitle, redoTitle); // register the action with the undoManager
     });
 
