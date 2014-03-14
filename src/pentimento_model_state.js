@@ -7,7 +7,7 @@ pentimento.state = new function() {
 	this.video_cursor;
 	this.lecture_start_time;
 	this.is_recording;
-	this.current_slide; //necessary?
+	this.current_slide = null;
 	this.color;
 	this.width;
 	this.current_tool;
@@ -23,5 +23,6 @@ pentimento.state = new function() {
     this.current_time = 0;
     this.last_time_update = null;
     this.interval_timing = 50;//ms hmmmmm sure?
+    this.selection = [];
 };
 

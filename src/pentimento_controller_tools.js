@@ -1,9 +1,9 @@
 function live_tool_handler(event) {
     event.stopPropagation(); 
     var tool = $(event.target).attr('data-toolname');
-    //keep recording and switch tools
-    //might need to do different clearings of events
-    clear_previous_handlers(tool); //need the name of the newly selected tool? should just clear all?
+    if(clear_previous_handlers(tool)) {
+        pentimento.state.tool = tool;
+    }
 
     switch(tool) {
     	case 'emphasis':
@@ -12,8 +12,7 @@ function live_tool_handler(event) {
             //all timing is done insidie of these handlers
             //could potentially move these things out
 		    pentimento.state.canvas.mousedown(pen_mousedown);
-            pentimento.state.canvas.mousemove(pen_mousemove); //
-    		//var visual = $(window).mouseup(pen_mouseup);
+            pentimento.state.canvas.mousemove(pen_mousemove);
             $(window).mouseup(function(event) { //TODO FIX THIS TO BE MORE THE SAME.
                 if(pentimento.state.lmb_down) {
                     var visual = pen_mouseup(event);
@@ -37,11 +36,10 @@ function live_tool_handler(event) {
                 pentimento.recording_controller.add_slide();
             }
             break;
-    	case 'shape':
-    		break;
     	case 'color':
     		break;
     	case 'width':
+            pentimento.state.width = parseInt($(this).val());
     		break;
     	case 'delete':
     		break;
@@ -55,11 +53,13 @@ function live_tool_handler(event) {
     		console.log('Unrecognized tool clicked, live tools');
     		console.log(this);
     }
-    pentimento.state.tool = tool;
 }
 
 function nonlive_tool_handler(event) {
     var tool = $(event.target).attr('data-toolname');
+    if(clear_previous_handlers(tool)) {
+        pentimento.state.tool = tool;
+    }
     var interval;
 
     switch(tool) {
@@ -67,7 +67,7 @@ function nonlive_tool_handler(event) {
             //code that's also possibly shitty and may not work, but is cleaner
             interval = setInterval(function() { //TODO fix.
                 if(pentimento.state.current_time + 95 <= pentimento.lecture_controller.get_lecture_duration()) {
-                    update_visuals(pentimento.state.current_time);
+                    update_visuals(pentimento.state.current_time, true);
                     pentimento.uiux_controller.update_time(pentimento.state.current_time);
                     pentimento.state.current_time+=95;
                 } else {
@@ -98,11 +98,16 @@ function nonlive_tool_handler(event) {
     		break;
     	case 'redraw':
     		break;
+        case 'select':
+            pentimento.state.canvas.mousedown(select_mousedown);
+            pentimento.state.canvas.mousemove(select_mousemove);
+            $(window).mouseup(select_mouseup);
+            break;
     	case 'insert':
             pentimento.state.is_recording = false;
             pentimento.state.lmb_down = false; //necessary?
             /*
-            
+
                 get the current time of the lecture.
                 begin recording
                 end recording
@@ -113,12 +118,12 @@ function nonlive_tool_handler(event) {
         case 'rewind':
             pentimento.lecture_controller.rewind();
             pentimento.uiux_controller.update_time(pentimento.state.current_time);
-            update_visuals(pentimento.state.current_time);
+            update_visuals(pentimento.state.current_time, true);
             break;
         case 'full-rewind':
             pentimento.lecture_controller.full_rewind();
             pentimento.uiux_controller.update_time(pentimento.state.current_time);
-            update_visuals(pentimento.state.current_time);
+            update_visuals(pentimento.state.current_time, true);
             break;
     	case 'pan':
     		break;
@@ -145,7 +150,8 @@ function breaking_tool_handler(event) {
 }
 
 $(document).ready(function() {
-    $('.live-tool').click(live_tool_handler);    
+    $('.live-tool').click(live_tool_handler);
+    $('.live-tool').change(live_tool_handler)  
 
     $('.live-tool').addClass('hidden');
     $('.nonlive-tool').click(nonlive_tool_handler);
@@ -153,10 +159,8 @@ $(document).ready(function() {
     $('.recording-tool').click(function(event) {
         var elt = $(event.target);
         if (elt.attr('data-label')==='begin') {
+            $('button[data-toolname="pen"]').click();
             pentimento.state.is_recording=true;
-            if(!pentimento.state.tool) {
-                $('button[data-toolname="pen"]').click();
-            }
             pentimento.recording_controller.do_record();
             pentimento.uiux_controller.begin_recording();
         } else {

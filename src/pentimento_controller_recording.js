@@ -8,7 +8,8 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         });
        recordRTC.startRecording();
     });
-
+    var state = pentimento.state;
+    
 	//move to elsewhere? high level function?
     function slide() {
         this.last_start = null;
@@ -32,43 +33,37 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         }
     };
 
-    function slide_change(from_page, to_page) { //should this live with t_audio????
+    function slide_change(from_page, to_page, time) {
         this.from_page = from_page;
         this.to_page = to_page;
-        //this.t_audio = t_audio;
+        this.time = time;
     };
 
     this.add_slide = function() {
-    	//some checking for whether or not to insert a new slide_change??
-        //should this strictly be just a thing where you add at the end? that seems wrong.
-
-    	if(lecture.slides.length != 0) { //maybe we need a more robust check mechanism...???
-    		var idx = lecture.slides.indexOf(pentimento.state.current_slide);
-    		lecture.slide_changes.push(new slide_change(idx, idx+1));
+        var gt = global_time();
+    	if(lecture.slides.length != 0) {
+    		var idx = lecture.slides.indexOf(current_slide);
+    		lecture.slide_changes.push(new slide_change(idx, idx+1, gt));
     		end_slide();
     	}
         var new_slide = new slide();
         lecture.slides.push(new_slide);
-        pentimento.state.current_slide = new_slide; //local???? probs
-        new_slide.last_start = global_time();
+        state.current_slide = new_slide;
+        new_slide.last_start = gt;
     };
 
     function end_slide() { //jesus save me.
-    	pentimento.state.current_slide.duration += global_time() - pentimento.state.current_slide.last_start;//jesus. save me
-    	pentimento.state.current_slide = null;
+    	state.current_slide.duration += global_time() - state.current_slide.last_start;
+    	state.current_slide = null;
     }
 
-    this.change_slide = function() {
-
-    };
-
     this.add_visual = function(visual) {
-        pentimento.state.current_slide.visuals.push(visual); //change to local????
+        state.current_slide.visuals.push(visual); //change to local????
     };
 
 	this.do_record = function() {
+        recording_params = pentimento.lecture_controller.get_recording_params();
 		lecture = new pentimento.lecture();
-		recording_params = pentimento.lecture_controller.get_recording_params();
 		this.add_slide();
         pentimento.state.last_time_update = global_time();
 

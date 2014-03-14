@@ -33,12 +33,12 @@ pentimento.lecture_controller = new function() {
         return lecture.slides[index].duration;
     }
 
-    this.get_slide_from_time = function(time) { //returns a copy; makes original immutable. necessary???
+    this.set_slide_by_time = function(time) {
         var total_duration=0; //something...something...equals
         for(slide in lecture.slides) {
             if(time >= total_duration && time <= total_duration+lecture.slides[slide].duration) {
-                return lecture.slides[slide];
-                //return $.extend(true, {}, lecture[slide]); //private
+                state.current_slide = lecture.slides[slide];
+                return ;
             } else {
                 total_duration += lecture.slides[slide].duration;
             }
@@ -65,7 +65,9 @@ pentimento.lecture_controller = new function() {
 
     this.full_rewind = function() {
         state.current_time = 0;
-        //check if slide
+        if(!lecture.slides) {
+            return ;
+        }
         state.current_slide = lecture.slides[0];
     }
 
@@ -184,7 +186,7 @@ pentimento.lecture_controller = new function() {
             //need to shift the current slide change also. more such to fixxxxx
         }
 
-        pentimento.state.current_slide = this.get_slide_from_time(pentimento.state.current_time);
+        this.set_slide_by_time(pentimento.state.current_time);
     }
 
 };
@@ -198,6 +200,7 @@ function log_lecture() {
 
 $(document).ready(function() {
     lecture = new pentimento.lecture();
+    lecture.slide_changes.push({from_slide:-1, to_slide:0, time:0})
     console.log('lecture created');
     
     var logger = $('<button>LOG-LECTURE</button>');
