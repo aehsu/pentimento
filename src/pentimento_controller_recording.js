@@ -3,7 +3,9 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 	var recording_params;
     var recordRTC = null;
     navigator.getUserMedia({audio: true}, function(mediaStream) {
-       recordRTC = RecordRTC(mediaStream);
+       recordRTC = RecordRTC(mediaStream, {
+            autoWriteToDisk: true
+        });
        recordRTC.startRecording();
     });
 
@@ -98,8 +100,27 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             var segment = new Audio_segment(audioURL, 0, audio_duration, start_time, current_time);
             lecture.audio_tracks.push(segment);
             pentimento.lecture_controller.create_audio_segment(segment);
-        });
 
+
+            // TEMP: Try writing the audio to disk
+            saveToDisk(audioURL, "testrecord");
+            // recordRTC.writeToDisk();
+
+            (function () {
+                var eventHandlers = {
+                    'play': function () {
+                        pentimento.state.wavesurfer.playPause();
+                    }
+                };
+
+                document.addEventListener('click', function (e) {
+                    var action = e.target.dataset && e.target.dataset.action;
+                    if (action && action in eventHandlers) {
+                        eventHandlers[action](e);
+                    }
+                });
+            }());
+        });
 
 
         console.log('stop_record function called');
@@ -117,3 +138,27 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 		lecture = null;
 	}
 };
+
+var saveToDisk = function(fileURL, fileName) {
+    // for non-IE
+    if (!window.ActiveXObject) {
+        var save = document.createElement('a');
+        save.href = fileURL;
+        save.target = '_blank';
+        save.download = fileName || 'unknown';
+
+        var event = document.createEvent('Event');
+        event.initEvent('click', true, true);
+        save.dispatchEvent(event);
+        (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    }
+
+    // for IE
+    else if ( !! window.ActiveXObject && document.execCommand)     {
+        var _window = window.open(fileURL, '_blank');
+        _window.document.close();
+        _window.document.execCommand('SaveAs', true, fileName || fileURL)
+        _window.close();
+    }
+};
+

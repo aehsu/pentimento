@@ -3,7 +3,7 @@ pentimento.lecture_controller = new function() {
     var state = pentimento.state;
     var interval;
     var audio_timeline_scale = 10;
-    var wavesurfer = Object.create(WaveSurfer);
+    state.wavesurfer = Object.create(WaveSurfer);
 
     this.begin_recording = function() {
         console.log("begin_recording");
@@ -210,6 +210,8 @@ $(document).ready(function() {
     // test_audio_track.audio_segments = [test_segment];
     // create_audio_track(test_audio_track);
     // create_audio_segment(test_segment);
+    // Bind buttons and keypresses
+
 });
 //DEBUGGING PURPOSES ONLY
 
