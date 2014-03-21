@@ -132,9 +132,7 @@ pentimento.lecture_controller = new function() {
             //     if event.clientX === (segment.position().left + segment.width())
             //         // Call shift function in model
             // };
-        }); 
-
-        .resizable({
+        }).resizable({
             handles: "e, w",
             minWidth: 1,
             stop: function( event, ui ) {
