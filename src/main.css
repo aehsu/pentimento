@@ -82,7 +82,9 @@ label{
 
 #audio_timeline {
     height: 500px;
-    width: 1000px;
+    width: 100%;
+    display: inline-block;
+
     border-style: solid;
     border-color: black;
     /*disable text selection*/
@@ -103,6 +105,7 @@ label{
     height: 100px;
     border-style: solid;
     border-color: black;
+    float: left;
 }
 
 .audio_segment > wave {
@@ -117,7 +120,7 @@ label{
 
 .audio_track {
     padding: 0;
-    width: 600;
+    width: 300;
     height: 300;
 }
 
@@ -126,7 +129,6 @@ height: 100%;
 width: 5px;
 position: absolute;
 font-size: 0.1px;
-display: block;
 }
 .ui-resizable-w {
     cursor: w-resize;

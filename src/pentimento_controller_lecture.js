@@ -2,7 +2,7 @@ pentimento.lecture_controller = new function() {
     var lecture;
     var state = pentimento.state;
     var interval;
-    var audio_timeline_scale = 10;
+    var audio_timeline_scale = 100;
     state.wavesurfer = Object.create(WaveSurfer);
 
     this.begin_recording = function() {
@@ -121,7 +121,7 @@ pentimento.lecture_controller = new function() {
         var clip = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"}).data(audio_segment);
         $("#track-0").append(clip);
 
-        clip.css({ "padding": 0, "width": "600", "height": $("#audio_timeline").height()/2 });
+        clip.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
         clip.draggable({
             containment: "#track-0",
             axis: "x"
