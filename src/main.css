@@ -1,5 +1,4 @@
 canvas {
-    border: 1px solid black;
     cursor: crosshair;
 }
 button {
@@ -105,14 +104,22 @@ label{
     height: 100px;
     border-style: solid;
     border-color: black;
+    border-width: 2px;
     float: left;
 }
 
-.audio_segment > wave {
+.audio_segment wave {
     position: absolute;
     left:0;
     right: 0;
+    border-style: none;
 }
+
+wave canvas {
+
+    border-style: none;
+}
+
 
 .ui-button:hover {
     background: rgba(0, 0, 0, 0.1);

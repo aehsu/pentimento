@@ -122,10 +122,18 @@ pentimento.lecture_controller = new function() {
         $("#track-0").append(clip);
 
         clip.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
+        
+        // Dragging
         clip.draggable({
             containment: "#track-0",
             axis: "x"
-        })
+        }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
+            // for ( var segment in $("#track-0").children(".audio_segment")) {
+            //     if event.clientX === (segment.position().left + segment.width())
+            //         // Call shift function in model
+            // };
+        }); 
+
         .resizable({
             handles: "e, w",
             minWidth: 1,
