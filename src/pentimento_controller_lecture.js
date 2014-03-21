@@ -126,7 +126,19 @@ pentimento.lecture_controller = new function() {
             containment: "#track-0",
             axis: "x"
         })
-        .resizable({handles: "e, w", minWidth: 1});
+        .resizable({
+            handles: "e, w",
+            minWidth: 1,
+            stop: function( event, ui ) {
+                dwidth = ui.originalSize.width - ui.size.width;
+                if (ui.position.left === ui.originalPosition.left) // then right handle was used
+                    audio_segment.resize(dwidth, "right");
+                else
+                    audio_segment.resize(dwidth, "left");
+            }
+
+
+        });
 
         
         //load waveform
