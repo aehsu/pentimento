@@ -19,6 +19,7 @@ var Audio_segment = function(audio_resource, audio_start_time, audio_end_time, l
 	this.audio_resource = audio_resource;
 	this.audio_start_time = audio_start_time;
 	this.audio_end_time = audio_end_time;
+	this.audio_length = audio_end_time - audio_start_time;
 	this.lecture_start_time = lecture_start_time;
 	this.lecture_end_time = lecture_end_time;
 

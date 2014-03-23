@@ -1,5 +1,4 @@
 canvas {
-    border: 1px solid black;
     cursor: crosshair;
 }
 button {
@@ -82,7 +81,9 @@ label{
 
 #audio_timeline {
     height: 500px;
-    width: 1000px;
+    width: 100%;
+    display: inline-block;
+
     border-style: solid;
     border-color: black;
     /*disable text selection*/
@@ -103,13 +104,22 @@ label{
     height: 100px;
     border-style: solid;
     border-color: black;
+    border-width: 2px;
+    float: left;
 }
 
-.audio_segment > wave {
+.audio_segment wave {
     position: absolute;
     left:0;
     right: 0;
+    border-style: none;
 }
+
+wave canvas {
+
+    border-style: none;
+}
+
 
 .ui-button:hover {
     background: rgba(0, 0, 0, 0.1);
@@ -117,7 +127,7 @@ label{
 
 .audio_track {
     padding: 0;
-    width: 600;
+    width: 300;
     height: 300;
 }
 
@@ -126,7 +136,6 @@ height: 100%;
 width: 5px;
 position: absolute;
 font-size: 0.1px;
-display: block;
 }
 .ui-resizable-w {
     cursor: w-resize;
