@@ -206,6 +206,9 @@ var gui2test = function() {
                     expectedDisability['end group1'] = true;
                     checkButtonDisability(expectedDisability);
 
+    //TODO: after this part of testing, starting a group, performing an action, and pressing undo group without ending the 
+    //group results in a "too much recursion" error at undo.js line 435 
+
     console.log('passed!');
     
 }
