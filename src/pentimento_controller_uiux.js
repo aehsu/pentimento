@@ -47,8 +47,9 @@ pentimento.uiux_controller = new function() {
         });
 
         interval = setInterval(function() {
-            state.current_time += global_time() - state.last_time_update;
-            state.last_time_update = global_time();
+            var gt = global_time()
+            state.current_time += gt - state.last_time_update;
+            state.last_time_update = gt;
             update_ticker(state.current_time);
         }, state.interval_timing);
     }

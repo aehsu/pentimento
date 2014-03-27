@@ -74,9 +74,12 @@ function nonlive_tool_handler(event) {
                     clearInterval(interval);
                 }
             }, 95);
+            $('input[data-toolname="play"]').toggleClass('hidden');
+            $('input[data-toolname="stop"]').toggleClass('hidden');
+            
     		break;
     	case 'stop':
-            clearInterval(interval);
+            clearInterval(interval); //scoping issue for interval
     		break;
     	case 'hyperlink':
     		break;
@@ -93,28 +96,45 @@ function nonlive_tool_handler(event) {
     	case 'width':
     		break;
     	case 'delete':
+            pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
+            update_visuals(pentimento.state.current_time, true);
     		break;
     	case 'retime':
-    		break;
-    	case 'redraw':
     		break;
         case 'select':
             pentimento.state.canvas.mousedown(select_mousedown);
             pentimento.state.canvas.mousemove(select_mousemove);
             $(window).mouseup(select_mouseup);
             break;
-    	case 'insert':
-            pentimento.state.is_recording = false;
-            pentimento.state.lmb_down = false; //necessary?
-            /*
+        case 'redraw':
+            clear();
+            // for(vis in pentimento.state.current_slide.visuals) {
+            //     var visual = pentimento.state.current_slide.visuals[vis];
+            //     if(pentimento.state.selection.indexOf(visual) == -1) { //if the visual is not in the selection
+            //         draw_visual(visual);
+            //     }
+            // }
+            // //what if our selection is not contiguous??????
+            // //should sandwich them or something.
+            // var buffer = [];
+            // pentimento.state.is_recording = true;
+            // pentimento.state.canvas.mousedown(pen_mousedown);
+            // pentimento.state.canvas.mousemove(pen_mousemove);
+            // $(window).mouseup(function(event) {
+            //     if(pentimento.state.lmb_down) {
+            //         var visual = pen_mouseup(event);
+            //         buffer.push(visual);
+            //     }
+            // });
+            // //take up
+            // var endredraw = $('<button></button>', {text: 'End Redraw'})
+            // $('body>div:first-child').append(endredraw);
+            // endredraw.click(function() {
+            //     pentimento.state.is_recording = false;
+            //     endredraw.remove();
 
-                get the current time of the lecture.
-                begin recording
-                end recording
-                insert into original lecture.
-                shift everything by appropriate amount
-            */
-    		break;
+            // });
+            break;
         case 'rewind':
             pentimento.lecture_controller.rewind();
             pentimento.uiux_controller.update_time(pentimento.state.current_time);
@@ -151,9 +171,9 @@ function breaking_tool_handler(event) {
 
 $(document).ready(function() {
     $('.live-tool').click(live_tool_handler);
-    $('.live-tool').change(live_tool_handler)  
-
+    $('.live-tool').change(live_tool_handler);
     $('.live-tool').addClass('hidden');
+
     $('.nonlive-tool').click(nonlive_tool_handler);
     
     $('.recording-tool').click(function(event) {

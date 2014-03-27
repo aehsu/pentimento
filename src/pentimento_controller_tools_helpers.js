@@ -76,6 +76,7 @@ function empty_visual(){
             'color': pentimento.state.color,
             'width': pentimento.state.width,
         },
+        transforms: {},
         vertices:[]
     }
 }
@@ -344,3 +345,4 @@ function select_mouseup(event) {
         draw_visual(vis_copy);
     }
 }
+

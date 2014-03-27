@@ -45,7 +45,7 @@
             <input type="image" src="icons/media_record.png" class="recording-tool center" data-label="begin">
             <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-label="stop">
             
-            <table class="inline">
+            <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
                     <td>
                     <input type="checkbox">Visuals
@@ -56,7 +56,6 @@
                 <tr>
                     <td><input type="checkbox">Audio</td>
                 </tr>
-
             </table>
 
 
@@ -68,7 +67,7 @@
 
             <input type="image" src="icons/media_playback_start.png" class="nonlive-tool center" data-toolname="play">
             <input type="image" src="icons/pause.png" class="nonlive-tool hidden center" data-toolname="stop">
-            <table class="inline">
+            <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
                     <td>
                     <input type="checkbox">No Pause
@@ -100,7 +99,7 @@
 
        <!--      <button class="nonlive-tool" data-toolname="full-rewind" height="20px"> |< </button>
             <button class="nonlive-tool" data-toolname="full-fastforward" height="20px"> >| </button> -->
-            
+            <br/>
             <button class="live-tool" data-toolname="clear">Clear</button> <!-- there should be two version of this..? maybe not. maybe just create new slides -->
             <button class="live-tool" data-toolname="pen">Pen</button>
             <select class="live-tool" data-toolname="width">
@@ -121,8 +120,8 @@
             <button class="nonlive-tool" data-toolname="select">Select </button>
             <button class="nonlive-tool" data-toolname="full-rewind"> |< </button>
             <button class="nonlive-tool" data-toolname="rewind"> < </button>
-            <button class="nonlive-tool" data-toolname="play">Play[nl]</button>
-            <button class="nonlive-tool hidden" data-toolname="stop">Stop[nl]</button>
+            <button class="nonlive-tool" data-toolname="redraw">Redraw</button>
+            <button class="nonlive-tool" data-toolname="delete">Delete</button>
             <button class="nonlive-tool" data-toolname="fastforward"> > </button>
             <button class="nonlive-tool" data-toolname="full-fastforward"> >| </button>
         </div>

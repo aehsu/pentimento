@@ -77,3 +77,24 @@ Lecture Controller
 
 UIUX Controller
 ---------------
+ **UGHHH RENAME THIS SHIT** This is really the **time** controller
+
+ .. js:data:: pentimento.uiux_controller
+
+ 	it is what it is
+
+ 	.. js:function:: stop_recording()
+
+ 		paired with the other stop_recording function
+
+ 	.. js:function:: update_ticker(time)
+
+ 		just updates the ticker
+
+ 	.. js:function:: begin_recording()
+
+ 		does what it sounds like
+
+ 	.. js:function:: update_time(time)
+
+ 		globally updates the time and state to the given time

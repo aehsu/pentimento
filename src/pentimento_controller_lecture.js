@@ -2,6 +2,7 @@ pentimento.lecture_controller = new function() {
     var lecture;
     var state = pentimento.state;
     var interval;
+    var recording_params;
     var audio_timeline_scale = 100;
     state.wavesurfer = Object.create(WaveSurfer);
 
@@ -55,17 +56,17 @@ pentimento.lecture_controller = new function() {
         state.current_slide = lecture.slides[0];
     }
 
-    this.get_recording_params = function() {
-        if(!state.current_slide) { //maybe fix? maybe change? 
-            return {
-                'current_slide': null,
-                'time_in_slide': null
-            };
+    this.update_recording_params = function() {
+        if(!state.current_slide) {
+            recording_params = {
+                'current_slide':null,
+                'time_in_slide':null
+            }
         } else {
             var total_duration = 0;
             for(slide in lecture.slides) { //something...equals...something...
                 if (state.current_time > total_duration && state.current_time <= total_duration+lecture.slides[slide].duration) {
-                    return {
+                    recording_params =  {
                         'current_slide': slide,
                         'time_in_slide': state.current_time - total_duration
                     };
@@ -73,26 +74,7 @@ pentimento.lecture_controller = new function() {
                     total_duration += lecture.slides[slide].duration;
                 }
             }
-            //alert('should never get here');
-            //return false;
         }
-    }
-
-    function insert_visuals_into_slide(to_slide, from_slide, insertion_time) { //should have insert_audio?
-        var before_visuals = [];
-        var after_visuals = to_slide.visuals;
-
-        while(after_visuals.length!=0 && after_visuals[0].tMin < insertion_time) {
-            before_visuals.push(after_visuals.shift());
-        }
-        $.each(after_visuals, function(index, value) {//shift
-            value.tMin += from_slide.duration;
-        });
-        $.each(from_slide.visuals, function(index, value) {
-            value.tMin += insertion_time;
-        })
-        to_slide.visuals = before_visuals.concat(from_slide.visuals.concat(after_visuals));
-        to_slide.duration += from_slide.duration;
     }
 
     this.create_audio_track = function(audio_track) {
@@ -132,7 +114,6 @@ pentimento.lecture_controller = new function() {
 
         });
 
-        
         //load waveform
         var wavesurfer = Object.create(WaveSurfer);
         console.log("#" + new_segment_id)
@@ -151,54 +132,192 @@ pentimento.lecture_controller = new function() {
         wavesurfer.load(audio_segment.audio_resource);
     }
 
-    this.insert_recording = function(recording, params) {
-        if(params['current_slide']==null) {
+    function insert_slide_into_slide(to_slide, from_slide, insertion_time) {
+        for(vis in to_slide.visuals) {
+            var visual = to_slide.visuals[vis];
+            if (visual.tMin >= insertion_time) { //shift visuals in the to_slide
+                shift_visual(visual, from_slide.duration);
+            }
+        }
+        for(vis in from_slide.visuals) {
+            var visual = $.extend({}, from_slide.visuals[vis], true); //make a deep copy
+            visual.tMin += insertion_time;
+            to_slide.visuals.push(visual);
+        }
+        to_slide.duration += from_slide.duration;
+    }
+
+    this.insert_recording = function(recording) {
+        if(recording_params['current_slide']==null) {
             lecture = recording;
         } else {
-            var slide = lecture.slides[params['current_slide']];
-
-            insert_visuals_into_slide(slide, recording.slides.shift(), params['time_in_slide']);
+            var slide = lecture.slides[recording_params['current_slide']];
+            insert_slide_into_slide(slide, recording.slides.shift(), recording_params['time_in_slide']);
             
             var before = [];
             var after = lecture.slides;
-            for(var i=0; i<=params['current_slide']; i++) {
+            for(var i=0; i<=recording_params['current_slide']; i++) {
                 before.push(after.shift());
-            }
+            } //separate slides to before and after those to be inserted
 
-            lecture.slides = before.concat(recording.slides.concat(after));
-            //some logic. the timing is wrong for this
-            //if just one slide in recording.slides to begin with, no change.
-            //else we gotta shift 
             if(recording.slides.length!=0) {
                 //accumulate times up to sum of all in params['current_slide'] and
-                //all of recording.slides
+                //all of recording.slides. then change state.current_time
                 //TODO TODO TODO TODO TODO
-            }
 
-            //shift slide_change events as well.
-            //shift slide_change events as well.
-            //shift slide_change events as well.
-            //shift slide_change events as well.
-            //shift slide_change events as well.
-            //shift slide_change events as well.
-            for(var i=params['current_slide']; i<lecture.slide_changes.length; i++) {
-                lecture.slide_changes[i].from_slide+=1;
-                lecture.slide_changes[i].to_slide+=1;
+                for(var i=0; i<lecture.slide_changes.length; i++) {
+                    var change = lecture.slide_changes[i];
+                    if(change['from_slide'] == recording_params['current_slide']) {
+                        lecture.slide_changes.splice(i, 1); //remove it
+                        break;
+                    }
+                }
+                //TODO FIX
             }
-            //need to shift the current slide change also. more such to fixxxxx
+            lecture.slides = before.concat(recording.slides.concat(after));
         }
 
-        this.set_slide_by_time(pentimento.state.current_time);
+        this.set_slide_by_time(pentimento.state.current_time); //also wrong since current_time is not updated.
     }
 
+    function shift_visual(visual, amount) {
+        //shift an entire visual by some amount in time
+        visual.tMin += amount;
+        for(vert in visual.vertices) {
+            visual.vertices[vert]['t'] += amount;
+        }
+    }
+
+    function shift_visuals(start_time, amount) {
+        //start_time is relative to the slide, not global
+        var visuals = state.current_slide.visuals;
+        for(vis in visuals) {
+            var visual = visuals[vis];
+            if(visual.tMin > start_time) {
+                shift_visual(visual, amount);
+            }
+        }
+    }
+
+    function prevNeighbor(visual) {
+        var prev;
+        for(vis in state.current_slide.visuals) {
+            var tMin = state.current_slide.visuals[vis].tMin;
+            if(tMin < visual.tMin && (prev==undefined || tMin > prev.tMin)) {
+                prev = state.current_slide.visuals[vis];
+            }
+        }
+        return prev;
+    }
+
+    function nextNeighbor(visual) {
+        var next;
+        for(vis in state.current_slide.visuals) {
+            var tMin = state.current_slide.visuals[vis].tMin;
+            if(tMin > visual.tMin && (next==undefined || tMin < next.tMin)) {
+                next = state.current_slide.visuals[vis];
+            }
+        }
+        return next;
+    }
+
+    function segment_visuals(visuals) {
+        //returns an array of contiguous visuals
+        function cmp_visuals(a, b) {
+            if(a.tMin < b.tMin) {
+                return -1;
+            }
+            if (b.tMin > a.tMin) {
+                return 1;
+            }
+            return 0;
+        }
+        function cmp_segments(a, b) {
+            //only to be used if each segment is sorted!
+            if (a[0].tMin < b[0].tMin) {
+                return -1;
+            }
+            if (b[0].tMin > a[0].tMin) {
+                return 1;
+            }
+            return 0;
+        }
+        var visuals_copy = visuals.slice();
+        var segments = [];
+        var segment = [];
+        var endpoints; //just pointers
+        while(visuals_copy.length>0) {
+            endpoints = [visuals_copy[0]];
+            while(endpoints.length>0) {
+                var visual = endpoints.shift();
+                segment.push(visual);
+                visuals_copy.splice(visuals_copy.indexOf(visual), 1);
+                var prev_vis = prevNeighbor(visual);
+                var next_vis = nextNeighbor(visual);
+                if(visuals_copy.indexOf(prev_vis) > -1) {
+                    endpoints.push(prev_vis);
+                }
+                if(visuals_copy.indexOf(next_vis) > -1) {
+                    endpoints.push(next_vis);
+                }
+            }
+            segment.sort(cmp_visuals);
+            segments.push(segment);
+            segment = [];
+        }
+        segments.sort(cmp_segments);
+        return segments;
+    }
+
+    function get_segments_shift(segments) {
+        var shifts = [];
+        for(seg in segments) {
+            var duration = 0;
+            var tMin;
+            var segment = segments[seg];
+            var first = segment[0];
+            var last = segment[segment.length-1];
+            var next = nextNeighbor(last);
+            if (next != undefined) {
+                duration += next.tMin-first.tMin;
+            } else {
+                duration += last.vertices[last.vertices.length-1]['t'] - first.tMin;
+            }
+            if(tMin==undefined || first.tMin < tMin) {
+                tMin = first.tMin;
+            }
+            shifts.push({'tMin':tMin, 'duration':duration});
+        }
+        shifts.reverse();
+        return shifts;
+    }
+
+    this.delete_visuals = function(visuals) {
+        //handles both shifting of the visuals in time and removal from within the visuals
+        var segments = segment_visuals(visuals);
+        var shifts = get_segments_shift(segments);
+        console.log(shifts);
+        for(sh in shifts) {
+            var shift = shifts[sh];
+            shift_visuals(shift['tMin'], -1.0*shift['duration']);
+        }
+        
+        for(vis in visuals) {
+            var index = state.current_slide.visuals.indexOf(visuals[vis]);
+            state.current_slide.visuals.splice(index, 1);
+        }
+    }
+
+    this.redraw_visuals = function(visuals) {
+
+    }
+
+    //DEBUGGING PURPOSES ONLY
+    this.log_lecture = function() {
+        console.log(lecture);
+        window.lec = lecture;
+    }
 };
-
-
-//DEBUGGING PURPOSES ONLY
-function log_lecture() {
-    console.log(lecture);
-    window.lec = lecture;
-}
 
 $(document).ready(function() {
     lecture = new pentimento.lecture();
@@ -206,7 +325,7 @@ $(document).ready(function() {
     console.log('lecture created');
     
     var logger = $('<button>LOG-LECTURE</button>');
-    $(logger).click(log_lecture);
+    $(logger).click(pentimento.lecture_controller.log_lecture);
     $('body div:first').append(logger);
 
     // Test
@@ -219,4 +338,3 @@ $(document).ready(function() {
 
 });
 //DEBUGGING PURPOSES ONLY
-
