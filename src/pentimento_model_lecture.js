@@ -23,6 +23,7 @@ var Audio_segment = function(audio_resource, audio_start_time, audio_end_time, l
 	this.lecture_start_time = lecture_start_time;
 	this.lecture_end_time = lecture_end_time;
 
+	//these should probably be moved elsewhere, you're mixing controller logic with model data
 	this.delete = function(audio_start_time, audio_end_time) {
 
 	};

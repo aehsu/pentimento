@@ -3,9 +3,9 @@
 *************************************************/
 
 pentimento.state = new function() {
-	this.audio_cursor;
-	this.video_cursor;
-	this.lecture_start_time;
+	this.audio_cursor; //why?
+	this.video_cursor; //why?
+	this.lecture_start_time; //why? all lectures should start at time 0...
 	this.is_recording;
 	this.current_slide = null;
 	this.color;
@@ -25,4 +25,3 @@ pentimento.state = new function() {
     this.interval_timing = 50;//ms hmmmmm sure?
     this.selection = [];
 };
-

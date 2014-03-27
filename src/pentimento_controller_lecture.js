@@ -5,22 +5,6 @@ pentimento.lecture_controller = new function() {
     var audio_timeline_scale = 100;
     state.wavesurfer = Object.create(WaveSurfer);
 
-    this.begin_recording = function() {
-        console.log("begin_recording");
-        if(!state.current_slide) { //jesus save me
-            this.add_slide();
-        } else {
-            state.current_slide.last_start = global_time(); //not used.
-        }
-
-        interval = setInterval(do_timing, state.interval_timing);
-    }
-
-    this.stop_recording = function() {
-        clearInterval(interval);//NEED TO REDO SOME LOGIC FOR TIMING OF SLIDES
-        //lecture.duration += diff;
-    }
-
     this.get_slides_length = function() {
         return lecture.slides.length;
     }

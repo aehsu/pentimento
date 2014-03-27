@@ -1,4 +1,3 @@
-
 pentimento.uiux_controller = new function() {
     var state = pentimento.state; //reference
     var interval;
@@ -80,41 +79,25 @@ $(document).ready(function() {
         pentimento.state.pressure = true;
         pentimento.state.pressure_color = true;
         pentimento.state.pressure_width = true;
-
-    //why is this different?!
-    //var c = pentimento.state.canvas[0];
-    //c.addEventListener("MSPointerUp", canvas_mouseup, false);
-    //c.addEventListener("MSPointerMove", canvas_mousemove, false);
-    //c.addEventListener("MSPointerDown", canvas_mousedown, false);
     } else {
         console.log('Pointer Disabled Device');
         pentimento.state.pressure = false;
         pentimento.state.pressure_color = false;
         pentimento.state.pressure_width = false;
-        //pentimento.state.canvas.mousedown(canvas_mousedown);
-        //pentimento.state.canvas.mousemove(canvas_mousemove);
-        //$(window).mouseup(canvas_mouseup);
     }
 
     $('#slider').slider({
-            disabled: true,
-            step:1,
-            range: 'min',
-            slide: function(event, ui) {
-                pentimento.uiux_controller.update_time(ui.value);
-                update_visuals(ui.value, true);
-            },
-            stop: function(event, ui) {
-                pentimento.uiux_controller.update_time(ui.value);
-                update_visuals(pentimento.state.current_time, true);
-                pentimento.lecture_controller.set_slide_by_time(ui.value);
-            }
-        });
-    /* PORTED
-     //ignore touch events for now
-     canvas = $("#canv")[0]
-     canvas.addEventListener('touchstart', on_mousedown, false);
-     canvas.addEventListener('touchmove', on_mousemove, false);
-     window.addEventListener('touchend', on_mouseup, false);
-     */
+        disabled: true,
+        step:1,
+        range: 'min',
+        slide: function(event, ui) {
+            pentimento.uiux_controller.update_time(ui.value);
+            update_visuals(ui.value, true);
+        },
+        stop: function(event, ui) {
+            pentimento.uiux_controller.update_time(ui.value);
+            update_visuals(pentimento.state.current_time, true);
+            pentimento.lecture_controller.set_slide_by_time(ui.value);
+        }
+    });
 });

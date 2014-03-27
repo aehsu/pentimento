@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Models &mdash; Pentimento 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Pentimento 1.0 documentation" href="index.html" />
+    <link rel="next" title="Controllers" href="controllers.html" />
+    <link rel="prev" title="Design" href="design.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="controllers.html" title="Controllers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Pentimento 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Models</a><ul>
+<li><a class="reference internal" href="#lecture-model">Lecture Model</a></li>
+<li><a class="reference internal" href="#state-model">State Model</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="design.html"
+                        title="previous chapter">Design</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="controllers.html"
+                        title="next chapter">Controllers</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/models.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div>Models in our system represent the raw data itself, but do not have any notion of how to manipulate the data. Models are purely a container for data, almost like channels. Any additional classes that might be defined for data should be made as a model.</div></blockquote>
+<div class="section" id="lecture-model">
+<h2>Lecture Model<a class="headerlink" href="#lecture-model" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The lecture model represents a constructor function, or something similar to classes in the traditional sense. The lecture model itself contains only fields, and any future extension to the data a lecture should store can be made in the lecture model.</p>
+<dl class="class">
+<dt id="pentimento.lecture">
+<em class="property">class </em><tt class="descclassname">pentimento.</tt><tt class="descname">lecture</tt><big>(</big><big>)</big><a class="headerlink" href="#pentimento.lecture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor function for lecture objects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">new lecture object</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="slides[]">
+<tt class="descname">slides[]</tt><a class="headerlink" href="#slides[]" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of slides within the lecture. Initially empty, slides are 0-indexed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="slide_changes[]">
+<tt class="descname">slide_changes[]</tt><a class="headerlink" href="#slide_changes[]" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of slide_changes within the lecture. Begins with a <tt class="docutils literal"><span class="pre">{from_slide:-1,</span> <span class="pre">to_slide:0,</span> <span class="pre">time:0}</span></tt> slide_change.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="audio_tracks[]">
+<tt class="descname">audio_tracks[]</tt><a class="headerlink" href="#audio_tracks[]" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>SOME DESCRIPTION, JONATHAN</strong></p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="state-model">
+<h2>State Model<a class="headerlink" href="#state-model" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The state model represents a different fundamental element from the lecture model. The state represents more a shared channel for methods to access in their need for information about the current session of recording. As such, the state model is not a constructor but an already-initialized object of information with default values.</p>
+<p>Sessions begin and end on leaving of a page or refresh of the page.</p>
+<dl class="data">
+<dt id="pentimento.state">
+<tt class="descclassname">pentimento.</tt><tt class="descname">state</tt><a class="headerlink" href="#pentimento.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maintains information about the recording session</p>
+<dl class="attribute">
+<dt id="is_recording">
+<tt class="descname">is_recording</tt><a class="headerlink" href="#is_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">boolean</span></tt> about whether the system is currently recording</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="current_slide">
+<tt class="descname">current_slide</tt><a class="headerlink" href="#current_slide" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">reference</span></tt> to which slide the user is currently viewing or editing. Alias to an element within <tt class="docutils literal"><span class="pre">pentimento.lecture.slides</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="color">
+<tt class="descname">color</tt><a class="headerlink" href="#color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hex-value referring to the most-recently selected color for visuals</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="width">
+<tt class="descname">width</tt><a class="headerlink" href="#width" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">string</span></tt> referring to the most-recently selected width for visuals</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="current_tool">
+<tt class="descname">current_tool</tt><a class="headerlink" href="#current_tool" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">string</span></tt> referring to which tool is currently enabled by the user</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lmb_down">
+<tt class="descname">lmb_down</tt><a class="headerlink" href="#lmb_down" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">boolean</span></tt> referring to whether the left mouse button is down</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="last_point">
+<tt class="descname">last_point</tt><a class="headerlink" href="#last_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object with an <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt> attribute referring to the last point the <tt class="docutils literal"><span class="pre">current_tool</span></tt> needs to utilize its function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="context">
+<tt class="descname">context</tt><a class="headerlink" href="#context" title="Permalink to this definition">¶</a></dt>
+<dd><p>The context of the drawing canvas</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="canvas">
+<tt class="descname">canvas</tt><a class="headerlink" href="#canvas" title="Permalink to this definition">¶</a></dt>
+<dd><p>The HTML <tt class="docutils literal"><span class="pre">canvas</span></tt> element</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="current_visual">
+<tt class="descname">current_visual</tt><a class="headerlink" href="#current_visual" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current visual which the tool is modifying</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pressure">
+<tt class="descname">pressure</tt><a class="headerlink" href="#pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">boolean</span></tt> about whether or not the hardware supports pressure sensitivity</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pressure_color">
+<tt class="descname">pressure_color</tt><a class="headerlink" href="#pressure_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hex-value representing the color to interpolate into if pressure sensitivity is applicable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pressure_width">
+<tt class="descname">pressure_width</tt><a class="headerlink" href="#pressure_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Width to interpolate to if pressure sensitivity is applicable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tool">
+<tt class="descname">tool</tt><a class="headerlink" href="#tool" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>LOL LIKE I KNOW?! I HAVE NO IDEA, CURRENT_TOOL?</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="current_time = 0">
+<tt class="descname">current_time = 0</tt><a class="headerlink" href="#current_time = 0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time within the lecture that a user is currently at. Initialized to a default value of 0.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="last_time_update = null">
+<tt class="descname">last_time_update = null</tt><a class="headerlink" href="#last_time_update = null" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the clock time when the system last updated as it was recording. As the timers in JavaScript are unreliable, updates to the recording interval are based on this field.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="interval_timing = 50">
+<tt class="descname">interval_timing = 50</tt><a class="headerlink" href="#interval_timing = 50" title="Permalink to this definition">¶</a></dt>
+<dd><p>I don&#8217;t know. <strong>Represents something I have forgotten.</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="selection = []">
+<tt class="descname">selection = []</tt><a class="headerlink" href="#selection = []" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the tool currently enabled is the selection tool, maintains an array of references to the visuals which are selected.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="controllers.html" title="Controllers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             >previous</a> |</li>
+        <li><a href="index.html">Pentimento 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, MIT CSAIL -- Computer Graphics Group. Fredo Durand; Alex Hsu, Kenny Lam, Richard Lu, Halla Moore, Jonathan Wang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

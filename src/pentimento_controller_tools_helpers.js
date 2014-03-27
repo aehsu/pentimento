@@ -7,7 +7,6 @@ function draw_point(coord) { //PORTED
     var ctx = pentimento.state.context;
     ctx.globalAlpha = 1.0;
     ctx.beginPath();
-    // ctx.fillStyle = default_point_color;
     ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
 }
 
@@ -54,7 +53,7 @@ function draw_line(line) {
 // Returns the location of the event on the canvas, as opposed to on the page
 function get_canvas_point(event){
     var pt = {
-        x: event.pageX - pentimento.state.canvas.offset().left, // todo fix if canvas not in corner
+        x: event.pageX - pentimento.state.canvas.offset().left,
         y: event.pageY - pentimento.state.canvas.offset().top,
     };
 

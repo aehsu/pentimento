@@ -25,12 +25,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         this.get_visual_by_index = function(index) {
             return this.VISUALS[index];
         }
-        this.insert_visual_at_index = function(visual, index) {
-
-        }
-        this.insert_visual_at_time = function(visual, t_audio) { //t_audio, t_visual?
-
-        }
     };
 
     function slide_change(from_page, to_page, time) {
@@ -67,7 +61,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 		this.add_slide();
         pentimento.state.last_time_update = global_time();
 
-
         // Start the audio recording
         recordRTC.startRecording();
 	};
@@ -98,7 +91,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 
 
             // TEMP: Try writing the audio to disk
-            saveToDisk(audioURL, "testrecord");
+            // saveToDisk(audioURL, "testrecord");
             // recordRTC.writeToDisk();
 
             (function () {
@@ -118,15 +111,14 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         });
 
 
-        console.log('stop_record function called');
-        console.log('recording params value {"current_slide":'+recording_params['current_slide']+', "time_in_slide":'+recording_params['time_in_slide']);
+        // console.log('stop_record function called');
+        // console.log('recording params value {"current_slide":'+recording_params['current_slide']+', "time_in_slide":'+recording_params['time_in_slide']);
 		end_slide();
 
-        console.log('some sanity checking happening');
-        if(lecture.slides[0].visuals[0] && lecture.slides[0].visuals[1]) {
-            console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' + lecture.slides[0].visuals[1].tMin);
-        }
-        var tmp = lecture.slides[lecture.slides.length-1].visuals;
+        // console.log('some sanity checking happening');
+        // if(lecture.slides[0].visuals[0] && lecture.slides[0].visuals[1]) {
+        //     console.log('tMin for first and second visuals:' + lecture.slides[0].visuals[0].tMin + ', ' + lecture.slides[0].visuals[1].tMin);
+        // }
 
 		pentimento.lecture_controller.insert_recording(lecture, recording_params);
 		recording_params = null;
