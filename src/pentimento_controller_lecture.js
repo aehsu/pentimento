@@ -1,5 +1,5 @@
 pentimento.lecture_controller = new function() {
-    var lecture;
+    var lecture = new pentimento.lecture();
     var state = pentimento.state;
     var interval;
     var recording_params;
@@ -14,12 +14,8 @@ pentimento.lecture_controller = new function() {
         return lecture.slides[index];
     }
 
-    this.get_slide_duration = function(index) {
-        return lecture.slides[index].duration;
-    }
-
     this.set_slide_by_time = function(time) {
-        var total_duration=0; //something...something...equals
+        var total_duration=0; //something...something...equals?
         for(slide in lecture.slides) {
             if(time >= total_duration && time <= total_duration+lecture.slides[slide].duration) {
                 state.current_slide = lecture.slides[slide];
@@ -39,6 +35,7 @@ pentimento.lecture_controller = new function() {
     }
 
     this.rewind = function() {
+        //TODO
         //should really seek a more previous slide change
         var idx = lecture.slides.indexOf(state.current_slide);
         var t = 0;
@@ -56,7 +53,7 @@ pentimento.lecture_controller = new function() {
         state.current_slide = lecture.slides[0];
     }
 
-    this.update_recording_params = function() {
+    this.begin_recording = function() {
         if(!state.current_slide) {
             recording_params = {
                 'current_slide':null,
@@ -133,6 +130,7 @@ pentimento.lecture_controller = new function() {
     }
 
     function insert_slide_into_slide(to_slide, from_slide, insertion_time) {
+        //insertion time is in the to_slide
         for(vis in to_slide.visuals) {
             var visual = to_slide.visuals[vis];
             if (visual.tMin >= insertion_time) { //shift visuals in the to_slide
@@ -176,7 +174,7 @@ pentimento.lecture_controller = new function() {
             }
             lecture.slides = before.concat(recording.slides.concat(after));
         }
-
+        //update the ticker...handled in other code
         this.set_slide_by_time(pentimento.state.current_time); //also wrong since current_time is not updated.
     }
 
@@ -193,7 +191,7 @@ pentimento.lecture_controller = new function() {
         var visuals = state.current_slide.visuals;
         for(vis in visuals) {
             var visual = visuals[vis];
-            if(visual.tMin > start_time) {
+            if(visual.tMin >= start_time) {
                 shift_visual(visual, amount);
             }
         }
@@ -273,7 +271,6 @@ pentimento.lecture_controller = new function() {
         var shifts = [];
         for(seg in segments) {
             var duration = 0;
-            var tMin;
             var segment = segments[seg];
             var first = segment[0];
             var last = segment[segment.length-1];
@@ -283,12 +280,8 @@ pentimento.lecture_controller = new function() {
             } else {
                 duration += last.vertices[last.vertices.length-1]['t'] - first.tMin;
             }
-            if(tMin==undefined || first.tMin < tMin) {
-                tMin = first.tMin;
-            }
-            shifts.push({'tMin':tMin, 'duration':duration});
+            shifts.push({'tMin':first.tMin, 'duration':duration});
         }
-        shifts.reverse();
         return shifts;
     }
 
@@ -296,26 +289,45 @@ pentimento.lecture_controller = new function() {
         //handles both shifting of the visuals in time and removal from within the visuals
         var segments = segment_visuals(visuals);
         var shifts = get_segments_shift(segments);
-        console.log(shifts);
-        for(sh in shifts) {
-            var shift = shifts[sh];
-            shift_visuals(shift['tMin'], -1.0*shift['duration']);
-        }
-        
+        shifts.reverse();
+        console.log("DELETION", shifts);
         for(vis in visuals) {
             var index = state.current_slide.visuals.indexOf(visuals[vis]);
             state.current_slide.visuals.splice(index, 1);
         }
+        for(sh in shifts) {
+            var shift = shifts[sh];
+            shift_visuals(shift['tMin'], -1.0*shift['duration']);
+        }
+        //should we change the duration of the slide?!?
+        shifts.reverse();
+        return shifts;
     }
 
-    this.redraw_visuals = function(visuals) {
+    this.redraw_visuals = function(old_visuals, new_visuals) {
+        var shifts = this.delete_visuals(old_visuals);
+        if(new_visuals.length==0) {return ;}
 
+        var duration = get_segments_shift([new_visuals])[0]['duration'];
+        console.log('duration', duration);
+        var offset = new_visuals[0].tMin - shifts[0]['tMin'];
+        shift_visuals(shifts[0]['tMin'], duration);
+        for(vis in new_visuals) {
+            shift_visual(new_visuals[vis], -1.0*offset);
+            state.current_slide.visuals.push(new_visuals[vis]);   
+        }
+        state.current_slide.duration += duration;
     }
 
     //DEBUGGING PURPOSES ONLY
     this.log_lecture = function() {
         console.log(lecture);
         window.lec = lecture;
+    }
+
+    this.log_visuals = function() {
+        console.log(state.current_slide.visuals);
+        window.viz = state.current_slide.visuals;
     }
 };
 
@@ -328,6 +340,10 @@ $(document).ready(function() {
     $(logger).click(pentimento.lecture_controller.log_lecture);
     $('body div:first').append(logger);
 
+    var logger2 = $('<button>LOG-VISUALS</button>');
+    $(logger2).click(pentimento.lecture_controller.log_visuals);
+    $('body div:first').append(logger2);
+
     // Test
     // var test_audio_track = new Audio_track();
     // var test_segment = new Audio_segment("clair_de_lune.mp3", 0, 500.0, 0, 500.0);
@@ -337,4 +353,3 @@ $(document).ready(function() {
     // Bind buttons and keypresses
 
 });
-//DEBUGGING PURPOSES ONLY

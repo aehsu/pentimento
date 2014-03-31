@@ -55,6 +55,7 @@ function get_canvas_point(event){
     var pt = {
         x: event.pageX - pentimento.state.canvas.offset().left,
         y: event.pageY - pentimento.state.canvas.offset().top,
+        t: global_time()
     };
 
     if (pentimento.state.pressure) {
@@ -71,7 +72,7 @@ function empty_visual(){
         doesItGetDeleted: null,
         tDeletion: null,
         tEndEdit: null,
-        tMin: global_time() - pentimento.state.current_slide.last_start,
+        tMin: global_time(),
         properties: {
             'color': pentimento.state.color,
             'width': pentimento.state.width,
@@ -157,54 +158,6 @@ function clear() {
 
 
 // Handler function for a mousedown on the canvas
-function pen_mousedown(event) {
-    if (! pentimento.state.is_recording){return;}
-    var state = pentimento.state; //reference
-
-    event.preventDefault();
-    state.lmb_down = true; //FUCK TODO FIX.
-
-    state.current_visual = empty_visual();
-    state.current_visual.type = VisualTypes.stroke;//active_visual_type; move to state? update empty visual based on this
-    state.last_point = get_canvas_point(event);
-    state.last_point['t'] = global_time() - pentimento.state.current_slide.last_start;
-    state.current_visual.vertices.push(state.last_point);
-}
-
-function pen_mousemove(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();  
-    var state = pentimento.state; //reference
-
-    if (state.lmb_down) {
-        var cur_point = get_canvas_point(event);
-        draw_line({
-            from: state.last_point,
-            to: cur_point,
-        });
-        
-        state.last_point = cur_point;
-        state.last_point['t'] = global_time() - pentimento.state.current_slide.last_start;//can move into get_canvas_point() function.
-        state.current_visual.vertices.push(cur_point);
-    }
-}
-
-function pen_mouseup(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();
-    //console.log('pen_mouseup');
-
-    var state = pentimento.state;
-    if (state.lmb_down) {
-        state.lmb_down = false;
-        var visual = state.current_visual;
-        state.current_visual = null;
-        state.last_point = null;
-        return visual; // why need to return?
-    }
-}
-
-// Handler function for a mousedown on the canvas
 function dots_mousedown(event) {
     if (! pentimento.state.is_recording){return;}
     var state = pentimento.state; //reference
@@ -253,6 +206,52 @@ function dots_mouseup(event) {
         state.current_visual = null;
         state.last_point = null;
         return visual;
+    }
+}
+
+// Handler function for a mousedown on the canvas
+function pen_mousedown(event) {
+    if (! pentimento.state.is_recording){return;}
+    var state = pentimento.state; //reference
+
+    event.preventDefault();
+    state.lmb_down = true; //FUCK TODO FIX.
+
+    state.current_visual = empty_visual();
+    state.current_visual.type = VisualTypes.stroke;//active_visual_type; move to state? update empty visual based on this
+    state.last_point = get_canvas_point(event);
+    state.current_visual.vertices.push(state.last_point);
+}
+
+function pen_mousemove(event) {
+    if (! pentimento.state.is_recording){return;}
+    event.preventDefault();  
+    var state = pentimento.state; //reference
+
+    if (state.lmb_down) {
+        var cur_point = get_canvas_point(event);
+        draw_line({
+            from: state.last_point,
+            to: cur_point,
+        });
+        
+        state.last_point = cur_point;
+        state.current_visual.vertices.push(cur_point);
+    }
+}
+
+function pen_mouseup(event) {
+    if (! pentimento.state.is_recording){return;}
+    event.preventDefault();
+    //console.log('pen_mouseup');
+
+    var state = pentimento.state;
+    if (state.lmb_down) {
+        state.lmb_down = false;
+        var visual = state.current_visual;
+        state.current_visual = null;
+        state.last_point = null;
+        return visual; // why need to return?
     }
 }
 

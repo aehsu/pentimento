@@ -107,33 +107,28 @@ function nonlive_tool_handler(event) {
             $(window).mouseup(select_mouseup);
             break;
         case 'redraw':
-            clear();
-            // for(vis in pentimento.state.current_slide.visuals) {
-            //     var visual = pentimento.state.current_slide.visuals[vis];
-            //     if(pentimento.state.selection.indexOf(visual) == -1) { //if the visual is not in the selection
-            //         draw_visual(visual);
-            //     }
-            // }
-            // //what if our selection is not contiguous??????
-            // //should sandwich them or something.
-            // var buffer = [];
-            // pentimento.state.is_recording = true;
-            // pentimento.state.canvas.mousedown(pen_mousedown);
-            // pentimento.state.canvas.mousemove(pen_mousemove);
-            // $(window).mouseup(function(event) {
-            //     if(pentimento.state.lmb_down) {
-            //         var visual = pen_mouseup(event);
-            //         buffer.push(visual);
-            //     }
-            // });
-            // //take up
-            // var endredraw = $('<button></button>', {text: 'End Redraw'})
-            // $('body>div:first-child').append(endredraw);
-            // endredraw.click(function() {
-            //     pentimento.state.is_recording = false;
-            //     endredraw.remove();
-
-            // });
+            // pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
+            // update_visuals(pentimento.state.current_time, true);
+            // some manual drawing necessary
+            var buffer = [];
+            pentimento.state.is_recording = true;
+            pentimento.state.canvas.mousedown(pen_mousedown);
+            pentimento.state.canvas.mousemove(pen_mousemove);
+            $(window).mouseup(function(event) {
+                if(pentimento.state.lmb_down) {
+                    var visual = pen_mouseup(event);
+                    buffer.push(visual);
+                }
+            });
+            var endredraw = $('<button></button>', {text: 'End Redraw'});
+            $('body>div:first-child').append(endredraw);
+            endredraw.click(function() {
+                pentimento.state.is_recording = false;
+                endredraw.remove();
+                clear();
+                pentimento.lecture_controller.redraw_visuals(pentimento.state.selection, buffer);
+                pentimento.uiux_controller.stop_recording();
+            });
             break;
         case 'rewind':
             pentimento.lecture_controller.rewind();

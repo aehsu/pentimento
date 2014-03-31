@@ -1,5 +1,6 @@
 pentimento.recording_controller = new function() {//records little mini-lectures, which is all a lecture is.
 	var recording = null;
+    var slide_begin = null;
     var recordRTC = null;
     // navigator.getUserMedia({audio: true}, function(mediaStream) {
     //    recordRTC = RecordRTC(mediaStream, {
@@ -12,7 +13,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     
 	//move to elsewhere? high level function?
     function slide() {
-        this.last_start = null;
         this.number = null;
         this.visuals = [];
         this.duration = 0;
@@ -39,35 +39,39 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     	if(recording.slides.length != 0) {
     		var idx = recording.slides.indexOf(state.current_slide);
     		recording.slide_changes.push(new slide_change(idx, idx+1, gt));
-    		end_slide();
+    		end_slide(gt);
     	}
         var new_slide = new slide();
         recording.slides.push(new_slide);
         state.current_slide = new_slide;
-        new_slide.last_start = gt;
+        slide_begin = gt+2;
     };
 
-    function end_slide() {
-    	state.current_slide.duration += global_time() - state.current_slide.last_start;
-        delete state.current_slide.last_start;
+    function end_slide(gt) {
+    	state.current_slide.duration += gt-slide_begin;
+        slide_begin = null;
     	state.current_slide = null;
     }
 
     this.add_visual = function(visual) {
+        visual.tMin -= slide_begin;
+        for(vert in visual.vertices) {
+            visual.vertices[vert]['t'] -= slide_begin;
+        }
         state.current_slide.visuals.push(visual); //change to local????
     };
 
 	this.do_record = function() {
-        pentimento.lecture_controller.update_recording_params();
+        pentimento.lecture_controller.begin_recording();
         recording = new pentimento.lecture();
 		this.add_slide();
-        pentimento.state.last_time_update = global_time();
 
         // Start the audio recording
         // recordRTC.startRecording();
 	};
 
 	this.stop_record = function() {
+        var gt = global_time();
         // Stop the audio recording
         // recordRTC.stopRecording(function(audioURL) {
         //    console.log(audioURL);
@@ -112,9 +116,10 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         //     }());
         // });
 
-        end_slide();
+        end_slide(gt);
 		pentimento.lecture_controller.insert_recording(recording);
 		recording = null;
+        state.last_time_update = null;
 	}
 };
 
