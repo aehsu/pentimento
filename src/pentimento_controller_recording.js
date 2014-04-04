@@ -119,7 +119,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         end_slide(gt);
 		pentimento.lecture_controller.insert_recording(recording);
 		recording = null;
-        state.last_time_update = null;
 	}
 };
 
