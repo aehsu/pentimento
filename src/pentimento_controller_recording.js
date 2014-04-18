@@ -66,7 +66,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         pentimento.lecture_controller.begin_recording();
         recording = new pentimento.lecture();
 		this.add_slide();
-        begin_record_time = global_time();
+        begin_record_time = pentimento.state.current_time;
 
         // Start the audio recording
         recordRTC.startRecording();
@@ -74,6 +74,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 
 	this.stop_record = function() {
         var gt = global_time();
+        var end_record_time = pentimento.state.current_time;
 
         // Stop the audio recording
         recordRTC.stopRecording(function(audioURL) {
@@ -87,11 +88,11 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             };
 
             // Get information about the audio track from looking at the lecture state
-            var audio_duration = gt - begin_record_time;
+            var audio_duration = end_record_time - begin_record_time;
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Insert the audio segment into the track
-            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, begin_record_time, gt);
+            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, begin_record_time, end_record_time);
             track.audio_segments.push(segment);
 
             // TEMP: Try writing the audio to disk

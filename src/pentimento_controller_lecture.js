@@ -16,7 +16,7 @@ pentimento.lecture_controller = new function() {
     }
 
     this.set_slide_by_time = function(time) {
-        var total_duration=0; //something...something...equals?
+        var total_duration = 0; //something...something...equals?
         for(slide in lecture.slides) {
             if(time >= total_duration && time <= total_duration+lecture.slides[slide].duration) {
                 state.current_slide = lecture.slides[slide];
