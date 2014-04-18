@@ -1,5 +1,6 @@
 pentimento.lecture_controller = new function() {
-    var lecture = new pentimento.lecture();
+    var lecture = null;
+    this.lecture = lecture;
     var state = pentimento.state;
     var interval;
     var recording_params;
@@ -74,60 +75,79 @@ pentimento.lecture_controller = new function() {
         }
     }
 
-    this.create_audio_track = function(audio_track) {
-        var new_track_id = "track-" + $("#audio_timeline").children(".audio_track").length;
-        var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
-        new_track.data(audio_track);
-        $("#audio_timeline").append(new_track);
-    };
+    // Refreshes the audio timeline display to show the tracks and segments
+    this.refresh_audio_display = function() {
 
-    this.create_audio_segment = function(audio_segment) {
-        var new_segment_id = "segment-" + $("#track-0").children(".audio_segment").length;
-        var clip = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"}).data(audio_segment);
-        $("#track-0").append(clip);
+        // Clear the existing audio timeline
+        $("#audio_timeline").html("");
 
-        clip.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
+        // Iterate over all audio tracks
+        console.log(lecture.audio_tracks.length);
+        for (var i = 0; i < lecture.audio_tracks.length; i++) {
+            var audio_track = lecture.audio_tracks[i];
+            console.log(audio_track);
+
+            // Create a new track div and set it's data
+            var new_track_id = "track-" + i;
+            var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
+            new_track.data(audio_track);
+            $("#audio_timeline").append(new_track);
+
+            // Iterate over all segments for that track
+            for (var j = 0; j < audio_track.audio_segments.length; j++) {
+                var audio_segment = audio_track.audio_segments[i];
+
+                // Create a new segment div 
+                var new_segment_id = "segment-" + j;
+                var new_segment = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"});
+                new_segment.data(audio_segment);
+                new_track.append(new_segment);
+
+                // Set the css for the new segment
+                new_segment.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
         
-        // Dragging
-        clip.draggable({
-            containment: "#track-0",
-            axis: "x"
-        }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-            // for ( var segment in $("#track-0").children(".audio_segment")) {
-            //     if event.clientX === (segment.position().left + segment.width())
-            //         // Call shift function in model
-            // };
-        }).resizable({
-            handles: "e, w",
-            minWidth: 1,
-            stop: function( event, ui ) {
-                dwidth = ui.originalSize.width - ui.size.width;
-                if (ui.position.left === ui.originalPosition.left) // then right handle was used
-                    audio_segment.resize(dwidth, "right");
-                else
-                    audio_segment.resize(dwidth, "left");
-            }
+                // Setup the dragging
+                new_segment.draggable({
+                    containment: ("#" + new_track_id),
+                    axis: "x"
+                }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
+                    // for ( var segment in $("#track-0").children(".audio_segment")) {
+                    //     if event.clientX === (segment.position().left + segment.width())
+                    //         // Call shift function in model
+                    // };
+                }).resizable({
+                    handles: "e, w",
+                    minWidth: 1,
+                    stop: function( event, ui ) {
+                        dwidth = ui.originalSize.width - ui.size.width;
+                        if (ui.position.left === ui.originalPosition.left) // then right handle was used
+                            audio_segment.resize(dwidth, "right");
+                        else
+                            audio_segment.resize(dwidth, "left");
+                    }
+                });
 
+                // Load the waveform to be displayed inside the segment div
+                var wavesurfer = Object.create(WaveSurfer);
+                console.log("#" + new_segment_id)
 
-        });
+                wavesurfer.init({
+                    container: document.querySelector("#" + new_segment_id),
+                    waveColor: 'violet',
+                    progressColor: 'purple',
+                    height: $("#audio_timeline").height()/2
+                });
 
-        //load waveform
-        var wavesurfer = Object.create(WaveSurfer);
-        console.log("#" + new_segment_id)
+                wavesurfer.on('ready', function () {
+                    wavesurfer.play();
+                });
 
-        wavesurfer.init({
-            container: document.querySelector("#" + new_segment_id),
-            waveColor: 'violet',
-            progressColor: 'purple',
-            height: $("#audio_timeline").height()/2
-        });
+                wavesurfer.load(audio_segment.audio_resource);
 
-        wavesurfer.on('ready', function () {
-            wavesurfer.play();
-        });
-
-        wavesurfer.load(audio_segment.audio_resource);
+            }; // End of audio segments loop
+        }; // End of audio tracks loop
     }
+
 
     function insert_slide_into_slide(to_slide, from_slide, insertion_time) {
         //insertion time is in the to_slide

@@ -2,12 +2,13 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 	var recording = null;
     var slide_begin = null;
     var recordRTC = null;
-    // navigator.getUserMedia({audio: true}, function(mediaStream) {
-    //    recordRTC = RecordRTC(mediaStream, {
-    //         autoWriteToDisk: true
-    //     });
-    //    recordRTC.startRecording();
-    // });
+    var begin_record_time;
+    navigator.getUserMedia({audio: true}, function(mediaStream) {
+       recordRTC = RecordRTC(mediaStream, {
+            autoWriteToDisk: true
+        });
+       recordRTC.startRecording();
+    });
     var state = pentimento.state;
     var slide_counter; //maybe to be used.
     
@@ -65,60 +66,61 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         pentimento.lecture_controller.begin_recording();
         recording = new pentimento.lecture();
 		this.add_slide();
+        begin_record_time = global_time();
 
         // Start the audio recording
-        // recordRTC.startRecording();
+        recordRTC.startRecording();
 	};
 
 	this.stop_record = function() {
         var gt = global_time();
+
         // Stop the audio recording
-        // recordRTC.stopRecording(function(audioURL) {
-        //    console.log(audioURL);
+        recordRTC.stopRecording(function(audioURL) {
+           console.log(audioURL);
 
-        //     // Insert an audio track if there isn't one yet
-        //     var track = recording.audio_tracks[0];
-        //     if (typeof track === 'undefined') {
-        //         track = new Audio_track();
-        //         recording.audio_tracks.push(track);
-        //         pentimento.lecture_controller.create_audio_track(track);
-        //     };
+            // Insert an audio track if there isn't one yet
+            var track = recording.audio_tracks[0];
+            if (typeof track === 'undefined') {
+                track = new pentimento.audio_track();
+                recording.audio_tracks.push(track);
+            };
 
-        //     // Get information about the audio track from looking at the lecture state
-        //     var start_time = pentimento.state.last_time_update;
-        //     var current_time = global_time();
-        //     var audio_duration = current_time - start_time;
-        //     console.log("Recorded audio of length: " + audio_duration);
+            // Get information about the audio track from looking at the lecture state
+            var audio_duration = gt - begin_record_time;
+            console.log("Recorded audio of length: " + String(audio_duration));
 
-        //     // Insert the audio segment into the track
-        //     var segment = new Audio_segment(audioURL, 0, audio_duration, start_time, current_time);
-        //     recording.audio_tracks.push(segment);
-        //     pentimento.lecture_controller.create_audio_segment(segment);
+            // Insert the audio segment into the track
+            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, begin_record_time, gt);
+            track.audio_segments.push(segment);
 
+            // TEMP: Try writing the audio to disk
+            // saveToDisk(audioURL, "testrecord");
+            // recordRTC.writeToDisk();
 
-        //     // TEMP: Try writing the audio to disk
-        //     // saveToDisk(audioURL, "testrecord");
-        //     // recordRTC.writeToDisk();
-
-        //     (function () {
-        //         var eventHandlers = {
-        //             'play': function () {
-        //                 pentimento.state.wavesurfer.playPause();
-        //             }
-        //         };
-
-        //         document.addEventListener('click', function (e) {
-        //             var action = e.target.dataset && e.target.dataset.action;
-        //             if (action && action in eventHandlers) {
-        //                 eventHandlers[action](e);
-        //             }
-        //         });
-        //     }());
-        // });
+        });
 
         end_slide(gt);
 		pentimento.lecture_controller.insert_recording(recording);
 		recording = null;
+
+        // Update the audio display
+        pentimento.lecture_controller.refresh_audio_display();
+
+        (function () {
+            var eventHandlers = {
+                'play': function () {
+                    pentimento.state.wavesurfer.playPause();
+                }
+            };
+
+            document.addEventListener('click', function (e) {
+                var action = e.target.dataset && e.target.dataset.action;
+                if (action && action in eventHandlers) {
+                    eventHandlers[action](e);
+                }
+            });
+        }());
 	}
 };
 
