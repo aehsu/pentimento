@@ -75,11 +75,29 @@ pentimento.lecture_controller = new function() {
         }
     }
 
+
+
+    this.update_gradations = function() {
+
+    }
+
     // Refreshes the audio timeline display to show the tracks and segments
     this.refresh_audio_display = function() {
 
+        var draw_gradations = function() { 
+            console.log('hi')
+            var timeline = $('#audio_timeline');
+            var gradation_container = $('<div></div>');
+            gradation_container.attr('id', 'placeholder').css('width', timeline.width()).css('height', timeline.height());
+            timeline.append(gradation_container);
+            $.plot($("#placeholder"), [ [[0, 0], [1, 1]] ], { yaxis: { max: 1 } });
+        }
+
         // Clear the existing audio timeline
         $("#audio_timeline").html("");
+
+        // Draw gradations into the timeline
+        draw_gradations();
 
         // Iterate over all audio tracks
         console.log(lecture.audio_tracks.length);

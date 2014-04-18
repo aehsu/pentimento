@@ -56,12 +56,6 @@ pentimento.uiux_controller = new function() {
             update_ticker(state.current_time);
         }, state.interval_timing);
     }
-
-    this.update_time = function(time) { //need to add multi-slide support
-        state.current_time = time;
-        update_ticker(time);
-        $('#slider').slider('value', time);
-    }
 };
 
 $(document).ready(function() {
