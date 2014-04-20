@@ -1,9 +1,8 @@
 function live_tool_handler(event) {
     event.stopPropagation(); 
     var tool = $(event.target).attr('data-toolname');
-    if(clear_previous_handlers(tool)) {
-        pentimento.state.tool = tool;
-    }
+    clear_previous_handlers();
+    pentimento.state.tool = tool;
 
     switch(tool) {
     	case 'emphasis':
@@ -11,24 +10,11 @@ function live_tool_handler(event) {
     	case 'pen':
             //all timing is done insidie of these handlers
             //could potentially move these things out
-		    pentimento.state.canvas.mousedown(pen_mousedown);
-            pentimento.state.canvas.mousemove(pen_mousemove);
-            $(window).mouseup(function(event) { //TODO FIX THIS TO BE MORE THE SAME.
-                if(pentimento.state.lmb_down) {
-                    var visual = pen_mouseup(event);
-                    pentimento.recording_controller.add_visual(visual);
-                }
-            }); //could coalesce these
+            pentimento.state.canvas.on('mousedown', pen_mousedown);
+            pentimento.state.canvas.on('mousemove', pen_mousemove);
+            $(window).on('mouseup', pen_mouseup);
             break;
     	case 'dots':
-            pentimento.state.canvas.mousedown(dots_mousedown);
-            pentimento.state.canvas.mousemove(dots_mousemove);
-            $(window).mouseup(function(event) {
-                console.log("MOUSEUPEVENT:");
-                console.log(event);
-                var visual = dots_mouseup(event);
-                pentimento.lecture_controller.add_visual(visual);
-            }); //could coalesce these
     		break;
         case 'add-slide':
             if(pentimento.state.is_recording) {
@@ -57,11 +43,10 @@ function live_tool_handler(event) {
 
 function nonlive_tool_handler(event) {
     var tool = $(event.target).attr('data-toolname');
-    if(clear_previous_handlers(tool)) {
-        pentimento.state.tool = tool;
-    }
+    clear_previous_handlers();
+    pentimento.state.tool = tool;
+    
     var interval;
-
     switch(tool) {
     	case 'play':
             //code that's also possibly shitty and may not work, but is cleaner
@@ -73,10 +58,9 @@ function nonlive_tool_handler(event) {
                 } else {
                     clearInterval(interval);
                 }
-            }, 95);
+            }, INTERVAL_TIMING);
             $('input[data-toolname="play"]').toggleClass('hidden');
             $('input[data-toolname="stop"]').toggleClass('hidden');
-            
     		break;
     	case 'stop':
             clearInterval(interval); //scoping issue for interval
@@ -96,49 +80,43 @@ function nonlive_tool_handler(event) {
     	case 'width':
     		break;
     	case 'delete':
-            pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
-            update_visuals(pentimento.state.current_time, true);
+//            pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
+//            update_visuals(pentimento.state.current_time, true);
     		break;
     	case 'retime':
     		break;
         case 'select':
-            pentimento.state.canvas.mousedown(select_mousedown);
-            pentimento.state.canvas.mousemove(select_mousemove);
+//            pentimento.state.canvas.mousedown(select_mousedown);
+//            pentimento.state.canvas.mousemove(select_mousemove);
             $(window).mouseup(select_mouseup);
             break;
         case 'redraw':
             // pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
             // update_visuals(pentimento.state.current_time, true);
             // some manual drawing necessary
-            var buffer = [];
-            pentimento.state.is_recording = true;
-            pentimento.state.canvas.mousedown(pen_mousedown);
-            pentimento.state.canvas.mousemove(pen_mousemove);
-            $(window).mouseup(function(event) {
-                if(pentimento.state.lmb_down) {
-                    var visual = pen_mouseup(event);
-                    buffer.push(visual);
-                }
-            });
-            var endredraw = $('<button></button>', {text: 'End Redraw'});
-            $('body>div:first-child').append(endredraw);
-            endredraw.click(function() {
-                pentimento.state.is_recording = false;
-                endredraw.remove();
-                clear();
-                pentimento.lecture_controller.redraw_visuals(pentimento.state.selection, buffer);
-                pentimento.uiux_controller.stop_recording();
-            });
+//            var buffer = [];
+//            pentimento.state.is_recording = true;
+//            pentimento.state.canvas.mousedown(pen_mousedown);
+//            pentimento.state.canvas.mousemove(pen_mousemove);
+//            $(window).mouseup(function(event) {
+//                if(pentimento.state.lmb_down) {
+//                    var visual = pen_mouseup(event);
+//                    buffer.push(visual);
+//                }
+//            });
+//            var endredraw = $('<button></button>', {text: 'End Redraw'});
+//            $('body>div:first-child').append(endredraw);
+//            endredraw.click(function() {
+//                pentimento.state.is_recording = false;
+//                endredraw.remove();
+//                clear();
+//                pentimento.lecture_controller.redraw_visuals(pentimento.state.selection, buffer);
+//                pentimento.uiux_controller.stop_recording();
+//            });
             break;
         case 'rewind':
-            pentimento.lecture_controller.rewind();
-            pentimento.uiux_controller.update_time(pentimento.state.current_time);
-            update_visuals(pentimento.state.current_time, true);
             break;
         case 'full-rewind':
-            pentimento.lecture_controller.full_rewind();
-            pentimento.uiux_controller.update_time(pentimento.state.current_time);
-            update_visuals(pentimento.state.current_time, true);
             break;
     	case 'pan':
     		break;
@@ -177,11 +155,11 @@ $(document).ready(function() {
             $('button[data-toolname="pen"]').click();
             pentimento.state.is_recording=true;
             pentimento.recording_controller.do_record();
-            pentimento.uiux_controller.begin_recording();
+            pentimento.time_controller.begin_recording();
         } else {
             pentimento.state.is_recording = false;
             pentimento.recording_controller.stop_record();
-            pentimento.uiux_controller.stop_recording();
+            pentimento.time_controller.stop_recording();
             // clear_previous_handlers(null);
         }
         $('.recording-tool').toggleClass('hidden');

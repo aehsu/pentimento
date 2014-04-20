@@ -1,10 +1,10 @@
-pentimento.uiux_controller = new function() {
+pentimento.time_controller = new function() {
     var state = pentimento.state; //reference
     var interval;
     this.stop_recording = function() {
         clearInterval(interval);
         interval = null;
-        //some logic to update the slider
+        
         $('#slider').slider("option", {
             disabled: false,
             max: pentimento.lecture_controller.get_lecture_duration()
@@ -48,48 +48,27 @@ pentimento.uiux_controller = new function() {
 
         interval = setInterval(function() {
             var gt = global_time();
-            if(!state.last_time_update) {
-                state.last_time_update = gt;
-            }
-            state.current_time += gt - state.last_time_update;
-            state.last_time_update = gt;
-            update_ticker(state.current_time);
-        }, state.interval_timing);
+            if(!state.last_time_update) { state.last_time_update = gt; }
+            update_ticker(state.current_time + gt - state.last_time_update);
+        }, INTERVAL_TIMING);
     }
 
-    this.update_time = function(time) { //need to add multi-slide support
+    this.update_time = function(time) {
         state.current_time = time;
         update_ticker(time);
         $('#slider').slider('value', time);
     }
+    
+    this.rewind = function() {
+        //TODO
+    }
+
+    this.full_rewind = function() {
+        //TODO
+    }
 };
 
 $(document).ready(function() {
-    //a lot of this can be moved to just a $(document).ready function...
-
-    pentimento.state.canvas = $('#sketchpad');
-    pentimento.state.is_recording = false;
-    pentimento.state.lmb_down = false;
-    pentimento.state.last_point = null;
-    pentimento.state.color = '#777';
-    pentimento.state.width = 2;
-    pentimento.state.context = pentimento.state.canvas[0].getContext('2d'); //move this to controller? very local.
-    pentimento.state.pressure = false;
-    pentimento.state.pressure_color = false;
-    pentimento.state.pressure_width = false;
-
-    if (ie10_tablet_pointer()) {
-        console.log('Pointer Enabled Device');
-        pentimento.state.pressure = true;
-        pentimento.state.pressure_color = true;
-        pentimento.state.pressure_width = true;
-    } else {
-        console.log('Pointer Disabled Device');
-        pentimento.state.pressure = false;
-        pentimento.state.pressure_color = false;
-        pentimento.state.pressure_width = false;
-    }
-
     $('#slider').slider({
         disabled: true,
         step:1,

@@ -1,14 +1,16 @@
 /*************************************************
 					MODEL
 *************************************************/
+function Slide() {
+    this.visuals = [];
+    this.duration = 0;
+}
 
-//PUBLIC
-pentimento.lecture = function() {
-	this.slides = [];
-	this.slide_changes = [];
-	this.audio_tracks = [];
-};
-
+function Lecture() {
+    this.slides = []; //every lecture is by default, initialized with at least one slide
+    this.audio_tracks = [];
+    this.constraints = [];
+}
 
 // Audio classes
 var Audio_track = function() {
