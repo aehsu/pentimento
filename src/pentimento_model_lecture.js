@@ -4,13 +4,39 @@
 function Slide() {
     this.visuals = [];
     this.duration = 0;
+    
+    this.access = function() {
+        var self = this;
+        var visual_accessors = [];
+        for(var vis in self.visuals) { visual_accessors.push(self.visuals[vis].access()); }
+        return {
+            visuals: function() { return visual_accessors; },
+            duration: function() { return self.duration; }
+        };
+    };
+};
+
+function Constraint() {
+    this.tVis;
+    this.tAud;
 }
 
 function Lecture() {
     this.slides = []; //every lecture is by default, initialized with at least one slide
     this.audio_tracks = [];
     this.constraints = [];
-}
+    
+    this.access = function() {
+        var self = this;
+        var slide_accessors = [];
+        for(var sli in self.slides) { slide_accessors.push(self.slides[sli].access()); }
+        return {
+            slides: function() { return slide_accessors; },
+            constraints: function() { return self.constraints; }
+            //audio
+        };
+    };
+};
 
 // Audio classes
 var Audio_track = function() {

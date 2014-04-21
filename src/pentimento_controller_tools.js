@@ -9,7 +9,6 @@ function live_tool_handler(event) {
     		break;
     	case 'pen':
             //all timing is done insidie of these handlers
-            //could potentially move these things out
             pentimento.state.canvas.on('mousedown', pen_mousedown);
             pentimento.state.canvas.on('mousemove', pen_mousemove);
             $(window).on('mouseup', pen_mouseup);
@@ -49,12 +48,11 @@ function nonlive_tool_handler(event) {
     var interval;
     switch(tool) {
     	case 'play':
-            //code that's also possibly shitty and may not work, but is cleaner
-            interval = setInterval(function() { //TODO fix.
-                if(pentimento.state.current_time + 95 <= pentimento.lecture_controller.get_lecture_duration()) {
-                    update_visuals(pentimento.state.current_time, true);
-                    pentimento.uiux_controller.update_time(pentimento.state.current_time);
-                    pentimento.state.current_time+=95;
+            interval = setInterval(function() {
+                if(pentimento.state.current_time + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
+//                    pentimento.state.current_time+=INTERVAL_TIMING;
+                    pentimento.time_controller.update_time(pentimento.state.current_time+INTERVAL_TIMING);
+                    pentimento.visuals_controller.update_visuals(true);
                 } else {
                     clearInterval(interval);
                 }
@@ -81,25 +79,25 @@ function nonlive_tool_handler(event) {
     		break;
     	case 'delete':
 //            pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
-//            update_visuals(pentimento.state.current_time, true);
+//            pentimento.visuals_controller.update_visuals(true);
     		break;
     	case 'retime':
     		break;
         case 'select':
-//            pentimento.state.canvas.mousedown(select_mousedown);
-//            pentimento.state.canvas.mousemove(select_mousemove);
+            pentimento.state.canvas.mousedown(select_mousedown);
+            pentimento.state.canvas.mousemove(select_mousemove);
             $(window).mouseup(select_mouseup);
             break;
         case 'redraw':
             // pentimento.lecture_controller.delete_visuals(pentimento.state.selection);
-            // update_visuals(pentimento.state.current_time, true);
+            // pentimento.visuals_controller.update_visuals(true);
             // some manual drawing necessary
 //            var buffer = [];
 //            pentimento.state.is_recording = true;
 //            pentimento.state.canvas.mousedown(pen_mousedown);
 //            pentimento.state.canvas.mousemove(pen_mousemove);
 //            $(window).mouseup(function(event) {
-//                if(pentimento.state.lmb_down) {
+//                if(pentimento.state.lmb) {
 //                    var visual = pen_mouseup(event);
 //                    buffer.push(visual);
 //                }
@@ -126,22 +124,6 @@ function nonlive_tool_handler(event) {
     }
 }
 
-function breaking_tool_handler(event) {
-    if (pentimento.state.is_recording != true) {
-        console.log('something went wrong. a breaking tool was triggered when not recording');
-    }
-    event.stopPropagation(); 
-    var tool = $(event.target).attr('data-toolname');
-    switch(tool) {
-        case 'play':
-            $('.recording-tool').click();
-            $('.nonlive-tool[data-toolname="play"]').click();
-            break;
-        case 'insert':
-            break;
-    }
-}
-
 $(document).ready(function() {
     $('.live-tool').click(live_tool_handler);
     $('.live-tool').change(live_tool_handler);
@@ -153,6 +135,9 @@ $(document).ready(function() {
         var elt = $(event.target);
         if (elt.attr('data-label')==='begin') {
             $('button[data-toolname="pen"]').click();
+            pentimento.state.selection=[];
+            pentimento.visuals_controller.update_visuals(true);
+            pentimento.time_controller.update_time(pentimento.state.current_time);
             pentimento.state.is_recording=true;
             pentimento.recording_controller.do_record();
             pentimento.time_controller.begin_recording();

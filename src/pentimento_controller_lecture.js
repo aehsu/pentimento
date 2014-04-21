@@ -1,17 +1,23 @@
+//The convention is to include the duration for which slide you're on.
+//For example, slides have these durations: [10, 10, 10, 10].
+//Times [1-10] are for slide 0, [11-20] are for slide 1, [21-30] are for slide 2, [31-40] are for slide 3.
+//Time 0 is treated special.
+
 pentimento.lecture_controller = new function() {
     var _lecture = new Lecture(); _lecture.slides.push(new Slide()); //initialize every lecture with one empty slide
     pentimento.visuals_controller.set_lecture(_lecture);
-    var state = pentimento.state;
+    var state = pentimento.state;//Time 0 is treated s//Time 0 is treated special.pecial.
     var recording_params;
     var group_name = "Lecture_Controller_Group";
 //    var audio_timeline_scale = 100;
 //    state.wavesurfer = Object.create(WaveSurfer);
 
-    this.set_slide_by_time = function(time) {
+    this.set_state_slide = function(time) {
         //this should be changed to something...but not sure what
+        if(time==0) { state.current_slide = _lecture.slides[0]; return; }
         var total_duration=0;
         for(var slide in _lecture.slides) {
-            if(time >= total_duration && time < total_duration+lecture.slides[slide].duration) {
+            if(time > total_duration && time <= total_duration+_lecture.slides[slide].duration) {
                 state.current_slide = _lecture.slides[slide];
                 return;
             } else {
@@ -27,14 +33,23 @@ pentimento.lecture_controller = new function() {
         }
         return time;
     }
+    
+    this.get_lecture_accessor = function() {
+        return _lecture.access();
+    }
 
     this.begin_recording = function() {
+        state.current_slide = null;
+        if(state.current_time==0) {
+            recording_params = {index: 0, split: 0};
+            return;
+        }
+        
         var split_slide = 0;
         var split_time = 0;
-        
         var total_duration = 0;
         for(var slide in _lecture.slides) { //something...equals...something...
-            if (state.current_time >= total_duration && state.current_time < total_duration+_lecture.slides[slide].duration) {
+            if (state.current_time > total_duration && state.current_time <= total_duration+_lecture.slides[slide].duration) {
                 split_slide = slide;
                 split_time = state.current_time - total_duration;
                 break;
@@ -132,8 +147,7 @@ pentimento.lecture_controller = new function() {
         } //separate slides to before and after those to be inserted
         _lecture.slides = before.concat(recording.slides.concat(after)); //concat does not modify
         
-        state.current_time += total_recording_time;
-        state.current_slide = recording.slides[recording.slides.length-1];
+        pentimento.time_controller.update_time(state.current_time + total_recording_time);
         //ticker gets updated by the call from controller_tools
         //end GROUP! um undo stuff put here
     }

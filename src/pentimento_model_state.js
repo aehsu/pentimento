@@ -52,7 +52,7 @@ function ie10_tablet_pointer() {
 $(document).ready(function() {
     pentimento.state.canvas = $('#sketchpad');
     pentimento.state.is_recording = false;
-    pentimento.state.lmb_down = false;
+    pentimento.state.lmb = false;
     pentimento.state.last_point = null;
     pentimento.state.color = '#777';
     pentimento.state.width = 2;

@@ -47,7 +47,11 @@ BasicVisual.prototype.access = function() {
     return {
         tMin: function() { return self.tMin; },
         hyperlink: function() { return self.hyperlink; },
-        type: function() { return self.type; }
+        type: function() { return self.type; },
+        doesItGetDeleted: function() { return self.doesItGetDeleted; },
+        tEndEdit: function() { return self.tEndEdit; },
+        properties: function() { return self.properties; },
+        transforms: function() { return self.transforms; }
     }
 }
 

@@ -17,7 +17,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     	if(working_slide != null ) { end_slide(gt); }
         working_slide = new Slide();
         recording.slides.push(working_slide);
-        slide_begin = gt+1; //stops slide overlap
+        slide_begin = gt;
     };
 
     function end_slide(end_time) {
@@ -29,17 +29,15 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     this.add_visual = function(visual) {
         visual.tMin -= slide_begin;
         for(vert in visual.vertices) {
-            visual.vertices[vert]['t'] -= slide_begin;
+            visual.vertices[vert].t -= slide_begin;
         }
-        working_slide.visuals.push(visual); //change to local????
+        working_slide.visuals.push(visual);
     };
 
 	this.do_record = function() {
         pentimento.lecture_controller.begin_recording();
         recording = new Lecture();
         
-        //for safety, explicitly set to be null, will need to recalculate upon exit of recording anyways.
-        state.current_slide = null;
         add_slide();
         // Start the audio recording
         // recordRTC.startRecording();

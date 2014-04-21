@@ -19,16 +19,10 @@ function draw_line(segment) {
             var alpha = (1 - 0.5) + 0.5 * avg_pressure
             line.color = 'rgba(32,32,32,' + alpha + ')' // todo use defaults
         }
-        else {
-            line.color = 'rgba(64,64,64,1)'  // todo use defaults
-        }
+        else { line.color = 'rgba(64,64,64,1)' }   // todo use defaults
 
-        if (pressure_width) {
-            line.width = 1 + Math.round(max_extra_line_width * avg_pressure) // todo use defaults
-        }
-        else {
-            line.width = 2 // todo use defaults
-        }
+        if (pressure_width) { line.width = 1 + Math.round(max_extra_line_width * avg_pressure) }  // todo use defaults
+        else { line.width = 2 } // todo use defaults
 
         canvas.draw_line(line)*/
     } else {
@@ -136,18 +130,17 @@ function select_mousedown(event) { //non-live handler
     event.preventDefault();
     var state = pentimento.state;
 
-    update_visuals(state.current_time, true);
-    state.lmb_down = true;
+    pentimento.visuals_controller.update_visuals(true);
     state.last_point = get_canvas_point(event);
     state.selection = [];
 }
 
 function select_mousemove(event) {
-    if (pentimento.state.is_recording||!pentimento.state.lmb_down) {return ;}
+    if (pentimento.state.is_recording||!pentimento.state.lmb) {return ;}
     event.preventDefault();
     var state = pentimento.state;
 
-    update_visuals(state.current_time, true);
+    pentimento.visuals_controller.update_visuals(true);
     var coord = get_canvas_point(event);
     var ctx = state.context;
     var width = state.width;
@@ -190,7 +183,7 @@ function select_mousemove(event) {
                 n_vert++;
             }
         }
-        if(n_vert/visual.vertices.length >= .4) {
+        if(n_vert/visual.vertices.length >= .45) {
             state.selection.push(visual);
         }
     }
@@ -199,7 +192,7 @@ function select_mousemove(event) {
         var vis_copy = $.extend(true, {}, state.selection[vis]);
         vis_copy.properties.width = state.selection[vis].properties.width+1;
         vis_copy.properties.color = "#0000FF";
-        draw_visual(vis_copy);
+        draw_visual(vis_copy.access());
     }
 
     ctx.strokeStyle = style; // should be valid if you say pentimento.state.color
@@ -211,13 +204,12 @@ function select_mouseup(event) {
     event.preventDefault();
 
     var state =  pentimento.state;
-    state.lmb_down = false;
-    update_visuals(state.current_time, true);
+    pentimento.visuals_controller.update_visuals(true);
     for(vis in state.selection) {
         var vis_copy = $.extend(true, {}, state.selection[vis]);
         vis_copy.properties.width = state.selection[vis].properties.width+1;
         vis_copy.properties.color = "#0000FF";
-        draw_visual(vis_copy);
+        draw_visual(vis_copy.access());
     }
 }
 

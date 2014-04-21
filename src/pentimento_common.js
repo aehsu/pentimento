@@ -6,6 +6,25 @@ function global_time() {
     return (new Date()).getTime();
 }
 
+function draw_visual(visual_accessor) {
+    switch(visual_accessor.type()) {
+        case VisualTypes.basic:
+            console.log("someone actually made a basic type?!",visual_accessor);
+            break;
+        case VisualTypes.stroke:
+            var verts = visual_accessor.vertices();
+            for(var i=1; i<verts.length; i++) {
+                var line = new Segment(verts[i-1], verts[i], visual_accessor.properties());
+                draw_line(line);
+            }
+            break;
+        case VisualTypes.dot:
+            break;
+        case VisualTypes.img:
+            break;
+    };
+}
+
 $(document).ready(function(){
     var iw = $(window).width();
     var ih = $(window).height();

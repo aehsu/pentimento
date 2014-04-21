@@ -5,6 +5,28 @@ pentimento.visuals_controller = new function() {
         _lecture = lecture;
     };
     
+    this.update_visuals = function() {
+        clear();
+        var slide_accessors = pentimento.lecture_controller.get_lecture_accessor().slides();
+        var running_time = 0;
+        var visuals = [];
+        for(var i in slide_accessors) {
+            var slide_accessor = slide_accessors[i];
+            if(running_time + slide_accessor.duration() < pentimento.state.current_time) {
+                running_time += slide_accessor.duration();
+            } else {
+                var visual_accessors = slide_accessor.visuals();
+                for(var vis in visual_accessors) {
+                    var visual_accessor = visual_accessors[vis];
+                    if(running_time + visual_accessor.tMin() <= pentimento.state.current_time) {
+                        draw_visual(visual_accessor);
+                    }
+                }
+                running_time+= slide_accessor.duration();
+            }
+        }
+    };
+    
     function prevNeighbor(visual) {
         var prev;
         for(vis in state.current_slide.visuals) {
@@ -155,54 +177,3 @@ pentimento.visuals_controller = new function() {
         state.current_slide.duration += duration;
     }
 };
-
-//function draw_visual(visual) {
-//    if (visual.type == VisualTypes.dots) {
-//        for(var j=0; j<visual.vertices.length; j++) {
-//            var vertex = visual.vertices[j];
-//            draw_point(vertex);
-//        }   
-//    } else if(visual.type == VisualTypes.stroke) {
-//        for(var j=1; j<visual.vertices.length; j++){
-//            var from = visual.vertices[j-1]
-//            var to = visual.vertices[j]
-//            var line = {
-//                from: from,
-//                to: to,
-//                properties: visual.properties
-//            };  
-//            draw_line(line);
-//        }   
-//    } else {
-//        console.log('unknown visual type');
-//    }
-//}
-
-function draw_visuals(visuals){ // PORTED
-    for (var i=0; i<visuals.length; i++){
-        draw_visual(visuals[i]);
-    }
-}
-
-function update_visuals(time, doclear) { //just always take for state.current_time? //need to change to support multiple slides?
-    if(doclear) {
-        clear();
-    }
-    var visuals = [];
-    var running_time = 0;
-    var slide;
-    for(var i=0; i<pentimento.lecture_controller.get_slides_length(); i++) {
-        slide = pentimento.lecture_controller.get_slide(i)
-        if(running_time + slide.duration < time) {
-            running_time += slide.duration;
-        } else {
-            for(visual in slide.visuals) {
-                if(slide.visuals[visual].tMin + running_time <= time) {
-                    visuals.push(slide.visuals[visual]);
-                }
-            }
-            running_time+= slide.duration;
-        }
-    }
-    draw_visuals(visuals);
-}
