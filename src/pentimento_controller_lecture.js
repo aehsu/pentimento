@@ -88,9 +88,42 @@ pentimento.lecture_controller = new function() {
             console.log('hi')
             var timeline = $('#audio_timeline');
             var gradation_container = $('<div></div>');
-            gradation_container.attr('id', 'placeholder').css('width', timeline.width()).css('height', timeline.height());
+            gradation_container.attr('id', 'gradation_container').css('width', timeline.width()).css('height', timeline.height());
             timeline.append(gradation_container);
-            $.plot($("#placeholder"), [ [[0, 0], [1, 1]] ], { yaxis: { max: 1 } });
+
+            // Changes tickpoints into time display (ex: 00:30:00)
+            // Each tickpoint unit is one second which is then scaled by theaudio_timeline_scale
+            var tickFormatter = function (tickpoint) {
+                var sec_num = parseInt(tickpoint, 10);
+                var hours   = Math.floor(sec_num / 3600);
+                var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+                var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+                if (hours   < 10) {hours   = "0"+hours;}
+                if (minutes < 10) {minutes = "0"+minutes;}
+                if (seconds < 10) {seconds = "0"+seconds;}
+                var time    = hours+':'+minutes+':'+seconds;
+                return time;
+            }
+            var options = {
+                series: {
+                    lines: { show: false },
+                    points: { show: true }
+                },
+                yaxis: {
+                    ticks: {show: true}
+                },
+                xaxis: {
+                    min: 0, // Min and Max refer to the range
+                    max: 100,
+                    tickFormatter: tickFormatter
+                }
+            };
+
+            // Dummy data
+            var plot_data = [ [0, 0], [0, 10] ];
+
+            $.plot(gradation_container, plot_data, options);
         }
 
         // Clear the existing audio timeline

@@ -84,9 +84,7 @@ label{
     height: 500px;
     width: 100%;
     display: inline-block;
-
-    border-style: solid;
-    border-color: black;
+    border-style: none;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
 }
@@ -127,7 +125,7 @@ wave canvas {
 }
 
 .audio_track {
-    padding: 0;
+    padding-left: 22px;
     width: 300;
     height: 300;
 }
@@ -146,6 +144,13 @@ font-size: 0.1px;
     cursor: e-resize;
     top:0px;
     right: -5px;
+}
+
+#gradation_container {
+    position: absolute;
+}
+#gradation_container canvas {
+    border-style: none;
 }
 
 
