@@ -117,14 +117,33 @@ pentimento.lecture_controller = new function() {
                     min: 0, // Min and Max refer to the range
                     max: 100,
                     tickFormatter: tickFormatter
+                },
+                grid: {
+                    // hoverable: true
                 }
             };
 
             // Dummy data
             var plot_data = [ [0, 0], [0, 10] ];
 
+            // create cursor object
+            var timeline_cursor = $('#timeline_cursor');
+            if (timeline_cursor.length === 0) {
+                 timeline_cursor = $('<div></div>').attr({'id': 'timeline_cursor'});
+                 $('#audio_timeline').append(timeline_cursor);
+            }
+            
+
+
             $.plot(gradation_container, plot_data, options);
-        }
+            // Bind hover callback to get mouse location
+            $('#audio_timeline').bind("mousemove", function (event) {
+                    // Display bar behind mouse
+                    $('#timeline_cursor').css({
+                       left:  event.pageX
+                    });
+                });
+            }
 
         // Clear the existing audio timeline
         $("#audio_timeline").html("");

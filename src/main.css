@@ -81,12 +81,18 @@ label{
 
 
 #audio_timeline {
-    height: 500px;
+    height: 400px;
     width: 100%;
     display: inline-block;
     border-style: none;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
+}
+#timeline_cursor {
+    position: absolute;
+    width: 0px;
+    height: inherit;
+    border-left: solid #79DFFF;
 }
 
 .draggable-box {
