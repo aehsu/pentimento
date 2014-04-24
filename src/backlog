@@ -1,0 +1,19 @@
+SELECT, then adjust SLIDER. SELECTION still exists, but not highlighted.
++
+
+SELECT, then RECORD. SELECTION still exists, and is highlighted.
++
+
+enable REDRAW with new architecture
+
+enable DELETE with new architecture
+
+ensure consistency with convention:
+//The convention is to include the duration for which slide you're on, i.e. (start, end]
+//For example, slides have these durations: [10, 10, 10, 10].
+//Times [1-10] are for slide 0, [11-20] are for slide 1, [21-30] are for slide 2, [31-40] are for slide 3.
+//Time 0 is treated special.
+
+undo
+
+retimer
