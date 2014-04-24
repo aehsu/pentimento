@@ -1356,6 +1356,46 @@ var testUM = function (guiFunctions) {
 
     failedScenarios['test30'] = getFailedFunctions(expectedResults, scenario);
 
+    /*
+        TEST 31
+        group2 poulated, group1 started, group2 undone, group1 started, action performed
+        test that group1 was ended properly when group2 was undone
+        (if not, results show 'internal errors' (recursion errors))
+    */
+
+    scenario = function () {
+        um.startHierarchy('group2');
+        changeBodyColor('red');
+        um.endHierarchy('group2');
+        um.startHierarchy('group1');
+        um.undoHierarchy('group2');
+        um.startHierarchy('group1');
+        changeBodyColor('blue');
+    };
+    
+    standardResults = [1, 0, getBodyColorTitle('blue'), null];
+
+    expectedResults = {
+        undo: [true, 0, 1, null, getBodyColorTitle('blue')],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [true],
+        undoH1: [true, 0, 1, null, getBodyColorTitle('blue')],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [errorNames['endH2']],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);
+
     
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
