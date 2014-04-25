@@ -187,6 +187,14 @@ var gui2test = function() {
                     expectedDisability['end group1'] = true;
                     checkButtonDisability(expectedDisability);
 
+    undoManager.undoHierarchy('group1');
+    undoManager.startHierarchy('group2');
+    undoManager.startHierarchy('group3');
+    undoManager.redoHierarchy('group1');
+
+                    checkButtonDisability(expectedDisability);
+
+
     console.log('passed!');
     
 }
