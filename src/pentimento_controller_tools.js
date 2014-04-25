@@ -164,7 +164,7 @@ function breaking_tool_handler(event) {
     }
 }
 
-$(document).ready(function() {
+$(document).ready(function() {    
     $('.live-tool').click(live_tool_handler);
     $('.live-tool').change(live_tool_handler);
     $('.live-tool').addClass('hidden');

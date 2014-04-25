@@ -74,11 +74,81 @@ pentimento.lecture_controller = new function() {
         }
     }
 
+
+
+    this.update_gradations = function() {
+
+    }
+
     // Refreshes the audio timeline display to show the tracks and segments
     this.refresh_audio_display = function() {
 
+        var draw_gradations = function() { 
+            console.log('hi')
+            var timeline = $('#audio_timeline');
+            var gradation_container = $('<div></div>');
+            gradation_container.attr('id', 'gradation_container').css('width', timeline.width()).css('height', timeline.height());
+            timeline.append(gradation_container);
+
+            // Changes tickpoints into time display (ex: 00:30:00)
+            // Each tickpoint unit is one second which is then scaled by theaudio_timeline_scale
+            var tickFormatter = function (tickpoint) {
+                var sec_num = parseInt(tickpoint, 10);
+                var hours   = Math.floor(sec_num / 3600);
+                var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+                var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+                if (hours   < 10) {hours   = "0"+hours;}
+                if (minutes < 10) {minutes = "0"+minutes;}
+                if (seconds < 10) {seconds = "0"+seconds;}
+                var time    = hours+':'+minutes+':'+seconds;
+                return time;
+            }
+            var options = {
+                series: {
+                    lines: { show: false },
+                    points: { show: true }
+                },
+                yaxis: {
+                    ticks: {show: true}
+                },
+                xaxis: {
+                    min: 0, // Min and Max refer to the range
+                    max: 100,
+                    tickFormatter: tickFormatter
+                },
+                grid: {
+                    // hoverable: true
+                }
+            };
+
+            // Dummy data
+            var plot_data = [ [0, 0], [0, 10] ];
+
+            // create cursor object
+            var timeline_cursor = $('#timeline_cursor');
+            if (timeline_cursor.length === 0) {
+                 timeline_cursor = $('<div></div>').attr({'id': 'timeline_cursor'});
+                 $('#audio_timeline').append(timeline_cursor);
+            }
+            
+
+
+            $.plot(gradation_container, plot_data, options);
+            // Bind hover callback to get mouse location
+            $('#audio_timeline').bind("mousemove", function (event) {
+                    // Display bar behind mouse
+                    $('#timeline_cursor').css({
+                       left:  event.pageX
+                    });
+                });
+            }
+
         // Clear the existing audio timeline
         $("#audio_timeline").html("");
+
+        // Draw gradations into the timeline
+        draw_gradations();
 
         // Iterate over all audio tracks
         console.log(lecture.audio_tracks.length);
@@ -108,21 +178,25 @@ pentimento.lecture_controller = new function() {
                 // Setup the dragging
                 new_segment.draggable({
                     containment: ("#" + new_track_id),
-                    axis: "x"
+                    axis: "x",
+                    opacity: 0.75
+                }).on( "dragstart", function( event, ui ) {
+                    new_segment.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-                    // for ( var segment in $("#track-0").children(".audio_segment")) {
-                    //     if event.clientX === (segment.position().left + segment.width())
-                    //         // Call shift function in model
-                    // };
+                    // Call shift function in model
+                    // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
+                    new_segment.removeClass('dragged')
                 }).resizable({
                     handles: "e, w",
                     minWidth: 1,
                     stop: function( event, ui ) {
                         dwidth = ui.originalSize.width - ui.size.width;
                         if (ui.position.left === ui.originalPosition.left) // then right handle was used
-                            audio_segment.resize(dwidth, "right");
+                            // Trim audio from Right
+                            audio_segment.crop_segment(dwidth, "right");
                         else
-                            audio_segment.resize(dwidth, "left");
+                            // Trim audio from Left
+                            audio_segment.crop_segment(dwidth, "left");
                     }
                 });
 
