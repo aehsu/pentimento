@@ -44,7 +44,6 @@ if (!console) {
 	console = {
 		log: function() {
 			// do nothing, just prevent undefined errors
-      //TODO: make a log file?
 		}
 	};
 }
