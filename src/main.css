@@ -112,6 +112,13 @@ label{
     border-width: 2px;
     margin-top: 7px; 
     float: left;
+    box-shadow: 0;
+    transition: box-shadow .15s;
+}
+
+.dragged {
+    /*box-shadow: 0 0 3px #515151;*/
+    box-shadow: 8px 10px 24px 0px rgba(0,0,0,0.75);
 }
 
 .audio_segment wave {

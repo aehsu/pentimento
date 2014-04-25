@@ -179,11 +179,14 @@ pentimento.lecture_controller = new function() {
                 // Setup the dragging
                 new_segment.draggable({
                     containment: ("#" + new_track_id),
-                    axis: "x"
+                    axis: "x",
+                    opacity: 0.75
+                }).on( "dragstart", function( event, ui ) {
+                    new_segment.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
                     // Call shift function in model
-                    audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
-                    
+                    // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
+                    new_segment.removeClass('dragged')
                 }).resizable({
                     handles: "e, w",
                     minWidth: 1,
