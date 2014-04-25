@@ -181,19 +181,20 @@ pentimento.lecture_controller = new function() {
                     containment: ("#" + new_track_id),
                     axis: "x"
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-                    // for ( var segment in $("#track-0").children(".audio_segment")) {
-                    //     if event.clientX === (segment.position().left + segment.width())
-                    //         // Call shift function in model
-                    // };
+                    // Call shift function in model
+                    audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
+                    
                 }).resizable({
                     handles: "e, w",
                     minWidth: 1,
                     stop: function( event, ui ) {
                         dwidth = ui.originalSize.width - ui.size.width;
                         if (ui.position.left === ui.originalPosition.left) // then right handle was used
-                            audio_segment.resize(dwidth, "right");
+                            // Trim audio from Right
+                            audio_segment.crop_segment(dwidth, "right");
                         else
-                            audio_segment.resize(dwidth, "left");
+                            // Trim audio from Left
+                            audio_segment.crop_segment(dwidth, "left");
                     }
                 });
 
