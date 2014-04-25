@@ -156,7 +156,7 @@ var getUndoManager = function(groupTypes, debug) {
         undoing = true;
 
         // remove any groups started, but not populated, right before the undo
-        for (var i in groupsJustStarted) { //TODO: helper
+        for (var i in groupsJustStarted) {
             group = groupsJustStarted[i];
             var index = openGroups.indexOf(group);
             if (index !== -1) {
@@ -213,19 +213,6 @@ var getUndoManager = function(groupTypes, debug) {
 
         redoing = true;
 
-        // remove any groups started, but not populated, right before the undo
-        for (var i in groupsJustStarted) { //TODO: helper
-            group = groupsJustStarted[i];
-            var index = openGroups.indexOf(group);
-            if (index !== 0) {
-                unorderedSplice(openGroups, index, 1);
-                // group effectively ended, fire event and debugWarning about autoClosed  //TODO: effectively end helper?
-                fireEvent('operationDone');
-                displayDebugWarning(groupAutoClose(group));
-            }
-
-        }
-
         groupsJustStarted = [];
 
         var initialNextUndo = getNextUndo();
@@ -258,7 +245,18 @@ var getUndoManager = function(groupTypes, debug) {
             }
         }
         // update the open groups to be those that the redone action is in
+        // this results in the closing of any groups that were opened, but not populated, right before the redo
+
+        // display autoclose warnings
+        for (var i in openGroups) {
+            group = openGroups[i];
+            displayDebugWarning(groupAutoClose(group));
+        }
+
+        // close all groups
         openGroups = [];
+
+        // reopen the appropriate groups
         for (var i in actionObj.inGroups) {
             group = actionObj.inGroups[i];
             if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) { // don't add the group if it ends at the redone action

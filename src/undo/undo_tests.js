@@ -1394,9 +1394,7 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);
-
-    
+    failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);  
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 
