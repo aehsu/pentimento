@@ -1,6 +1,5 @@
 pentimento.lecture_controller = new function() {
-    var lecture = null;
-    this.lecture = lecture;
+    this.lecture = null;
     var state = pentimento.state;
     var interval;
     var recording_params;
@@ -169,6 +168,11 @@ pentimento.lecture_controller = new function() {
         if(recording_params['current_slide']==null) {
             lecture = recording;
         } else {
+            // Update the audio
+            lecture.audio_tracks = recording.tracks;
+            console.log(lecture.audio_tracks);
+
+            // Update the visuals
             var slide = lecture.slides[recording_params['current_slide']];
             insert_slide_into_slide(slide, recording.slides.shift(), recording_params['time_in_slide']);
             

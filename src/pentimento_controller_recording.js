@@ -81,11 +81,12 @@ pentimento.recording_controller = new function() {//records little mini-lectures
            console.log(audioURL);
 
             // Insert an audio track if there isn't one yet
-            var track = recording.audio_tracks[0];
+            var track = pentimento.lecture_controller.audio_tracks[0];
             if (typeof track === 'undefined') {
                 track = new pentimento.audio_track();
                 recording.audio_tracks.push(track);
             };
+            
 
             // Get information about the audio track from looking at the lecture state
             var audio_duration = end_record_time - begin_record_time;
@@ -93,6 +94,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 
             // Insert the audio segment into the track
             var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, begin_record_time, end_record_time);
+            console.log(segment);
             track.audio_segments.push(segment);
 
             // TEMP: Try writing the audio to disk
