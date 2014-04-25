@@ -132,6 +132,7 @@ $(document).ready(function(){
         }
     }
     undoManager.addListener('groupStatusChange', changeGroupStatus);
+    undoManager.addListener('operationDone', changeGroupStatus); // sometimes groups are auto-closed during undo/redo
 
     // Set up the event handler for the dropdowns. Changing the value changes the corresponding css value
     // for the example text.

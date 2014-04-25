@@ -492,7 +492,7 @@ var getUndoManager = function(groupTypes, debug) {
         // Returns an array with the groups that were closed since the last action.
         getGroupsJustClosed: function() {
             if (undoStack.length > 0) {
-                return getNextUndo().atEndOfGroups;  //TODO: better to store atEndOfGroups, or use filter and other methods when it's needed?
+                return getNextUndo().atEndOfGroups;
             }
             return [];
         },
@@ -524,7 +524,7 @@ var getUndoManager = function(groupTypes, debug) {
             if (!group && getNextRedo().atStartOfGroups.length === 0) {
                 return getNextRedo().title;
             }
-            if (getNextRedo().inGroups.indexOf(group) !== -1) { //TODO: should this be inGroups or atStartOfGroups? 
+            if (getNextRedo().atStartOfGroups.indexOf(group) !== -1) {
                 return getGroupRedoTitle(group);
             }
             return false;
