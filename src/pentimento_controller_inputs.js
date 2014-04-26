@@ -15,13 +15,13 @@ function mouse_down_handler(evt) {
             console.log("unique mouse hardware?", evt);
             break;
     }
-};
+}
 
 function mouse_up_handler(evt) {
     pentimento.state.lmb = false;
     pentimento.state.mmb = false;
     pentimento.state.rmb = false;
-};
+}
 
 function key_down_handler(evt) {
     if(evt.ctrlKey) {
@@ -31,7 +31,7 @@ function key_down_handler(evt) {
     } else if(evt.altKey) {
         pentimento.state.altKey = true;
     }
-};
+}
 
 function key_up_handler(evt) {
     if(evt.which == 17) { //ctrl key
@@ -41,11 +41,29 @@ function key_up_handler(evt) {
     } else if(evt.which == 18) {
         pentimento.state.altKey = false;
     }
-};
+}
+
+function undo_listener(event) {
+    if(um.getUndoLength() > 0) {
+        $('.forever-tool[data-toolname="undo"]').removeAttr('disabled');
+    } else {
+        $('.forever-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+    }
+}
+
+function redo_listener(event) {
+    if(um.getRedoLength() > 0) {
+        $('.forever-tool[data-toolname="redo"]').removeAttr('disabled');
+    } else {
+        $('.forever-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+    }
+}
 
 $(document).ready(function() {
     $(pentimento.state.canvas).on('mousedown', mouse_down_handler);
     $(window).on('mouseup', mouse_up_handler);
     $(window).on('keydown', key_down_handler);
     $(window).on('keyup', key_up_handler);
-});
+    $(window).on('click', undo_listener);
+    $(window).on('click', redo_listener)
+})

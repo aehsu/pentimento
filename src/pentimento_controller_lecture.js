@@ -3,17 +3,16 @@
 //Times [1-10] are for slide 0, [11-20] are for slide 1, [21-30] are for slide 2, [31-40] are for slide 3.
 //Time 0 is treated special.
 
-pentimento.lecture_controller = new function() {
-    var _lecture = new Lecture(); _lecture.slides.push(new Slide()); //initialize every lecture with one empty slide
-    pentimento.visuals_controller.set_lecture(_lecture);
-    var state = pentimento.state;//Time 0 is treated s//Time 0 is treated special.pecial.
-    var recording_params;
+function LectureController() {
+    var _lecture = new Lecture();
+    this.visuals_controller = new VisualsController(_lecture);
+//    var _audio_controller = new AudioController(_lecture);
+    var state = pentimento.state;//Time 0 is treated special.
     var group_name = "Lecture_Controller_Group";
 //    var audio_timeline_scale = 100;
 //    state.wavesurfer = Object.create(WaveSurfer);
 
-    this.set_state_slide = function(time) {
-        //this should be changed to something...but not sure what
+    this.set_state_slide = function(time) { //questionable
         if(time==0) { state.current_slide = _lecture.slides[0]; return; }
         var total_duration=0;
         for(var slide in _lecture.slides) {
@@ -37,119 +36,30 @@ pentimento.lecture_controller = new function() {
     this.get_lecture_accessor = function() {
         return _lecture.access();
     }
-
-    this.begin_recording = function() {
-        state.current_slide = null;
-        if(state.current_time==0) {
-            recording_params = {index: 0, split: 0};
-            return;
-        }
+    
+    this.add_slide = function(slide) {
+        _lecture.slides.push(slide);
+        var self = this;
         
-        var split_slide = 0;
-        var split_time = 0;
-        var total_duration = 0;
-        for(var slide in _lecture.slides) { //something...equals...something...
-            if (state.current_time > total_duration && state.current_time <= total_duration+_lecture.slides[slide].duration) {
-                split_slide = slide;
-                split_time = state.current_time - total_duration;
-                break;
-            } else {
-                total_duration += _lecture.slides[slide].duration;
-            }
-        }
-        recording_params = {
-            index: split_slide, 
-            split: split_time
-        };
+        um.add(function() {
+            self.delete_slide(slide);
+        }, group_name);
     }
+    
+    this.delete_slide = function(slide) {
+        var idx = _lecture.slides.indexOf(slide);
+        if(idx==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
 
-//    this.create_audio_track = function(audio_track) {
-//        var new_track_id = "track-" + $("#audio_timeline").children(".audio_track").length;
-//        var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
-//        new_track.data(audio_track);
-//        $("#audio_timeline").append(new_track);
-//    };
-
-//    this.create_audio_segment = function(audio_segment) {
-//        var new_segment_id = "segment-" + $("#track-0").children(".audio_segment").length;
-//        var clip = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"}).data(audio_segment);
-//        $("#track-0").append(clip);
-//
-//        clip.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
-//        
-//        // Dragging
-//        clip.draggable({
-//            containment: "#track-0",
-//            axis: "x"
-//        }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-//            // for ( var segment in $("#track-0").children(".audio_segment")) {
-//            //     if event.clientX === (segment.position().left + segment.width())
-//            //         // Call shift function in model
-//            // };
-//        }).resizable({
-//            handles: "e, w",
-//            minWidth: 1,
-//            stop: function( event, ui ) {
-//                dwidth = ui.originalSize.width - ui.size.width;
-//                if (ui.position.left === ui.originalPosition.left) // then right handle was used
-//                    audio_segment.resize(dwidth, "right");
-//                else
-//                    audio_segment.resize(dwidth, "left");
-//            }
-//
-//
-//        });
-//
-//        //load waveform
-//        var wavesurfer = Object.create(WaveSurfer);
-//        console.log("#" + new_segment_id)
-//
-//        wavesurfer.init({
-//            container: document.querySelector("#" + new_segment_id),
-//            waveColor: 'violet',
-//            progressColor: 'purple',
-//            height: $("#audio_timeline").height()/2
-//        });
-//
-//        wavesurfer.on('ready', function () {
-//            wavesurfer.play();
-//        });
-//
-//        wavesurfer.load(audio_segment.audio_resource);
-//    }
-
-    function insert_slide_into_slide(to_slide, from_slide, insertion_time) {
-        //insertion time is in the to_slide
-        pentimento.visuals_controller.shift_visuals(to_slide, from_slide, insertion_time);
+        _lecture.slides.splice(idx, 1);
+        var self = this;
         
-        for(var vis in from_slide.visuals) {
-            var visual = from_slide.visuals[vis];//$.extend({}, from_slide.visuals[vis], true); //make a deep copy
-            visual.tMin += insertion_time;
-            to_slide.visuals.push(visual);
-        }
-        to_slide.duration += from_slide.duration;
+        um.add(function() {
+            self.add_slide(slide);
+        }, group_name);
     }
-
-    this.insert_recording = function(recording) {
-        //begin GROUP!
+    
+    this.accept_recording = function(recording, params) {
         
-        var total_recording_time = 0;
-        for(var slide in recording.slides) { total_recording_time += recording.slides[slide].duration; }
-
-        var slide = _lecture.slides[recording_params.index];
-        var merge_slide = recording.slides.shift();
-        insert_slide_into_slide(slide, merge_slide, recording_params.split);
-
-        var before = [];
-        var after = _lecture.slides;
-        for(var i=0; i<=recording_params.slide_idx; i++) {
-            before.push(after.shift());
-        } //separate slides to before and after those to be inserted
-        _lecture.slides = before.concat(recording.slides.concat(after)); //concat does not modify
-        
-        pentimento.time_controller.update_time(state.current_time + total_recording_time);
-        //ticker gets updated by the call from controller_tools
-        //end GROUP! um undo stuff put here
     }
     
     if(DEBUG) {
@@ -164,7 +74,9 @@ pentimento.lecture_controller = new function() {
         console.log(state.current_slide.visuals);
         window.viz = state.current_slide.visuals;
     }
-};
+}
+
+pentimento.lecture_controller = new LectureController();
 
 $(document).ready(function() {
     if(DEBUG) {

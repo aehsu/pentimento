@@ -176,6 +176,7 @@ function select_mousemove(event) {
         var visual = state.current_slide.visuals[vis];
         var n_vert = 0;
         for (vert in visual.vertices) {
+            if(visual.tMin > state.current_time || (visual.tDeletion != undefined && visual.tDeletion < state.current_time)) { continue; }
             var x = visual.vertices[vert].x;
             var y = visual.vertices[vert].y;
 
@@ -213,3 +214,18 @@ function select_mouseup(event) {
     }
 }
 
+function enable_undo() {
+    
+}
+
+function disable_undo() {
+    
+}
+
+function enable_redo() {
+    
+}
+
+function disable_redo() {
+    
+}

@@ -1,6 +1,12 @@
 pentimento = {};
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
 DEBUG = true;
+ActionTypes = {
+    Visual_Action: "Visual_Action",
+    Batch_Action: "Batch_Action",
+    Recording_Action: "Recording_Action"
+};
+um = getUndoManager([ActionTypes.Visual_Action, ActionTypes.Batch_Action, ActionTypes.Recording_Action], true);
 
 function global_time() {
     return (new Date()).getTime();
@@ -22,6 +28,20 @@ function draw_visual(visual_accessor) {
             break;
         case VisualTypes.img:
             break;
+    }
+}
+
+function Iterator(array) {
+    return {
+        index: -1,
+        hasNext: function() { return this.index < array.length-1; },
+        next: function() {
+            if(this.hasNext()) {
+                this.index = this.index + 1;
+                return array[this.index];
+            }
+            return null;
+        }        
     };
 }
 

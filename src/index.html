@@ -6,6 +6,11 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='jquery-ui.js'></script>
     <link href="jquery-ui.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='undo/errors.js'></script>
+    <script type='text/javascript' src='undo/compatibility.js'></script>
+    <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
+    <script type='text/javascript' src='undo/undo.js'></script>
+    
     <script type='text/javascript' src='pentimento_common.js'></script>
     <script type='text/javascript' src="wavesurfer.min.js"></script>
     <script type='text/javascript' src="RecordRTC.js"></script>
@@ -72,16 +77,16 @@
             <input type="image" src="icons/pen.png" class="nonlive-tool center" data-toolname="redraw">
 
             <label>Move selection to current time</label>
+<!--
             <input type="image" src="icons/moveInTime.png" class="nonlive-tool center" data-toolname="move-in-time">
-            <!-- <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> -->
-            <!-- <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> -->
+             <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> 
+             <input type="image" src="icons/delete.png" class="nonlive-tool center" data-toolname="redraw"> 
+-->
 
             <input type="checkbox" class="center">ghosts
             <input type="checkbox" class="center">grid
             <input type="checkbox" class="center">margin
 
-       <!--      <button class="nonlive-tool" data-toolname="full-rewind" height="20px"> |< </button>
-            <button class="nonlive-tool" data-toolname="full-fastforward" height="20px"> >| </button> -->
             <br/>
             <button class="live-tool" data-toolname="clear">Clear</button> <!-- there should be two version of this..? maybe not. maybe just create new slides -->
             <button class="live-tool" data-toolname="pen">Pen</button>
@@ -107,8 +112,14 @@
             <button class="nonlive-tool" data-toolname="delete">Delete</button>
             <button class="nonlive-tool" data-toolname="fastforward"> > </button>
             <button class="nonlive-tool" data-toolname="full-fastforward"> >| </button>
+            <button class="forever-tool" data-toolname="undo" disabled="true">Undo</button>
+            <button class="forever-tool" data-toolname="redo" disabled="true">Redo</button>
         </div>
         <hr>
+        <div style="height:15px;">
+            <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        </div>
+<!--
         <div>
             <label width="150px"> Editing Tools </label>
             <label>stroke</label>
@@ -141,6 +152,7 @@
             <label>| Hyperlink</label>
             <input type="text">
         </div>
+-->
         <div class="container">
             <div class="left-col">
                 <input type="image" src="icons/selection.png" height="40px" ><br>
@@ -180,9 +192,6 @@
                 <canvas id='sketchpad'></canvas>
             </div>
         </div>
-        
-        <br>
-        <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
 
         <button class="btn btn-primary" data-action="play">
             <i class="glyphicon glyphicon-play"></i>

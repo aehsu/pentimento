@@ -36,7 +36,7 @@ function BasicVisual(tMin) {
     this.tMin = tMin;
     this.hyperlink;
     this.type = VisualTypes.basic;
-    this.doesItGetDeleted;
+    this.tDeletion;
     this.tEndEdit;
     this.properties = {};
     this.transforms = {};
@@ -60,7 +60,7 @@ function StrokeVisual(tMin) {
     this.hyperlink;
     this.type = VisualTypes.stroke;
     this.vertices = [];
-    this.doesItGetDeleted;
+    this.tDeletion;
     this.tEndEdit;
     this.properties = {};
     this.transforms = {};
@@ -81,7 +81,7 @@ function DotsVisual(tMin) {
     this.hyperlink;
     this.type = VisualTypes.dot;
     this.vertices = [];
-    this.doesItGetDeleted;
+    this.tDeletion;
     this.tEndEdit;
     this.properties = {};
     this.transforms = {};
