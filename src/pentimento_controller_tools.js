@@ -8,7 +8,7 @@ function live_tool_handler(event) {
     	case 'emphasis':
     		break;
     	case 'pen':
-            //all timing is done insidie of these handlers
+            //all timing is done inside of these handlers
             pentimento.state.canvas.on('mousedown', pen_mousedown);
             pentimento.state.canvas.on('mousemove', pen_mousemove);
             $(window).on('mouseup', pen_mouseup);

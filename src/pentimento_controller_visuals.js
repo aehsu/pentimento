@@ -8,18 +8,27 @@ function VisualsController(lecture) {
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
         
         slide.visuals.splice(idx, 1);
-        //um stuff
+        var self = this;
+        
+        um.add(function() {
+            self.add_visual(slide, visual);
+        }, group_name);
     }
     
     this.add_visual = function(slide, visual) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
-        slide.visuals.append(visual);
-        //um stuff
+        slide.visuals.push(visual);
+        var self = this;
+        
+        um.add(function() {
+            self.delete_visual(slide, visual);
+        }, group_name);
     }
     
     this.update_visuals = function() {
+        //renderer code. temporary stint until renderer code gets well integrated
         clear();
         var slide_accessors = pentimento.lecture_controller.get_lecture_accessor().slides();
         var running_time = 0;

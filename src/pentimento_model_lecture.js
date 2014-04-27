@@ -21,10 +21,21 @@ function Constraint() {
     this.tAud;
 }
 
+function Matrix() {
+    //TODO
+}
+
+function Transform() {
+    this.tMin;
+    this.duration; //necessary?
+    this.matrix;
+}
+
 function Lecture() {
     this.slides = []; //every lecture is by default, initialized with at least one slide
     this.audio_tracks = [];
     this.constraints = [];
+    this.transforms = [];
     
     this.access = function() {
         var self = this;
