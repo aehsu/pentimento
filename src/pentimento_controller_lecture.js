@@ -4,6 +4,7 @@
 //Time 0 is treated special.
 
 function LectureController(lecture) {
+    var self = this;
     var _lecture = lecture;
     this.visuals_controller = new VisualsController(lecture);
 //    var _audio_controller = new AudioController(lecture);
@@ -39,7 +40,6 @@ function LectureController(lecture) {
     
     this.add_slide = function(slide) {
         _lecture.slides.push(slide);
-        var self = this;
         
         um.add(function() {
             self.delete_slide(slide);
@@ -51,52 +51,9 @@ function LectureController(lecture) {
         if(idx==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
 
         _lecture.slides.splice(idx, 1);
-        var self = this;
         
         um.add(function() {
             self.add_slide(slide);
-        }, group_name);
-    }
-    
-    this.accept_recording = function(recording, params) {
-        //recording is a raw lecture object, instead of a controller
-        if(state.current_slide != params.slide) { console.log('some kind of inconsistency in accept_recording'); return; }
-        var idx = _lecture.slides.indexOf(params.slide);
-        var running_duration = 0;
-        for(var i=0; i<idx; i++) { running_duration += _lecture.slides[i].duration; }
-        
-        var excised_slide = _lecture.slides.splice(idx, 1)[0];
-        if(excised_slide!=undefined) {
-            for(var vis in excised_slide.visuals) {
-                var visual = $.extend(true, {}, excised_slide.visuals[vis]); //deep copy
-                if(visual.tMin < params.time - running_duration) {
-                    recording.slides[0].splice(vis, 0, visual);
-                } else if(visual.tMin > params.time - running_duration) {
-                    visual.tMin += recording.slides[0].duration;
-                    recording.slides[0].push(visual);
-                }
-            }
-            recording.slides[0].duration += excised_slide.duration;
-        }
-        
-        for(var sl in recording.slides) {
-            _lecture.slides.splice(idx+sl, 0, recording.slides[sl]);
-        }
-        
-        //TODO need, black magic. need to move to beginning.
-        um.add(function() {
-            reject_recording(recording, params, excised_slide)
-        }, group_name);
-    }
-    
-    function reject_recording(recording, params, excised_slide) {
-        var idx = _lecture.slides.indexOf(recording.slides[0]);
-        if(idx==-1) { console.log('something went terribly wrong in the rejection of a recording'); return; }
-        _lecture.slides.splice(idx, recording.slides.length, excised_slide);
-        
-        var self = this;
-        um.add(function() {
-            self.accept_recording(recording, params);
         }, group_name);
     }
     

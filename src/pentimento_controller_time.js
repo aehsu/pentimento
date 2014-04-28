@@ -1,7 +1,11 @@
 pentimento.time_controller = new function() {
     var state = pentimento.state; //reference
+    var self = this;
     var interval;
-    this.stop_recording = function() {
+    var stop_interval;
+    var last_time_update;
+    
+    this.stop_recording = function(end_time) {
         clearInterval(interval);
         interval = null;
         
@@ -9,8 +13,9 @@ pentimento.time_controller = new function() {
             disabled: false,
             max: pentimento.lecture_controller.get_lecture_duration()
         });
-        $('#slider').slider('value', state.current_time);
-        state.last_time_update = null;
+        self.update_time(state.current_time + (end_time - last_time_update));
+        last_time_update = null;
+//        $('#slider').slider('value', state.current_time);
     }
 
     function update_ticker(time) {
@@ -40,23 +45,26 @@ pentimento.time_controller = new function() {
         $('#ticker').val(min + ':' + sec + '.' + ms);
     }
 
-    this.begin_recording = function() {
+    this.begin_recording = function(begin_time) {
         $('#slider').slider("option", {
             disabled: true
         });
-
+        
+        last_time_update = begin_time;
         interval = setInterval(function() {
             var gt = global_time();
-            if(!state.last_time_update) { state.last_time_update = gt; }
-            update_ticker(state.current_time + gt - state.last_time_update);
+            self.update_time(state.current_time + (gt - last_time_update));
+            last_time_update = gt;
         }, INTERVAL_TIMING);
     }
 
     this.update_time = function(time) {
         state.current_time = time;
         update_ticker(time);
-        $('#slider').slider('value', time);
-        pentimento.lecture_controller.set_state_slide(state.current_time);
+        if(!state.is_recording) {
+            $('#slider').slider('value', time);
+            pentimento.lecture_controller.set_state_slide(state.current_time);
+        }
     }
     
     this.rewind = function() {

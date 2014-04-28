@@ -43,7 +43,7 @@ function draw_line(segment) {
 function get_canvas_point(event){
     var x = event.pageX - pentimento.state.canvas.offset().left;
     var y = event.pageY - pentimento.state.canvas.offset().top;
-    var t = global_time();
+    var t = pentimento.state.current_time;
     
     if(pentimento.state.pressure) {
         return new Vertex(x, y, t, event.pressure);
@@ -93,7 +93,7 @@ function pen_mousedown(event) {
     if (! pentimento.state.is_recording){return;}
     event.preventDefault();
     var state = pentimento.state; //reference
-    state.current_visual = new StrokeVisual(global_time());
+    state.current_visual = new StrokeVisual(state.current_time);
     state.current_visual.properties.color = state.color;
     state.current_visual.properties.width = state.width;
     state.last_point = get_canvas_point(event);
@@ -118,7 +118,7 @@ function pen_mouseup(event) {
     event.preventDefault();
 
     var state = pentimento.state;
-    if(state.current_visual != null && state.current_visual!=undefined) {
+    if(state.current_visual) { //check for not null and not undefined  != null && !=undefined
         pentimento.recording_controller.add_visual(state.current_visual);
         state.current_visual = null;
         state.last_point = null;
@@ -212,20 +212,4 @@ function select_mouseup(event) {
         vis_copy.properties.color = "#0000FF";
         draw_visual(vis_copy.access());
     }
-}
-
-function enable_undo() {
-    
-}
-
-function disable_undo() {
-    
-}
-
-function enable_redo() {
-    
-}
-
-function disable_redo() {
-    
 }
