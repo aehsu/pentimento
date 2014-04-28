@@ -1,5 +1,6 @@
 pentimento = {};
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
+DIRTY_TIMING = 250;
 DEBUG = true;
 ActionTypes = {
     Visual_Action: "Visual_Action",
@@ -12,16 +13,22 @@ function global_time() {
     return (new Date()).getTime();
 }
 
-function draw_visual(visual_accessor) {
-    switch(visual_accessor.type()) {
+function draw_visual(visual_access) {
+    switch(visual_access.type()) {
         case VisualTypes.basic:
             console.log("someone actually made a basic type?!",visual_accessor);
             break;
         case VisualTypes.stroke:
-            var verts = visual_accessor.vertices();
-            for(var i=1; i<verts.length; i++) {
-                var line = new Segment(verts[i-1], verts[i], visual_accessor.properties());
+            var verts_iter = visual_access.vertices();
+            var prev;
+            if(verts_iter.hasNext()) {
+                prev = verts_iter.next();
+            }
+            while (verts_iter.hasNext()) {
+                var curr = verts_iter.next();
+                var line = new Segment(prev, curr, visual_access.properties);
                 draw_line(line);
+                prev = curr;
             }
             break;
         case VisualTypes.dot:

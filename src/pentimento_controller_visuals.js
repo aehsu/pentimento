@@ -1,4 +1,5 @@
 function VisualsController(lecture) {
+    var self = this;
     var _lecture = lecture;
     var state = pentimento.state;
     var group_name = "Visuals_Controller_Group";
@@ -6,12 +7,14 @@ function VisualsController(lecture) {
     this.delete_visual = function(slide, visual) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
+        idx = slide.visuals.indexOf(visual);
+        if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
         
         slide.visuals.splice(idx, 1);
-        var self = this;
         
         um.add(function() {
             self.add_visual(slide, visual);
+            self.update_visuals();
         }, group_name);
     }
     
@@ -20,41 +23,49 @@ function VisualsController(lecture) {
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
         slide.visuals.push(visual);
-        var self = this;
         
         um.add(function() {
             self.delete_visual(slide, visual);
+            self.update_visuals();
+        }, group_name);
+    }
+    
+    function do_shift_visuals(visuals, amount) {
+        for(var vis in visuals) {
+            visuals[vis].tMin += amount;
+            var vert_iter = visuals[vis].access().vertices();
+            while(vert_iter.hasNext()) {
+                var vert = ver_iter.next();
+                vert.t += amount;
+            }
+        }
+    }
+    
+    this.shift_visuals = function(visuals, amount) {
+        do_shift_visuals(visuals, amount);
+        
+        //black magic, move to beginning?
+        um.add(function() {
+            do_shift_visuals(visuals, -1.0*amount);
         }, group_name);
     }
     
     this.update_visuals = function() {
         //renderer code. temporary stint until renderer code gets well integrated
         clear();
-        var slide_accessors = pentimento.lecture_controller.get_lecture_accessor().slides();
-        var running_time = 0;
+        var slide_iter = pentimento.lecture_controller.get_lecture_accessor().slides();
+        var slide_time = state.current_time;
         var visuals = [];
-        for(var i in slide_accessors) {
-            var slide_accessor = slide_accessors[i];
-            if(running_time + slide_accessor.duration() < pentimento.state.current_time) {
-                running_time += slide_accessor.duration();
-            } else {
-                var visual_accessors = slide_accessor.visuals();
-                for(var vis in visual_accessors) {
-                    var visual_accessor = visual_accessors[vis];
-                    if(running_time + visual_accessor.tMin() <= pentimento.state.current_time) {
-                        draw_visual(visual_accessor);
-                    }
+        while(slide_iter.hasNext()) {
+            var slide = slide_iter.next();
+            if(slide==state.current_slide) { //if(running_time + slide_accessor.duration() < pentimento.state.current_time) //
+                var visuals_iter = slide.access().visuals();
+                while(visuals_iter.hasNext()) {
+                    var visual_access = visuals_iter.next().access();
+                    if(slide_time > visual_access.tMin()) { draw_visual(visual_access); }
                 }
-                running_time+= slide_accessor.duration();
-            }
-        }
-    }
-    
-    this.shift_visuals = function(to_slide, from_slide, insertion_time) {
-        for(var vis in to_slide.visuals) {
-            var visual = to_slide.visuals[vis];
-            if (visual.tMin >= insertion_time) { //shift visuals in the to_slide
-                modify_visual(visual, 'tMin', visual.tMin + from_slide.duration)
+            } else {
+                slide_time -= slide.duration;
             }
         }
     }

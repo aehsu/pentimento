@@ -6,9 +6,12 @@
 function LectureController(lecture) {
     var self = this;
     var _lecture = lecture;
+    var state = pentimento.state;//Time 0 is treated special.
+    state.current_slide = new Slide();
+    _lecture.slides.push(state.current_slide); //manual initialization, prevents undoing to no slide.
+    
     this.visuals_controller = new VisualsController(lecture);
 //    var _audio_controller = new AudioController(lecture);
-    var state = pentimento.state;//Time 0 is treated special.
     var group_name = "Lecture_Controller_Group";
 //    var audio_timeline_scale = 100;
 //    state.wavesurfer = Object.create(WaveSurfer);
@@ -53,6 +56,7 @@ function LectureController(lecture) {
         _lecture.slides.splice(idx, 1);
         
         um.add(function() {
+            //TODO need to set state.current_slide correctly
             self.add_slide(slide);
         }, group_name);
     }

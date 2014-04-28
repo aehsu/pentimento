@@ -51,7 +51,7 @@ BasicVisual.prototype.access = function() {
         doesItGetDeleted: function() { return self.doesItGetDeleted; },
         tEndEdit: function() { return self.tEndEdit; },
         properties: function() { return self.properties; },
-        transforms: function() { return self.transforms; }
+        transforms: function() { return new Iterator(self.transforms); }
     }
 }
 
@@ -72,7 +72,7 @@ StrokeVisual.prototype.access = function() {
     var self = this;
     var _super = BasicVisual.prototype.access.call(self);
     //we can put the get_vertices from Richard's code here if we really want to limit what access you get
-    _super.vertices = function() { return self.vertices; }
+    _super.vertices = function() { return new Iterator(self.vertices); }
     return _super;
 }
 
@@ -93,7 +93,7 @@ DotsVisual.prototype.access = function() {
     var self = this;
     var _super = BasicVisual.prototype.access.call(self);
     //we can put the get_vertices from Richard's code here if we really want to limit what access you get
-    _super.vertices = function() { return self.vertices; }
+    _super.vertices = function() { return new Iterator(self.vertices); }
     return _super;
 }
 
