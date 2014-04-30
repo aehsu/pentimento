@@ -2,7 +2,6 @@ function VisualsController(lecture) {
     var self = this;
     var _lecture = lecture;
     var state = pentimento.state;
-    var group_name = "Visuals_Controller_Group";
     
     this.delete_visual = function(slide, visual) {
         var idx = _lecture.slides.indexOf(slide);
@@ -13,21 +12,29 @@ function VisualsController(lecture) {
         slide.visuals.splice(idx, 1);
         
         um.add(function() {
-            self.add_visual(slide, visual);
+            self.add_visual(slide, visual, idx);
             self.update_visuals();
-        }, group_name);
+        }, ActionGroups.Visual_Group);
+        
+        return visual;
     }
     
-    this.add_visual = function(slide, visual) {
+    this.add_visual = function(slide, visual, index) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
-        slide.visuals.push(visual);
+        if(index==undefined || index==null) {
+            slide.visuals.push(visual);
+        } else {
+            slide.visuals.splice(index, 0, visual);
+        }
         
         um.add(function() {
             self.delete_visual(slide, visual);
             self.update_visuals();
-        }, group_name);
+        }, ActionGroups.Visual_Group);
+        
+        return visual;
     }
     
     function do_shift_visuals(visuals, amount) {
@@ -35,7 +42,7 @@ function VisualsController(lecture) {
             visuals[vis].tMin += amount;
             var vert_iter = visuals[vis].access().vertices();
             while(vert_iter.hasNext()) {
-                var vert = ver_iter.next();
+                var vert = vert_iter.next();
                 vert.t += amount;
             }
         }
@@ -45,9 +52,11 @@ function VisualsController(lecture) {
         do_shift_visuals(visuals, amount);
         
         //black magic, move to beginning?
-        um.add(function() {
+        var shift = um.addToStartOfGroup(ActionGroups.Recording_Group, function() {
             do_shift_visuals(visuals, -1.0*amount);
-        }, group_name);
+        });
+        
+        if(DEBUG) { console.log(shift); }
     }
     
     this.update_visuals = function() {
@@ -92,6 +101,7 @@ function VisualsController(lecture) {
             for(var vis in state.current_slide.visuals) {
                 var visual = state.current_slide.visuals[vis];
                 if(visual.tMin >= start_time) {
+//                    self.shift_visuals(visual)
                    modify_visual(visual, 'tMin', visual.tMin-1.0*shift.duration)
                }
             }
@@ -101,9 +111,9 @@ function VisualsController(lecture) {
         return shifts;
     }
     
-    this.delete_visuals = function(visuals) {
-        do_deletion(visuals);
-    }
+//    this.delete_visuals = function(visuals) {
+//        do_deletion(visuals);
+//    }
 
     function prevNeighbor(visual) {
         var prev;

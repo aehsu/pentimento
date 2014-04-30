@@ -130,7 +130,7 @@ function select_mousedown(event) { //non-live handler
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.update_visuals(true);
     state.last_point = get_canvas_point(event);
     state.selection = [];
 }
@@ -140,7 +140,7 @@ function select_mousemove(event) {
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.update_visuals(true);
     var coord = get_canvas_point(event);
     var ctx = state.context;
     var width = state.width;
@@ -168,6 +168,7 @@ function select_mousemove(event) {
     }
 
     if(!state.current_slide) {
+        console.log("this should never happen inside of the selection handler for mousemove");
         ctx.strokeStyle = style; // should be valid if you say pentimento.state.color
         ctx.lineWidth = width; // should be valid if you say pentimento.state.width
         return;
@@ -205,11 +206,12 @@ function select_mouseup(event) {
     event.preventDefault();
 
     var state =  pentimento.state;
-    pentimento.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.update_visuals(true);
     for(vis in state.selection) {
         var vis_copy = $.extend(true, {}, state.selection[vis]);
         vis_copy.properties.width = state.selection[vis].properties.width+1;
         vis_copy.properties.color = "#0000FF";
         draw_visual(vis_copy.access());
     }
+    console.log('dummy');
 }

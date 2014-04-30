@@ -2,12 +2,12 @@ pentimento = {};
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
 DIRTY_TIMING = 250;
 DEBUG = true;
-ActionTypes = {
-    Visual_Action: "Visual_Action",
-    Batch_Action: "Batch_Action",
-    Recording_Action: "Recording_Action"
+ActionGroups = {
+    Visual_Group: "Visual_Group",
+    Audio_Group: "Audio_Group",
+    Recording_Group: "Recording_Group"
 };
-um = getUndoManager([ActionTypes.Visual_Action, ActionTypes.Batch_Action, ActionTypes.Recording_Action], true);
+um = getUndoManager([ActionGroups.Recording_Group, ActionGroups.Visual_Group, ActionGroups.Audio_Group], DEBUG);
 
 function global_time() {
     return (new Date()).getTime();
@@ -26,7 +26,7 @@ function draw_visual(visual_access) {
             }
             while (verts_iter.hasNext()) {
                 var curr = verts_iter.next();
-                var line = new Segment(prev, curr, visual_access.properties);
+                var line = new Segment(prev, curr, visual_access.properties());
                 draw_line(line);
                 prev = curr;
             }

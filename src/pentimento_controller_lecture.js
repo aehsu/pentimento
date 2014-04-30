@@ -12,9 +12,6 @@ function LectureController(lecture) {
     
     this.visuals_controller = new VisualsController(lecture);
 //    var _audio_controller = new AudioController(lecture);
-    var group_name = "Lecture_Controller_Group";
-//    var audio_timeline_scale = 100;
-//    state.wavesurfer = Object.create(WaveSurfer);
 
     this.set_state_slide = function(time) { //questionable.
         if(time==0) { state.current_slide = _lecture.slides[0]; return; }
