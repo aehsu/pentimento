@@ -3,7 +3,7 @@ function VisualsController(lecture) {
     var _lecture = lecture;
     var state = pentimento.state;
     
-    this.delete_visual = function(slide, visual) {
+    function unaddVisual(slide, visual) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
         idx = slide.visuals.indexOf(visual);
@@ -12,14 +12,14 @@ function VisualsController(lecture) {
         slide.visuals.splice(idx, 1);
         
         um.add(function() {
-            self.add_visual(slide, visual, idx);
-            self.update_visuals();
+            self.addVisual(slide, visual, idx);
+            self.updateVisuals();
         }, ActionGroups.Visual_Group);
         
         return visual;
     }
     
-    this.add_visual = function(slide, visual, index) {
+    this.addVisual = function(slide, visual, index) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
@@ -30,36 +30,98 @@ function VisualsController(lecture) {
         }
         
         um.add(function() {
-            self.delete_visual(slide, visual);
-            self.update_visuals();
+            unaddVisual(slide, visual);
+            self.updateVisuals();
         }, ActionGroups.Visual_Group);
         
         return visual;
     }
     
-    function do_shift_visuals(visuals, amount) {
-        for(var vis in visuals) {
-            visuals[vis].tMin += amount;
-            var vert_iter = visuals[vis].access().vertices();
-            while(vert_iter.hasNext()) {
-                var vert = vert_iter.next();
-                vert.t += amount;
-            }
+    function doShiftVisual(visual, amount) {
+        visual.tMin += amount;
+        var vert_iter = visual.access().vertices();
+        while(vert_iter.hasNext()) {
+            var vert = vert_iter.next();
+            vert.t += amount;
         }
     }
     
-    this.shift_visuals = function(visuals, amount) {
-        do_shift_visuals(visuals, amount);
+    this.shiftVisuals = function(visuals, amount) {
+        for(var vis in visuals) { doShiftVisual(visuals[vis], amount); }
         
         //black magic, move to beginning?
         var shift = um.addToStartOfGroup(ActionGroups.Recording_Group, function() {
-            do_shift_visuals(visuals, -1.0*amount);
+            for(var vis in visuals) { doShiftVisual(visuals[vis], -1.0*amount); }
         });
         
         if(DEBUG) { console.log(shift); }
     }
     
-    this.update_visuals = function() {
+    function undeleteVisuals(slide, visuals, indices, shifts) {
+        //need to handle shifting correctly
+        shifts.reverse();
+        visuals.reverse();
+        indices.reverse(); //necessary to preserve correct ordering
+        
+        for(var sh in shifts) {
+            var shift = shifts[sh];
+            for(var vis in slide.visuals) {
+                var visual = slide.visuals[vis];
+                if(visual.tMin >= shift.tMin) { doShiftVisual(visual, shift.duration); }
+            }
+        }
+        
+        for(var i in indices) {
+            var index = indices[i];
+            var visual = visuals[i];
+            slide.visuals.splice(index, 0, visual);
+        }
+        
+        visuals.reverse(); //this is not necessary
+        //no need to reverse indices here cause it will just get garbagecollected
+        //shifts will likewise just get garbagecollected
+        
+        um.add(function() {
+            self.deleteVisuals(slide, visuals);
+        }, ActionGroups.Visual_Group);
+        pentimento.lecture_controller.visuals_controller.updateVisuals();
+    }
+    
+    this.deleteVisuals = function(slide, visuals) {
+        var indices = [];
+        var segments = segmentVisuals(visuals);
+        var shifts = getSegmentsShifts(segments);
+        shifts.reverse();
+        
+        console.log("pre-DELETION visuals"); console.log(state.current_slide.visuals);
+        console.log("DELETION shifts"); console.log(shifts);
+        
+        for(var vis in visuals) { //remove the visuals from the slide
+            var index = state.current_slide.visuals.indexOf(visuals[vis]);
+            state.current_slide.visuals.splice(index, 1);
+            indices.push(index);
+            if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
+        }
+        
+        console.log("post-DELETION visuals"); console.log(state.current_slide.visuals);
+        
+        for(var sh in shifts) {
+            var shift = shifts[sh];
+            for(var vis in state.current_slide.visuals) {
+                var visual = state.current_slide.visuals[vis];
+                if(visual.tMin >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
+            }
+        }
+        shifts.reverse();
+        
+        //should we change the duration of the slide?!?
+        um.add(function() {
+            undeleteVisuals(state.current_slide, visuals, indices, shifts);
+        }, ActionGroups.Visual_Group);
+        pentimento.lecture_controller.visuals_controller.updateVisuals();
+    }
+
+    this.updateVisuals = function() {
         //renderer code. temporary stint until renderer code gets well integrated
         clear();
         var slide_iter = pentimento.lecture_controller.get_lecture_accessor().slides();
@@ -78,43 +140,7 @@ function VisualsController(lecture) {
             }
         }
     }
-    
-    function do_deletion(visuals) {
-        //handles both shifting of the visuals in time and removal from within the visuals
-        var segments = segment_visuals(visuals);
-        var start_time = segments[0][0].tMin;
-        var shifts = get_segments_shift(segments);
-        shifts.reverse();
-        console.log("pre-DELETION visuals")
-        console.log(state.current_slide.visuals);
-        console.log("DELETION shifts");
-        console.log(shifts);
-        for(var vis in visuals) { //remove the visuals from the 
-            var index = state.current_slide.visuals.indexOf(visuals[vis]);
-            //undo manager logic
-            state.current_slide.visuals.splice(index, 1);
-        }
-        console.log("post-DELETION visuals");
-        console.log(state.current_slide.visuals);
-        for(var sh in shifts) {
-            var shift = shifts[sh];
-            for(var vis in state.current_slide.visuals) {
-                var visual = state.current_slide.visuals[vis];
-                if(visual.tMin >= start_time) {
-//                    self.shift_visuals(visual)
-                   modify_visual(visual, 'tMin', visual.tMin-1.0*shift.duration)
-               }
-            }
-        }
-        //should we change the duration of the slide?!?
-        shifts.reverse();
-        return shifts;
-    }
-    
-//    this.delete_visuals = function(visuals) {
-//        do_deletion(visuals);
-//    }
-
+    /************* HELPER FUNCTIONS *************/
     function prevNeighbor(visual) {
         var prev;
         for(vis in state.current_slide.visuals) {
@@ -137,12 +163,12 @@ function VisualsController(lecture) {
         return next;
     }
     
-    function modify_visual(obj, field, new_val) {
+    function modifyVisual(obj, field, new_val) {
         //undo manager push here!
         obj[field] = new_val;
     }
     
-    function segment_visuals(visuals) {
+    function segmentVisuals(visuals) {
         //returns an array of segments, where each segment consists of a set of contiguous visuals
         function cmp_visuals(a, b) {
             if(a.tMin < b.tMin) {
@@ -190,7 +216,7 @@ function VisualsController(lecture) {
         return segments;
     }
 
-    function get_segments_shift(segments) {
+    function getSegmentsShifts(segments) {
         var shifts = [];
         for(seg in segments) {
             var duration = 0;

@@ -1,11 +1,9 @@
 pentimento.recording_controller = new function() {//records little mini-lectures, which is all a lecture is.
-    var interval = null;
-    var slide_begin = NaN;
     var state = pentimento.state;
+    var slide_begin = NaN;
     var dirty_visuals = [];
     var dirty_times = [];
-    var dirty_idx = null;
-    var is_redraw = false;
+    var insertion_index = null;
     
     function end_slide(time) {
         console.log('ending slide at', time);
@@ -14,7 +12,7 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             for(var vis in dirty_visuals) {
                 dirty_visuals[vis].tMin = dirty_times[vis];
             }
-            pentimento.lecture_controller.visuals_controller.shift_visuals(dirty_visuals, time - slide_begin);
+            pentimento.lecture_controller.visuals_controller.shiftVisuals(dirty_visuals, time - slide_begin);
             dirty_times = [];
             dirty_visuals = [];
             dirty_idx = null;
@@ -30,12 +28,41 @@ pentimento.recording_controller = new function() {//records little mini-lectures
         pentimento.lecture_controller.add_slide(state.current_slide);
     }
 
-    this.add_visual = function(visual) {
-        if(!is_redraw) {
-            pentimento.lecture_controller.visuals_controller.add_visual(state.current_slide, visual, dirty_idx);
-        } else {
-            
+    this.addVisual = function(visual) {
+        for(var vert in visual.vertices) {
+            visual.vertices[vert].t -= slide_begin;
         }
+        visual.tMin -= slide_begin;
+        pentimento.lecture_controller.visuals_controller.addVisual(state.current_slide, visual, insertion_index);
+    }
+    
+    this.begin_redrawing = function() {
+        if(!state.current_slide) {
+            console.log("this should never, ever happen");
+            return; 
+        }
+        //um.startHierarchy()
+        pentimento.lecture_controller.visuals_controller.deleteVisuals(state.selection);
+        //somehow get the earliest time!
+        var visuals_iter = state.current_slide.access().visuals();
+        while(visuals_iter.hasNext()) {
+            var visual = visuals_iter.next();
+            if(state.selection.indexOf(visual) >= 0 && insertion_index == null) {
+                insertion_index = visuals_iter.index;
+            } else if(visual.access().tMin() > state.current_time) {
+                dirty_visuals.push(visual);
+            }
+        }
+        
+        
+        for(var vis in dirty_visuals) { //alternatively, set interval for shifting as you go
+            dirty_times.push(dirty_visuals[vis].access().tMin());
+            dirty_visuals[vis].tMin = NaN; //temporary disabling of the visuals.
+        }
+        
+        slide_begin = global_time();
+        pentimento.time_controller.begin_recording(slide_begin);
+        pentimento.state.is_recording = true;
     }
     
 	this.begin_recording = function() {
@@ -44,18 +71,19 @@ pentimento.recording_controller = new function() {//records little mini-lectures
 //        pentimento.time_controller.update_time(pentimento.state.current_time);//why is this here??
         
         if(!state.current_slide) {
-            this.add_slide();
             console.log("this should never, ever happen");
-        } else {
-            var visuals_iter = state.current_slide.access().visuals();
-            while(visuals_iter.hasNext()) {
-                var visual = visuals_iter.next();
-                if(visual.access().tMin() > state.current_time) { //is dirty
-                    if(dirty_idx == null) {dirty_idx = visuals_iter.index;}
-                    dirty_visuals.push(visual);//splice them out?? nahh
-                }
+            return;
+        }
+        
+        var visuals_iter = state.current_slide.access().visuals();
+        while(visuals_iter.hasNext()) {
+            var visual = visuals_iter.next();
+            if(visual.access().tMin() > state.current_time) { //is dirty
+                if(insertion_index == null) {insertion_index = visuals_iter.index;}
+                dirty_visuals.push(visual);//splice them out?? nahh
             }
         }
+        
         
         for(var vis in dirty_visuals) { //alternatively, set interval for shifting as you go
             dirty_times.push(dirty_visuals[vis].access().tMin());

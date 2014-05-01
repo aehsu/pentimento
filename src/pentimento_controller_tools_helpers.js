@@ -43,7 +43,7 @@ function draw_line(segment) {
 function get_canvas_point(event){
     var x = event.pageX - pentimento.state.canvas.offset().left;
     var y = event.pageY - pentimento.state.canvas.offset().top;
-    var t = pentimento.state.current_time;
+    var t = global_time(); //hmmmmm...
     
     if(pentimento.state.pressure) {
         return new Vertex(x, y, t, event.pressure);
@@ -93,7 +93,7 @@ function pen_mousedown(event) {
     if (! pentimento.state.is_recording){return;}
     event.preventDefault();
     var state = pentimento.state; //reference
-    state.current_visual = new StrokeVisual(state.current_time);
+    state.current_visual = new StrokeVisual(global_time());
     state.current_visual.properties.color = state.color;
     state.current_visual.properties.width = state.width;
     state.last_point = get_canvas_point(event);
@@ -119,7 +119,7 @@ function pen_mouseup(event) {
 
     var state = pentimento.state;
     if(state.current_visual) { //check for not null and not undefined  != null && !=undefined
-        pentimento.recording_controller.add_visual(state.current_visual);
+        pentimento.recording_controller.addVisual(state.current_visual);
         state.current_visual = null;
         state.last_point = null;
     }
@@ -130,7 +130,7 @@ function select_mousedown(event) { //non-live handler
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.lecture_controller.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.updateVisuals();
     state.last_point = get_canvas_point(event);
     state.selection = [];
 }
@@ -140,7 +140,7 @@ function select_mousemove(event) {
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.lecture_controller.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.updateVisuals();
     var coord = get_canvas_point(event);
     var ctx = state.context;
     var width = state.width;
@@ -206,12 +206,11 @@ function select_mouseup(event) {
     event.preventDefault();
 
     var state =  pentimento.state;
-    pentimento.lecture_controller.visuals_controller.update_visuals(true);
+    pentimento.lecture_controller.visuals_controller.updateVisuals();
     for(vis in state.selection) {
         var vis_copy = $.extend(true, {}, state.selection[vis]);
         vis_copy.properties.width = state.selection[vis].properties.width+1;
         vis_copy.properties.color = "#0000FF";
         draw_visual(vis_copy.access());
     }
-    console.log('dummy');
 }

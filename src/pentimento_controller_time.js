@@ -84,11 +84,11 @@ $(document).ready(function() {
         slide: function(event, ui) {
             pentimento.state.selection = [];
             pentimento.time_controller.update_time(ui.value);
-            pentimento.lecture_controller.visuals_controller.update_visuals(true);
+            pentimento.lecture_controller.visuals_controller.updateVisuals();
         },
         stop: function(event, ui) {
             pentimento.time_controller.update_time(ui.value);
-            pentimento.lecture_controller.visuals_controller.update_visuals(true);
+            pentimento.lecture_controller.visuals_controller.updateVisuals();
         }
     });
 });

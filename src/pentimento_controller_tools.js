@@ -51,7 +51,7 @@ function nonlive_tool_handler(event) {
             interval = setInterval(function() {
                 if(pentimento.state.current_time + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
                     pentimento.time_controller.update_time(pentimento.state.current_time+INTERVAL_TIMING);
-                    pentimento.visuals_controller.update_visuals(true);
+                    //pentimento.visuals_controller.updateVisuals();
                 } else {
                     clearInterval(interval);
                 }
@@ -77,9 +77,8 @@ function nonlive_tool_handler(event) {
     	case 'width':
     		break;
     	case 'delete':
-            pentimento.visuals_controller.delete_visuals(pentimento.state.selection);
+            pentimento.lecture_controller.visuals_controller.deleteVisuals(pentimento.state.current_slide, pentimento.state.selection);
             pentimento.state.selection = [];
-            pentimento.visuals_controller.update_visuals(true);
     		break;
     	case 'retime':
     		break;
@@ -89,9 +88,9 @@ function nonlive_tool_handler(event) {
             $(window).mouseup(select_mouseup);
             break;
         case 'redraw':
-            var shifts = pentimento.visuals_controller.delete_visuals(pentimento.state.selection);
-            pentimento.time_controller.update_time(shifts[0].tMin);
-            $('.recording-tool:not(.hidden)').click();
+            pentimento.recording_controller.begin_redrawing();
+            $('.recording-tool').toggleClass('hidden');
+            $('button[data-toolname="pen"]').click();
             break;
         case 'rewind':
             break;
