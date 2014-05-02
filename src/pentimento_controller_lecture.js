@@ -39,15 +39,17 @@ function LectureController(lecture) {
     }
     
     this.addSlide = function(slide) {
-        _lecture.slides.push(slide);
+        var index = _lecture.slides.indexOf(state.current_slide);
+        _lecture.slides.splice(index, 0, slide);
+        return index;
     }
     
     this.deleteSlide = function(slide) {
-        var idx = _lecture.slides.indexOf(slide);
-        if(idx==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
+        var index = _lecture.slides.indexOf(slide);
+        if(index==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
 
-        _lecture.slides.splice(idx, 1);
-        return idx;
+        _lecture.slides.splice(index, 1);
+        return index;
     }
     
     if(DEBUG) {

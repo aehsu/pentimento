@@ -50,7 +50,7 @@ function nonlive_tool_handler(event) {
     	case 'play':
             interval = setInterval(function() {
                 if(pentimento.state.current_time + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
-                    pentimento.time_controller.update_time(pentimento.state.current_time+INTERVAL_TIMING);
+                    pentimento.time_controller.updateTime(pentimento.state.current_time+INTERVAL_TIMING);
                     //pentimento.visuals_controller.updateVisuals();
                 } else {
                     clearInterval(interval);

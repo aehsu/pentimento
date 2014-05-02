@@ -2,31 +2,27 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     var state = pentimento.state;
     var slide_begin = NaN;
     var dirty_visuals = [];
-    var dirty_times = [];
     var insertion_index = null;
+    
+    function MakeDirtyVisual(visual) {
+        this.visual = visual;
+        this.tMin = visual.access().tMin();
+        visual.tMin = NaN;
+    }
     
     function endSlide(time, slide) {
         console.log('ending slide at', time);
         state.current_slide.duration += time - slide_begin;
-        if(dirty_visuals.length > 0) {
-            for(var vis in dirty_visuals) {
-                dirty_visuals[vis].tMin = dirty_times[vis];
-            }
-            pentimento.lecture_controller.visuals_controller.shiftVisuals(dirty_visuals, time - slide_begin);
-            dirty_times = [];
-            dirty_visuals = [];
-            insertion_index = null;
-        }
-        
         slide_begin = NaN;
     }
     
-    function unaddSlide(prev_slide, new_slide) {
+    function unaddSlide(prev_slide, new_slide, index) {
         //simply unadd's a slide, but is not the same as deleting a slide!
         //unadding is the opposite of adding a slide, but deleting a slide can be done outside of a recording
         //refer to lecture controller for slide deletion
         if(new_slide != state.current_slide) { console.log('Error in unadding a slide!'); }
-        var index = pentimento.lecture_controller.deleteSlide(new_slide);
+        state.current_slide = prev_slide;
+        pentimento.lecture_controller.deleteSlide(new_slide);
         var duration = 0;
         var slide_iter = pentimento.lecture_controller.get_lecture_accessor();
         
@@ -35,26 +31,32 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             if(slide_iter.index == index) { break; }
             duration+= slide.access().duration();
         }
-        pentimento.time_controller.update_time(duration);
         slide_begin = global_time();
+        pentimento.time_controller.updateTime(duration);
+        pentimento.lecture_controller.visuals_controller.updateVisuals();
         
         um.add(function() {
-            self.addSlide();
-        }, ActionGroups.Recording_Group);
+            self.addSlide(new_slide);
+        }, ActionTitles.AdditionOfSlide);
     }
 
-    this.addSlide = function() {
+    this.addSlide = function(slide) {
         //adding a slide does not start a group! to undo a slide's addition, you must undo all actions leading upto it
         slide_begin = global_time();
         if(state.current_slide) { endSlide(slide_begin, state.current_slide); } //only end the current_slide if not undefined and not null
         var prev_slide = state.current_slide;
-        var new_slide = new Slide();
-        pentimento.lecture_controller.addSlide(new_slide);
-        state.current_slide = next_slide;
+        var new_slide;
+        if(slide) {
+            new_slide = slide;
+        } else {
+            new_slide = new Slide();
+        }
+        var index = pentimento.lecture_controller.addSlide(new_slide);
+        state.current_slide = new_slide;
         
         um.add(function() {
-            unaddSlide(prev_slide, new_slide);
-        }, ActionGroups.Recording_Group);
+            unaddSlide(prev_slide, new_slide, index);
+        }, ActionTitles.AdditionOfSlide);
     }
 
     this.addVisual = function(visual) {
@@ -95,10 +97,6 @@ pentimento.recording_controller = new function() {//records little mini-lectures
     }
     
 	this.beginRecording = function() {
-//        pentimento.state.selection=[]; //selection??? what to do with it?
-//        pentimento.visuals_controller.update_visuals(true);
-//        pentimento.time_controller.update_time(pentimento.state.current_time);//why is this here??
-        
         if(!state.current_slide) {
             console.log("this should never, ever happen");
             return;
@@ -109,10 +107,9 @@ pentimento.recording_controller = new function() {//records little mini-lectures
             var visual = visuals_iter.next();
             if(visual.access().tMin() > state.current_time) { //is dirty
                 if(insertion_index == null) {insertion_index = visuals_iter.index;}
-                dirty_visuals.push(visual);//splice them out?? nahh
+                dirty_visuals.push(new MakeDirtyVisual(visual));
             }
         }
-        
         
         for(var vis in dirty_visuals) { //alternatively, set interval for shifting as you go
             dirty_times.push(dirty_visuals[vis].access().tMin());

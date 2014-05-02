@@ -3,10 +3,18 @@ INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
 DIRTY_TIMING = 250;
 DEBUG = true;
 ActionGroups = {
-    Visual_Group: "Visual_Group",
-    Audio_Group: "Audio_Group",
-    Recording_Group: "Recording_Group"
+    VisualGroup: "VisualGroup",
+    AudioGroup: "AudioGroup",
+    RecordingGroup: "RecordingGroup"
 };
+
+ActionTitles = {
+    AdditionOfSlide: "AdditionOfSlide",
+    DeleteSlide: "DeleteSlide",
+    UnaddSlide: "UnaddSlide",
+    
+};
+
 um = getUndoManager([ActionGroups.Recording_Group, ActionGroups.Visual_Group, ActionGroups.Audio_Group], DEBUG);
 
 function global_time() {

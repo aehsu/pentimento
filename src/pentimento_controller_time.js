@@ -13,7 +13,7 @@ pentimento.time_controller = new function() {
             disabled: false,
             max: pentimento.lecture_controller.get_lecture_duration()
         });
-        self.update_time(state.current_time + (end_time - last_time_update));
+        self.updateTime(state.current_time + (end_time - last_time_update));
         last_time_update = null;
 //        $('#slider').slider('value', state.current_time);
     }
@@ -53,12 +53,12 @@ pentimento.time_controller = new function() {
         last_time_update = begin_time;
         interval = setInterval(function() {
             var gt = global_time();
-            self.update_time(state.current_time + (gt - last_time_update));
+            self.updateTime(state.current_time + (gt - last_time_update));
             last_time_update = gt;
         }, INTERVAL_TIMING);
     }
 
-    this.update_time = function(time) {
+    this.updateTime = function(time) {
         state.current_time = time;
         update_ticker(time);
         if(!state.is_recording) {
@@ -83,11 +83,11 @@ $(document).ready(function() {
         range: 'min',
         slide: function(event, ui) {
             pentimento.state.selection = [];
-            pentimento.time_controller.update_time(ui.value);
+            pentimento.time_controller.updateTime(ui.value);
             pentimento.lecture_controller.visuals_controller.updateVisuals();
         },
         stop: function(event, ui) {
-            pentimento.time_controller.update_time(ui.value);
+            pentimento.time_controller.updateTime(ui.value);
             pentimento.lecture_controller.visuals_controller.updateVisuals();
         }
     });
