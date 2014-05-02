@@ -17,8 +17,8 @@ function live_tool_handler(event) {
     		break;
         case 'add-slide':
             if(pentimento.state.is_recording) {
-                clear();
-                pentimento.recording_controller.add_slide();
+                pentimento.recording_controller.addSlide();
+                pentimento.lecture_controller.visuals_controller.updateVisuals();
             }
             break;
     	case 'color':
@@ -88,7 +88,7 @@ function nonlive_tool_handler(event) {
             $(window).mouseup(select_mouseup);
             break;
         case 'redraw':
-            pentimento.recording_controller.begin_redrawing();
+            pentimento.recording_controller.beginRedrawing();
             $('.recording-tool').toggleClass('hidden');
             $('button[data-toolname="pen"]').click();
             break;
@@ -108,9 +108,9 @@ function recording_tool_handler(event) {
     var elt = $(event.target);
     if (elt.attr('data-label')==='begin') {
         $('button[data-toolname="pen"]').click();
-        pentimento.recording_controller.begin_recording();
+        pentimento.recording_controller.beginRecording();
     } else {
-        pentimento.recording_controller.stop_recording();
+        pentimento.recording_controller.stopRecording();
     }
     $('.recording-tool').toggleClass('hidden');
     $('.live-tool').toggleClass('hidden');

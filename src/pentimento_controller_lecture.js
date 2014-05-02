@@ -38,24 +38,16 @@ function LectureController(lecture) {
         return _lecture.access();
     }
     
-    this.add_slide = function(slide) {
+    this.addSlide = function(slide) {
         _lecture.slides.push(slide);
-        
-        um.add(function() {
-            self.delete_slide(slide);
-        }, group_name);
     }
     
-    this.delete_slide = function(slide) {
+    this.deleteSlide = function(slide) {
         var idx = _lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
 
         _lecture.slides.splice(idx, 1);
-        
-        um.add(function() {
-            //TODO need to set state.current_slide correctly
-            self.add_slide(slide);
-        }, group_name);
+        return idx;
     }
     
     if(DEBUG) {
