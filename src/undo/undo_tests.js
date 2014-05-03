@@ -1396,6 +1396,40 @@ var testUM = function (guiFunctions) {
 
     failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);  
 
+    /*
+        TEST 32
+        
+    */
+
+    scenario = function () {
+        um.startHierarchy('group2');
+        changeBodyColor('red');
+        um.undo();
+    };
+    
+    standardResults = [0, 1, null, getBodyColorTitle('red')];
+
+    expectedResults = {
+        undo: [errorNames['undo']],
+        redo: [1, 0, getBodyColorTitle('red'), null],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [errorNames['undoH1']],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [true],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test32'] = getFailedFunctions(expectedResults, scenario);      
+
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 
     //populate nonEmptyFailedScenarios and figure out whether all the tests passed or not

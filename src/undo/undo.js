@@ -278,6 +278,9 @@ var getUndoManager = function(groupTypes, debug) {
         // inverse: the function that would undo the actions just performed
         // title: describes the actions just performed   
         add: function(inverse, title) {
+            if (!title) {
+                title = "";
+            }
             if (undoing) { // if undoing, the action object should go on the redo stack
                 redoStack.push({
                     action: inverse
