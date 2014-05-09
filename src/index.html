@@ -31,6 +31,7 @@
     <script type='text/javascript' src="RecordRTC.js"></script>
     <script type='text/javascript' src='pentimento_model_lecture.js'></script>    
     <script type='text/javascript' src='pentimento_model_state.js'></script>
+    <script type='text/javascript' src='pentimento_audio_controller.js'></script>
     <script type='text/javascript' src='pentimento_controller_recording.js'></script>
     <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
     <script type='text/javascript' src='pentimento_controller_uiux_helpers.js'></script>
@@ -202,12 +203,15 @@
         <br>
         <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
 
-        <button class="btn btn-primary" data-action="play">
+        <button id="play_pause_button" class="btn btn-primary" data-action="play">
             <i class="glyphicon glyphicon-play"></i>
             Audio Play
             /
             <i class="glyphicon glyphicon-pause"></i>
             Audio Pause
+        </button>
+        <button id="record_audio_button" class="btn btn-primary" data-action="record_audio">
+            Record
         </button>
         <div id="audio_timeline"></div>
 </body>

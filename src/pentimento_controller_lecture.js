@@ -1,17 +1,16 @@
 pentimento.lecture_controller = new function() {
-    this.lecture = null;
+    var lecture = new pentimento.lecture();
     var state = pentimento.state;
     var interval;
     var recording_params;
     var audio_timeline_scale = 100;
-    state.wavesurfer = Object.create(WaveSurfer);
 
-    this.get_slides_length = function() {
-        return lecture.slides.length;
-    }
+    this.get_lecture = function() {
+        return lecture;
+    };
 
-    this.get_slide = function(index) {
-        return lecture.slides[index];
+    this.get_lecture_duration = function() {
+        return 0;
     }
 
     this.set_slide_by_time = function(time) {
@@ -24,14 +23,6 @@ pentimento.lecture_controller = new function() {
                 total_duration += lecture.slides[slide].duration;
             }
         }
-    }
-
-    this.get_lecture_duration = function() {
-        var time = 0;
-        for(slide in lecture.slides) {
-            time += lecture.slides[slide].duration;
-        }
-        return time;
     }
 
     this.rewind = function() {
@@ -80,147 +71,7 @@ pentimento.lecture_controller = new function() {
 
     }
 
-    // Refreshes the audio timeline display to show the tracks and segments
-    this.refresh_audio_display = function() {
-
-        var draw_gradations = function() { 
-            console.log('hi')
-            var timeline = $('#audio_timeline');
-            var gradation_container = $('<div></div>');
-            gradation_container.attr('id', 'gradation_container').css('width', timeline.width()).css('height', timeline.height());
-            timeline.append(gradation_container);
-
-            // Changes tickpoints into time display (ex: 00:30:00)
-            // Each tickpoint unit is one second which is then scaled by theaudio_timeline_scale
-            var tickFormatter = function (tickpoint) {
-                var sec_num = parseInt(tickpoint, 10);
-                var hours   = Math.floor(sec_num / 3600);
-                var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-                var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-                if (hours   < 10) {hours   = "0"+hours;}
-                if (minutes < 10) {minutes = "0"+minutes;}
-                if (seconds < 10) {seconds = "0"+seconds;}
-                var time    = hours+':'+minutes+':'+seconds;
-                return time;
-            }
-            var options = {
-                series: {
-                    lines: { show: false },
-                    points: { show: true }
-                },
-                yaxis: {
-                    ticks: {show: true}
-                },
-                xaxis: {
-                    min: 0, // Min and Max refer to the range
-                    max: 100,
-                    tickFormatter: tickFormatter
-                },
-                grid: {
-                    // hoverable: true
-                }
-            };
-
-            // Dummy data
-            var plot_data = [ [0, 0], [0, 10] ];
-
-            // create cursor object
-            var timeline_cursor = $('#timeline_cursor');
-            if (timeline_cursor.length === 0) {
-                 timeline_cursor = $('<div></div>').attr({'id': 'timeline_cursor'});
-                 $('#audio_timeline').append(timeline_cursor);
-            }
-            
-
-
-            $.plot(gradation_container, plot_data, options);
-            // Bind hover callback to get mouse location
-            $('#audio_timeline').bind("mousemove", function (event) {
-                    // Display bar behind mouse
-                    $('#timeline_cursor').css({
-                       left:  event.pageX
-                    });
-                });
-            }
-
-        // Clear the existing audio timeline
-        $("#audio_timeline").html("");
-
-        // Draw gradations into the timeline
-        draw_gradations();
-
-        // Iterate over all audio tracks
-        console.log(lecture.audio_tracks.length);
-        for (var i = 0; i < lecture.audio_tracks.length; i++) {
-            var audio_track = lecture.audio_tracks[i];
-            console.log(audio_track);
-
-            // Create a new track div and set it's data
-            var new_track_id = "track-" + i;
-            var new_track = $('<div></div>').attr({"id": new_track_id , "class": "audio_track"});
-            new_track.data(audio_track);
-            $("#audio_timeline").append(new_track);
-
-            // Iterate over all segments for that track
-            for (var j = 0; j < audio_track.audio_segments.length; j++) {
-                var audio_segment = audio_track.audio_segments[i];
-
-                // Create a new segment div 
-                var new_segment_id = "segment-" + j;
-                var new_segment = $("<div></div>").attr({"id": new_segment_id, "class": "audio_segment"});
-                new_segment.data(audio_segment);
-                new_track.append(new_segment);
-
-                // Set the css for the new segment
-                new_segment.css({ "padding": 0, "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, "height": $("#audio_timeline").height()/2 });
-        
-                // Setup the dragging
-                new_segment.draggable({
-                    containment: ("#" + new_track_id),
-                    axis: "x",
-                    opacity: 0.75
-                }).on( "dragstart", function( event, ui ) {
-                    new_segment.addClass('dragged')
-                }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-                    // Call shift function in model
-                    // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
-                    new_segment.removeClass('dragged')
-                }).resizable({
-                    handles: "e, w",
-                    minWidth: 1,
-                    stop: function( event, ui ) {
-                        dwidth = ui.originalSize.width - ui.size.width;
-                        if (ui.position.left === ui.originalPosition.left) // then right handle was used
-                            // Trim audio from Right
-                            audio_segment.crop_segment(dwidth, "right");
-                        else
-                            // Trim audio from Left
-                            audio_segment.crop_segment(dwidth, "left");
-                    }
-                });
-
-                // Load the waveform to be displayed inside the segment div
-                var wavesurfer = Object.create(WaveSurfer);
-                console.log("#" + new_segment_id)
-
-                wavesurfer.init({
-                    container: document.querySelector("#" + new_segment_id),
-                    waveColor: 'violet',
-                    progressColor: 'purple',
-                    height: $("#audio_timeline").height()/2
-                });
-
-                wavesurfer.on('ready', function () {
-                    wavesurfer.play();
-                });
-
-                wavesurfer.load(audio_segment.audio_resource);
-
-            }; // End of audio segments loop
-        }; // End of audio tracks loop
-    }
-
+    
 
     function insert_slide_into_slide(to_slide, from_slide, insertion_time) {
         //insertion time is in the to_slide
@@ -430,24 +281,17 @@ pentimento.lecture_controller = new function() {
 };
 
 $(document).ready(function() {
-    lecture = new pentimento.lecture();
-    lecture.slide_changes.push({from_slide:-1, to_slide:0, time:0})
-    console.log('lecture created');
+    // lecture.slide_changes.push({from_slide:-1, to_slide:0, time:0})
+    // console.log('lecture created');
     
-    var logger = $('<button>LOG-LECTURE</button>');
-    $(logger).click(pentimento.lecture_controller.log_lecture);
-    $('body div:first').append(logger);
+    // var logger = $('<button>LOG-LECTURE</button>');
+    // $(logger).click(pentimento.lecture_controller.log_lecture);
+    // $('body div:first').append(logger);
 
-    var logger2 = $('<button>LOG-VISUALS</button>');
-    $(logger2).click(pentimento.lecture_controller.log_visuals);
-    $('body div:first').append(logger2);
+    // var logger2 = $('<button>LOG-VISUALS</button>');
+    // $(logger2).click(pentimento.lecture_controller.log_visuals);
+    // $('body div:first').append(logger2);
 
-    // Test
-    // var test_audio_track = new Audio_track();
-    // var test_segment = new Audio_segment("clair_de_lune.mp3", 0, 500.0, 0, 500.0);
-    // test_audio_track.audio_segments = [test_segment];
-    // create_audio_track(test_audio_track);
-    // create_audio_segment(test_segment);
-    // Bind buttons and keypresses
-
+    var audio_controller = new pentimento.audio_controller();
+    audio_controller.init();
 });
