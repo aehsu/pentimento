@@ -133,7 +133,10 @@ function VisualsController(lec) {
                 var visualsIter = slide.access().visuals();
                 while(visualsIter.hasNext()) {
                     var visualAccess = visualsIter.next().access();
-                    if(slideTime > visualAccess.tMin()) { drawVisual(visualAccess); }
+                    if(slideTime > visualAccess.tMin() && 
+                        (visualAccess.tDeletion()==null) || (visualAccess.tDeletion()!=null && slideTime < visualAccess.tDeletion()) ) {
+                        drawVisual(visualAccess);
+                    }
                 }
             } else {
                 slideTime -= slide.duration;

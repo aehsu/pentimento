@@ -4,7 +4,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
     var dirtyVisuals = [];
     var insertionIndex = null;
     
-    function MakeDirtyVisual(visual) {
+    function MakeVisualDirty(visual) {
         this.visual = visual;
         this.tMin = visual.access().tMin();
         visual.tMin = NaN;
@@ -64,6 +64,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             visual.vertices[vert].t -= slideBegin;
         }
         visual.tMin -= slideBegin;
+        if(visual.tDeletion != null) { visual.tDeletion -= slideBegin; }
         pentimento.lectureController.visualsController.addVisual(state.currentSlide, visual, insertionIndex);
     }
     
@@ -85,12 +86,6 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             }
         }
         
-        
-        // for(var vis in dirtyVisuals) { //alternatively, set interval for shifting as you go
-        //     dirty_times.push(dirtyVisuals[vis].access().tMin());
-        //     dirtyVisuals[vis].tMin = NaN; //temporary disabling of the visuals.
-        // }
-        
         slideBegin = globalTime();
         pentimento.timeController.beginRecording(slideBegin);
         pentimento.state.isRecording = true;
@@ -107,7 +102,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             var visual = visualsIter.next();
             if(visual.access().tMin() > state.videoCursor) { //is dirty
                 if(insertionIndex == null) {insertionIndex = visualsIter.index;}
-                dirtyVisuals.push(new MakeDirtyVisual(visual));
+                dirtyVisuals.push(new MakeVisualDirty(visual));
             }
         }
 

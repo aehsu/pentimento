@@ -150,6 +150,19 @@ function penMouseUp(event) {
     }
 }
 
+function highlightMouseUp(event) {
+    if (!pentimento.state.isRecording){return;}
+    event.preventDefault();
+
+    var state = pentimento.state;
+    if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
+        state.currentVisual.tDeletion = globalTime()+3000; //highlighing duration
+        pentimento.recordingController.addVisual(state.currentVisual);
+        state.currentVisual = null;
+        state.lastPoint = null;
+    }
+}
+
 function selectMouseDown(event) { //non-live handler
     if (pentimento.state.isRecording) {return ;}
     event.preventDefault();

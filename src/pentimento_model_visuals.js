@@ -6,95 +6,70 @@ var VisualTypes = {
     img: "IMG"
 };
 
-function Vertex(x, y, t, p) {
-    this.x = x;
-    this.y = y;
-    this.t = t;
-    this.p = p;
-}
+function Vertex(myX, myY, myT, myP) {
+    var x = myX;
+    var y = myY;
+    var t = myT;
+    var p = myP;
 
-Vertex.prototype.access = function() {
-    var self = this;
-    return {
-        x: function() { return self.x; },
-        y: function() { return self.y; },
-        t: function() { return self.t; },
-        p: function() { return self.p; }
-    }
+    this.getX = function() { return x; }
+    this.getY = function() { return y; }
+    this.getT = function() { return t; }
+    this.getP = function() { return p; }
+
+    this.setX = function(newX) { x = newX; }
+    this.setY = function(newY) { y = newY; }
+    this.setT = function(newT) { t = newT; }
+    this.setP = function(newP) { p = newP; }    
 }
 
 function Segment(a, b, props) {
-    return {
-        from: a, 
-        to: b,
-        properties: props
-    }
+    var from = a;
+    var to = b;
+    var properties = props;
+
+    this.getFromPoint = function() { return from; }
+    this.getToPoint = function() { return to; }
+    this.getProperties = function() { return properties; }
+
+    this.setX = function(newX) { x = newX; }
 }
 
-function BasicVisual(tMin) {
+function BasicVisual(tmin, props) {
     //could alternatively take in an object of properties    
-    this.tMin = tMin;
-    this.hyperlink;
-    this.type = VisualTypes.basic;
-    this.tDeletion;
-    this.tEndEdit;
-    this.properties = {};
-    this.transforms = [];
+    var type = VisualTypes.basic;
+    var hyperlink = null;
+    var tDeletion = null;
+    var transforms = [];
+    var tMin = tmin;
+    var properties = props;
+    //this.doesItGetDeleted;
+    // this.tEndEdit = null; not necessary
+
+    this.getType = function() { return type; }
+    this.getHyperlink = function() { return hyperlink; }
+    this.getTDeletion = function() { return tDeletion; }
+    this.getTransforms = function() { return transforms; }
+    this.getTMin = function() { return tMin; }
+    this.getProperties = function() { return properties; }
+
+    this.setType = function(newType) { type = newType; }
+    this.setHyperlink = function(newHyperlink) { hyperlink = newHyperlink; }
+    this.setTDeletion = function(newTDeletion) { tDeletion = newTDeletion; }
+    this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+    this.setTMin = function(newTMin) { tMin = newTMin; }
+    this.setProperties = function(newProperties) { properties = newProperties; }
 }
 
-BasicVisual.prototype.access = function() {
-    var self = this; //refer to the object itself, not this function
-    return {
-        tMin: function() { return self.tMin; },
-        hyperlink: function() { return self.hyperlink; },
-        type: function() { return self.type; },
-        // doesItGetDeleted: function() { return self.doesItGetDeleted; },
-        tEndEdit: function() { return self.tEndEdit; },
-        properties: function() { return self.properties; },
-        transforms: function() { return new Iterator(self.transforms); }
-    }
-}
-
-function StrokeVisual(tMin) {
-    this.tMin = tMin;
-    this.hyperlink;
-    this.type = VisualTypes.stroke;
-    this.vertices = [];
-    this.tDeletion;
-    this.tEndEdit;
-    this.properties = {};
-    this.transforms = [];
+function StrokeVisual(tmin, props) {
+    BasicVisual.call(this, tmin, props);
+    var vertices = [];
+    
+    this.getVertices = function() { return new Iterator(vertices); }
+    this.setVertices = function(newVertices) { vertices = newVertices; }
 }
 
 StrokeVisual.prototype = new BasicVisual();
 StrokeVisual.prototype.constructor = StrokeVisual; //optional until you make a constructor call
-StrokeVisual.prototype.access = function() {
-    var self = this;
-    var _super = BasicVisual.prototype.access.call(self);
-    //we can put the get_vertices from Richard's code here if we really want to limit what access you get
-    _super.vertices = function() { return new Iterator(self.vertices); }
-    return _super;
-}
-
-function DotsVisual(tMin) {
-    this.tMin = tMin;
-    this.hyperlink;
-    this.type = VisualTypes.dot;
-    this.vertices = [];
-    this.tDeletion;
-    this.tEndEdit;
-    this.properties = {};
-    this.transforms = [];
-}
-
-DotsVisual.prototype = new BasicVisual();
-DotsVisual.prototype.constructor = DotsVisual; //optional until you make a constructor call
-DotsVisual.prototype.access = function() {
-    var self = this;
-    var _super = BasicVisual.prototype.access.call(self);
-    //we can put the get_vertices from Richard's code here if we really want to limit what access you get
-    _super.vertices = function() { return new Iterator(self.vertices); }
-    return _super;
-}
 
 //more visuals declarations

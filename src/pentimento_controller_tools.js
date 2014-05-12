@@ -5,13 +5,16 @@ function lectureToolHandler(event) {
     pentimento.state.tool = tool;
 
     switch(tool) {
-    	case 'emphasis':
-    		break;
     	case 'pen':
             //all timing is done inside of these handlers
             pentimento.state.canvas.on('mousedown', penMouseDown);
             pentimento.state.canvas.on('mousemove', penMouseMove);
             $(window).on('mouseup', penMouseUp);
+            break;
+        case 'highlight':
+            pentimento.state.canvas.on('mousedown', penMouseDown);
+            pentimento.state.canvas.on('mousemove', penMouseMove);
+            $(window).on('mouseup', highlightMouseUp);
             break;
     	case 'dots':
     		break;
@@ -107,7 +110,7 @@ function editToolHandler(event) {
 function recordingToolHandler(event) {
     var elt = $(event.target);
     if (elt.attr('data-label')==='begin') {
-        $('button[data-toolname="pen"]').click();
+        $('input[data-toolname="pen"]').click();
         pentimento.recordingController.beginRecording();
     } else {
         pentimento.recordingController.stopRecording();
