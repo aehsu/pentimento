@@ -1,24 +1,25 @@
-pentimento.time_controller = new function() {
+pentimento.timeController = new function() {
     var state = pentimento.state; //reference
     var self = this;
     var interval;
-    var stop_interval;
-    var last_time_update;
+    var lastTimeUpdate;
     
-    this.stop_recording = function(end_time) {
+    this.stopRecording = function(endTime) {
         clearInterval(interval);
         interval = null;
         
         $('#slider').slider("option", {
             disabled: false,
-            max: pentimento.lecture_controller.get_lecture_duration()
+            max: pentimento.lectureController.getLectureDuration()
         });
-        self.updateTime(state.current_time + (end_time - last_time_update));
-        last_time_update = null;
+        var type = state.recordingType;
+        if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) { self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate)); }
+        if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.videoCursor + (endTime - lastTimeUpdate)); }
+        lastTimeUpdate = null;
 //        $('#slider').slider('value', state.current_time);
     }
 
-    function update_ticker(time) {
+    function updateTicker(time) {
         var min = Math.floor(time/60000);
         time -= min*60000;
         var sec = Math.floor(time/1000);
@@ -45,25 +46,30 @@ pentimento.time_controller = new function() {
         $('#ticker').val(min + ':' + sec + '.' + ms);
     }
 
-    this.begin_recording = function(begin_time) {
+    this.beginRecording = function(beginTime) {
         $('#slider').slider("option", {
             disabled: true
         });
         
-        last_time_update = begin_time;
+        var type = state.recordingType;
+        lastTimeUpdate = beginTime;
         interval = setInterval(function() {
-            var gt = global_time();
-            self.updateTime(state.current_time + (gt - last_time_update));
-            last_time_update = gt;
+            var gt = globalTime();
+            if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) { self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate)); }
+            if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate)); }
+            lastTimeUpdate = gt;
         }, INTERVAL_TIMING);
     }
 
-    this.updateTime = function(time) {
-        state.current_time = time;
-        update_ticker(time);
-        if(!state.is_recording) {
+    this.updateAudioTime = function(time) {
+    }
+
+    this.updateVideoTime = function(time) {
+        state.videoCursor = time;
+        updateTicker(time);
+        if(!state.isRecording) {
             $('#slider').slider('value', time);
-            pentimento.lecture_controller.set_state_slide(state.current_time);
+            pentimento.lectureController.setStateSlide(state.videoCursor);
         }
     }
     
@@ -71,7 +77,7 @@ pentimento.time_controller = new function() {
         //TODO
     }
 
-    this.full_rewind = function() {
+    this.fullRewind = function() {
         //TODO
     }
 };
@@ -83,12 +89,12 @@ $(document).ready(function() {
         range: 'min',
         slide: function(event, ui) {
             pentimento.state.selection = [];
-            pentimento.time_controller.updateTime(ui.value);
-            pentimento.lecture_controller.visuals_controller.updateVisuals();
+            pentimento.timeController.updateVideoTime(ui.value);
+            pentimento.lectureController.visualsController.updateVisuals();
         },
         stop: function(event, ui) {
-            pentimento.time_controller.updateTime(ui.value);
-            pentimento.lecture_controller.visuals_controller.updateVisuals();
+            pentimento.timeController.updateVideoTime(ui.value);
+            pentimento.lectureController.visualsController.updateVisuals();
         }
     });
 });

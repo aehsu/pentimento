@@ -1,6 +1,6 @@
 //handles mouse events and key events accordingly
 
-function mouse_down_handler(evt) {
+function mouseDownHandler(evt) {
     switch(evt.which) {
         case 1:
             pentimento.state.lmb = true;
@@ -17,13 +17,13 @@ function mouse_down_handler(evt) {
     }
 }
 
-function mouse_up_handler(evt) {
+function mouseUpHandler(evt) {
     pentimento.state.lmb = false;
     pentimento.state.mmb = false;
     pentimento.state.rmb = false;
 }
 
-function key_down_handler(evt) {
+function keyDownHandler(evt) {
     if(evt.ctrlKey) {
         pentimento.state.ctrlKey = true;
     } else if(evt.shiftKey) {
@@ -33,7 +33,7 @@ function key_down_handler(evt) {
     }
 }
 
-function key_up_handler(evt) {
+function keyUpHandler(evt) {
     if(evt.which == 17) { //ctrl key
         pentimento.state.ctrlKey = false;
     } else if(evt.which == 16) { //shift key
@@ -43,7 +43,7 @@ function key_up_handler(evt) {
     }
 }
 
-function undo_listener(event) {
+function undoListener(event) {
     if(um.getUndoLength() > 0) {
         $('.forever-tool[data-toolname="undo"]').removeAttr('disabled');
     } else {
@@ -51,7 +51,7 @@ function undo_listener(event) {
     }
 }
 
-function redo_listener(event) {
+function redoListener(event) {
     if(um.getRedoLength() > 0) {
         $('.forever-tool[data-toolname="redo"]').removeAttr('disabled');
     } else {
@@ -60,10 +60,10 @@ function redo_listener(event) {
 }
 
 $(document).ready(function() {
-    $(pentimento.state.canvas).on('mousedown', mouse_down_handler);
-    $(window).on('mouseup', mouse_up_handler);
-    $(window).on('keydown', key_down_handler);
-    $(window).on('keyup', key_up_handler);
-    $(window).on('click', undo_listener);
-    $(window).on('click', redo_listener)
+    $(pentimento.state.canvas).on('mousedown', mouseDownHandler);
+    $(window).on('mouseup', mouseUpHandler);
+    $(window).on('keydown', keyDownHandler);
+    $(window).on('keyup', keyUpHandler);
+    $(window).on('click', undoListener);
+    $(window).on('click', redoListener)
 })

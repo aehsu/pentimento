@@ -1,10 +1,10 @@
-function VisualsController(lecture) {
+function VisualsController(lec) {
     var self = this;
-    var _lecture = lecture;
+    var lecture = lec;
     var state = pentimento.state;
     
     function unaddVisual(slide, visual) {
-        var idx = _lecture.slides.indexOf(slide);
+        var idx = lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
         idx = slide.visuals.indexOf(visual);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
@@ -14,13 +14,13 @@ function VisualsController(lecture) {
         um.add(function() {
             self.addVisual(slide, visual, idx);
             self.updateVisuals();
-        }, ActionGroups.Visual_Group);
+        }, ActionTitles.UnaddVisual);
         
         return visual;
     }
     
     this.addVisual = function(slide, visual, index) {
-        var idx = _lecture.slides.indexOf(slide);
+        var idx = lecture.slides.indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
         if(index==undefined || index==null) {
@@ -32,16 +32,16 @@ function VisualsController(lecture) {
         um.add(function() {
             unaddVisual(slide, visual);
             self.updateVisuals();
-        }, ActionGroups.Visual_Group);
+        }, ActionTitles.AdditionOfVisual);
         
         return visual;
     }
     
     function doShiftVisual(visual, amount) {
         visual.tMin += amount;
-        var vert_iter = visual.access().vertices();
-        while(vert_iter.hasNext()) {
-            var vert = vert_iter.next();
+        var vertIter = visual.access().vertices();
+        while(vertIter.hasNext()) {
+            var vert = vertIter.next();
             vert.t += amount;
         }
     }
@@ -50,7 +50,7 @@ function VisualsController(lecture) {
         for(var vis in visuals) { doShiftVisual(visuals[vis], amount); }
         
         //black magic, move to beginning?
-        var shift = um.addToStartOfGroup(ActionGroups.Recording_Group, function() {
+        var shift = um.addToStartOfGroup(ActionGroups.RecordingGroup, function() {
             for(var vis in visuals) { doShiftVisual(visuals[vis], -1.0*amount); }
         });
         
@@ -83,8 +83,8 @@ function VisualsController(lecture) {
         
         um.add(function() {
             self.deleteVisuals(slide, visuals);
-        }, ActionGroups.Visual_Group);
-        pentimento.lecture_controller.visuals_controller.updateVisuals();
+        }, ActionTitles.DeleteVisual);
+        pentimento.lectureController.visualsController.updateVisuals();
     }
     
     this.deleteVisuals = function(slide, visuals) {
@@ -93,22 +93,22 @@ function VisualsController(lecture) {
         var shifts = getSegmentsShifts(segments);
         shifts.reverse();
         
-        console.log("pre-DELETION visuals"); console.log(state.current_slide.visuals);
+        console.log("pre-DELETION visuals"); console.log(state.currentSlide.visuals);
         console.log("DELETION shifts"); console.log(shifts);
         
         for(var vis in visuals) { //remove the visuals from the slide
-            var index = state.current_slide.visuals.indexOf(visuals[vis]);
-            state.current_slide.visuals.splice(index, 1);
+            var index = state.currentSlide.visuals.indexOf(visuals[vis]);
+            state.currentSlide.visuals.splice(index, 1);
             indices.push(index);
             if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
         }
         
-        console.log("post-DELETION visuals"); console.log(state.current_slide.visuals);
+        console.log("post-DELETION visuals"); console.log(state.currentSlide.visuals);
         
         for(var sh in shifts) {
             var shift = shifts[sh];
-            for(var vis in state.current_slide.visuals) {
-                var visual = state.current_slide.visuals[vis];
+            for(var vis in state.currentSlide.visuals) {
+                var visual = state.currentSlide.visuals[vis];
                 if(visual.tMin >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
             }
         }
@@ -116,37 +116,37 @@ function VisualsController(lecture) {
         
         //should we change the duration of the slide?!?
         um.add(function() {
-            undeleteVisuals(state.current_slide, visuals, indices, shifts);
-        }, ActionGroups.Visual_Group);
-        pentimento.lecture_controller.visuals_controller.updateVisuals();
+            undeleteVisuals(state.currentSlide, visuals, indices, shifts);
+        }, ActionTitles.DeleteVisual);
+        pentimento.lectureController.visualsController.updateVisuals();
     }
 
     this.updateVisuals = function() {
         //renderer code. temporary stint until renderer code gets well integrated
         clear();
-        var slide_iter = pentimento.lecture_controller.get_lecture_accessor().slides();
-        var slide_time = state.current_time;
+        var slideIter = pentimento.lectureController.getLectureAccessor().slides();
+        var slideTime = state.videoCursor;
         var visuals = [];
-        while(slide_iter.hasNext()) {
-            var slide = slide_iter.next();
-            if(slide==state.current_slide) { //if(running_time + slide_accessor.duration() < pentimento.state.current_time) //
-                var visuals_iter = slide.access().visuals();
-                while(visuals_iter.hasNext()) {
-                    var visual_access = visuals_iter.next().access();
-                    if(slide_time > visual_access.tMin()) { draw_visual(visual_access); }
+        while(slideIter.hasNext()) {
+            var slide = slideIter.next();
+            if(slide==state.currentSlide) { //if(running_time + slide_accessor.duration() < pentimento.state.current_time) //
+                var visualsIter = slide.access().visuals();
+                while(visualsIter.hasNext()) {
+                    var visualAccess = visualsIter.next().access();
+                    if(slideTime > visualAccess.tMin()) { drawVisual(visualAccess); }
                 }
             } else {
-                slide_time -= slide.duration;
+                slideTime -= slide.duration;
             }
         }
     }
     /************* HELPER FUNCTIONS *************/
     function prevNeighbor(visual) {
         var prev;
-        for(vis in state.current_slide.visuals) {
-            var tMin = state.current_slide.visuals[vis].tMin;
+        for(vis in state.currentSlide.visuals) {
+            var tMin = state.currentSlide.visuals[vis].tMin;
             if(tMin < visual.tMin && (prev==undefined || tMin > prev.tMin)) {
-                prev = state.current_slide.visuals[vis];
+                prev = state.currentSlide.visuals[vis];
             }
         }
         return prev;
@@ -154,23 +154,18 @@ function VisualsController(lecture) {
 
     function nextNeighbor(visual) {
         var next;
-        for(vis in state.current_slide.visuals) {
-            var tMin = state.current_slide.visuals[vis].tMin;
+        for(vis in state.currentSlide.visuals) {
+            var tMin = state.currentSlide.visuals[vis].tMin;
             if(tMin > visual.tMin && (next==undefined || tMin < next.tMin)) {
-                next = state.current_slide.visuals[vis];
+                next = state.currentSlide.visuals[vis];
             }
         }
         return next;
     }
     
-    function modifyVisual(obj, field, new_val) {
-        //undo manager push here!
-        obj[field] = new_val;
-    }
-    
     function segmentVisuals(visuals) {
         //returns an array of segments, where each segment consists of a set of contiguous visuals
-        function cmp_visuals(a, b) {
+        function cmpVisuals(a, b) {
             if(a.tMin < b.tMin) {
                 return -1;
             }
@@ -179,7 +174,7 @@ function VisualsController(lecture) {
             }
             return 0;
         }
-        function cmp_segments(a, b) {
+        function cmpSegments(a, b) {
             //only to be used if each segment is sorted!
             if (a[0].tMin < b[0].tMin) {
                 return -1;
@@ -189,30 +184,30 @@ function VisualsController(lecture) {
             }
             return 0;
         }
-        var visuals_copy = visuals.slice();
+        var visualsCopy = visuals.slice();
         var segments = [];
         var segment = [];
         var endpoints; //just pointers
-        while(visuals_copy.length>0) {
-            endpoints = [visuals_copy[0]];
+        while(visualsCopy.length>0) {
+            endpoints = [visualsCopy[0]];
             while(endpoints.length>0) {
                 var visual = endpoints.shift();
                 segment.push(visual);
-                visuals_copy.splice(visuals_copy.indexOf(visual), 1);
-                var prev_vis = prevNeighbor(visual);
-                var next_vis = nextNeighbor(visual);
-                if(visuals_copy.indexOf(prev_vis) > -1) {
-                    endpoints.push(prev_vis);
+                visualsCopy.splice(visualsCopy.indexOf(visual), 1);
+                var prevVis = prevNeighbor(visual);
+                var nextVis = nextNeighbor(visual);
+                if(visualsCopy.indexOf(prevVis) > -1) {
+                    endpoints.push(prevVis);
                 }
-                if(visuals_copy.indexOf(next_vis) > -1) {
-                    endpoints.push(next_vis);
+                if(visualsCopy.indexOf(nextVis) > -1) {
+                    endpoints.push(nextVis);
                 }
             }
-            segment.sort(cmp_visuals);
+            segment.sort(cmpVisuals);
             segments.push(segment);
             segment = [];
         }
-        segments.sort(cmp_segments);
+        segments.sort(cmpSegments);
         return segments;
     }
 

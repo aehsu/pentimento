@@ -39,7 +39,7 @@ function BasicVisual(tMin) {
     this.tDeletion;
     this.tEndEdit;
     this.properties = {};
-    this.transforms = {};
+    this.transforms = [];
 }
 
 BasicVisual.prototype.access = function() {
@@ -48,7 +48,7 @@ BasicVisual.prototype.access = function() {
         tMin: function() { return self.tMin; },
         hyperlink: function() { return self.hyperlink; },
         type: function() { return self.type; },
-        doesItGetDeleted: function() { return self.doesItGetDeleted; },
+        // doesItGetDeleted: function() { return self.doesItGetDeleted; },
         tEndEdit: function() { return self.tEndEdit; },
         properties: function() { return self.properties; },
         transforms: function() { return new Iterator(self.transforms); }
@@ -63,7 +63,7 @@ function StrokeVisual(tMin) {
     this.tDeletion;
     this.tEndEdit;
     this.properties = {};
-    this.transforms = {};
+    this.transforms = [];
 }
 
 StrokeVisual.prototype = new BasicVisual();
@@ -84,7 +84,7 @@ function DotsVisual(tMin) {
     this.tDeletion;
     this.tEndEdit;
     this.properties = {};
-    this.transforms = {};
+    this.transforms = [];
 }
 
 DotsVisual.prototype = new BasicVisual();

@@ -1,7 +1,7 @@
-function live_tool_handler(event) {
+function lectureToolHandler(event) {
     event.stopPropagation(); 
     var tool = $(event.target).attr('data-toolname');
-    clear_previous_handlers();
+    clearPreviousHandlers();
     pentimento.state.tool = tool;
 
     switch(tool) {
@@ -9,16 +9,16 @@ function live_tool_handler(event) {
     		break;
     	case 'pen':
             //all timing is done inside of these handlers
-            pentimento.state.canvas.on('mousedown', pen_mousedown);
-            pentimento.state.canvas.on('mousemove', pen_mousemove);
-            $(window).on('mouseup', pen_mouseup);
+            pentimento.state.canvas.on('mousedown', penMouseDown);
+            pentimento.state.canvas.on('mousemove', penMouseMove);
+            $(window).on('mouseup', penMouseUp);
             break;
     	case 'dots':
     		break;
         case 'add-slide':
-            if(pentimento.state.is_recording) {
-                pentimento.recording_controller.addSlide();
-                pentimento.lecture_controller.visuals_controller.updateVisuals();
+            if(pentimento.state.isRecording) {
+                pentimento.recordingController.addSlide();
+                pentimento.lectureController.visualsController.updateVisuals();
             }
             break;
     	case 'color':
@@ -40,17 +40,17 @@ function live_tool_handler(event) {
     }
 }
 
-function nonlive_tool_handler(event) {
+function editToolHandler(event) {
     var tool = $(event.target).attr('data-toolname');
-    clear_previous_handlers();
+    clearPreviousHandlers();
     pentimento.state.tool = tool;
     
     var interval;
     switch(tool) {
     	case 'play':
             interval = setInterval(function() {
-                if(pentimento.state.current_time + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
-                    pentimento.time_controller.updateTime(pentimento.state.current_time+INTERVAL_TIMING);
+                if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
+                    pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
                     //pentimento.visuals_controller.updateVisuals();
                 } else {
                     clearInterval(interval);
@@ -77,15 +77,15 @@ function nonlive_tool_handler(event) {
     	case 'width':
     		break;
     	case 'delete':
-            pentimento.lecture_controller.visuals_controller.deleteVisuals(pentimento.state.current_slide, pentimento.state.selection);
+            pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             pentimento.state.selection = [];
     		break;
     	case 'retime':
     		break;
         case 'select':
-            pentimento.state.canvas.mousedown(select_mousedown);
-            pentimento.state.canvas.mousemove(select_mousemove);
-            $(window).mouseup(select_mouseup);
+            pentimento.state.canvas.mousedown(selectMouseDown);
+            pentimento.state.canvas.mousemove(selectMouseMove);
+            $(window).mouseup(selectMouseUp);
             break;
         case 'redraw':
             pentimento.recording_controller.beginRedrawing();
@@ -104,20 +104,18 @@ function nonlive_tool_handler(event) {
     }
 }
 
-function recording_tool_handler(event) {
+function recordingToolHandler(event) {
     var elt = $(event.target);
     if (elt.attr('data-label')==='begin') {
         $('button[data-toolname="pen"]').click();
-        pentimento.recording_controller.beginRecording();
+        pentimento.recordingController.beginRecording();
     } else {
-        pentimento.recording_controller.stopRecording();
+        pentimento.recordingController.stopRecording();
     }
     $('.recording-tool').toggleClass('hidden');
-    $('.live-tool').toggleClass('hidden');
-    $('.nonlive-tool').toggleClass('hidden');
 }
 
-function forever_tool_handler(event) {
+function foreverToolHandler(event) {
     var elt = $(event.target);
     if(elt.prop('disabled')=='disabled') {
         return;
@@ -130,11 +128,10 @@ function forever_tool_handler(event) {
 }
 
 $(document).ready(function() {
-    $('.live-tool').click(live_tool_handler);
-    $('.live-tool').change(live_tool_handler);
-    $('.live-tool').addClass('hidden');
+    $('.live-tool').click(lectureToolHandler);
+    $('.live-tool').change(lectureToolHandler);
 
-    $('.nonlive-tool').click(nonlive_tool_handler);
-    $('.forever-tool').click(forever_tool_handler);
-    $('.recording-tool').click(recording_tool_handler);
+    $('.nonlive-tool').click(editToolHandler);
+    $('.forever-tool').click(foreverToolHandler);
+    $('.recording-tool').click(recordingToolHandler);
 })

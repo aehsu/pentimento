@@ -1,7 +1,12 @@
-pentimento = {};
+/***********************CONFIGURATION***********************/
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
-DIRTY_TIMING = 250;
 DEBUG = true;
+canvasId = "sketchpad";
+sliderId = "slider";
+tickerId = "ticker";
+
+pentimento = {};
+
 ActionGroups = {
     VisualGroup: "VisualGroup",
     AudioGroup: "AudioGroup",
@@ -12,38 +17,21 @@ ActionTitles = {
     AdditionOfSlide: "AdditionOfSlide",
     DeleteSlide: "DeleteSlide",
     UnaddSlide: "UnaddSlide",
-    
+    AdditionOfVisual: "AdditionOfVisual",
+    UnaddVisual: "UnaddVisual",
+    DeleteVisual: "DeleteVisual"
 };
 
-um = getUndoManager([ActionGroups.Recording_Group, ActionGroups.Visual_Group, ActionGroups.Audio_Group], DEBUG);
+RecordingTypes = {
+    VideoOnly: "VideoOnly",
+    AudioOnly: "AudioOnly",
+    AudioVideo: "AudioVideo"
+};
 
-function global_time() {
+um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.VisualGroup, ActionGroups.AudioGroup], DEBUG);
+
+function globalTime() {
     return (new Date()).getTime();
-}
-
-function draw_visual(visual_access) {
-    switch(visual_access.type()) {
-        case VisualTypes.basic:
-            console.log("someone actually made a basic type?!",visual_accessor);
-            break;
-        case VisualTypes.stroke:
-            var verts_iter = visual_access.vertices();
-            var prev;
-            if(verts_iter.hasNext()) {
-                prev = verts_iter.next();
-            }
-            while (verts_iter.hasNext()) {
-                var curr = verts_iter.next();
-                var line = new Segment(prev, curr, visual_access.properties());
-                draw_line(line);
-                prev = curr;
-            }
-            break;
-        case VisualTypes.dot:
-            break;
-        case VisualTypes.img:
-            break;
-    }
 }
 
 function Iterator(array) {
@@ -63,12 +51,11 @@ function Iterator(array) {
 $(document).ready(function(){
     var iw = $(window).width();
     var ih = $(window).height();
-    $('#sketchpad')[0].width = 0.8 * iw;
-    $('#sketchpad')[0].height = 0.8 * ih;
+    $('#'+canvasId)[0].width = 0.8 * iw;
+    $('#'+canvasId)[0].height = 0.8 * ih;
 
-    $('#slider').width($('canvas').width());
-    $('#ticker').css('position', 'absolute'); //so many bad things.
-    $('#ticker').css('left', parseInt($('#slider').width())+20 + 'px'); //holy shit.
-    $('#ticker').css('top', parseInt($('#slider').position().top)-10 + 'px'); //oh god.
-    //temporary one-time off's to do initialization correctly..."correctly"
+    $('#'+sliderId).width($('canvas').width());
+    $('#'+tickerId).css('position', 'absolute');
+    $('#'+tickerId).css('left', parseInt($('#'+sliderId).width())+20 + 'px');
+    $('#'+tickerId).css('top', parseInt($('#'+sliderId).position().top)-10 + 'px');
 });
