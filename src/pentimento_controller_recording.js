@@ -4,20 +4,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
     var dirtyVisuals = [];
     var visualsInsertionTime;
     
-    function MakeVisualDirty(visual) {
-        this.visual = visual;
-        this.tMin = visual.getTMin();
-        visual.setTMin(NaN); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
-        this.times = [];
-        var vertices = visual.getVertices();
-        for(var i in vertices) {
-            times.append(vertices[i].getT());
-            vertices[i].setT(NaN);
-        }
-    }
-    
     function endSlide(time) {
-        //end heirarchy
         console.log('ending slide at', time);
         var diff = time - slideBegin;
 
@@ -26,23 +13,24 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         pentimento.lectureController.endSlide(diff); //puts at beginning of undo group
         //shifts the slide's duration by diff amount
 
+        um.endHierarchy(ActionGroups.SlideGroup);
+        slideBegin = NaN;
         dirtyVisuals = [];
         state.visualsInsertionIndex = null;
-        slideBegin = NaN;
-        um.endHierarchy(ActionGroups.SlideGroup);
     }
 
     this.addSlide = function(slide) {
         if(!state.currentSlide) { console.log('something happend in adding a slide such that the state is incoherent'); return; }
-        slideBegin = globalTime();
-        endSlide(slideBegin);
+        var time = globalTime();
+        endSlide(time);
 
         um.startHierarchy(ActionGroups.SlideGroup);
         pentimento.lectureController.addSlide(); //adds the action onto the undo stack
 
         updateVisuals();
-        state.visualsInsertionIndex = 0;
+        slideBegin = time;
         visualsInsertionTime = 0;
+        state.visualsInsertionIndex = 0;
     }
 
     this.addVisual = function(visual) {
@@ -59,6 +47,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
     }
     
     this.beginRedrawing = function() {
+        //TODO FIXXXXX
         if(!state.currentSlide) {
             console.log("this should never, ever happen");
             return; 
@@ -104,21 +93,36 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             var visual = iter.next();
             if(visual.getTMin() > state.videoCursor) { //is dirty
                 if(minIndex == undefined) { minIndex = iter.index; }
-                dirtyVisuals.push(new MakeVisualDirty(visual));
+                dirtyVisuals.push(pentimento.lectureController.visualsController.MakeVisualDirty(visual));
             }
         }
         if(minIndex==undefined) { //no dirty visuals, should instead just append to the end
             state.visualsInsertionIndex = state.currentSlide.getVisuals().length;
         } else {
+            //Fredo and I disagree on this point, and he thinks things should just be put at the end
+            //I believe this gives odd semantics, but this if-else could just be deleted and replaced with the
+            //if-body. Fredo's semantics would be provided instead of mine, in that case
             state.visualsInsertionIndex = minIndex;
         }
-        state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz
-        visualsInsertionTime = state.videoCursor;
+        state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz when audio comes into play
+
+        var duration = 0;
+        var iter = pentimento.lecture.getSlidesIterator();
+        while(iter.hasNext()) {
+            var slide = iter.next();
+            if(slide==state.currentSlide) { break; }
+
+            duration += slide.getDuration();
+        }
+        
+        //TODO snap state.videoCursor leftmost
+        visualsInsertionTime = state.videoCursor - duration; //visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
 
         slideBegin = globalTime();
         console.log('beginning recording at', slideBegin);
-        
+
         um.startHierarchy(ActionGroups.RecordingGroup);
+        um.startHierarchy(ActionGroups.SlideGroup);
         pentimento.timeController.beginRecording(slideBegin);
         pentimento.state.isRecording = true;
 	}

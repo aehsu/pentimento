@@ -3,9 +3,24 @@ function VisualsController(lec) {
     var lecture = lec;
     var state = pentimento.state;
 
-    this.cleanVisuals = function(dirtyVisuals, shift) {
-        for(var i in dirtyVisuals.length) {
-            var dirtyObj = dirtyVisuals[i];
+    this.MakeVisualDirty = function(visual) {
+        var wrapper = {};
+        wrapper.visual = visual;
+        wrapper.tMin = visual.getTMin();
+        visual.setTMin(NaN); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
+        wrapper.times = [];
+        var vertices = visual.getVertices();
+        for(var i in vertices) {
+            wrapper.times.push(vertices[i].getT());
+            vertices[i].setT(NaN);
+        }
+        return wrapper;
+    }
+
+    this.cleanVisuals = function(dirtyWrappers, shift) {
+        if(dirtyWrappers.lenght==0) { return; } //DONT add anything to the beginning of the group if we don't need to
+        for(var i in dirtyWrappers) {
+            var dirtyObj = dirtyWrappers[i];
             var visual = dirtyObj.visual;
             var vertices = visual.getVertices();
             for(var j in vertices) {

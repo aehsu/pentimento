@@ -1,33 +1,34 @@
-function lectureToolHandler(event) {
-    event.stopPropagation(); 
-    var tool = $(event.target).attr('data-toolname');
-    clearPreviousHandlers();
-    pentimento.state.tool = tool;
-
+function lectureToolHandler(tool, event) {
     switch(tool) {
     	case 'pen':
             pentimento.state.canvas.on('mousedown', penMouseDown);
             pentimento.state.canvas.on('mousemove', penMouseMove);
             $(window).on('mouseup', penMouseUp);
+            pentimento.state.tool = tool;
             break;
         case 'highlight':
             pentimento.state.canvas.on('mousedown', penMouseDown);
             pentimento.state.canvas.on('mousemove', penMouseMove);
             $(window).on('mouseup', highlightMouseUp);
+            pentimento.state.tool = tool;
             break;
     	case 'dots':
     		break;
         case 'add-slide':
             if(pentimento.state.isRecording) {
                 pentimento.recordingController.addSlide();
-                updateVisuals();
+                $('input[data-toolname="pen"]').click();
             }
+            lectureToolHandler(pentimento.state.tool); //restore the previous tool
             break;
     	case 'color':
     		break;
     	case 'width':
-            pentimento.state.width = parseInt($(this).val());
+            pentimento.state.width = parseInt($(event.target).val());
+            lectureToolHandler(pentimento.state.tool); //restore the previous tool
     		break;
+        case 'select':
+            break;
     	case 'delete':
     		break;
     	case 'pan':
@@ -38,15 +39,12 @@ function lectureToolHandler(event) {
     	default:
 		    pentimento.state.tool = null;
     		console.log('Unrecognized tool clicked, live tools');
-    		console.log(this);
+    		console.log(tool);
+            console.log(event);
     }
 }
 
-function editToolHandler(event) {
-    var tool = $(event.target).attr('data-toolname');
-    clearPreviousHandlers();
-    pentimento.state.tool = tool;
-    
+function editToolHandler(tool, event) {
     var interval;
     switch(tool) {
     	case 'play':
@@ -88,6 +86,7 @@ function editToolHandler(event) {
             pentimento.state.canvas.mousedown(selectMouseDown);
             pentimento.state.canvas.mousemove(selectMouseMove);
             $(window).mouseup(selectMouseUp);
+            pentimento.state.tool = tool;
             break;
         case 'redraw':
             pentimento.recording_controller.beginRedrawing();
@@ -130,10 +129,24 @@ function foreverToolHandler(event) {
 }
 
 $(document).ready(function() {
-    $('.live-tool').click(lectureToolHandler);
-    $('.live-tool').change(lectureToolHandler);
+    $('.lecture-tool').click(function(event) {
+        event.stopPropagation(); 
+        var tool = $(event.target).attr('data-toolname');
+        clearPreviousHandlers();
+        lectureToolHandler(tool, event);
+    });
+    $('.lecture-tool').change(function(event) {
+        event.stopPropagation();
+        var tool = $(event.target).attr('data-toolname');
+        clearPreviousHandlers();
+        lectureToolHandler(tool, event);
+    });
 
-    $('.nonlive-tool').click(editToolHandler);
+    $('.edit-tool').click(function(event) {
+        var tool = $(event.target).attr('data-toolname');
+        clearPreviousHandlers();
+        editToolHandler(tool, event);
+    });
     $('.forever-tool').click(foreverToolHandler);
     $('.recording-tool').click(recordingToolHandler);
 })

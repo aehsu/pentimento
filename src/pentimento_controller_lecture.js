@@ -13,17 +13,20 @@ function LectureController(lec) {
     this.visualsController = new VisualsController(lecture);
     // this.audioController = new AudioController(lecture);
 
-    this.setStateSlide = function(time) { //questionable.
-        // if(time==0) { state.currentSlide = lecture.slides[0]; return; }
-        // var totalDuration=0;
-        // for(var slide in lecture.slides) {
-        //     if(time > totalDuration && time <= totalDuration+lecture.slides[slide].duration) {
-        //         state.currentSlide = lecture.slides[slide];
-        //         return;
-        //     } else {
-        //         totalDuration += lecture.slides[slide].duration;
-        //     }
-        // }
+    this.setStateSlide = function() {
+        var time = state.videoCursor;
+        if(time==0) { state.currentSlide = lecture.getSlides()[0]; return; }
+        var totalDuration=0;
+        var slidesIter = lecture.getSlidesIterator();
+        while(slidesIter.hasNext()) {
+            var slide = slidesIter.next();
+            if(time > totalDuration && time <= totalDuration+slide.getDuration()) {
+                state.currentSlide = slide;
+                return;
+            } else {
+                totalDuration += slide.getDuration();
+            }
+        }
     }
 
     this.getLectureDuration = function() {
@@ -47,14 +50,24 @@ function LectureController(lec) {
     }
 
     function unEndSlide(shift) {
+        var newDuration = state.currentSlide.getDuration();
+        var slide = state.currentSlide;
+        slide.setDuration(newDuration - shift);
+
+        var self = this;
+        um.add(function() {
+            self.reEndSlide(shift);
+        }, ActionTitles.ShiftSlide)
+    }
+
+    function reEndSlide(shift) {
         var originalDuration = state.currentSlide.getDuration();
         var slide = state.currentSlide;
         slide.setDuration(originalDuration + shift);
 
         var self = this;
         um.add(function() {
-            self.endSlide(shift);
-            //it's okay to reuse endSlice, since this action is always the first thing within a group
+            self.unEndSlide(shift);
         }, ActionTitles.ShiftSlide)
     }
 
@@ -92,6 +105,7 @@ function LectureController(lec) {
         state.currentSlide = newSlide;
 
         um.add(function() {
+            //TODO need to restore the insertion index!
             unaddSlide(prevSlide, newSlide, index);
         }, ActionTitles.AdditionOfSlide);
     }
@@ -107,12 +121,3 @@ function LectureController(lec) {
 
 pentimento.lecture = new Lecture();
 pentimento.lectureController = new LectureController(pentimento.lecture);
-
-$(document).ready(function() {
-    if(DEBUG) {
-        console.log('lecture created');
-        var logger2 = $('<button>LOG-VISUALS</button>');
-        // $(logger2).click();//
-        $('body div:first').append(logger2);
-    }
-});

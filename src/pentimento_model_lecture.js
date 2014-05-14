@@ -37,11 +37,7 @@ function Constraint(tvis, taud, mytype) {
     this.setType = function(newType) { type = newType; }
 }
 
-function Matrix() {
-    //TODO
-}
-
-function Transform(tmin, durate, mat) {
+function SlideTransform(tmin, durate, mat) {
     var tMin = tmin;
     var duration = durate;
     var matrix = mat;
