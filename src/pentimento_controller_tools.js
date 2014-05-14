@@ -6,7 +6,6 @@ function lectureToolHandler(event) {
 
     switch(tool) {
     	case 'pen':
-            //all timing is done inside of these handlers
             pentimento.state.canvas.on('mousedown', penMouseDown);
             pentimento.state.canvas.on('mousemove', penMouseMove);
             $(window).on('mouseup', penMouseUp);
@@ -21,7 +20,7 @@ function lectureToolHandler(event) {
         case 'add-slide':
             if(pentimento.state.isRecording) {
                 pentimento.recordingController.addSlide();
-                pentimento.lectureController.visualsController.updateVisuals();
+                updateVisuals();
             }
             break;
     	case 'color':
@@ -54,7 +53,7 @@ function editToolHandler(event) {
             interval = setInterval(function() {
                 if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
                     pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
-                    //pentimento.visuals_controller.updateVisuals();
+                    updateVisuals();
                 } else {
                     clearInterval(interval);
                 }
@@ -110,8 +109,8 @@ function editToolHandler(event) {
 function recordingToolHandler(event) {
     var elt = $(event.target);
     if (elt.attr('data-label')==='begin') {
-        $('input[data-toolname="pen"]').click();
         pentimento.recordingController.beginRecording();
+        $('input[data-toolname="pen"]').click();
     } else {
         pentimento.recordingController.stopRecording();
     }

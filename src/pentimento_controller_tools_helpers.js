@@ -1,16 +1,9 @@
-function drawPoint(coord) { //PORTED
-    var ctx = pentimento.state.context;
-    ctx.globalAlpha = 1.0;
-    ctx.beginPath();
-    ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
-}
-
 function drawLine(segment) {
     var ctx = pentimento.state.context;
     ctx.globalAlpha = 1.0;
     ctx.beginPath();
-    ctx.moveTo(segment.from.x, segment.from.y);
-    ctx.lineTo(segment.to.x, segment.to.y);
+    ctx.moveTo(segment.getFromPoint().getX(), segment.getFromPoint().getY());
+    ctx.lineTo(segment.getToPoint().getX(), segment.getToPoint().getY());
 
     if (pentimento.state.pressure) { //some fancy stuff based on pressure
         /*var avg_pressure = 0.5 * (line.from.pressure + line.to.pressure)
@@ -26,13 +19,8 @@ function drawLine(segment) {
 
         canvas.drawLine(line)*/
     } else {
-        if(segment.properties) {
-            ctx.strokeStyle = segment.properties.color;
-            ctx.lineWidth = segment.properties.width;
-        } else {
-            ctx.strokeStyle = pentimento.state.color;
-            ctx.lineWidth = pentimento.state.width;
-        }
+        ctx.strokeStyle = segment.getProperties().color;
+        ctx.lineWidth = segment.getProperties().width;
         ctx.lineCap = 'round';
         ctx.stroke();
     }
@@ -66,35 +54,6 @@ function clearPreviousHandlers() {
     pentimento.state.tool = null;
 }
 
-function clear() {
-    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-}
-
-function drawVisual(visualAccess) {
-    switch(visualAccess.type()) {
-        case VisualTypes.basic:
-            console.log("someone actually made a basic type?!",visualAccess);
-            break;
-        case VisualTypes.stroke:
-            var vertsIter = visualAccess.vertices();
-            var prev;
-            if(vertsIter.hasNext()) {
-                prev = vertsIter.next();
-            }
-            while (vertsIter.hasNext()) {
-                var curr = vertsIter.next();
-                var line = new Segment(prev, curr, visualAccess.properties());
-                drawLine(line);
-                prev = curr;
-            }
-            break;
-        case VisualTypes.dot:
-            break;
-        case VisualTypes.img:
-            break;
-    }
-}
-
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
@@ -118,11 +77,12 @@ function penMouseDown(event) {
     if (! pentimento.state.isRecording){return;}
     event.preventDefault();
     var state = pentimento.state; //reference
-    state.currentVisual = new StrokeVisual(globalTime());
-    state.currentVisual.properties.color = state.color;
-    state.currentVisual.properties.width = state.width;
+    state.currentVisual = new StrokeVisual(globalTime(), {
+        color: state.color,
+        width: state.width
+    });
     state.lastPoint = getCanvasPoint(event);
-    state.currentVisual.vertices.push(state.lastPoint);
+    state.currentVisual.getVertices().push(state.lastPoint);
 }
 
 function penMouseMove(event) {
@@ -132,9 +92,9 @@ function penMouseMove(event) {
 
     if (state.lmb) {
         var curPoint = getCanvasPoint(event);
-        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.properties));
+        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
         state.lastPoint = curPoint;
-        state.currentVisual.vertices.push(curPoint);
+        state.currentVisual.getVertices().push(curPoint);
     }
 }
 
@@ -168,7 +128,7 @@ function selectMouseDown(event) { //non-live handler
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.lectureController.visualsController.updateVisuals();
+    updateVisuals();
     state.lastPoint = getCanvasPoint(event);
     state.selection = [];
 }
@@ -178,7 +138,7 @@ function selectMouseMove(event) {
     event.preventDefault();
     var state = pentimento.state;
 
-    pentimento.lectureController.visualsController.updateVisuals();
+    updateVisuals();
     var coord = getCanvasPoint(event);
     var ctx = state.context;
     var width = state.width;
@@ -244,7 +204,7 @@ function selectMouseUp(event) {
     event.preventDefault();
 
     var state =  pentimento.state;
-    pentimento.lectureController.visualsController.updateVisuals();
+    updateVisuals();
     for(vis in state.selection) {
         var visCopy = $.extend(true, {}, state.selection[vis]);
         visCopy.properties.width = state.selection[vis].properties.width+1;

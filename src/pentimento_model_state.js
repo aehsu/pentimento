@@ -4,22 +4,24 @@
 pentimento.state = new function() {
 	this.isRecording = false;
     this.recordingType = null;
+    this.visualsInsertionIndex = null;
     
 	this.color = '#777';
 	this.width = 2;
-    this.pressure;
-	this.pressureColor; //false
-	this.pressureWidth; //false
+    this.pressureColor; //false
+    this.pressureWidth; //false
     
     this.canvas;
-    this.context; //move this to controller? very local.
+    this.context;
 
+    this.pressure;
 	this.lmb = false;
     this.mmb = false;
     this.rmb = false;
     this.ctrlKey = false;
     this.shiftKey = false;
     this.altKey = false;
+    this.keyboardShortcuts = false;
     
     this.tool = null;
 	this.lastPoint = null;

@@ -32,7 +32,9 @@ function Segment(a, b, props) {
     this.getToPoint = function() { return to; }
     this.getProperties = function() { return properties; }
 
-    this.setX = function(newX) { x = newX; }
+    this.setFromPoint = function(newFrom) { from = newFrom; }
+    this.setToPoint = function(newTo) { to = newTo; }
+    this.setProperties = function(newProperties) { properties = newProperties; }
 }
 
 function BasicVisual(tmin, props) {
@@ -63,12 +65,13 @@ function BasicVisual(tmin, props) {
 
 function StrokeVisual(tmin, props) {
     BasicVisual.call(this, tmin, props);
+    this.setType(VisualTypes.stroke);
     var vertices = [];
     
-    this.getVertices = function() { return new Iterator(vertices); }
+    this.getVertices = function() { return vertices; }
     this.setVertices = function(newVertices) { vertices = newVertices; }
+    this.getVerticesIterator = function() { return new Iterator(vertices); } //for Richard
 }
-
 StrokeVisual.prototype = new BasicVisual();
 StrokeVisual.prototype.constructor = StrokeVisual; //optional until you make a constructor call
 

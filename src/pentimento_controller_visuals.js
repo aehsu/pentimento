@@ -2,38 +2,81 @@ function VisualsController(lec) {
     var self = this;
     var lecture = lec;
     var state = pentimento.state;
+
+    this.cleanVisuals = function(dirtyVisuals, shift) {
+        for(var i in dirtyVisuals.length) {
+            var dirtyObj = dirtyVisuals[i];
+            var visual = dirtyObj.visual;
+            var vertices = visual.getVertices();
+            for(var j in vertices) {
+                vertices[j].setT(dirtyObj.times[j]+shift);
+            }
+            visual.setTMin(dirtyObj.tMin + shift);
+        }
+
+        um.addToStartOfGroup(ActionGroups.SlideGroup, function() {
+            reDirtyVisuals(dirtyVisuals, shift);
+        });
+    }
+
+    function reDirtyVisuals(dirtyVisuals, shift) {
+        for(var i in dirtyVisuals.length) {
+            var dirtyObj = dirtyVisuals[i];
+            var visual = dirtyObj.visual;
+            var vertices = visual.getVertices();
+            for(var j in vertices) {
+                vertices[j].setT(NaN);
+            }
+            visual.setTMin(NaN);
+        }
+
+        um.add(function() {
+            reCleanVisuals(dirtyVisuals, shift);
+        }, ActionTitles.ShiftVisuals);
+    }
+
+    function reCleanVisuals(dirtyVisuals, shift) {
+        for(var i in dirtyVisuals.length) {
+            var dirtyObj = dirtyVisuals[i];
+            var visual = dirtyObj.visual;
+            var vertices = visual.getVertices();
+            for(var j in vertices) {
+                vertices[j].setT(dirtyObj.times[j]+shift);
+            }
+            visual.setTMin(dirtyObj.tMin + shift);
+        }
+
+        um.add(function() {
+            reDirtyVisuals(dirtyVisuals, shift);
+        }, ActionTitles.ShiftVisuals);
+    }
     
     function unaddVisual(slide, visual) {
-        var idx = lecture.slides.indexOf(slide);
+        var idx = lecture.getSlides().indexOf(slide);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
-        idx = slide.visuals.indexOf(visual);
+        idx = slide.getVisuals().indexOf(visual);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
         
-        slide.visuals.splice(idx, 1);
-        
+        slide.getVisuals().splice(idx, 1);
+        state.visualsInsertionIndex--;
         um.add(function() {
-            self.addVisual(slide, visual, idx);
-            self.updateVisuals();
+            self.addVisual(slide, visual);
         }, ActionTitles.UnaddVisual);
-        
+        updateVisuals();
         return visual;
     }
     
-    this.addVisual = function(slide, visual, index) {
-        var idx = lecture.slides.indexOf(slide);
+    this.addVisual = function(slide, visual) {
+        var idx = lecture.getSlides().indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
-        if(index==undefined || index==null) {
-            slide.visuals.push(visual);
-        } else {
-            slide.visuals.splice(index, 0, visual);
-        }
-        
+        slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
+        state.visualsInsertionIndex++;
         um.add(function() {
             unaddVisual(slide, visual);
-            self.updateVisuals();
+            updateVisuals();
         }, ActionTitles.AdditionOfVisual);
-        
+        updateVisuals();
         return visual;
     }
     
@@ -84,7 +127,7 @@ function VisualsController(lec) {
         um.add(function() {
             self.deleteVisuals(slide, visuals);
         }, ActionTitles.DeleteVisual);
-        pentimento.lectureController.visualsController.updateVisuals();
+        updateVisuals();
     }
     
     this.deleteVisuals = function(slide, visuals) {
@@ -118,30 +161,7 @@ function VisualsController(lec) {
         um.add(function() {
             undeleteVisuals(state.currentSlide, visuals, indices, shifts);
         }, ActionTitles.DeleteVisual);
-        pentimento.lectureController.visualsController.updateVisuals();
-    }
-
-    this.updateVisuals = function() {
-        //renderer code. temporary stint until renderer code gets well integrated
-        clear();
-        var slideIter = pentimento.lectureController.getLectureAccessor().slides();
-        var slideTime = state.videoCursor;
-        var visuals = [];
-        while(slideIter.hasNext()) {
-            var slide = slideIter.next();
-            if(slide==state.currentSlide) { //if(running_time + slide_accessor.duration() < pentimento.state.current_time) //
-                var visualsIter = slide.access().visuals();
-                while(visualsIter.hasNext()) {
-                    var visualAccess = visualsIter.next().access();
-                    if(slideTime > visualAccess.tMin() && 
-                        (visualAccess.tDeletion()==null) || (visualAccess.tDeletion()!=null && slideTime < visualAccess.tDeletion()) ) {
-                        drawVisual(visualAccess);
-                    }
-                }
-            } else {
-                slideTime -= slide.duration;
-            }
-        }
+        updateVisuals();
     }
     /************* HELPER FUNCTIONS *************/
     function prevNeighbor(visual) {

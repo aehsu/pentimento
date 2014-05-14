@@ -90,11 +90,11 @@ $(document).ready(function() {
         slide: function(event, ui) {
             pentimento.state.selection = [];
             pentimento.timeController.updateVideoTime(ui.value);
-            pentimento.lectureController.visualsController.updateVisuals();
+            updateVisuals();
         },
         stop: function(event, ui) {
             pentimento.timeController.updateVideoTime(ui.value);
-            pentimento.lectureController.visualsController.updateVisuals();
+            updateVisuals();
         }
     });
 });
