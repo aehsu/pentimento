@@ -117,9 +117,10 @@ pentimento.recordingController = new function() {//records little mini-lectures,
 
         slideBegin = globalTime();
         console.log('beginning recording at', slideBegin);
+        
+        um.startHierarchy(ActionGroups.RecordingGroup);
         pentimento.timeController.beginRecording(slideBegin);
         pentimento.state.isRecording = true;
-        um.startHierarchy(ActionGroups.RecordingGroup);
 	}
 
 	this.stopRecording = function() {

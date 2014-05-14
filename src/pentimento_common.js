@@ -12,6 +12,7 @@ pentimento = {};
 ActionGroups = {
     RecordingGroup: "RecordingGroup",
     SlideGroup: "SlideGroup",
+    CustomGroup: "CustomGroup"
 };
 
 ActionTitles = {
