@@ -1,3 +1,7 @@
+//Because of integration with the undo manager, the undo actions should call updateVisuals()
+//appropriately. Only the undo actions, though, not the forward actions! Therefore, any time
+//the um.add is called, it should have an updateVisuals inside of the function if necessary
+
 function VisualsController(lec) {
     var self = this;
     var lecture = lec;
@@ -17,6 +21,7 @@ function VisualsController(lec) {
         return wrapper;
     }
 
+    /*********************************CLEANING OF VISUALS*********************************/
     this.cleanVisuals = function(dirtyWrappers, shift) {
         if(dirtyWrappers.lenght==0) { return; } //DONT add anything to the beginning of the group if we don't need to
         for(var i in dirtyWrappers) {
@@ -65,7 +70,8 @@ function VisualsController(lec) {
             reDirtyVisuals(dirtyVisuals, shift);
         }, ActionTitles.ShiftVisuals);
     }
-    
+    /*********************************CLEANING OF VISUALS*********************************/
+    /**********************************ADDING OF VISUALS**********************************/
     function unaddVisual(slide, visual) {
         var idx = lecture.getSlides().indexOf(slide);
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
@@ -89,18 +95,54 @@ function VisualsController(lec) {
         state.visualsInsertionIndex++;
         um.add(function() {
             unaddVisual(slide, visual);
-            updateVisuals();
         }, ActionTitles.AdditionOfVisual);
-        updateVisuals();
         return visual;
     }
-    
+    /**********************************ADDING OF VISUALS**********************************/
+    /**********************************EDITING OF VISUALS**********************************/
+    //This section is primarily concerned with the direct editing of the properties of
+    //a visual. Recording edits to a visual are transforms, which is in a later section
+    this.editWidth = function(visuals, newWidth) {
+        var widths = [];
+        for(var i in visuals) {
+            var visual = visuals[i];
+            widths.push(visual.getProperties().getWidth());
+            visual.getProperties().setWidth(newWidth);
+        }
+
+        um.add(function() {
+            unEditWidths(visuals, widths, newWidth);
+            updateVisuals();
+        }, ActionTitles.EditOfVisual)
+    }
+
+    function unEditWidths(visuals, widths, newWidth) {
+        for(var i in visuals) {
+            var visual = visuals[i];
+            visual.getProperties().setWidth(widths[i]);
+        }
+
+        um.add(function() {
+            self.editWidth(visuals, newWidth);
+            updateVisuals();
+        }, ActionTitles.EditOfVisual);
+    }
+
+    this.editColor = function(visuals, newColor) {
+        //TODO FILL
+    }
+
+    function unEditColors(visuals, colors) {
+        //TODO FILL
+    }
+    /**********************************EDITING OF VISUALS**********************************/
+    /*********************************DELETING OF VISUALS**********************************/
     function doShiftVisual(visual, amount) {
-        visual.tMin += amount;
-        var vertIter = visual.access().vertices();
+        visual.setTMin(visual.getTMin() + amount);
+        var vertIter = visual.getVerticesIterator();
         while(vertIter.hasNext()) {
             var vert = vertIter.next();
-            vert.t += amount;
+            vert.setT(vert.getT() + amount);
         }
     }
     
@@ -123,16 +165,17 @@ function VisualsController(lec) {
         
         for(var sh in shifts) {
             var shift = shifts[sh];
-            for(var vis in slide.visuals) {
-                var visual = slide.visuals[vis];
-                if(visual.tMin >= shift.tMin) { doShiftVisual(visual, shift.duration); }
+            var visualIter = slide.getVisualsIterator();
+            while(visualIter.hasNext()) {
+                var visual = visualIter.next();
+                if(visual.getTMin() >= shift.tMin) { doShiftVisual(visual, shift.duration); }
             }
         }
         
         for(var i in indices) {
             var index = indices[i];
             var visual = visuals[i];
-            slide.visuals.splice(index, 0, visual);
+            slide.getVisuals().splice(index, 0, visual);
         }
         
         visuals.reverse(); //this is not necessary
@@ -155,8 +198,8 @@ function VisualsController(lec) {
         console.log("DELETION shifts"); console.log(shifts);
         
         for(var vis in visuals) { //remove the visuals from the slide
-            var index = state.currentSlide.visuals.indexOf(visuals[vis]);
-            state.currentSlide.visuals.splice(index, 1);
+            var index = state.currentSlide.getVisuals().indexOf(visuals[vis]);
+            state.currentSlide.getVisuals().splice(index, 1);
             indices.push(index);
             if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
         }
@@ -165,9 +208,10 @@ function VisualsController(lec) {
         
         for(var sh in shifts) {
             var shift = shifts[sh];
-            for(var vis in state.currentSlide.visuals) {
-                var visual = state.currentSlide.visuals[vis];
-                if(visual.tMin >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
+            var visualIter = state.currentSlide.getVisualsIterator();
+            while(visualIter.hasNext()) {
+                var visual = visualIter.next();
+                if(visual.getTMin() >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
             }
         }
         shifts.reverse();
@@ -178,7 +222,14 @@ function VisualsController(lec) {
         }, ActionTitles.DeleteVisual);
         updateVisuals();
     }
-    /************* HELPER FUNCTIONS *************/
+    /*********************************DELETING OF VISUALS**********************************/
+    /*******************************TRANSFORMING OF VISUALS********************************/
+    //Typically during a recording, these are the handlers for transforms to be applied to visuals
+    //Resizing or such actions are transformations which may happen during editing
+
+
+    /*******************************TRANSFORMING OF VISUALS********************************/
+    /**********************************HELPER FUNCTIONS***********************************/
     function prevNeighbor(visual) {
         var prev;
         for(vis in state.currentSlide.visuals) {
@@ -266,4 +317,5 @@ function VisualsController(lec) {
         }
         return shifts;
     }
+    /**********************************HELPER FUNCTIONS***********************************/
 };

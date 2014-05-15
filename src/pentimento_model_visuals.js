@@ -6,7 +6,7 @@ var VisualTypes = {
     img: "IMG"
 };
 
-function VisualProperties(c, w) {
+function VisualProperty(c, w) {
     var self = this;
     self.color, self.width;
     if (c==undefined)   { self.color = null; }
@@ -20,6 +20,10 @@ function VisualProperties(c, w) {
     this.setWidth  = function(newWidth) { self.width = newWidth; }
 }
 
+VisualProperty.prototype.getClone = function() {
+    return new VisualProperty(this.getColor(), this.getWidth());
+}
+
 function VisualTransform(tmin, durate, mat) {
     var tMin = tmin;
     var duration = durate;
@@ -31,6 +35,10 @@ function VisualTransform(tmin, durate, mat) {
     this.setTMin = function(newTMin) { tMin = newTMin; }
     this.setDuration = function(newDuration) { duration = newDuration; }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
+}
+
+VisualTransform.prototype.getClone = function() {
+    return new VisualTransform(this.getTMin(), this.getDuration(), this.getMatrix().getClone());
 }
 
 //could potentially migrate a vertex to have a tMin and a tDeletion
@@ -71,6 +79,11 @@ function Segment(a, b, props) {
     this.setProperties = function(newProperties) { self.properties = newProperties; }
 }
 
+//unnecessary
+Segment.prototype.getClone = function() {
+    return new Segment(this.getFromPoint().getClone(), this.getToPoint().getClone(), this.getProperties().getClone());
+}
+
 function BasicVisual(tmin, props) {
     //could alternatively take in an object of properties    
     var self = this;
@@ -94,30 +107,29 @@ function BasicVisual(tmin, props) {
     this.setTransforms = function(newTransforms) { self.transforms = newTransforms; }
     this.setTMin = function(newTMin) { self.tMin = newTMin; }
     this.setProperties = function(newProperties) { self.properties = newProperties; }
+
+    this.getTransformsIterator = function() { return new Iterator(self.transforms); }
 }
 
+BasicVisual.prototype.constructor = BasicVisual;
 BasicVisual.prototype.getClone = function() {
-    var copy = BasicVisual.constructor();
-    for(var attr in this) {
-        if(this[attr] instanceof Object) {
-            var attrCopy;
-            for(var subattr in this[attr]) {
-                if ('getClone' in this[attr][subattr]) {
-                    attrCopy = this[attr][subattr].getClone();
-                } else {
-                    attrCopy = this[attr][subattr];
-                }
-            }
-            copy[attr] = attrCopy;
-        } else {
-            copy[this] = this[attr];
-        }
+    var copy = new this.constructor(this.getTMin(), this.getProperties().getClone());
+    copy.setType(this.getType());
+    copy.setHyperlink(this.getHyperlink());
+    copy.setTDeletion(this.getTDeletion());
+    copy.setTMin(this.getTMin());
+    copy.setProperties(this.getProperties().getClone());
+    var transformsCopy = [];
+    var transformIter = this.getTransformsIterator();
+    while(transformIter.hasNext()) {
+        transformsCopy.push(transformIter.next().getClone());
     }
+    copy.setTransforms(transformsCopy);
     return copy;
 }
 
 function StrokeVisual(tmin, props) {
-    BasicVisual.call(this, tmin, props);
+    BasicVisual.prototype.constructor.call(this, tmin, props);
     this.setType(VisualTypes.stroke);
     var self = this;
     self.vertices = [];
@@ -128,5 +140,15 @@ function StrokeVisual(tmin, props) {
 }
 StrokeVisual.prototype = new BasicVisual();
 StrokeVisual.prototype.constructor = StrokeVisual;
+StrokeVisual.prototype.getClone = function() {
+    var copy = BasicVisual.prototype.getClone.call(this); //StrokeVisual.prototype.getClone.call(this) is also valid
+    var verticesCopy = [];
+    var vertIter = this.getVerticesIterator();
+    while(vertIter.hasNext()) {
+        verticesCopy.push(vertIter.next().getClone());
+    }
+    copy.setVertices(verticesCopy);
+    return copy;
+}
 
 //more visuals declarations

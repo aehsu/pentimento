@@ -13,15 +13,16 @@ pentimento = {};
 ActionGroups = {
     RecordingGroup: "RecordingGroup",
     SlideGroup: "SlideGroup",
-    CustomGroup: "CustomGroup"
+    VisualGroup: "VisualGroup",
+    EditGroup: "EditGroup"
+    // CustomGroup: "CustomGroup"
 };
 
 ActionTitles = {
     AdditionOfSlide: "AdditionOfSlide",
     DeleteSlide: "DeleteSlide",
-    UnaddSlide: "UnaddSlide",
     AdditionOfVisual: "AdditionOfVisual",
-    UnaddVisual: "UnaddVisual",
+    EditOfVisual: "EditOfVisual(s)",
     DeleteVisual: "DeleteVisual",
     ShiftVisuals: "ShiftVisual(s)",
     ShiftSlide: "ShiftSlide"
@@ -33,7 +34,7 @@ RecordingTypes = {
     AudioVideo: "AudioVideo"
 };
 
-um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.VisualGroup, ActionGroups.AudioGroup], DEBUG);
+um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], DEBUG);
 
 function globalTime() {
     return (new Date()).getTime();
@@ -58,7 +59,7 @@ function Matrix() {
 }
 
 Matrix.prototype.getClone = function() {
-    
+
 }
 
 /***********************RENDERING CODE***********************/

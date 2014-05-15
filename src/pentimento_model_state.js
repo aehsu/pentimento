@@ -23,7 +23,7 @@ pentimento.state = new function() {
     this.altKey = false;
     this.keyboardShortcuts = false;
     
-    this.tool = null;
+    this.tool = null; //whichever tool is active for a recording
 	this.lastPoint = null;
     this.selection = [];
     

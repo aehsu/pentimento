@@ -45,17 +45,29 @@ function keyUpHandler(evt) {
 
 function undoListener(event) {
     if(um.getUndoLength() > 0) {
-        $('.forever-tool[data-toolname="undo"]').removeAttr('disabled');
+        $('.um-tool[data-toolname="undo"]').removeAttr('disabled');
+        var title = um.getUndoGroups();
+        title = title[title.length-1];
+        $('.um-tool[data-toolname="undo"]').each(function() {
+            $(this).text('Undo-'+title);
+        });
     } else {
-        $('.forever-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="undo"]').each(function() { $(this).text('Undo'); });
     }
 }
 
 function redoListener(event) {
     if(um.getRedoLength() > 0) {
-        $('.forever-tool[data-toolname="redo"]').removeAttr('disabled');
+        $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
+        var title = um.getUndoGroups();
+        title = title[title.length-1];
+        $('.um-tool[data-toolname="redo"]').each(function() {
+            $(this).text('Redo-'+title);
+        });
     } else {
-        $('.forever-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
     }
 }
 

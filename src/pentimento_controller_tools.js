@@ -1,3 +1,8 @@
+//Various tools may need to update the state of the view, so the updates are all called here
+//within this file. You'll see the various invocations of updateVisuals(). It's up to each
+//switch statement to determine when to update the state of the visuals appropriately
+//for each tool
+
 function lectureToolHandler(tool, event) {
     switch(tool) {
     	case 'pen':
@@ -44,58 +49,81 @@ function lectureToolHandler(tool, event) {
     }
 }
 
+//Editing tools handling. These are typically direct invocations of the proper
+//controller to handle the lecture model directly. Therefore, the handling of groups for
+//the editing tools also belongs here.
 function editToolHandler(tool, event) {
-    var interval;
     switch(tool) {
-    	case 'play':
-            interval = setInterval(function() {
-                if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lecture_controller.get_lecture_duration()) {
-                    pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
+    	case 'play': //also includes pause
+            if (pentimento.state.isRecording) {return ;}
+            pentimento.state.playInterval = setInterval(function() {
+                if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
+                    pentimento.timeController.updateVideoTime(pentimento.state.videoCursor+INTERVAL_TIMING);
                     updateVisuals();
                 } else {
-                    clearInterval(interval);
+                    clearInterval(pentimento.state.playInterval);
+                    $('input[data-toolname="play"]').toggleClass('hidden');
+                    $('input[data-toolname="pause"]').toggleClass('hidden');
                 }
             }, INTERVAL_TIMING);
             $('input[data-toolname="play"]').toggleClass('hidden');
-            $('input[data-toolname="stop"]').toggleClass('hidden');
+            $('input[data-toolname="pause"]').toggleClass('hidden');
     		break;
-    	case 'stop':
-            clearInterval(interval); //scoping issue for interval
-    		break;
+        case 'pause':
+            clearInterval(pentimento.state.playInterval);
+            $('input[data-toolname="play"]').toggleClass('hidden');
+            $('input[data-toolname="pause"]').toggleClass('hidden');
+            break;
     	case 'hyperlink':
-    		break;
-    	case 'insert-pic-vid-page':
-    		break;
-    	case 'selection':
-    		break;
-    	case 'record':
-    		break;
-    	case 'record-stop':
     		break;
     	case 'color':
     		break;
     	case 'width':
+            if(event.target.value=="" || pentimento.state.isRecording) { return; }
+            //could check for empty selection. UI decision, not mine
+            var newWidth = parseInt(event.target.value);
+            um.startHierarchy(ActionGroups.EditGroup);
+            pentimento.lectureController.visualsController.editWidth(pentimento.state.selection, newWidth);
+            um.endHierarchy(ActionGroups.EditGroup);
+            updateVisuals();
+            $('.edit-tool[data-toolname="width"]').val('');
     		break;
     	case 'delete':
+            if (pentimento.state.isRecording) { return; }
+            //could check for empty selection. UI decision, not mine
+            um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
+            um.endHierarchy(ActionGroups.EditGroup);
             pentimento.state.selection = [];
     		break;
-    	case 'retime':
-    		break;
         case 'select':
-            pentimento.state.canvas.mousedown(selectMouseDown);
-            pentimento.state.canvas.mousemove(selectMouseMove);
-            $(window).mouseup(selectMouseUp);
+            pentimento.state.canvas.mousedown(function(event) {
+                if (pentimento.state.isRecording) {return ;}
+                event.preventDefault();
+                updateVisuals();
+                selectMouseDown(event);
+            });
+            pentimento.state.canvas.mousemove(function(event) {
+                if (pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
+                event.preventDefault();
+                updateVisuals();
+                selectMouseMove(event);
+            });
+            $(window).mouseup(function(event) {
+                if (pentimento.state.isRecording) {return ;}
+                event.preventDefault();
+                updateVisuals();
+                selectMouseUp(event);
+            });
             pentimento.state.tool = tool;
             break;
         case 'redraw':
-            pentimento.recording_controller.beginRedrawing();
-            $('.recording-tool').toggleClass('hidden');
-            $('button[data-toolname="pen"]').click();
+            // pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
+            // pentimento.recording_controller.beginRedrawing();
+            // $('.recording-tool').toggleClass('hidden');
+            // $('button[data-toolname="pen"]').click();
             break;
         case 'rewind':
-            break;
-        case 'full-rewind':
             break;
     	case 'pan':
     		break;
@@ -107,16 +135,17 @@ function editToolHandler(tool, event) {
 
 function recordingToolHandler(event) {
     var elt = $(event.target);
-    if (elt.attr('data-label')==='begin') {
+    if (elt.attr('data-toolname')==='begin') {
         pentimento.recordingController.beginRecording();
         $('input[data-toolname="pen"]').click();
     } else {
         pentimento.recordingController.stopRecording();
+        pentimento.state.tool = null;
     }
     $('.recording-tool').toggleClass('hidden');
 }
 
-function foreverToolHandler(event) {
+function undoToolHandler(event) {
     var elt = $(event.target);
     if(elt.prop('disabled')=='disabled') {
         return;
@@ -147,6 +176,6 @@ $(document).ready(function() {
         clearPreviousHandlers();
         editToolHandler(tool, event);
     });
-    $('.forever-tool').click(foreverToolHandler);
+    $('.um-tool').click(undoToolHandler);
     $('.recording-tool').click(recordingToolHandler);
 })

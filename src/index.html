@@ -30,8 +30,8 @@
 
 <body>
         <div>
-            <input type="image" src="icons/media_record.png" class="recording-tool center" data-label="begin">
-            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-label="stop">
+            <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
+            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
             
             <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
@@ -48,7 +48,7 @@
 
             |
             <input type="image" src="icons/media_playback_start.png" class="edit-tool center" data-toolname="play">
-            <input type="image" src="icons/pause.png" class="edit-tool hidden center" data-toolname="stop">
+            <input type="image" src="icons/pause.png" class="edit-tool hidden center" data-toolname="pause">
             <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
                     <td><input type="checkbox">No Pause</td>
@@ -63,7 +63,7 @@
             | 
             <input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
             <label>select |</label>
-            <input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="scratch">
+            <input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="delete">
             <label>delete |</label>
             <input type="image" src="icons/pen.png" class="edit-tool center" data-toolname="redraw">
             <label>redraw selection |</label>
@@ -82,8 +82,8 @@
                 <option value="20">20</option>
             </select>
             <label> | </label>
-            <button class="forever-tool" data-toolname="undo" disabled="true">Undo</button>
-            <button class="forever-tool" data-toolname="redo" disabled="true">Redo</button>
+            <button class="um-tool" data-toolname="undo" disabled="true">Undo</button>
+            <button class="um-tool" data-toolname="redo" disabled="true">Redo</button>
 
             <!-- <label>Move selection to current time</label> -->
 <!--
@@ -155,8 +155,8 @@
 
                 <button class="lecture-tool" data-toolname="add-slide">Add Slide</button><br>
 
-                <button class="forever-tool" data-toolname="undo" disabled="true">Undo</button>
-                <button class="forever-tool" data-toolname="redo" disabled="true">Redo</button>
+                <button class="um-tool" data-toolname="undo" disabled="true">Undo</button>
+                <button class="um-tool" data-toolname="redo" disabled="true">Redo</button>
 
                 <!-- <input type="image" src="icons/emphasize.png" height="40px">
                 <input type="image" src="icons/revertEmphasis.png" height="40px"><br>

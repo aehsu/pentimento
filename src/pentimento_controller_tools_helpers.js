@@ -103,7 +103,7 @@ function penMouseDown(event) {
     if (!pentimento.state.isRecording){return;}
     event.preventDefault();
     var state = pentimento.state; //reference
-    state.currentVisual = new StrokeVisual(globalTime(), new VisualProperties(state.color, state.width));
+    state.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(state.color, state.width));
     state.lastPoint = getCanvasPoint(event);
     state.currentVisual.getVertices().push(state.lastPoint);
 }
@@ -151,19 +151,13 @@ function highlightMouseUp(event) {
 
 //edit tool
 function selectMouseDown(event) {
-    if (pentimento.state.isRecording) {return ;}
-    event.preventDefault();
     var state = pentimento.state;
-
-    updateVisuals();
     state.lastPoint = getCanvasPoint(event);
     state.selection = [];
 }
 
 //edit tool
 function selectMouseMove(event) {
-    if (pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
-    event.preventDefault();
     var state = pentimento.state;
 
     var coord = getCanvasPoint(event);
@@ -200,18 +194,14 @@ function selectMouseMove(event) {
         }
     }
 
-    updateVisuals();
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
     for(var i in state.selection) {
-        var visual = state.selection[i];
-        var propsCopy = new VisualProperties();
-        var visCopy = new StrokeVisual(propsCopy);
-        $.extend(true, {}, state.selection[i]);
-        propsCopy.setWidth(state.selection[i].getProperties().getWidth()+1);
+        var visCopy = state.selection[i].getClone();
+        var propsCopy = visCopy.getProperties();
+        propsCopy.setWidth(propsCopy.getWidth()+1);
         propsCopy.setColor("#0000FF");
-        visCopy.setProperties(propsCopy);
         drawVisual(visCopy);
     }
 
@@ -221,17 +211,13 @@ function selectMouseMove(event) {
 
 //edit tool
 function selectMouseUp(event) {
-    if (pentimento.state.isRecording) {return ;}
-    event.preventDefault();
-
     var state =  pentimento.state;
-    updateVisuals();
+
     for(var i in state.selection) {
-        var visCopy = $.extend(true, {}, state.selection[i]);
-        var props = visCopy.getProperties();
-        props.setWidth(props.getWidth()+1);
-        props.setColor("#0000FF");
-        visCopy.setProperties(props);
+        var visCopy = state.selection[i].getClone();
+        var propsCopy = visCopy.getProperties();
+        propsCopy.setWidth(propsCopy.getWidth()+1);
+        propsCopy.setColor("#0000FF");
         drawVisual(visCopy);
     }
 }

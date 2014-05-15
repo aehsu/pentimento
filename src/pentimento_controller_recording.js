@@ -46,41 +46,6 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         pentimento.lectureController.visualsController.addVisual(state.currentSlide, visual); //adds an action onto the undo stack
     }
     
-    this.beginRedrawing = function() {
-        //TODO FIXXXXX
-        if(!state.currentSlide) {
-            console.log("this should never, ever happen");
-            return; 
-        }
-
-        var iter = state.currentSlide.getVisualsIterator();
-        while(iter.hasNext()) {
-            var visual = iter.next();
-            if(visual.getTMin() > state.videoCursor) { //is dirty
-                dirtyVisuals.push(new MakeVisualDirty(visual));
-            }
-        }
-        state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz
-
-        um.startHierarchy(ActionGroups.RecordingGroup);
-        pentimento.lectureController.visualsController.deleteVisuals(state.selection);
-        //somehow get the earliest time!
-        var visualsIter = state.currentSlide.access().visuals();
-        var minIndex;
-        while(visualsIter.hasNext()) {
-            var visual = visualsIter.next();
-            if(state.selection.indexOf(visual) >= 0 && state.visualsInsertionIndex == null) {
-                state.visualsInsertionIndex = visualsIter.index;
-            } else if(visual.access().tMin() > state.videoCursor) {
-                dirtyVisuals.push(visual);
-            }
-        }
-        
-        slideBegin = globalTime();
-        pentimento.timeController.beginRecording(slideBegin);
-        pentimento.state.isRecording = true;
-    }
-    
 	this.beginRecording = function() {
         if(!state.currentSlide) {
             console.log("this should never, ever happen");
@@ -116,7 +81,8 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         }
         
         //TODO snap state.videoCursor leftmost
-        visualsInsertionTime = state.videoCursor - duration; //visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
+        //visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
+        visualsInsertionTime = state.videoCursor - duration;
 
         slideBegin = globalTime();
         console.log('beginning recording at', slideBegin);

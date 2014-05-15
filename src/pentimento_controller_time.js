@@ -72,14 +72,6 @@ pentimento.timeController = new function() {
             pentimento.lectureController.setStateSlide(state.videoCursor);
         }
     }
-    
-    this.rewind = function() {
-        //TODO
-    }
-
-    this.fullRewind = function() {
-        //TODO
-    }
 };
 
 $(document).ready(function() {
