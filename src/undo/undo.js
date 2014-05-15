@@ -19,6 +19,12 @@ var getUndoManager = function(groupTypes, debug) {
         }
     }
 
+    // the group titles are the same as the group types by default. These can be changed with the setGroupTitle function.
+    var groupTitles = {};
+    for (var i in groupTypes) {
+        groupTitles[groupTypes[i]] = groupTypes[i];
+    }
+
     // These stacks hold objects that represent the actions that can be undone or redone.
     // The objects, referred to as action objects later on, should have the following properties:
     //      action - the function that will be called when the action object is pulled off one of the stacks
@@ -99,7 +105,7 @@ var getUndoManager = function(groupTypes, debug) {
                 title = undoStack[index].title; // set the title if it hasn't been set yet
             }
             else if (undoStack[index].title != title) {
-                title = group; // if the titles aren't the same, return the group name as the title
+                title = groupTitles[group]; // if the titles aren't the same, return the default group title
                 break;
             }
             if (undoStack[index].atStartOfGroups.indexOf(group) !== -1) {
@@ -136,7 +142,7 @@ var getUndoManager = function(groupTypes, debug) {
                 title = redoStack[index].title; // set the title if it hasn't been set yet
             }
             else if (redoStack[index].title != title) {
-                title = group; // if the titles aren't the same, return the group name as the title
+                title = groupTitles[group]; // if the titles aren't the same, return the default group title
                 break;
             }
             if (redoStack[index].atEndOfGroups.indexOf(group) !== -1) {
@@ -492,20 +498,6 @@ var getUndoManager = function(groupTypes, debug) {
         isGroupOpen: function(group) {
             return (openGroups.indexOf(group) !== -1);
         },
-        // Returns an array with the groups that the next undo action is in.
-        getUndoGroups: function() {
-            if (undoStack.length > 0){
-                return getNextUndo().inGroups;
-            }
-            return [];
-        },
-        // Returns an array with the groups that were closed since the last action.
-        getGroupsJustClosed: function() {
-            if (undoStack.length > 0) {
-                return getNextUndo().atEndOfGroups;
-            }
-            return [];
-        },
         // Checks if the undoManager can currently perform the undo function for a particular group. 
         // group - specifies the group the undo function applies to. If undefined (or otherwise falsy), 
         // will check for the individual undo function.
@@ -592,6 +584,15 @@ var getUndoManager = function(groupTypes, debug) {
                 return getNextRedo().title;
             }
             return null;
+        },
+        // set the default title of a group
+        setGroupTitle: function(group, title) {
+            var index = groupTypes.indexOf(group);
+            if (index === -1) {
+                throw notGroupError(group);
+            }
+            groupTitles[group] = title;
+            return true;
         }
     };
 
