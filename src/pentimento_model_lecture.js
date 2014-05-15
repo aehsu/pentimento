@@ -2,83 +2,69 @@
 					MODEL
 *************************************************/
 function Slide() {
-    this.visuals = [];
-    this.duration = 0;
+    var visuals = [];
+    var transforms = [];
+    var duration = 0.0;
     
-    this.access = function() {
-        var self = this;
-        var visual_accessors = [];
-        for(var vis in self.visuals) { visual_accessors.push(self.visuals[vis].access()); }
-        return {
-            visuals: function() { return visual_accessors; },
-            duration: function() { return self.duration; }
-        };
-    };
+    this.getVisuals = function() { return visuals; }
+    this.getDuration = function() { return duration; }
+    this.getTransforms = function() { return transforms; }
+
+    this.setVisuals = function(newVisuals) { visuals = newVisuals; }
+    this.setDuration = function(newDuration) { duration = newDuration; }
+    this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+
+    this.getVisualsIterator = function() { return new Iterator(visuals); }
+    this.getTransformsIterator = function() { return new Iterator(transforms); }
 };
 
-function Constraint() {
-    this.tVis;
-    this.tAud;
+ConstraintTypes = {
+	Manual: "Manual",
+	Automatic: "Automatic"
+}
+
+function Constraint(tvis, taud, mytype) {
+    var tVis = tvis;
+    var tAud = taud;
+    var type = mytype;
+
+    this.getTVis = function() { return tVis; }
+    this.getTAud = function() { return tAud; }
+    this.getType = function() { return type; }
+
+    this.setTVis = function(newTVis) { tVis = newTVis; }
+    this.setTAud = function(newTAud) { tAud = newTAud; }
+    this.setType = function(newType) { type = newType; }
+}
+
+function SlideTransform(tmin, durate, mat) {
+    var tMin = tmin;
+    var duration = durate;
+    var matrix = mat;
+
+    this.getTMin = function() { return tMin; }
+    this.getDuration = function() { return duration; }
+    this.getMatrix = function() { return matrix; }
+    this.setTMin = function(newTMin) { tMin = newTMin; }
+    this.setDuration = function(newDuration) { duration = newDuration; }
+    this.setMatrix = function(newMatrix) { matrix = newMatrix; }
 }
 
 function Lecture() {
-    this.slides = []; //every lecture is by default, initialized with at least one slide
-    this.audio_tracks = [];
-    this.constraints = [];
+    var slides = [];
+    var audioTracks = [];
+    var constraints = [];
+    // var transforms = [];
     
-    this.access = function() {
-        var self = this;
-        var slide_accessors = [];
-        for(var sli in self.slides) { slide_accessors.push(self.slides[sli].access()); }
-        return {
-            slides: function() { return slide_accessors; },
-            constraints: function() { return self.constraints; }
-            //audio
-        };
-    };
+    this.getSlides = function() { return slides; }
+    this.getAudioTracks = function() { return audioTracks; }
+    this.getConstraints = function() { return constraints; }
+    // this.getTransforms = function() { return transforms; }
+
+    this.setSlides = function(newSlides) { slides = newSlides; }
+    this.setAudioTracks = function(newAudioTracks) { audioTracks = newAudioTracks; }
+    this.setConstraints = function(newConstraints) { constraints = newConstraints; }
+    // this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+
+    this.getSlidesIterator = function() { return new Iterator(slides); }
 };
-
-// Audio classes
-var Audio_track = function() {
-	this.audio_segments = [];
-}
-
-var Audio_segment = function(audio_resource, audio_start_time, audio_end_time, lecture_start_time, lecture_end_time){
-	this.audio_resource = audio_resource;
-	this.audio_start_time = audio_start_time;
-	this.audio_end_time = audio_end_time;
-	this.audio_length = audio_end_time - audio_start_time;
-	this.lecture_start_time = lecture_start_time;
-	this.lecture_end_time = lecture_end_time;
-
-	//these should probably be moved elsewhere, you're mixing controller logic with model data
-	this.delete = function(audio_start_time, audio_end_time) {
-
-	};
-
-	this.shift = function(x_shift) {
-		this.slide.begin_time += x_shift * timeline_scale;
-		this.slide.end_time += x_shift * timeline_scale;
-	};
-
-	this.resize = function(x_shift, side_shifted) {
-		//need to restrict to constraints
-		if (side_shifted === "left")
-			this.audio_start_time += x_shift;
-		else if (side_shifted === "right")
-			this.audio_end_time += x_shift;
-	};
-
-	this.play_audio = function() {
-		// Need to handle event listener removal after playing
-		this.addEventListener('timeupdate', function() {
-			if (this.audio_end_time && currentTime >= audio_end_time) {
-				this.audio.pause();
-			};
-
-		}, false);
-		this.audio.currentTime = this.audio_start_time;
-		this.audio.play();
-	};
-};
-

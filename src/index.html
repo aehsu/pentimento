@@ -6,6 +6,11 @@
     <script src='jquery-1.10.2.min.js'></script>
     <script src='jquery-ui.js'></script>
     <link href="jquery-ui.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='undo/errors.js'></script>
+    <script type='text/javascript' src='undo/compatibility.js'></script>
+    <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
+    <script type='text/javascript' src='undo/undo.js'></script>
+    
     <script type='text/javascript' src='pentimento_common.js'></script>
     <script type='text/javascript' src="wavesurfer.min.js"></script>
     <script type='text/javascript' src="RecordRTC.js"></script>
@@ -25,8 +30,8 @@
 
 <body>
         <div>
-            <input type="image" src="icons/media_record.png" class="recording-tool center" data-label="begin">
-            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-label="stop">
+            <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
+            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
             
             <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
@@ -41,52 +46,31 @@
                 </tr>
             </table>
 
-
-
-<!--             <input type="image" src="icons/skipback.png" height="40px" class="top-button">
-            <input type="image" src="icons/skipahead.png" height="40px" class="top-button">
-            <input type="image" src="icons/selection.png" height="40px" class="top-button">
-            <input type="image" src="icons/redraw.png" height="40px" class="top-button"> -->
-
-            <input type="image" src="icons/media_playback_start.png" class="nonlive-tool center" data-toolname="play">
-            <input type="image" src="icons/pause.png" class="nonlive-tool hidden center" data-toolname="stop">
+            |
+            <input type="image" src="icons/media_playback_start.png" class="edit-tool center" data-toolname="play">
+            <input type="image" src="icons/pause.png" class="edit-tool hidden center" data-toolname="pause">
             <table style="display:inline-block;position:relative;top:15px;">
                 <tr>
-                    <td>
-                    <input type="checkbox">No Pause
-                    </td>
+                    <td><input type="checkbox">No Pause</td>
                 </tr>
-
                 <tr>
                     <td><input type="checkbox">Fast Replay</td>
                 </tr>
-
             </table>
 
-            <input type="image" src="icons/media_skip_backward.png" class="nonlive-tool center" data-toolname="rewind">
-            <input type="image" src="icons/media_skip_forward.png" class="nonlive-tool center" data-toolname="fastforward">
+            <input type="image" src="icons/media_skip_backward.png" class="edit-tool center" data-toolname="rewind">
+            <input type="image" src="icons/media_skip_forward.png" class="edit-tool center" data-toolname="fastforward">
+            | 
+            <input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
+            <label>select |</label>
+            <input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="delete">
+            <label>delete |</label>
+            <input type="image" src="icons/pen.png" class="edit-tool center" data-toolname="redraw">
+            <label>redraw selection |</label>
 
-            <label>delete last recording</label>
-            <input type="image" src="icons/scratch.png" class="nonlive-tool center" data-toolname="scratch">
-            <label>redraw selection</label>
-            <input type="image" src="icons/pen.png" class="nonlive-tool center" data-toolname="redraw">
-
-            <label>Move selection to current time</label>
-            <input type="image" src="icons/moveInTime.png" class="nonlive-tool center" data-toolname="move-in-time">
-            <!-- <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> -->
-            <!-- <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> -->
-
-            <input type="checkbox" class="center">ghosts
-            <input type="checkbox" class="center">grid
-            <input type="checkbox" class="center">margin
-
-       <!--      <button class="nonlive-tool" data-toolname="full-rewind" height="20px"> |< </button>
-            <button class="nonlive-tool" data-toolname="full-fastforward" height="20px"> >| </button> -->
-            <br/>
-            <button class="live-tool" data-toolname="clear">Clear</button> <!-- there should be two version of this..? maybe not. maybe just create new slides -->
-            <button class="live-tool" data-toolname="pen">Pen</button>
-            <select class="live-tool" data-toolname="width">
-                <option value="2">Default width</option>
+            <select class="edit-tool" data-toolname="width">
+                <option value="">Change Stroke Width</option>
+                <option value="2">2</option>
                 <option value="4">4</option>
                 <option value="6">6</option>
                 <option value="8">8</option>
@@ -97,29 +81,27 @@
                 <option value="18">18</option>
                 <option value="20">20</option>
             </select>
-            <button class="live-tool" data-toolname="dots">Dots</button>
-            <button class="live-tool" data-toolname="add-slide">Add Slide</button>
+            <label> | </label>
+            <button class="um-tool" data-toolname="undo" disabled="true">Undo</button>
+            <button class="um-tool" data-toolname="redo" disabled="true">Redo</button>
 
-            <button class="nonlive-tool" data-toolname="select">Select </button>
-            <button class="nonlive-tool" data-toolname="full-rewind"> |< </button>
-            <button class="nonlive-tool" data-toolname="rewind"> < </button>
-            <button class="nonlive-tool" data-toolname="redraw">Redraw</button>
-            <button class="nonlive-tool" data-toolname="delete">Delete</button>
-            <button class="nonlive-tool" data-toolname="fastforward"> > </button>
-            <button class="nonlive-tool" data-toolname="full-fastforward"> >| </button>
+            <!-- <label>Move selection to current time</label> -->
+<!--
+            <input type="image" src="icons/moveInTime.png" class="edit-tool center" data-toolname="move-in-time">
+             <input type="image" src="icons/delete.png" class="edit-tool center" data-toolname="redraw"> 
+-->
+
+            <!-- <input type="checkbox" class="center">ghosts
+            <input type="checkbox" class="center">grid
+            <input type="checkbox" class="center">margin -->
         </div>
         <hr>
-        <div>
-            <label width="150px"> Editing Tools </label>
-            <label>stroke</label>
+        <div style="height:15px;">
+            <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        </div>
 
-            <select>
-              <option value="one">1</option>
-              <option value="two">2</option>
-              <option value="five">5</option>
-              <option value="ten">10</option>
-              <option value="twenty">20</option>
-            </select>
+<!--         <div>
+            <label width="150px"> Editing Tools </label>
 
             <input type='color' name='pen-color' height="10px" width="20px">
             <input type="checkbox">Calligraphy  
@@ -140,22 +122,43 @@
 
             <label>| Hyperlink</label>
             <input type="text">
-        </div>
+        </div> -->
+
         <div class="container">
             <div class="left-col">
-                <input type="image" src="icons/selection.png" height="40px" ><br>
-                <label>Selection for editing <br> (eraser side of stylus)</label>
-                
+                <label>In-Lecture Tools</label><br>
                 <hr>
 
-                <label>In-Lecture Tools</label><br>
-                <input type="image" src="icons/feather-2.png" height="40px"><br>
+                <input type="image" src="icons/selection.png" height="40px" class="lecture-tool" data-toolname="select"><br>
+                <label>Selection for editing <br> (eraser side of stylus)</label><br>
+
+                <input type="image" src="icons/feather-2.png" height="40px" class="lecture-tool" data-toolname="pen"><br>
                 <label>Pen</label><br>
 
-                <input type="image" src="icons/highlighter.png" height="40px"><br>
+                <input type="image" src="icons/highlighter.png" height="40px" class="lecture-tool" data-toolname="highlight"><br>
                 <label>Highlighter</label><br>
 
-                <input type="image" src="icons/emphasize.png" height="40px">
+                <img src="icons/width.png" height="40px" width="90px"><br>
+                <select class="lecture-tool" data-toolname="width">
+                    <option value="2">Default width</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                </select><br>
+                <label>Stroke Width</label><br>
+
+                <button class="lecture-tool" data-toolname="add-slide">Add Slide</button><br>
+
+                <button class="um-tool" data-toolname="undo" disabled="true">Undo</button>
+                <button class="um-tool" data-toolname="redo" disabled="true">Redo</button>
+
+                <!-- <input type="image" src="icons/emphasize.png" height="40px">
                 <input type="image" src="icons/revertEmphasis.png" height="40px"><br>
 
                 <input type="image" src="icons/copylasso.png" height="40px">
@@ -171,7 +174,7 @@
                 <input type="image" src="icons/zoomOut.png" height="40px"><br>
 
                 <input type="image" src="icons/pageUp.png" height="40px">
-                <input type="image" src="icons/pageDown.png" height="40px"><br>
+                <input type="image" src="icons/pageDown.png" height="40px"><br> -->
 <!--                 <label>Emphasis Lasso</label>
                 <label>In-lecture revert last epmhasis</label> -->
 
@@ -180,9 +183,6 @@
                 <canvas id='sketchpad'></canvas>
             </div>
         </div>
-        
-        <br>
-        <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
 
         <button class="btn btn-primary" data-action="play">
             <i class="glyphicon glyphicon-play"></i>

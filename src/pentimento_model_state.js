@@ -2,40 +2,39 @@
 					MODEL
 *************************************************/
 pentimento.state = new function() {
-	this.audio_cursor; //why?
-	this.video_cursor; //why?
-	this.lecture_start_time; //why? all lectures should start at time 0...
+	this.isRecording = false;
+    this.recordingType = null;
+    this.visualsInsertionIndex = null;
     
-	this.is_recording;
-    
-	this.color;
-	this.width;
-    this.pressure;
-	this.pressure_color; //false
-	this.pressure_width; //false
+	this.color = '#777';
+	this.width = 2;
+    this.pressureColor; //false
+    this.pressureWidth; //false
     
     this.canvas;
-    this.context; //move this to controller? very local.
+    this.context;
 
-	this.lmb;
-    this.mmb;
-    this.rmb;
-    this.ctrlKey;
-    this.shiftKey;
-    this.altKey;
+    this.pressure;
+	this.lmb = false;
+    this.mmb = false;
+    this.rmb = false;
+    this.ctrlKey = false;
+    this.shiftKey = false;
+    this.altKey = false;
+    this.keyboardShortcuts = false;
     
-    this.tool;
-	this.last_point;
-    this.selection;
+    this.tool = null; //whichever tool is active for a recording
+	this.lastPoint = null;
+    this.selection = [];
     
-    this.current_slide;
-    this.current_time;
-    this.last_time_update;
+    this.currentSlide = null;
+    this.audioCursor = 0.0;
+    this.videoCursor = 0.0;
 };
 
 // Returns true if this Internet Explorer 10 or greater, running on a device
 // with msPointer events enabled (like the ms surface pro)
-function ie10_tablet_pointer() {
+function ie10TabletPointer() {
     var ie10 = /MSIE (\d+)/.exec(navigator.userAgent);
 
     if (ie10 != null) {
@@ -50,25 +49,18 @@ function ie10_tablet_pointer() {
 }
 
 $(document).ready(function() {
-    pentimento.state.canvas = $('#sketchpad');
-    pentimento.state.is_recording = false;
-    pentimento.state.lmb = false;
-    pentimento.state.last_point = null;
-    pentimento.state.color = '#777';
-    pentimento.state.width = 2;
+    pentimento.state.canvas = $('#'+canvasId);
     pentimento.state.context = pentimento.state.canvas[0].getContext('2d');
-    pentimento.state.current_time = 0;
-    pentimento.state.selection = [];
 
-    if (ie10_tablet_pointer()) {
+    if (ie10TabletPointer()) {
         console.log('Pointer Enabled Device');
         pentimento.state.pressure = true;
-        pentimento.state.pressure_color = true;
-        pentimento.state.pressure_width = true;
+        pentimento.state.pressureColor = true;
+        pentimento.state.pressureWidth = true;
     } else {
         console.log('Pointer Disabled Device');
         pentimento.state.pressure = false;
-        pentimento.state.pressure_color = false;
-        pentimento.state.pressure_width = false;
+        pentimento.state.pressureColor = false;
+        pentimento.state.pressureWidth = false;
     }
 })
