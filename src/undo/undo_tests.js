@@ -879,7 +879,6 @@ var testUM = function (guiFunctions) {
     }; 
 
     concatStandardRes();
-
     failedScenarios['test18'] = getFailedFunctions(expectedResults, scenario);
     
     /*
@@ -1398,7 +1397,8 @@ var testUM = function (guiFunctions) {
 
     /*
         TEST 32
-        
+        Start a group, perform an action, undo that action.
+        Test that the action can be redone both through individual redo and group redo.
     */
 
     scenario = function () {
@@ -1411,7 +1411,7 @@ var testUM = function (guiFunctions) {
 
     expectedResults = {
         undo: [errorNames['undo']],
-        redo: [1, 0, getBodyColorTitle('red'), null],
+        redo: [errorNames['redo']],
         startH1: [true],
         endH1: [errorNames['endH1']],
         undoH1: [errorNames['undoH1']],
@@ -1419,7 +1419,7 @@ var testUM = function (guiFunctions) {
         startH2: [true],
         endH2: [true],
         undoH2: [errorNames['undoH2']],
-        redoH2: [errorNames['redoH2']],
+        redoH2: [true, 1, 0, getBodyColorTitle('red'), null],
         startH3: [true],
         endH3: [errorNames['endH3']],
         undoH3: [errorNames['undoH3']],

@@ -126,7 +126,8 @@ var getUndoManager = function(groupTypes, debug) {
         // iterate through each action in the group
         while (!atEnd) {
             if (index < 0 || index >= redoStack.length) {
-                throw indexOutOfBoundsError(index); //TODO: test
+                displayDebugWarning("While getting title, couldn't find end of group: " + group);
+                return title;
             }
             if (redoStack[index].inGroups.indexOf(group) === -1) {
                 throw notInGroupError(group); //TODO: test
@@ -170,10 +171,12 @@ var getUndoManager = function(groupTypes, debug) {
 
         }
 
-        groupsJustStarted = [];
+        
 
         var actionObj = undoStack.pop();
         actionObj.action(); // undoes the performed action
+
+        groupsJustStarted = actionObj.atStartOfGroups.slice(0);
 
         // the relevant action object is now on the redo stack, but some properties haven't been defined yet.
         // they should be the same as they were before the action was undone.
@@ -358,14 +361,12 @@ var getUndoManager = function(groupTypes, debug) {
             else {
                 displayDebugWarning("The group '"+group+"' is not in hierarchyOrder, although it appears to be started.");
             }
-            
             index = groupsJustStarted.indexOf(group);
             if (index === -1) {
                 // keep track of the fact that the group was ended
                 var i = openGroups.indexOf(group);
                 unorderedSplice(openGroups, i, 1);
                 getNextUndo().atEndOfGroups.push(group);
-
                 // event only fired for non-empty groups
                 fireEvent("groupStatusChange");
             }
@@ -423,10 +424,16 @@ var getUndoManager = function(groupTypes, debug) {
             // redo each action until the end of the group (as it was before the group was undone) is reached
             var reachedEnd = false;
             while (!reachedEnd) {
-                if (getNextRedo().atEndOfGroups.indexOf(group) !== -1) {
-                    reachedEnd = true;
+                if (!getNextRedo()) {
+                    displayDebugWarning("While redoing the hierarchy, couldn't find the end of group: " + group);
+                    reachedEnd = true
                 }
-                redo(true);
+                else {
+                    if (getNextRedo().atEndOfGroups.indexOf(group) !== -1) {
+                        reachedEnd = true;
+                    }
+                    redo(true);
+                }
             }
 
             fireEvent('operationDone');
