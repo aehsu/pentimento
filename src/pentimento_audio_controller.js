@@ -109,7 +109,6 @@ pentimento.audio_controller = function() {
     this.refresh_audio_display = function() {
 
         var draw_gradations = function() { 
-            console.log('hi')
             var timeline = $('#audio_timeline');
             var gradation_container = $('<div></div>');
             gradation_container.attr('id', 'gradation_container').css('width', timeline.width()).css('height', timeline.height());
@@ -208,11 +207,11 @@ pentimento.audio_controller = function() {
                     axis: "x",
                     opacity: 0.75
                 }).on( "dragstart", function( event, ui ) {
-                    new_segment.addClass('dragged')
+                    ui.helper.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
                     // Call shift function in model
                     // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
-                    new_segment.removeClass('dragged')
+                    ui.helper.removeClass('dragged')
                 }).resizable({
                     handles: "e, w",
                     minWidth: 1,
@@ -246,7 +245,26 @@ pentimento.audio_controller = function() {
 
             }; // End of audio segments loop
         }; // End of audio tracks loop
-    }
+    };
+
+    // Given the location where the segment is dropped, this function figures out where to place the audio
+    // segment and moves the other audio segments to their correct locations
+    this.place_segment =  function( segment_idx, mouse_position ) {
+        // Iterate over audio tracks in DOM
+        $("audio_track").each(function() {
+            // Check to see if it over laps with segment on the left half
+            if ( mouse_position.x >= $(this).offset.left && mouse_position.x <= $(this).offset.left + $(this).width()/2 ) {
+                // Move segment to the left of conflicting segment
+            }
+            // Check to see if it over laps with segment on the right half
+            if ( mouse_position.x > $(this).offset.left + $(this).width()/2 && mouse_position.x <= $(this).offset.left + $(this).width() ) {
+                // Move segment to the left of conflicting segment
+            }
+
+        });
+    };
+
+
 
 }
 

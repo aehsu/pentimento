@@ -23,6 +23,8 @@ pentimento.audio_track = function() {
 	this.scale_segment = function(segment_idx, scale_factor) {
 
 	};
+
+
 }
 
 // Audio segments contain an audio clip and a location within the lecture
