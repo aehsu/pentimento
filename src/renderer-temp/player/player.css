@@ -14,6 +14,7 @@ body{
 /*begin changes*/
 .canvas_container {
     overflow: hidden;
+    position: relative;
 }
 .chapters_view {
     position: relative;
@@ -80,12 +81,26 @@ body{
     background-color: #fff;
 }
 .video.zooming{
-    cursor: url('images/magnify.cur'), -webkit-zoom-in;
-    cursor: url('images/magnify.cur'), -moz-zoom-in;
+    cursor: url('../images/magnify.cur'), -webkit-zoom-in;
+    cursor: url('../images/magnify.cur'), -moz-zoom-in;
 }
 
 .lecture{
     margin: auto auto;
+}
+
+.svg {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+}
+.clickable {
+    cursor: pointer;
+    opacity: 0;
+}
+.clickable:hover {
+    opacity: 0.2;
 }
 
 /**stuff overlayed on top of everything**/
@@ -196,7 +211,7 @@ input[type='button']:focus{
 }
 
 .start{
-    background-image: url('images/play.png');
+    background-image: url('../images/play.png');
 }
 
 #totalTime{
@@ -226,40 +241,40 @@ input[type='button']:focus{
 }
 
 .nextChapter{
-    background-image: url('images/next.png');
+    background-image: url('../images/next.png');
     width:25px;
     margin:1px;
 }
 
 .prevChapter{
-    background-image: url('images/prev.png');
+    background-image: url('../images/prev.png');
     width:25px;
     margin:1px;
 }
 
 .slowDown{
-    background-image: url('images/slow.png');
+    background-image: url('../images/slow.png');
     width:25px;
     margin:1px;
 }
 
 .speedUp{
-    background-image: url('images/ff.png');
+    background-image: url('../images/ff.png');
     width:25px;
     margin:1px;
     margin-left:30px;
 }
 
 .help{
-    background-image: url('images/help.png');
+    background-image: url('../images/help.png');
 }
 
 .viewChapterNav {
-    background-image: url('images/list.png');
+    background-image: url('../images/list.png');
 }
 
 .volume{
-    background-image: url('images/vol.png');
+    background-image: url('../images/vol.png');
     width:30px;
     height:30px;
     background-size: 30px;

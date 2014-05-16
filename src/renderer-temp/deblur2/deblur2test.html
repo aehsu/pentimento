@@ -3,21 +3,23 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
         <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <link href='http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' rel='stylesheet' type='text/css'>
-        <script src="http://web.mit.edu/lu16j/www/WebPentimento/generalfunctions.js"></script>
-        <script src="http://web.mit.edu/lu16j/www/WebPentimento/listeners.js"></script>
-<!--        <script src="http://web.mit.edu/lu16j/www/WebPentimento/renderer.js"></script>-->
-        <script src="../testRenderer.js"></script>
+        
         <script src="deblur2.js"></script>
-        <script src="http://web.mit.edu/lu16j/www/WebPentimento/preprocessor.js"></script>
-        <script src="http://web.mit.edu/lu16j/www/WebPentimento/player.js"></script>
-        <link href="http://web.mit.edu/lu16j/www/WebPentimento/player.css" type="text/css" rel="stylesheet">
+        
+        <script src="../renderer/generalfunctions.js"></script>
+        <script src="../renderer/listeners.js"></script>
+        <script src="../renderer/Visual.js"></script>
+        <script src="../renderer/PentimentoRenderer.js"></script>
+        <script src="../renderer/preprocessor.js"></script>
+        <script src="../player/player.js"></script>
+        <link href="../player/player.css" type="text/css" rel="stylesheet">
     </head>
     <body>
+        <span id='fps'>0 FPS</span>
         <div class='pentimento' data-name='deblur2'>
             <div class='lecture'>
                 <div class='canvas_container'>
                     <canvas class='video'></canvas>
-<!--                    Begin changes-->
                     <div class="chapters_view">
                         <div class="chapters_container">
                             <div class="chapters_list">
@@ -34,7 +36,6 @@
                             </svg>
                         </div>
                     </div>
-<!--                    end changes-->
                 </div>
                 <div class='onScreenStatus'>
                     <img src='http://web.mit.edu/lu16j/www/WebPentimento/images/pause.png' id='pauseIcon' width='0px' height='0px'> </div>

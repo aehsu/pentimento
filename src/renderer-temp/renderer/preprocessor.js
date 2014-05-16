@@ -1,6 +1,41 @@
-var boundingRect;
-
+/**
+ * Makes Fredo's data more friendly.
+ */
 function preprocess(data, e) {
+    
+    // track the extremeties of the lecture data
+    var boundingRect;
+
+    /**
+     * RDP algorithm for simplifying a series of points
+     * given an error constraint
+     */
+    function RDPalg(vertices, e) {
+        if(vertices.length < 3)
+            return vertices.slice(0);
+        var maxDist = 0;
+        var index = 0;
+        for(var i=1; i<vertices.length-1; i++) {
+            boundingRect.xmin = Math.min(boundingRect.xmin, vertices[i].x);
+            boundingRect.xmax = Math.max(boundingRect.xmax, vertices[i].x);
+            boundingRect.ymin = Math.min(boundingRect.ymin, vertices[i].y);
+            boundingRect.ymax = Math.max(boundingRect.ymax, vertices[i].y);
+            var dist = distToLine(vertices[i], vertices[0], vertices[vertices.length-1]);
+            if(dist > maxDist) {
+                maxDist = dist;
+                index = i;
+            }
+        }
+        if(maxDist > e) {
+            var left = RDPalg(vertices.slice(0,index), e);
+            var right = RDPalg(vertices.slice(index), e);
+            return left.concat(right);
+        }
+        else
+            return [vertices[0], vertices[vertices.length-1]];
+    }
+    
+    // initialize bounding rectangle
     data.preprocessed = true;
     boundingRect = {xmin: 0, xmax: 0,
                     ymin: 0, ymax: 0,
@@ -8,13 +43,26 @@ function preprocess(data, e) {
                     height: 0};
     boundingRect.width = data.width;
     boundingRect.height = data.height;
-    for(var i=0; i<data.visuals.length; i++) {
-        if(data.visuals[i].type === "stroke")
-            data.visuals[i].vertices = RDPalg(data.visuals[i].vertices, e);
-    }
     
-    // divide stroke into similar-direction
-    // polygons for calligraphy
+    /**
+     * Flip all of Fredo's y-coordinates
+     */
+    for(var i=0; i<data.visuals.length; i++) {
+        if(data.visuals[i].type === "stroke") {
+            for (var j in data.visuals[i].vertices)
+                data.visuals[i].vertices[j].y = data.height-data.visuals[i].vertices[j].y;
+            data.visuals[i].vertices = RDPalg(data.visuals[i].vertices, e);
+        }
+        else if(data.visuals[i].type === 'image') {
+            data.visuals[i].y = data.height-data.visuals[i].y;
+        }
+    }
+    for (var i in data.cameraTransforms)
+        data.cameraTransforms[i].ty *= -1;
+    
+    /**
+     * Clean up strokes for calligraphizing
+     */
     for(var i=0; i<data.visuals.length; i++) {
         if(data.visuals[i].type === 'stroke') {
             
@@ -90,26 +138,24 @@ function preprocess(data, e) {
             var cosb;
             
             var j=0;
+            var old_angle;
             while(j<stroke.length-1) {
                 var point = stroke[j],
                     next = stroke[j+1];
-                var ab = getDistance(Math.round(point.x), Math.round(point.y), Math.round(next.x), Math.round(next.y)),
-                    bc = getDistance(Math.round(next.x), Math.round(next.y), Math.round(next.x)+5, Math.round(next.y)+5),
-                    ac = getDistance(Math.round(point.x), Math.round(point.y), Math.round(next.x)+5, Math.round(next.y)+5);
-                if(ab !== 0 & bc !== 0) {
-                    var newcosb = (Math.pow(ab,2)+Math.pow(bc,2)-Math.pow(ac,2))/(2*ab*bc);
-                    if(!isNaN(newcosb) & Math.abs(newcosb) > 0.3) {
-                        if(cosb !== undefined & newcosb/cosb <= 0) {
-                            point.break = true;
-                        }
-                        cosb = newcosb;
-                    }
+                var new_angle = absolute_angle(5,-5,next.x-point.x,next.y-point.y);
+                if (old_angle !== undefined) {
+                    if (new_angle / old_angle < 0)
+                        point.break = true;
                 }
+                old_angle = new_angle;
                 j++;
             }
         }
     }
 
+    /**
+     * Finalize bounding rectangle and determine max/min zoom levels
+     */
     boundingRect.width = boundingRect.xmax-boundingRect.xmin;
     boundingRect.height = boundingRect.ymax-boundingRect.ymin;
     data.boundingRect = boundingRect;
@@ -117,31 +163,10 @@ function preprocess(data, e) {
     data.maxZoom = 4;
 }
 
-function RDPalg(vertices, e) {
-    if(vertices.length < 3)
-        return vertices.slice(0);
-    var maxDist = 0;
-    var index = 0;
-    for(var i=1; i<vertices.length-1; i++) {
-        boundingRect.xmin = Math.min(boundingRect.xmin, vertices[i].x);
-        boundingRect.xmax = Math.max(boundingRect.xmax, vertices[i].x);
-        boundingRect.ymin = Math.min(boundingRect.ymin, boundingRect.height-vertices[i].y);
-        boundingRect.ymax = Math.max(boundingRect.ymax, boundingRect.height-vertices[i].y);
-        var dist = distToLine(vertices[i], vertices[0], vertices[vertices.length-1]);
-        if(dist > maxDist) {
-            maxDist = dist;
-            index = i;
-        }
-    }
-    if(maxDist > e) {
-        var left = RDPalg(vertices.slice(0,index), e);
-        var right = RDPalg(vertices.slice(index), e);
-        return left.concat(right);
-    }
-    else
-        return [vertices[0], vertices[vertices.length-1]];
-}
+// return the absolute angle in degrees between the specified vectors
+function absolute_angle(x1,y1,x2,y2) { return Math.acos((x1 * x2 + y1 * y2) / (Math.sqrt(x1*x1+y1*y1) * Math.sqrt(x2*x2+y2*y2)) ) / Math.PI * 180 * (Math.abs(-y1*x2+x1*y2)/(-y1*x2+x1*y2)); };
 
+// for use in the RDP algorithm
 function distToLine(point, begin, end) {
     var ax = point.x-begin.x;
     var ay = point.y-begin.y;
