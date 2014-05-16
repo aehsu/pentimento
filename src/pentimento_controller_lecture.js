@@ -3,7 +3,6 @@ pentimento.lecture_controller = new function() {
     var state = pentimento.state;
     var interval;
     var recording_params;
-    var audio_timeline_scale = 100;
 
     this.get_lecture = function() {
         return lecture;

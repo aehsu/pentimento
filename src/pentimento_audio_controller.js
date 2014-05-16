@@ -8,7 +8,7 @@ pentimento.audio_controller = function() {
 	var self = this;
 
 	// Array of pentimento.audio_track
-	this.audio_tracks = [];
+	var audio_tracks = [];
 
 	// RecordRTC is used to record the audio stream
 	var recordRTC = null;
@@ -21,6 +21,8 @@ pentimento.audio_controller = function() {
     // -1 indicates that there is no recording in progress
     var begin_record_time = -1;
 
+    var audio_timeline_scale = 100;
+
 
     //
     // Pubilc methods
@@ -31,13 +33,21 @@ pentimento.audio_controller = function() {
     this.init = function () {
     	console.log("initialize: pentimento_audio_controller")
 
-    	// Start playing the audio
+    	// RecordRTC setup
+		navigator.getUserMedia({audio: true}, function(mediaStream) {
+	    recordRTC = RecordRTC(mediaStream, {
+	            autoWriteToDisk: true
+	        });
+	       recordRTC.startRecording();
+	    });
+
+    	// Button listener to start playing the audio
     	var play_pause_button = $("#play_pause_button");
 		play_pause_button.click(function() { 
 		    wavesurfer.playPause();
 		});
 
-		// Record or stop the current recording
+		// Button listener to record or stop the current recording
 		var record_audio_button = $("#record_audio_button");
 		record_audio_button.click(function() {
         	console.log("record_audio event listener");
@@ -71,10 +81,10 @@ pentimento.audio_controller = function() {
            console.log(audioURL);
 
             // Insert an audio track if there isn't one yet
-            var track = this.audio_tracks[0];
+            var track = audio_tracks[0];
             if (typeof track === 'undefined') {
                 track = new pentimento.audio_track();
-                this.audio_tracks.push(track);
+                audio_tracks.push(track);
             };
             
             // Get information about the audio track from looking at the lecture state
@@ -92,7 +102,7 @@ pentimento.audio_controller = function() {
         });
 
         // Update the audio display
-        refresh_audio_display();
+        this.refresh_audio_display();
     }
 
     // Refreshes the audio timeline display to show the tracks and segments
@@ -106,7 +116,7 @@ pentimento.audio_controller = function() {
             timeline.append(gradation_container);
 
             // Changes tickpoints into time display (ex: 00:30:00)
-            // Each tickpoint unit is one second which is then scaled by theaudio_timeline_scale
+            // Each tickpoint unit is one second which is then scaled by the audio_timeline_scale
             var tickFormatter = function (tickpoint) {
                 var sec_num = parseInt(tickpoint, 10);
                 var hours   = Math.floor(sec_num / 3600);
@@ -166,9 +176,9 @@ pentimento.audio_controller = function() {
         draw_gradations();
 
         // Iterate over all audio tracks
-        console.log(lecture.audio_tracks.length);
-        for (var i = 0; i < lecture.audio_tracks.length; i++) {
-            var audio_track = lecture.audio_tracks[i];
+        console.log(audio_tracks.length);
+        for (var i = 0; i < audio_tracks.length; i++) {
+            var audio_track = audio_tracks[i];
             console.log(audio_track);
 
             // Create a new track div and set it's data
