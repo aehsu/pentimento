@@ -249,19 +249,38 @@ pentimento.audio_controller = function() {
 
     // Given the location where the segment is dropped, this function figures out where to place the audio
     // segment and moves the other audio segments to their correct locations
-    this.place_segment =  function( segment_idx, mouse_position ) {
+    this.place_segment =  function ( segment_idx, mouse_position ) {
         // Iterate over audio tracks in DOM
         $("audio_track").each(function() {
             // Check to see if it over laps with segment on the left half
             if ( mouse_position.x >= $(this).offset.left && mouse_position.x <= $(this).offset.left + $(this).width()/2 ) {
+                console.log('move to left');
                 // Move segment to the left of conflicting segment
+                this.insert_segment();
             }
             // Check to see if it over laps with segment on the right half
-            if ( mouse_position.x > $(this).offset.left + $(this).width()/2 && mouse_position.x <= $(this).offset.left + $(this).width() ) {
+            else if ( mouse_position.x > $(this).offset.left + $(this).width()/2 && mouse_position.x <= $(this).offset.left + $(this).width() ) {
                 // Move segment to the left of conflicting segment
+                console.log('move to right');
+                this.insert_segment();
             }
 
         });
+    };
+
+    this.insert_segment = function (audio_segment, lecture_time) {
+        // Iterate over all segments for that track
+        for (var j = 0; j < audio_track.audio_segments.length; j++) {
+            var audio_segment = audio_track.audio_segments[i];
+
+            // Shift all segments on the right by the length of the segment
+            if ( lecture_time <= audio_segment.lecture_start_time ) {
+                pentimento.audio_track.shift_segment( audio_segment.id , audio_segment.length)
+            };
+        };
+        // Put segment at lecture_time
+        audio_segment.lecture_start_time = lecture_time;
+        audio_segment.lecture_end_time = lecture_time + audio_segment.length;
     };
 
 

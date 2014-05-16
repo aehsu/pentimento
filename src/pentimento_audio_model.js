@@ -24,7 +24,6 @@ pentimento.audio_track = function() {
 
 	};
 
-
 }
 
 // Audio segments contain an audio clip and a location within the lecture
