@@ -116,9 +116,13 @@ function penMouseMove(event) {
 
     if (state.lmb) {
         var curPoint = getCanvasPoint(event);
-        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
+//        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
         state.lastPoint = curPoint;
         state.currentVisual.getVertices().push(curPoint);
+        
+        // draws all visuals + current visual using rendering code
+        updateVisuals();
+        drawVisual(state.currentVisual, globalTime());
     }
 }
 
