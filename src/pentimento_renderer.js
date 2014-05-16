@@ -67,7 +67,6 @@ function renderCalligraphicStroke(visual, tVisual) {
     }
     while (vertsIter.hasNext()) {
         curr = vertsIter.next();
-        var line = new Segment(prev, curr, visual.getProperties());
         if (tVisual >= curr.getT()) { // fill path array with only the visible vertices
             var new_angle = absolute_angle(5,-5,curr.getX()-prev.getX(),curr.getY()-prev.getY());
             var new_direction = new_angle >= 0 ? 1 : -1;
