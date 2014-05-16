@@ -139,15 +139,18 @@ function preprocess(data, e) {
             
             var j=0;
             var old_angle;
+            var old_direction;
             while(j<stroke.length-1) {
                 var point = stroke[j],
                     next = stroke[j+1];
                 var new_angle = absolute_angle(5,-5,next.x-point.x,next.y-point.y);
+                var new_direction = new_angle >= 0 ? 1 : -1;
                 if (old_angle !== undefined) {
-                    if (new_angle / old_angle < 0)
+                    if (new_angle / old_angle < 0 || old_direction !== new_direction)
                         point.break = true;
                 }
                 old_angle = new_angle;
+                old_direction = new_direction;
                 j++;
             }
         }

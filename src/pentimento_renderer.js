@@ -1,32 +1,95 @@
+function updateVisuals() {
+    clear();
+    var slideIter = pentimento.lecture.getSlidesIterator();
+    var state = pentimento.state;
+    var slideTime = state.videoCursor;
+    while(slideIter.hasNext()) {
+        var slide = slideIter.next();
+        if(slide==state.currentSlide) {
+            var visualsIter = slide.getVisualsIterator();
+            while(visualsIter.hasNext()) {
+                var visual = visualsIter.next();
+                //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
+                if (isVisualVisible(visual, slideTime)) {
+                    drawVisual(visual, slideTime);
+                }
+            }
+        } else {
+            slideTime -= slide.getDuration();
+        }
+    }
+    if (state.currentVisual != null)
+        drawVisual(state.currentVisual, globalTime());
+    for(var i in state.selection) {
+        var visCopy = state.selection[i].getClone();
+        var propsCopy = visCopy.getProperties();
+        propsCopy.setWidth(propsCopy.getWidth()+1);
+        propsCopy.setColor("#0000FF");
+        drawVisual(visCopy, slideTime);
+    }
+}
+
+function clear() {
+    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
+}
+
+function drawVisual(visual, tVisual) {
+    tVisual = tVisual || pentimento.state.videoCursor;
+    //TODO SUPPORT FOR TRANSFORMS
+    switch(visual.getType()) {
+        case VisualTypes.basic:
+            console.log("someone actually made a basic type?!",visual);
+            break;
+        case VisualTypes.stroke:
+            renderCalligraphicStroke(visual, tVisual);
+            break;
+        case VisualTypes.dot:
+            break;
+        case VisualTypes.img:
+            break;
+    }
+}
+
+function drawVisuals(visuals) {
+    for (var i in visuals) {
+        drawVisual(visuals[i]);
+    }
+}
+
 function renderCalligraphicStroke(visual, tVisual) {
     var calligraphic_path = [];
     var vertsIter = visual.getVerticesIterator();
-    var prev;
+    var prev, curr;
     var old_angle;
+    var old_direction;
     if(vertsIter.hasNext()) {
         prev = vertsIter.next();
-        calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), false]);
     }
     while (vertsIter.hasNext()) {
-        var curr = vertsIter.next();
+        curr = vertsIter.next();
         var line = new Segment(prev, curr, visual.getProperties());
         if (tVisual >= curr.getT()) { // fill path array with only the visible vertices
             var new_angle = absolute_angle(5,-5,curr.getX()-prev.getX(),curr.getY()-prev.getY());
+            var new_direction = new_angle >= 0 ? 1 : -1;
             var breaking = false;
             if (old_angle !== undefined) {
-                if (new_angle / old_angle < 0)
+                if (new_angle / old_angle < 0 || new_direction !== old_direction)
                     breaking = true;
             }
             old_angle = new_angle;
-            calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), breaking]);
+            old_direction = new_direction;
+            calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), breaking]);
         }
         prev = curr;
     }
+    if (curr && tVisual >= curr.getT())
+        calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
     if (calligraphic_path.length > 0) { // draw calligraphic path
         var ctx = pentimento.state.context;
         ctx.globalAlpha = 1.0;
         ctx.strokeStyle = visual.getProperties().getColor();
-        ctx.lineWidth = visual.getProperties().getWidth();
+        ctx.fillStyle = visual.getProperties().getColor();
+        ctx.lineWidth = 1;
         ctx.lineCap = 'round';
         drawCalligraphicPath(0, calligraphic_path, false, ctx);
     }

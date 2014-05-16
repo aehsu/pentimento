@@ -116,13 +116,9 @@ function penMouseMove(event) {
 
     if (state.lmb) {
         var curPoint = getCanvasPoint(event);
-//        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
         state.lastPoint = curPoint;
         state.currentVisual.getVertices().push(curPoint);
-        
-        // draws all visuals + current visual using rendering code
         updateVisuals();
-        drawVisual(state.currentVisual, globalTime());
     }
 }
 
@@ -198,16 +194,10 @@ function selectMouseMove(event) {
         }
     }
 
+    updateVisuals();
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
-    for(var i in state.selection) {
-        var visCopy = state.selection[i].getClone();
-        var propsCopy = visCopy.getProperties();
-        propsCopy.setWidth(propsCopy.getWidth()+1);
-        propsCopy.setColor("#0000FF");
-        drawVisual(visCopy);
-    }
 
     ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
     ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
@@ -217,11 +207,5 @@ function selectMouseMove(event) {
 function selectMouseUp(event) {
     var state =  pentimento.state;
 
-    for(var i in state.selection) {
-        var visCopy = state.selection[i].getClone();
-        var propsCopy = visCopy.getProperties();
-        propsCopy.setWidth(propsCopy.getWidth()+1);
-        propsCopy.setColor("#0000FF");
-        drawVisual(visCopy);
-    }
+    updateVisuals();
 }
