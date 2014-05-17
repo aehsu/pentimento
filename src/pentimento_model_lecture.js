@@ -1,6 +1,25 @@
 /*************************************************
 					MODEL
 *************************************************/
+
+function SlideTransform(type, tmin, durate, mat) {
+    var self = this;
+    self.tMin = tmin;
+    self.duration = durate;
+    self.matrix = mat;
+
+    this.getTMin = function() { return self.tMin; }
+    this.getDuration = function() { return self.duration; }
+    this.getMatrix = function() { return self.matrix; }
+    this.setTMin = function(newTMin) { self.tMin = newTMin; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
+}
+
+SlideTransform.prototype.getClone = function() {
+    
+}
+
 function Slide() {
     var visuals = [];
     var transforms = [];
@@ -35,19 +54,6 @@ function Constraint(tvis, taud, mytype) {
     this.setTVis = function(newTVis) { tVis = newTVis; }
     this.setTAud = function(newTAud) { tAud = newTAud; }
     this.setType = function(newType) { type = newType; }
-}
-
-function SlideTransform(tmin, durate, mat) {
-    var tMin = tmin;
-    var duration = durate;
-    var matrix = mat;
-
-    this.getTMin = function() { return tMin; }
-    this.getDuration = function() { return duration; }
-    this.getMatrix = function() { return matrix; }
-    this.setTMin = function(newTMin) { tMin = newTMin; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
-    this.setMatrix = function(newMatrix) { matrix = newMatrix; }
 }
 
 function Lecture() {

@@ -26,6 +26,7 @@ pentimento.state = new function() {
     this.tool = null; //whichever tool is active for a recording
 	this.lastPoint = null;
     this.selection = [];
+    this.redoGroup = null;
     
     this.currentSlide = null;
     this.audioCursor = 0.0;

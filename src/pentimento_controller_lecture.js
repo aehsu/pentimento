@@ -13,6 +13,7 @@ function LectureController(lec) {
     this.visualsController = new VisualsController(lecture);
     // this.audioController = new AudioController(lecture);
 
+    //utility
     this.setStateSlide = function() {
         var time = state.videoCursor;
         if(time==0) { state.currentSlide = lecture.getSlides()[0]; return; }
@@ -29,6 +30,7 @@ function LectureController(lec) {
         }
     }
 
+    //utility
     this.getLectureDuration = function() {
         var time = 0;
         var iter = lecture.getSlidesIterator();
@@ -39,6 +41,7 @@ function LectureController(lec) {
         return time;
     }
 
+    //recording mode function
     this.endSlide = function(shift) {
         var originalDuration = state.currentSlide.getDuration();
         var slide = state.currentSlide;
@@ -95,6 +98,7 @@ function LectureController(lec) {
         }, ActionTitles.AdditionOfSlide);
     }
     
+    //recording mode function
     this.addSlide = function() {
         var prevSlide = state.currentSlide;
         var newSlide = new Slide();
@@ -109,13 +113,50 @@ function LectureController(lec) {
             unaddSlide(prevSlide, newSlide, index);
         }, ActionTitles.AdditionOfSlide);
     }
-    
-    this.deleteSlide = function(slide) {
-        // var index = lecture.slides.indexOf(slide);
-        // if(index==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
 
-        // lecture.slides.splice(index, 1);
-        // return index;
+    function unDeleteSlide(slide, index, time) {
+        lecture.getSlides().splice(index, 0, slide);
+        var duration = 0;
+        var slideIter = lecture.getSlidesIterator();
+        while(slideIter.hasNext()) {
+            var sl = slideIter.next();
+            if(slideIter.index==index) { break; }
+            duration += sl.getDuration();
+        }
+        pentimento.timeController.updateVideoTime(duration + time);
+        //shift constraints
+
+        um.add(function() {
+            self.deleteSlide(slide);
+            updateVisuals();
+        }, ActionTitles.DeleteSlide);
+    }
+    
+    //edit mode function
+    this.deleteSlide = function(slide) {
+        if(lecture.getSlides().length==1) {
+            throw {name:"DeleteSlideError", message:"Only one slide left, cannot delete!"}
+        }
+        var index = lecture.getSlides().indexOf(slide);
+        if(index==-1) { console.log("Error in delete_slide for Lecture controller"); return; }
+
+        lecture.getSlides().splice(index, 1);
+        
+        var duration = 0;
+        var slideIter = lecture.getSlidesIterator();
+        while(slideIter.hasNext()) {
+            var sl = slideIter.next();
+            if(slideIter.index == index) { break; }
+            duration += sl.getDuration();
+        }
+        var slideTime = state.videoCursor - duration;
+        pentimento.timeController.updateVideoTime(duration); //self.setStateSlide() implicit
+        //shift constraints
+
+        um.add(function() {
+            unDeleteSlide(slide, index, slideTime);
+            updateVisuals();
+        }, ActionTitles.DeleteSlide);
     }
 }
 

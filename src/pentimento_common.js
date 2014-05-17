@@ -14,7 +14,7 @@ ActionGroups = {
     RecordingGroup: "RecordingGroup",
     SlideGroup: "SlideGroup",
     VisualGroup: "VisualGroup",
-    EditGroup: "EditGroup"
+    EditGroup: "EditGroup",
     // CustomGroup: "CustomGroup"
 };
 

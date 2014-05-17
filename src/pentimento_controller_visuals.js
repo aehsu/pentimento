@@ -1,6 +1,6 @@
 //Because of integration with the undo manager, the undo actions should call updateVisuals()
 //appropriately. Only the undo actions, though, not the forward actions! Therefore, any time
-//the um.add is called, it should have an updateVisuals inside of the function if necessary
+//um.add is called, it should have an updateVisuals inside of the function if necessary
 
 function VisualsController(lec) {
     var self = this;
@@ -82,8 +82,8 @@ function VisualsController(lec) {
         state.visualsInsertionIndex--;
         um.add(function() {
             self.addVisual(slide, visual);
-        }, ActionTitles.UnaddVisual);
-        updateVisuals();
+            updateVisuals();
+        }, ActionTitles.AdditionOfVisual);
         return visual;
     }
     
@@ -95,10 +95,21 @@ function VisualsController(lec) {
         state.visualsInsertionIndex++;
         um.add(function() {
             unaddVisual(slide, visual);
+            updateVisuals();
         }, ActionTitles.AdditionOfVisual);
         return visual;
     }
+
+    this.appendVertex = function(visual, vertex) {
+        visual.getVertices().push(vertex);
+    }
     /**********************************ADDING OF VISUALS**********************************/
+    /*******************************TRANSFORMING OF VISUALS********************************/
+    //Typically during a recording, these are the handlers for transforms to be applied to visuals
+    //Resizing or such actions are transformations which may happen during editing
+
+
+    /*******************************TRANSFORMING OF VISUALS********************************/
     /**********************************EDITING OF VISUALS**********************************/
     //This section is primarily concerned with the direct editing of the properties of
     //a visual. Recording edits to a visual are transforms, which is in a later section
@@ -135,8 +146,7 @@ function VisualsController(lec) {
     function unEditColors(visuals, colors) {
         //TODO FILL
     }
-    /**********************************EDITING OF VISUALS**********************************/
-    /*********************************DELETING OF VISUALS**********************************/
+
     function doShiftVisual(visual, amount) {
         visual.setTMin(visual.getTMin() + amount);
         var vertIter = visual.getVerticesIterator();
@@ -144,6 +154,7 @@ function VisualsController(lec) {
             var vert = vertIter.next();
             vert.setT(vert.getT() + amount);
         }
+        if(visual.getTDeletion()!=null) { visual.setTDeletion(visual.getTDeletion() + amount);}
     }
     
     this.shiftVisuals = function(visuals, amount) {
@@ -178,14 +189,15 @@ function VisualsController(lec) {
             slide.getVisuals().splice(index, 0, visual);
         }
         
-        visuals.reverse(); //this is not necessary
+        // visuals.reverse(); //this is not necessary
         //no need to reverse indices here cause it will just get garbagecollected
         //shifts will likewise just get garbagecollected
-        
+
+        //TODO shift video cursor
         um.add(function() {
             self.deleteVisuals(slide, visuals);
+            updateVisuals();
         }, ActionTitles.DeleteVisual);
-        updateVisuals();
     }
     
     this.deleteVisuals = function(slide, visuals) {
@@ -204,7 +216,7 @@ function VisualsController(lec) {
             if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
         }
         
-        console.log("post-DELETION visuals"); console.log(state.currentSlide.visuals);
+        console.log("post-DELETION visuals"); console.log(state.currentSlide.getVisuals());
         
         for(var sh in shifts) {
             var shift = shifts[sh];
@@ -215,20 +227,15 @@ function VisualsController(lec) {
             }
         }
         shifts.reverse();
-        
+        //move video cursor
+
         //should we change the duration of the slide?!?
         um.add(function() {
-            undeleteVisuals(state.currentSlide, visuals, indices, shifts);
+            undeleteVisuals(slide, visuals, indices, shifts);
+            updateVisuals();
         }, ActionTitles.DeleteVisual);
-        updateVisuals();
     }
-    /*********************************DELETING OF VISUALS**********************************/
-    /*******************************TRANSFORMING OF VISUALS********************************/
-    //Typically during a recording, these are the handlers for transforms to be applied to visuals
-    //Resizing or such actions are transformations which may happen during editing
-
-
-    /*******************************TRANSFORMING OF VISUALS********************************/
+    /**********************************EDITING OF VISUALS**********************************/
     /**********************************HELPER FUNCTIONS***********************************/
     function prevNeighbor(visual) {
         var prev;

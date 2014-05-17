@@ -8,7 +8,8 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         console.log('ending slide at', time);
         var diff = time - slideBegin;
 
-        pentimento.lectureController.visualsController.cleanVisuals(dirtyVisuals, diff); //puts at beginning of undo group
+        pentimento.lectureController.visualsController.cleanVisuals(dirtyVisuals, diff);
+        //puts at beginning of undo group
         //restores visuals, etc etc.
         pentimento.lectureController.endSlide(diff); //puts at beginning of undo group
         //shifts the slide's duration by diff amount
@@ -34,7 +35,8 @@ pentimento.recordingController = new function() {//records little mini-lectures,
     }
 
     this.addVisual = function(visual) {
-        //restores a visual into a coherent given the context of the recording before passing it over to the visualsController to actually add it
+        //puts a visual into a coherent state given the context of the recording before passing it 
+        //over to the visualsController to actually add it
         var verts = visual.getVertices();
         for(var i in verts) {
             var vert = verts[i];
@@ -44,6 +46,11 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         
         if(visual.getTDeletion() != null) { visual.setTDeletion(visualsInsertionTime + visual.getTDeletion() - slideBegin); }
         pentimento.lectureController.visualsController.addVisual(state.currentSlide, visual); //adds an action onto the undo stack
+    }
+
+    this.appendVertex = function(visual, vertex) {
+        vertex.setT(visualsInsertionTime + vertex.getT() - slideBegin);
+        pentimento.lectureController.visualsController.appendVertex(visual, vertex);
     }
     
 	this.beginRecording = function() {

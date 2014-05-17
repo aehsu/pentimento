@@ -60,14 +60,16 @@ function undoListener(event) {
 function redoListener(event) {
     if(um.getRedoLength() > 0) {
         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
-        var title = um.getUndoGroups();
-        title = title[title.length-1];
-        $('.um-tool[data-toolname="redo"]').each(function() {
-            $(this).text('Redo-'+title);
-        });
+        // Support for the redo Group names is not yet okay
+        // var title = um.getUndoGroups();
+        // title = title[title.length-1];
+        // $('.um-tool[data-toolname="redo"]').each(function() {
+        //     $(this).text('Redo-'+title);
+        // });
     } else {
         $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
-        $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
+        // Support for the redo Group names is not yet okay
+        // $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
     }
 }
 

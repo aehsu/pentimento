@@ -6,6 +6,12 @@ var VisualTypes = {
     img: "IMG"
 };
 
+var VisualTransformTypes = {
+    Resize: "Resize", 
+    Move: "Move",
+    Property: "Property"
+};
+
 function VisualProperty(c, w) {
     var self = this;
     self.color, self.width;
@@ -24,21 +30,25 @@ VisualProperty.prototype.getClone = function() {
     return new VisualProperty(this.getColor(), this.getWidth());
 }
 
-function VisualTransform(tmin, durate, mat) {
-    var tMin = tmin;
-    var duration = durate;
-    var matrix = mat;
+function VisualTransform(kind, tmin, durate, mat) {
+    var self = this;
+    self.type = kind;
+    self.tMin = tmin;
+    self.duration = durate;
+    self.matrix = mat;
 
-    this.getTMin = function() { return tMin; }
-    this.getDuration = function() { return duration; }
-    this.getMatrix = function() { return matrix; }
-    this.setTMin = function(newTMin) { tMin = newTMin; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
-    this.setMatrix = function(newMatrix) { matrix = newMatrix; }
+    this.getType = function() { return self.type;}
+    this.getTMin = function() { return self.tMin; }
+    this.getDuration = function() { return self.duration; }
+    this.getMatrix = function() { return self.matrix; }
+    this.setType = function(newType) { self.type = newType; }
+    this.setTMin = function(newTMin) { self.tMin = newTMin; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
 }
 
 VisualTransform.prototype.getClone = function() {
-    return new VisualTransform(this.getTMin(), this.getDuration(), this.getMatrix().getClone());
+    return new VisualTransform(this.getType(), this.getTMin(), this.getDuration(), this.getMatrix().getClone());
 }
 
 //could potentially migrate a vertex to have a tMin and a tDeletion

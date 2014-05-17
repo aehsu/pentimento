@@ -39,7 +39,7 @@ function drawLine(segment) {
 //Therefore, when time his tDeletion, the visual is no longer visible
 function isVisualVisible(visual, tVisual) {
     if(visual.getTMin() > tVisual) { return false; }
-    if(visual.getTDeletion() != null && visual.getTDeletion() >= tVisual) { return false; }
+    if(visual.getTDeletion() != null && visual.getTDeletion() <= tVisual) { return false; }
 
     return true;
 }
@@ -84,80 +84,61 @@ function clearPreviousHandlers() {
 /***********************************************************************/
 /***********************************************************************/
 
-
-// Handler function for a mousedown on the canvas
-function dotsMouseDown(event) {
-    //TODO
-}
-
-function dotsMouseMove(event) {
-    //TODO
-}
-
-function dotsMouseUp(event) {
-    //TODO
-}
-
-//lecture tool
+/**********************************LECTURE-MODE TOOLS**********************************/
 function penMouseDown(event) {
-    if (!pentimento.state.isRecording){return;}
-    event.preventDefault();
-    var state = pentimento.state; //reference
+    var state = pentimento.state;
     state.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(state.color, state.width));
     state.lastPoint = getCanvasPoint(event);
     state.currentVisual.getVertices().push(state.lastPoint);
+    pentimento.recordingController.addVisual(state.currentVisual);
 }
 
-//lecture tool
 function penMouseMove(event) {
-    if (!pentimento.state.isRecording){return;}
-    event.preventDefault();  
-    var state = pentimento.state; //reference
-
+    var state = pentimento.state;
     if (state.lmb) {
         var curPoint = getCanvasPoint(event);
         drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
         state.lastPoint = curPoint;
-        state.currentVisual.getVertices().push(curPoint);
+        pentimento.recordingController.appendVertex(state.currentVisual, curPoint);
     }
 }
 
-//lecture tool
 function penMouseUp(event) {
-    if (!pentimento.state.isRecording){return;}
-    event.preventDefault();
-
     var state = pentimento.state;
     if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
-        pentimento.recordingController.addVisual(state.currentVisual);
         state.currentVisual = null;
         state.lastPoint = null;
     }
 }
 
-//lecture tool
+function highlightMouseDown(event) {
+    penMouseDown(event);
+}
+
+function highlightMouseMove(event) {
+    penMouseMove(event);
+}
+
 function highlightMouseUp(event) {
-    if (!pentimento.state.isRecording){return;}
-    event.preventDefault();
-
     var state = pentimento.state;
+    var highlightTime = 750; //duration for a highlighter, in ms
     if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
-        state.currentVisual.tDeletion = globalTime()+3000; //highlighing duration
-        pentimento.recordingController.addVisual(state.currentVisual);
+        var verts = state.currentVisual.getVertices();
+        state.currentVisual.setTDeletion(verts[verts.length-1].getT()+highlightTime); //should be moved else where...
         state.currentVisual = null;
         state.lastPoint = null;
     }
 }
+/**********************************LECTURE-MODE TOOLS**********************************/
 
-//edit tool
-function selectMouseDown(event) {
+/**********************************EDITING-MODE TOOLS**********************************/
+function editSelectMouseDown(event) {
     var state = pentimento.state;
     state.lastPoint = getCanvasPoint(event);
     state.selection = [];
 }
 
-//edit tool
-function selectMouseMove(event) {
+function editSelectMouseMove(event) {
     var state = pentimento.state;
 
     var coord = getCanvasPoint(event);
@@ -209,8 +190,7 @@ function selectMouseMove(event) {
     ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
 }
 
-//edit tool
-function selectMouseUp(event) {
+function editSelectMouseUp(event) {
     var state =  pentimento.state;
 
     for(var i in state.selection) {
@@ -221,3 +201,4 @@ function selectMouseUp(event) {
         drawVisual(visCopy);
     }
 }
+/**********************************EDITING-MODE TOOLS**********************************/

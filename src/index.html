@@ -3,9 +3,9 @@
 <head>
     <title>Capture Widget/Sketchpad</title>
     <link rel="stylesheet" type="text/css" href="main.css">
-    <script src='jquery-1.10.2.min.js'></script>
-    <script src='jquery-ui.js'></script>
-    <link href="jquery-ui.css" rel="stylesheet" type="text/css">
+    <script src='jquery-ui-1.10.4/js/jquery-1.10.2.js'></script>
+    <script src='jquery-ui-1.10.4/js/jquery-ui-1.10.4.js'></script>
+    <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
     <script type='text/javascript' src='undo/errors.js'></script>
     <script type='text/javascript' src='undo/compatibility.js'></script>
     <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
@@ -58,8 +58,8 @@
                 </tr>
             </table>
 
-            <input type="image" src="icons/media_skip_backward.png" class="edit-tool center" data-toolname="rewind">
-            <input type="image" src="icons/media_skip_forward.png" class="edit-tool center" data-toolname="fastforward">
+            <!-- <input type="image" src="icons/media_skip_backward.png" class="edit-tool center" data-toolname="rewind">
+            <input type="image" src="icons/media_skip_forward.png" class="edit-tool center" data-toolname="fastforward"> -->
             | 
             <input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
             <label>select |</label>
@@ -82,6 +82,7 @@
                 <option value="20">20</option>
             </select>
             <label> | </label>
+            <button class="edit-tool" data-toolname="delete-slide">Delete Slide</button>
             <button class="um-tool" data-toolname="undo" disabled="true">Undo</button>
             <button class="um-tool" data-toolname="redo" disabled="true">Redo</button>
 
