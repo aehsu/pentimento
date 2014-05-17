@@ -1,3 +1,7 @@
+/**
+ * Messy modularity-breaking listener class for responding
+ * to user input and passes them to the renderer
+ */
 var PentimentoListener = function(canvas_container, data, listener) {
     var jqcanvas = canvas_container.find("canvas");
     var canvas = jqcanvas[0];

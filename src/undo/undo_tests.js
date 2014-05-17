@@ -879,7 +879,6 @@ var testUM = function (guiFunctions) {
     }; 
 
     concatStandardRes();
-
     failedScenarios['test18'] = getFailedFunctions(expectedResults, scenario);
     
     /*
@@ -1395,6 +1394,41 @@ var testUM = function (guiFunctions) {
     concatStandardRes();
 
     failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);  
+
+    /*
+        TEST 32
+        Start a group, perform an action, undo that action.
+        Test that the action can be redone both through individual redo and group redo.
+    */
+
+    scenario = function () {
+        um.startHierarchy('group2');
+        changeBodyColor('red');
+        um.undo();
+    };
+    
+    standardResults = [0, 1, null, getBodyColorTitle('red')];
+
+    expectedResults = {
+        undo: [errorNames['undo']],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [errorNames['undoH1']],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [true],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [true, 1, 0, getBodyColorTitle('red'), null],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test32'] = getFailedFunctions(expectedResults, scenario);      
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 

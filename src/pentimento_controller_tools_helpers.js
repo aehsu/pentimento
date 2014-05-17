@@ -97,7 +97,6 @@ function penMouseMove(event) {
     var state = pentimento.state;
     if (state.lmb) {
         var curPoint = getCanvasPoint(event);
-        drawLine(new Segment(state.lastPoint,curPoint, state.currentVisual.getProperties()));
         state.lastPoint = curPoint;
         pentimento.recordingController.appendVertex(state.currentVisual, curPoint);
     }
@@ -175,16 +174,10 @@ function editSelectMouseMove(event) {
         }
     }
 
+    updateVisuals();
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
-    for(var i in state.selection) {
-        var visCopy = state.selection[i].getClone();
-        var propsCopy = visCopy.getProperties();
-        propsCopy.setWidth(propsCopy.getWidth()+1);
-        propsCopy.setColor("#0000FF");
-        drawVisual(visCopy);
-    }
 
     ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
     ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
@@ -193,6 +186,7 @@ function editSelectMouseMove(event) {
 function editSelectMouseUp(event) {
     var state =  pentimento.state;
 
+<<<<<<< HEAD
     for(var i in state.selection) {
         var visCopy = state.selection[i].getClone();
         var propsCopy = visCopy.getProperties();
@@ -202,3 +196,7 @@ function editSelectMouseUp(event) {
     }
 }
 /**********************************EDITING-MODE TOOLS**********************************/
+=======
+    updateVisuals();
+}
+>>>>>>> 54cad5bcd438a5beefb5432fb4d5fac83cc35230

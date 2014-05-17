@@ -62,67 +62,6 @@ Matrix.prototype.getClone = function() {
 
 }
 
-/***********************RENDERING CODE***********************/
-//renderer code. temporary stint until renderer code gets well integrated
-function updateVisuals() {
-    clear();
-    var slideIter = pentimento.lecture.getSlidesIterator();
-    var state = pentimento.state;
-    var slideTime = state.videoCursor;
-    while(slideIter.hasNext()) {
-        var slide = slideIter.next();
-        if(slide==state.currentSlide) {
-            var visualsIter = slide.getVisualsIterator();
-            while(visualsIter.hasNext()) {
-                var visual = visualsIter.next();
-                //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
-                if (isVisualVisible(visual, slideTime)) {
-                    drawVisual(visual);
-                }
-            }
-        } else {
-            slideTime -= slide.getDuration();
-        }
-    }
-}
-
-function clear() {
-    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-}
-
-function drawVisual(visual, tVisual) {
-    //TODO SUPPORT FOR TRANSFORMS
-    switch(visual.getType()) {
-        case VisualTypes.basic:
-            console.log("someone actually made a basic type?!",visual);
-            break;
-        case VisualTypes.stroke:
-            var vertsIter = visual.getVerticesIterator();
-            var prev;
-            if(vertsIter.hasNext()) {
-                prev = vertsIter.next();
-            }
-            while (vertsIter.hasNext()) {
-                var curr = vertsIter.next();
-                var line = new Segment(prev, curr, visual.getProperties());
-                drawLine(line);
-                prev = curr;
-            }
-            break;
-        case VisualTypes.dot:
-            break;
-        case VisualTypes.img:
-            break;
-    }
-}
-
-function drawVisuals(visuals) {
-    for (var i in visuals) {
-        drawVisual(visuals[i]);
-    }
-}
-/***********************RENDERING CODE***********************/
-
 $(document).ready(function(){
     var iw = $(window).width();
     var ih = $(window).height();

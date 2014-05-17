@@ -19,6 +19,12 @@ var getUndoManager = function(groupTypes, debug) {
         }
     }
 
+    // the group titles are the same as the group types by default. These can be changed with the setGroupTitle function.
+    var groupTitles = {};
+    for (var i in groupTypes) {
+        groupTitles[groupTypes[i]] = groupTypes[i];
+    }
+
     // These stacks hold objects that represent the actions that can be undone or redone.
     // The objects, referred to as action objects later on, should have the following properties:
     //      action - the function that will be called when the action object is pulled off one of the stacks
@@ -99,7 +105,7 @@ var getUndoManager = function(groupTypes, debug) {
                 title = undoStack[index].title; // set the title if it hasn't been set yet
             }
             else if (undoStack[index].title != title) {
-                title = group; // if the titles aren't the same, return the group name as the title
+                title = groupTitles[group]; // if the titles aren't the same, return the default group title
                 break;
             }
             if (undoStack[index].atStartOfGroups.indexOf(group) !== -1) {
@@ -126,7 +132,8 @@ var getUndoManager = function(groupTypes, debug) {
         // iterate through each action in the group
         while (!atEnd) {
             if (index < 0 || index >= redoStack.length) {
-                throw indexOutOfBoundsError(index); //TODO: test
+                displayDebugWarning("While getting title, couldn't find end of group: " + group);
+                return title;
             }
             if (redoStack[index].inGroups.indexOf(group) === -1) {
                 throw notInGroupError(group); //TODO: test
@@ -135,7 +142,7 @@ var getUndoManager = function(groupTypes, debug) {
                 title = redoStack[index].title; // set the title if it hasn't been set yet
             }
             else if (redoStack[index].title != title) {
-                title = group; // if the titles aren't the same, return the group name as the title
+                title = groupTitles[group]; // if the titles aren't the same, return the default group title
                 break;
             }
             if (redoStack[index].atEndOfGroups.indexOf(group) !== -1) {
@@ -170,10 +177,12 @@ var getUndoManager = function(groupTypes, debug) {
 
         }
 
-        groupsJustStarted = [];
+        
 
         var actionObj = undoStack.pop();
         actionObj.action(); // undoes the performed action
+
+        groupsJustStarted = actionObj.atStartOfGroups.slice(0);
 
         // the relevant action object is now on the redo stack, but some properties haven't been defined yet.
         // they should be the same as they were before the action was undone.
@@ -278,6 +287,9 @@ var getUndoManager = function(groupTypes, debug) {
         // inverse: the function that would undo the actions just performed
         // title: describes the actions just performed   
         add: function(inverse, title) {
+            if (!title) {
+                title = "";
+            }
             if (undoing) { // if undoing, the action object should go on the redo stack
                 redoStack.push({
                     action: inverse
@@ -355,14 +367,12 @@ var getUndoManager = function(groupTypes, debug) {
             else {
                 displayDebugWarning("The group '"+group+"' is not in hierarchyOrder, although it appears to be started.");
             }
-            
             index = groupsJustStarted.indexOf(group);
             if (index === -1) {
                 // keep track of the fact that the group was ended
                 var i = openGroups.indexOf(group);
                 unorderedSplice(openGroups, i, 1);
                 getNextUndo().atEndOfGroups.push(group);
-
                 // event only fired for non-empty groups
                 fireEvent("groupStatusChange");
             }
@@ -420,10 +430,16 @@ var getUndoManager = function(groupTypes, debug) {
             // redo each action until the end of the group (as it was before the group was undone) is reached
             var reachedEnd = false;
             while (!reachedEnd) {
-                if (getNextRedo().atEndOfGroups.indexOf(group) !== -1) {
-                    reachedEnd = true;
+                if (!getNextRedo()) {
+                    displayDebugWarning("While redoing the hierarchy, couldn't find the end of group: " + group);
+                    reachedEnd = true
                 }
-                redo(true);
+                else {
+                    if (getNextRedo().atEndOfGroups.indexOf(group) !== -1) {
+                        reachedEnd = true;
+                    }
+                    redo(true);
+                }
             }
 
             fireEvent('operationDone');
@@ -482,20 +498,6 @@ var getUndoManager = function(groupTypes, debug) {
         isGroupOpen: function(group) {
             return (openGroups.indexOf(group) !== -1);
         },
-        // Returns an array with the groups that the next undo action is in.
-        getUndoGroups: function() {
-            if (undoStack.length > 0){
-                return getNextUndo().inGroups;
-            }
-            return [];
-        },
-        // Returns an array with the groups that were closed since the last action.
-        getGroupsJustClosed: function() {
-            if (undoStack.length > 0) {
-                return getNextUndo().atEndOfGroups;  //TODO: better to store atEndOfGroups, or use filter and other methods when it's needed?
-            }
-            return [];
-        },
         // Checks if the undoManager can currently perform the undo function for a particular group. 
         // group - specifies the group the undo function applies to. If undefined (or otherwise falsy), 
         // will check for the individual undo function.
@@ -524,7 +526,7 @@ var getUndoManager = function(groupTypes, debug) {
             if (!group && getNextRedo().atStartOfGroups.length === 0) {
                 return getNextRedo().title;
             }
-            if (getNextRedo().inGroups.indexOf(group) !== -1) { //TODO: should this be inGroups or atStartOfGroups? 
+            if (getNextRedo().atStartOfGroups.indexOf(group) !== -1) {
                 return getGroupRedoTitle(group);
             }
             return false;
@@ -582,6 +584,15 @@ var getUndoManager = function(groupTypes, debug) {
                 return getNextRedo().title;
             }
             return null;
+        },
+        // set the default title of a group
+        setGroupTitle: function(group, title) {
+            var index = groupTypes.indexOf(group);
+            if (index === -1) {
+                throw notGroupError(group);
+            }
+            groupTitles[group] = title;
+            return true;
         }
     };
 
