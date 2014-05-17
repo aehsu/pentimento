@@ -165,3 +165,7 @@ var unorderedSpliceError = function() {
 var groupAutoClose = function(group) {
     return "The group '" + group + "' is being automatically ended.";
 };
+
+var groupReopened = function(group) {
+    return "The group '" + group + "' is being automatically reopened.";
+}

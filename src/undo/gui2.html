@@ -12,9 +12,17 @@
     <script src = 'gui2_test.js'></script>
     <script>
         $(document).ready(function(){
-            gui2test();
-            // undoManager.startHierarchy('group1');
-            // $('#color').val('red').trigger('change');
+            // gui2test();
+            undoManager.startHierarchy('group3');
+            undoManager.startHierarchy('group2');
+            undoManager.startHierarchy('group1');
+            $('#color').val('red').trigger('change');
+            undoManager.endHierarchy('group1');
+            undoManager.startHierarchy('group1');
+            $('#color').val('blue').trigger('change');
+            undoManager.endHierarchy('group1');
+            undoManager.undoHierarchy('group1');
+            undoManager.redoHierarchy('group1');
             // $('#color').val('blue').trigger('change');
             // $('#color').val('green').trigger('change');
             // undoManager.undo();

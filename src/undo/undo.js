@@ -233,9 +233,9 @@ var getUndoManager = function(groupTypes, debug) {
         // initially performed in the undoManager's current state. Instead, the properties should be the same as they were
         // before the action was redone.
         var currentNextUndo = getNextUndo();
-        currentNextUndo.inGroups = actionObj.inGroups;
-        currentNextUndo.atStartOfGroups = actionObj.atStartOfGroups;
-        currentNextUndo.atEndOfGroups = actionObj.atEndOfGroups;         
+        currentNextUndo.inGroups = actionObj.inGroups.slice(0);
+        currentNextUndo.atStartOfGroups = actionObj.atStartOfGroups.slice(0);
+        currentNextUndo.atEndOfGroups = actionObj.atEndOfGroups.slice(0);         
 
         // fixing some grouping things
 
@@ -269,6 +269,7 @@ var getUndoManager = function(groupTypes, debug) {
         for (var i in actionObj.inGroups) {
             group = actionObj.inGroups[i];
             if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) { // don't add the group if it ends at the redone action
+                displayDebugWarning(groupReopened(group));
                 openGroups.push(group);
             }
         }

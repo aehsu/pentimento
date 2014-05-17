@@ -1037,7 +1037,7 @@ var testUM = function (guiFunctions) {
         TEST 23
         group1 started, actions performed, last action undone, group ended, action redone, new action performed
         test that new action is not considered part of the group (only the redone action should be part of the group, 
-        relevant to Test 16)
+        relevant to Test 17)
     */
     
     scenario = function () {
@@ -1428,7 +1428,48 @@ var testUM = function (guiFunctions) {
 
     concatStandardRes();
 
-    failedScenarios['test32'] = getFailedFunctions(expectedResults, scenario);      
+    failedScenarios['test32'] = getFailedFunctions(expectedResults, scenario);
+
+    /*
+        TEST 33
+        Test that redoing group1 will leave group2 and group3 open
+    */
+
+    scenario = function () {
+        um.startHierarchy('group3');
+        um.startHierarchy('group2');
+        um.startHierarchy('group1');
+        changeBodyColor('red');
+        um.endHierarchy('group1');
+        um.startHierarchy('group1');
+        changeBodyColor('blue');
+        um.endHierarchy('group1');
+        um.undoHierarchy('group1');
+        um.redoHierarchy('group1');
+    };
+    
+    standardResults = [2, 0, getBodyColorTitle('blue'), null];
+
+    expectedResults = {
+        undo: [true, 1, 1, getBodyColorTitle('red'), getBodyColorTitle('blue')],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [true, 1, 1, getBodyColorTitle('red'), getBodyColorTitle('blue')],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [true],
+        undoH2: [true, 0, 2, null, getBodyColorTitle('red')],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [true],
+        undoH3: [true, 0, 2, null, getBodyColorTitle('red')],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test33'] = getFailedFunctions(expectedResults, scenario);  
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 
