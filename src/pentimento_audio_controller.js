@@ -211,6 +211,8 @@ pentimento.audio_controller = function() {
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
                     // Call shift function in model
                     // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
+                    // figure out if segment needs to be moved (if dropped on top of something)
+                    pentimento.audio_track.place_segment(ui.helper.attr('id'), ui.helper.data);
                     ui.helper.removeClass('dragged')
                 }).resizable({
                     handles: "e, w",
@@ -247,28 +249,9 @@ pentimento.audio_controller = function() {
         }; // End of audio tracks loop
     };
 
-    // Given the location where the segment is dropped, this function figures out where to place the audio
-    // segment and moves the other audio segments to their correct locations
-    this.place_segment =  function ( segment_idx, mouse_position ) {
-        // Iterate over audio tracks in DOM
-        $("audio_track").each(function() {
-            // Check to see if it over laps with segment on the left half
-            if ( mouse_position.x >= $(this).offset.left && mouse_position.x <= $(this).offset.left + $(this).width()/2 ) {
-                console.log('move to left');
-                // Move segment to the left of conflicting segment
-                this.insert_segment();
-            }
-            // Check to see if it over laps with segment on the right half
-            else if ( mouse_position.x > $(this).offset.left + $(this).width()/2 && mouse_position.x <= $(this).offset.left + $(this).width() ) {
-                // Move segment to the left of conflicting segment
-                console.log('move to right');
-                this.insert_segment();
-            }
+    
 
-        });
-    };
-
-    this.insert_segment = function (audio_segment, lecture_time) {
+    this.insert_segment = function (audio_segment_idx, lecture_time) {
         // Iterate over all segments for that track
         for (var j = 0; j < audio_track.audio_segments.length; j++) {
             var audio_segment = audio_track.audio_segments[i];
@@ -279,6 +262,7 @@ pentimento.audio_controller = function() {
             };
         };
         // Put segment at lecture_time
+        audio_segment
         audio_segment.lecture_start_time = lecture_time;
         audio_segment.lecture_end_time = lecture_time + audio_segment.length;
     };
