@@ -165,7 +165,7 @@ function lectureSelectMouseMove(event) {
             if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
         }
         if(nVert/visual.getVertices().length >= .45) {
-            pentimento.recordingController.addProperty(;;;;
+            // pentimento.recordingController.addProperty(;;;;
         }
     }
     ctx.strokeStyle = "#0000FF";

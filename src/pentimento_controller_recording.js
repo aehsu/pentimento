@@ -1,6 +1,8 @@
 pentimento.recordingController = new function() {//records little mini-lectures, which is all a lecture is.
     var self = this;
     var state = pentimento.state;
+    var originSlide = null;
+    var originSlideDuration = null;
     var shiftInterval = null;
     var dirtyVisuals = [];
     var dirtyConstraints = [];
@@ -128,7 +130,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         visualsInsertionTime = state.videoCursor - duration;
         slideBegin = globalTime();
         recordingBegin = slideBegin;
-        
+        // ORIGIN SLIDE;;;;;;
         setDirtyConstraints();
         //setDirtySlide(); -- always state.currentSlide
         setDirtyVisuals();
@@ -145,10 +147,11 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         state.currentSlide.setDuration(state.currentSlide.getDuration() + diff);
         pentimento.lectureController.visualsController.cleanVisuals(dirtyVisuals, diff); //DOES NOT add an action onto the undo stack
         var tmp = []; for(var i in dirtyVisuals) { tmp.push(dirtyVisuals[i].visual); }
+        //UNTIME THAT STUFF!!!
         um.addToStartOfGroup(ActionGroups.RecordingGroup, function() {
             pentimento.lectureController.visualsController.shiftVisuals(tmp, -1.0*diff);
         });
-        ;;;;//shift constraints
+        // f(;;;;//shift constraints. ORIGIN SLIDE
         pentimento.state.isRecording = false;
         pentimento.timeController.stopRecording(gt);
         try {
