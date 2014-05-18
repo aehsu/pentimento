@@ -16,9 +16,8 @@ function SlideTransform(type, tmin, durate, mat) {
     this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
 }
 
-SlideTransform.prototype.getClone = function() {
-
-}
+// SlideTransform.prototype.getClone = function() {
+// }
 
 function Slide() {
     var visuals = [];
@@ -43,17 +42,21 @@ ConstraintTypes = {
 } //necessary?
 
 function Constraint(tvis, taud, mytype) {
-    var tVis = tvis;
-    var tAud = taud;
-    var type = mytype;
+    var self = this;
+    self.tVis = tvis;
+    self.tAud = taud;
+    self.type = mytype;
+    self.disabled = false;
 
-    this.getTVisual = function() { return tVis; }
-    this.getTAudio = function() { return tAud; }
-    this.getType = function() { return type; }
+    this.getTVisual = function() { return self.tVis; }
+    this.getTAudio = function() { return self.tAud; }
+    this.getType = function() { return self.type; }
+    this.getDisabled = function() { return self.disabled; }
 
-    this.setTVisual = function(newTVis) { tVis = newTVis; }
-    this.setTAudio = function(newTAud) { tAud = newTAud; }
-    this.setType = function(newType) { type = newType; }
+    this.setTVisual = function(newTVis) { self.tVis = newTVis; }
+    this.setTAudio = function(newTAud) { self.tAud = newTAud; }
+    this.setType = function(newType) { self.type = newType; }
+    this.setDisabled = function(newBool) { self.disabled = newBool; }
 }
 
 function Lecture() {

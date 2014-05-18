@@ -77,6 +77,32 @@ function VisualsController(lec) {
     this.appendVertex = function(visual, vertex) {
         visual.getVertices().push(vertex);
     }
+
+    function unaddProperty(visual, property) {
+        var idx = visual.getProperyTransforms().indexOf(property);
+        visual.getPropertyTransforms().splice(idx, 1);
+
+        um.add(function() {
+            self.addProperty(visual, property);
+        }, ActionTitles.AdditionOfPropery);
+    }
+
+    this.addProperty = function(visual, property) {
+        visual.getPropertyTransforms().push(property);
+
+        um.add(function() {
+            unaddProperty(visual, property);
+        }, ActionTitles.AdditionOfPropery);
+    }
+
+    this.setTDeletion = function(visual, time) {
+        var tdel = visual.getTDeletion()
+        visual.setTDeletion(time);
+
+        um.add(function() {
+            self.setTDeletion(visual, tdel);
+        }, ActionTitles.DeleteVisual)
+    }
     /**********************************ADDING OF VISUALS**********************************/
     /*******************************TRANSFORMING OF VISUALS********************************/
     //Typically during a recording, these are the handlers for transforms to be applied to visuals
@@ -88,27 +114,48 @@ function VisualsController(lec) {
     //This section is primarily concerned with the direct editing of the properties of
     //a visual. Recording edits to a visual are transforms, which is in a later section
     this.editWidth = function(visuals, newWidth) {
-        var widths = [];
+        var widthObjs = [];
         for(var i in visuals) {
             var visual = visuals[i];
-            widths.push(visual.getProperties().getWidth());
+            var widthObj = {};
+            widthObj.widthTrans = [];
+            widthObj.indices = [];
+            widthObj.width  = visual.getProperties().getWidth();
             visual.getProperties().setWidth(newWidth);
+            var propTrans = visual.getPropertyTransforms();
+            for(var j in propTrans) {
+                if(propTrans[j].type=="width") {
+                    widthObj.widthTrans.push(propTrans[j]);
+                    widthObj.indices.push(j);
+                }
+            }
+            for(var j in widthObj.widthTrans) {
+                propTrans.splice(propTrans.indexOf(widthObj.widthTrans[j]), 1);
+            }
+            widthObjs.push(widthObj);
         }
 
         um.add(function() {
-            unEditWidths(visuals, widths, newWidth);
-        }, ActionTitles.EditOfVisual)
+            unEditWidths(visuals, widthObjs, newWidth);
+        }, ActionTitles.Edit)
     }
 
-    function unEditWidths(visuals, widths, newWidth) {
+    function unEditWidths(visuals, widthObjs, newWidth) {
         for(var i in visuals) {
             var visual = visuals[i];
-            visual.getProperties().setWidth(widths[i]);
+            var widthObj = widthObjs[i];
+            visual.getProperties().setWidth(widthObjs[i].width);
+            widthObj.indices.reverse();
+            widthObj.widthTrans.reverse();
+            var propTrans = visual.getPropertyTransforms();
+            for(var j in widthObj.indices) {
+                propTrans.splice(widthObj.indices[j], 0, widthObj.widthTrans[j]);
+            }
         }
 
         um.add(function() {
             self.editWidth(visuals, newWidth);
-        }, ActionTitles.EditOfVisual);
+        }, ActionTitles.Edit);
     }
 
     this.editColor = function(visuals, newColor) {

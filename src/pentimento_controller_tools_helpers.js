@@ -65,6 +65,52 @@ function isInside(startPoint, endPoint, testPoint) {
     return xcheck && ycheck;
 }
 
+function getPreviousLastRelevant(visual, property, tVis) {
+    var last = getLastRelevant(visual, property, tVis);
+    if(property=="width") {
+        var prev = visual.getProperties().width;
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < last.getTime()) {
+                prev = propTrans[i].getValue();
+            }
+        }
+        return prev;
+    } else if(property=="color") {
+        var prev = visual.getProperties().color;
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < last.getTime()) {
+                prev = propTrans[i].getValue();
+            }
+        }
+        return prev;
+    }
+}
+
+//property is either width or color
+function getLastRelevant(visual, property, tVis) {
+    if(property=="width") {
+        var last = visual.getProperties();
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < tVis) {
+                last = propTrans[i];
+            }
+        }
+        return last;
+    } else if(property=="color") {
+        var last = visual.getProperties();
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < tVis) {
+                last = propTrans[i];
+            }
+        }
+        return last;
+    }
+}
+
 // Gives the location of the event on the canvas, as opposed to on the page
 // Returns: Vertex(x,y,t,p) with x,y on the canvas, and t a global time
 function getCanvasPoint(event){
@@ -91,6 +137,8 @@ function clearPreviousHandlers() {
     $(window).on('mouseup', mouseUpHandler);
     $(window).on('keydown', keyDownHandler);
     $(window).on('keyup', keyUpHandler);
+    $(window).on('click', undoListener);
+    $(window).on('click', redoListener);
 }
 
 /***********************************************************************/
@@ -142,16 +190,10 @@ function highlightMouseUp(event) {
     }
 }
 
-function lectureSelectMouseDown(event) {
-    state.lastPoint = getCanvasPoint(event);
-}
-
-function lectureSelectMouseMove(event) {
+function lectureSelection(event) {
     var state = pentimento.state;
-
     var coord = getCanvasPoint(event);
     var ctx = state.context;
-
     var visualsIter = state.currentSlide.getVisualsIterator();
     while(visualsIter.hasNext()) {
         var visual = visualsIter.next();
@@ -164,10 +206,32 @@ function lectureSelectMouseMove(event) {
             if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
             if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
         }
-        if(nVert/visual.getVertices().length >= .45) {
-            // pentimento.recordingController.addProperty(;;;;
+        if(nVert/visual.getVertices().length >= .45 && state.selection.indexOf(visual)==-1) {
+            var gt = globalTime();
+            state.selection.push(visual);
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
+            //TODO should be fixed to be 
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.state.videoCursor).width+1, gt));
+        } else if(nVert/visual.getVertices().length < .45 && state.selection.indexOf(visual)>-1) {
+            state.selection.splice(state.selection.indexOf(visual), 1);
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.state.videoCursor), gt));
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.state.videoCursor), gt));
         }
     }
+}
+
+function lectureSelectMouseDown(event) {
+    pentimento.state.lastPoint = getCanvasPoint(event);
+    lectureSelection(event);
+}
+
+function lectureSelectMouseMove(event) {
+    var state = pentimento.state;
+    var ctx = state.context;
+    var coord = getCanvasPoint(event);
+    
+    lectureSelection(event);
+
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
@@ -178,6 +242,11 @@ function lectureSelectMouseMove(event) {
 
 function lectureSelectMouseUp(event) {
     //do nothing
+}
+
+function lectureDelete() {
+    var state = pentimento.state;
+    
 }
 /**********************************LECTURE-MODE TOOLS**********************************/
 

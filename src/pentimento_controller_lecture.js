@@ -94,7 +94,6 @@ function LectureController(lec) {
 
         um.add(function() {
             self.deleteSlide(slide);
-            updateVisuals();
         }, ActionTitles.DeleteSlide);
     }
     
@@ -121,7 +120,6 @@ function LectureController(lec) {
 
         um.add(function() {
             unDeleteSlide(slide, index, slideTime);
-            updateVisuals();
         }, ActionTitles.DeleteSlide);
     }
 }

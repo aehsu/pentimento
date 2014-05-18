@@ -81,8 +81,11 @@ pentimento.timeController = new function() {
             });
             $('#slider').slider('value', time);
             pentimento.lectureController.setStateSlide(state.videoCursor);
-
         }
+    }
+
+    this.refresh = function() {
+
     }
 };
 

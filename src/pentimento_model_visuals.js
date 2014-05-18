@@ -43,7 +43,7 @@ function VisualPropertyTransform(prop, newVal, time) {
     this.setValue = function(newVal) { self.value = newVal; }
     this.getDuration = function() { return self.duration; }
     this.setDuration = function(newDuration) { self.duration = newDuration; }
-    this.getTime = function() { return self.time; }
+    this.getTime = function() { return self.t; }
     this.setTime = function(newTime) { self.t = newTime; }
 }
 

@@ -12,22 +12,28 @@ tickerId = "ticker";
 pentimento = {};
 
 ActionGroups = {
-    EditGroup: "EditGroup", //editing is basically standalone, so you only ever have one group when editing
     VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
-    ShiftGroup: "ShiftGroup", //encapsulates a shift block
-    SlideGroup: "SlideGroup", //encapsulates the portion of a slide when recording
-    RecordingGroup: "RecordingGroup" //the largest group when recording, encapsulates an entire recording
+    SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
+    ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
+    RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
     // CustomGroup: "CustomGroup"
+    EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
 };
 
 ActionTitles = {
+    Recording: "Recording",
     AdditionOfSlide: "AdditionOfSlide",
     DeleteSlide: "DeleteSlide",
+    ShiftSlide: "ShiftSlide",
     AdditionOfVisual: "AdditionOfVisual",
-    EditOfVisual: "EditOfVisual(s)",
     DeleteVisual: "DeleteVisual",
     ShiftVisuals: "ShiftVisual(s)",
-    ShiftSlide: "ShiftSlide"
+    AdditionOfConstraint: "AdditionOfConstraint",
+    DeletionOfConstraint: "DeletionOfConstraint",
+    ShiftConstraints: "ShiftConstraints",
+    AdditionOfProperty: "AdditionOfProperty",
+    Edit: "Edit",
+    Dummy: "Dummy"
 };
 
 RecordingTypes = {

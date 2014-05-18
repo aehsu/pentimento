@@ -46,6 +46,7 @@ function lectureToolHandler(tool, event) {
             if(pentimento.state.isRecording) {
                 pentimento.recordingController.addSlide();
             }
+            $(window).click();
             lectureToolHandler(pentimento.state.tool); //restore the previous tool
             break;
     	case 'color':
@@ -72,6 +73,7 @@ function lectureToolHandler(tool, event) {
             });
             break;
     	case 'delete':
+            pentimento.recordingController.setTDeletion(pentimento.state.selection, globalTime());
     		break;
     	case 'pan':
     		break;
@@ -152,11 +154,10 @@ function editToolHandler(tool, event) {
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
             pentimento.timeController.updateVideoTime(t);
-            //move time cursor
+            //begin a recording
             break;
         case 'width':
-            if(event.target.value=="" || pentimento.state.isRecording) { return; }
-            //could check for empty selection. UI decision, not mine
+            if(event.target.value=="" || pentimento.state.isRecording || pentimento.state.selection.length==0) { return; }
             var newWidth = parseInt(event.target.value);
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.visualsController.editWidth(pentimento.state.selection, newWidth);
@@ -190,11 +191,13 @@ function recordingToolHandler(event) {
     pentimento.state.selection  = [];
     updateVisuals(); //clear any selection when switching modes
     if (elt.attr('data-toolname')==='begin') {
+        pentimento.state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz when audio comes into play
         pentimento.recordingController.beginRecording();
         $('input[data-toolname="pen"]').click();
     } else {
         pentimento.recordingController.stopRecording();
         pentimento.state.tool = null;
+        pentimento.state.recordingType = null;
     }
     $('.recording-tool').toggleClass('hidden');
 }
@@ -210,7 +213,8 @@ function umToolHandler(event) {
         updateVisuals();
     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
         if(!pentimento.state.isRecording) { return; }
-        um.undo();
+        var group = $(this).attr('data-group');
+        um.undoHierarchy(group);
         updateVisuals();
     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
         if(pentimento.state.isRecording) { return; }
@@ -219,7 +223,8 @@ function umToolHandler(event) {
         updateVisuals();
     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
         if(!pentimento.state.isRecording) { return; }
-        um.redo();
+        var group = $(this).attr('data-group');
+        um.redoHierarchy(group);
         updateVisuals();
     }
     $(window).click(); //updates the state of the undo and redo buttons correctly
