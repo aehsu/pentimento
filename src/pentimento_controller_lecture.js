@@ -42,17 +42,25 @@ function LectureController(lec) {
         return time;
     }
 
+    // //recording mode function. undoing logic local to recording controller
+    // this.unAddSlide = function(prevSlide, newSlide, index) {
+    //     if(newSlide != state.currentSlide) { console.log('Error in unadding a slide!'); }
+    //     var duration = 0;
+    //     while(slideIter.hasNext()) {
+    //         var slide = slideIter.next();
+    //         if(slideIter.index == index) { break; }
+    //         duration+= slide.getDuration();
+    //     }
+    //     pentimento.timeController.updateTime(duration);
+    //     state.currentSlide = prevSlide;
+    // }
+
     //recording mode function. undoing logic local to recording controller
-    this.unAddSlide = function(prevSlide, newSlide, index) {
-        if(newSlide != state.currentSlide) { console.log('Error in unadding a slide!'); }
-        var duration = 0;
-        while(slideIter.hasNext()) {
-            var slide = slideIter.next();
-            if(slideIter.index == index) { break; }
-            duration+= slide.getDuration();
-        }
-        pentimento.timeController.updateTime(duration);
-        state.currentSlide = prevSlide;
+    this.removeSlide = function(prevSlide, newSlide) {
+        var slides = lecture.getSlides();
+        var index = slides.indexOf(newSlide);
+
+        slides.splice(index, 1);
     }
     
     //recording mode function. undoing logic local to recording controller

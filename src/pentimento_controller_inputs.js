@@ -45,13 +45,12 @@ function keyUpHandler(evt) {
 
 function undoListener(event) {
     if(um.getUndoLength() > 0) {
-        $('.um-tool[data-toolname="undo"]').removeAttr('disabled');
+        $('.um-tool[data-toolname="undo"]').removeAttr('disabled'); //everything
+
         for(var attr in ActionGroups) {
             if(um.canUndo(attr)) {
-                $('.um-tool[data-toolname="undo"]').each(function() {
-                    $(this).text('Undo-'+attr);
-                    $(this).attr('data-group', attr)
-                });
+                $('.um-tool.edit-tool[data-toolname="undo"]').text('Undo-'+attr);
+                $('.um-tool.edit-tool[data-toolname="undo"]').attr('data-group', attr)
                 break;
             }
         }
@@ -67,10 +66,8 @@ function redoListener(event) {
         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
         for(var attr in ActionGroups) {
             if(um.canRedo(attr)) {
-                $('.um-tool[data-toolname="redo"]').each(function() {
-                    $(this).text('Redo-'+attr);
-                    $(this).attr('data-group', attr)
-                });
+                $('.um-tool.edit-tool[data-toolname="redo"]').text('Redo-'+attr);
+                $('.um-tool.edit-tool[data-toolname="redo"]').attr('data-group', attr);
                 break;
             }
         }

@@ -47,12 +47,12 @@ function Constraint(tvis, taud, mytype) {
     var tAud = taud;
     var type = mytype;
 
-    this.getTVis = function() { return tVis; }
-    this.getTAud = function() { return tAud; }
+    this.getTVisual = function() { return tVis; }
+    this.getTAudio = function() { return tAud; }
     this.getType = function() { return type; }
 
-    this.setTVis = function(newTVis) { tVis = newTVis; }
-    this.setTAud = function(newTAud) { tAud = newTAud; }
+    this.setTVisual = function(newTVis) { tVis = newTVis; }
+    this.setTAudio = function(newTAud) { tAud = newTAud; }
     this.setType = function(newType) { type = newType; }
 }
 

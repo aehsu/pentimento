@@ -52,6 +52,19 @@ function isVertexVisible(vertex, tVisual) {
     return true;
 }
 
+function isInside(startPoint, endPoint, testPoint) {
+    var xStart = startPoint.getX();
+    var yStart = startPoint.getY();
+    var xEnd = endPoint.getX();
+    var yEnd = endPoint.getY();
+    var x = testPoint.getX();
+    var y = testPoint.getY();
+    var xcheck = (xEnd >= xStart && xEnd >= x && x >= xStart) || (xEnd <= xStart && xEnd <= x && x <= xStart);
+    var ycheck = (yEnd >= yStart && yEnd >= y && y >= yStart) || (yEnd <= yStart && yEnd <= y && y <= yStart);
+
+    return xcheck && ycheck;
+}
+
 // Gives the location of the event on the canvas, as opposed to on the page
 // Returns: Vertex(x,y,t,p) with x,y on the canvas, and t a global time
 function getCanvasPoint(event){
@@ -128,6 +141,44 @@ function highlightMouseUp(event) {
         state.lastPoint = null;
     }
 }
+
+function lectureSelectMouseDown(event) {
+    state.lastPoint = getCanvasPoint(event);
+}
+
+function lectureSelectMouseMove(event) {
+    var state = pentimento.state;
+
+    var coord = getCanvasPoint(event);
+    var ctx = state.context;
+
+    var visualsIter = state.currentSlide.getVisualsIterator();
+    while(visualsIter.hasNext()) {
+        var visual = visualsIter.next();
+        if (!isVisualVisible(visual, state.videoCursor)) { continue; }
+
+        var nVert = 0;
+        var vertIter = visual.getVerticesIterator();
+        while (vertIter.hasNext()) {
+            var vertex = vertIter.next();
+            if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
+            if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
+        }
+        if(nVert/visual.getVertices().length >= .45) {
+            pentimento.recordingController.addProperty(;;;;
+        }
+    }
+    ctx.strokeStyle = "#0000FF";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
+
+    ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
+    ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
+}
+
+function lectureSelectMouseUp(event) {
+    //do nothing
+}
 /**********************************LECTURE-MODE TOOLS**********************************/
 
 /**********************************EDITING-MODE TOOLS**********************************/
@@ -143,19 +194,6 @@ function editSelectMouseMove(event) {
     var coord = getCanvasPoint(event);
     var ctx = state.context;
     state.selection = [];
-
-    function isInside(startPoint, endPoint, testPoint) {
-        var xStart = startPoint.getX();
-        var yStart = startPoint.getY();
-        var xEnd = endPoint.getX();
-        var yEnd = endPoint.getY();
-        var x = testPoint.getX();
-        var y = testPoint.getY();
-        var xcheck = (xEnd >= xStart && xEnd >= x && x >= xStart) || (xEnd <= xStart && xEnd <= x && x <= xStart);
-        var ycheck = (yEnd >= yStart && yEnd >= y && y >= yStart) || (yEnd <= yStart && yEnd <= y && y <= yStart);
-
-        return xcheck && ycheck;
-    }
 
     var visualsIter = state.currentSlide.getVisualsIterator();
     while(visualsIter.hasNext()) {

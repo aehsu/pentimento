@@ -7,6 +7,47 @@ function VisualsController(lec) {
     var lecture = lec;
     var state = pentimento.state;
 
+    this.makeVisualDirty = function(visual) {
+        var wrapper = {};
+        wrapper.visual = visual;
+        wrapper.tMin = visual.getTMin();
+        visual.setTMin(Number.POSITIVE_INFINITY); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
+        wrapper.times = [];
+        var vertices = visual.getVertices();
+        for(var i in vertices) {
+            wrapper.times.push(vertices[i].getT());
+            vertices[i].setT(Number.POSITIVE_INFINITY);
+        }
+        //would have to disable transforms
+        return wrapper;
+    }
+
+    this.cleanVisuals = function(dirtyWrappers, amount) {
+        for(var i in dirtyWrappers) {
+            var dirtyWrapper = dirtyWrappers[i];
+            var visual = dirtyWrapper.visual;
+            visual.setTMin(dirtyWrapper.tMin + amount);
+            var vertices = visual.getVertices();
+            for(var j in vertices) {
+                vertices[j].setT(dirtyWrapper.times[j] + amount);
+            }
+            //would have to re-enable transforms
+        }
+    }
+
+    this.muckVisuals = function(dirtyWrappers) {
+        for(var i in dirtyWrappers) {
+            var dirtyWrapper = dirtyWrappers[i];
+            var visual = dirtyWrapper.visual;
+            visual.setTMin(Number.POSITIVE_INFINITY);
+            var vertices = visual.getVertices();
+            for(var j in vertices) {
+                vertices[j].setT(Number.POSITIVE_INFINITY);
+            }
+            //would have to disable transforms
+        }
+    }
+
     /**********************************ADDING OF VISUALS**********************************/
     function unaddVisual(slide, visual) {
         var idx = lecture.getSlides().indexOf(slide);
@@ -134,7 +175,6 @@ function VisualsController(lec) {
         //no need to reverse indices here cause it will just get garbagecollected
         //shifts will likewise just get garbagecollected
 
-        //TODO shift video cursor
         um.add(function() {
             self.deleteVisuals(slide, visuals);
         }, ActionTitles.DeleteVisual);
@@ -167,12 +207,11 @@ function VisualsController(lec) {
             }
         }
         shifts.reverse();
-        //move video cursor
-
         //should we change the duration of the slide?!?
         um.add(function() {
             undeleteVisuals(slide, visuals, indices, shifts);
         }, ActionTitles.DeleteVisual);
+        return shifts[0].tMin;
     }
     /**********************************EDITING OF VISUALS**********************************/
     /**********************************HELPER FUNCTIONS***********************************/

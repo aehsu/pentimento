@@ -55,14 +55,32 @@ function lectureToolHandler(tool, event) {
             lectureToolHandler(pentimento.state.tool); //restore the previous tool
     		break;
         case 'select':
+            pentimento.state.canvas.mousedown(function(event) {
+                if (!pentimento.state.isRecording) {return ;}
+                event.preventDefault();
+                lectureSelectMouseDown(event);
+            });
+            pentimento.state.canvas.mousemove(function(event) {
+                if (!pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
+                event.preventDefault();
+                lectureSelectMouseMove(event);
+            });
+            $(window).mouseup(function(event) {
+                if (!pentimento.state.isRecording) {return ;}
+                event.preventDefault();
+                lectureSelectMouseUp(event);
+            });
             break;
     	case 'delete':
     		break;
     	case 'pan':
     		break;
-    	case 'clear':
-		    clear();
-    		break;
+    	case 'undo':
+            lectureToolHandler(pentimento.state.tool); //restore the previous tool
+            break;
+        case 'redo':
+            lectureToolHandler(pentimento.state.tool); //restore the previous tool
+            break;
     	default:
 		    pentimento.state.tool = null;
     		console.log('Unrecognized tool clicked, live tools');
@@ -119,22 +137,22 @@ function editToolHandler(tool, event) {
                 updateVisuals();
                 editSelectMouseUp(event);
             });
-            pentimento.state.tool = tool;
             break;
     	case 'delete':
-            if (pentimento.state.isRecording) { return; }
-            //could check for empty selection? UI decision, not mine
+            if (pentimento.state.isRecording || pentimento.state.selection.length==0) { return; }
             um.startHierarchy(ActionGroups.EditGroup);
-            pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
+            var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
+            pentimento.timeController.updateVideoTime(t);
             // pentimento.state.selection = []; //Richard says no!
             updateVisuals();
     		break;
         case 'redraw':
-            // pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
-            // pentimento.recording_controller.beginRedrawing();
-            // $('.recording-tool').toggleClass('hidden');
-            // $('button[data-toolname="pen"]').click();
+            um.startHierarchy(ActionGroups.EditGroup);
+            var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
+            um.endHierarchy(ActionGroups.EditGroup);
+            pentimento.timeController.updateVideoTime(t);
+            //move time cursor
             break;
         case 'width':
             if(event.target.value=="" || pentimento.state.isRecording) { return; }
@@ -151,12 +169,16 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.deleteSlide(pentimento.state.currentSlide);
             um.endHierarchy(ActionGroups.EditGroup);
+            // pentimento.timeController.updateVideoTime(t);
             updateVisuals();
         case 'rewind':
             break;
     	case 'pan':
     		break;
-        //etc...
+        case 'undo':
+            break;
+        case 'redo':
+            break;
     	default:
     		console.log('Unrecognized tool clicked, non live tools');
     		console.log(this);
@@ -181,17 +203,24 @@ function umToolHandler(event) {
     var elt = $(event.target);
     if(elt.prop('disabled')=='disabled') {
         return;
-    } else if(elt.attr('data-toolname')=='undo') {
+    } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
+        if(pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');
         um.undoHierarchy(group);
         updateVisuals();
-    } else if(elt.attr('data-toolname')=='redo') {
+    } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
+        if(!pentimento.state.isRecording) { return; }
+        um.undo();
+        updateVisuals();
+    } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
+        if(pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals();
-        // alert('Redo is currently disabled with the view. Once groups are handled with undo manager with redo-ing, we\'ll support this. Sorry for any inconvenience.');
-        // throw {name: "RedoActionError", message:"The undo manager does not currently support group\
-        //  labelling on the redo, hence redo has been disabled."};
+    } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
+        if(!pentimento.state.isRecording) { return; }
+        um.redo();
+        updateVisuals();
     }
     $(window).click(); //updates the state of the undo and redo buttons correctly
 }
