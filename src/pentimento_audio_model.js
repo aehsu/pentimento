@@ -23,24 +23,26 @@ pentimento.audio_track = function() {
 	this.scale_segment = function(segment_idx, scale_factor) {
 
 	};
-
-
-}
+};
 
 // Given the location where the segment is dropped, this function figures out where to place the audio
 // segment and returns the new location in the track
-pentimento.audio_track.place_segment =  function ( segment_idx, mouse_position ) {
-	console.log('called');
+pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
     // Iterate over audio tracks in DOM
-    $("audio_track").each(function() {
-        // Check to see if it over laps with segment on the left half
-        if ( mouse_position.x >= $(this).offset.left && mouse_position.x <= $(this).offset.left + $(this).width()/2 ) {
+    $(".audio_segment").each(function(index, segment) {
+    	// Don't check itself
+    	if (index === segment_idx) {
+    		return false;
+    	};
+
+        // Check to see if it overlaps with segment on the left half
+        if ( mouse_event.pageX >= $(segment).offset().left && mouse_event.pageX <= $(segment).offset().left + $(segment).width()/2 ) {
             console.log('move to left');
             // Move segment to the left of conflicting segment
            
         }
         // Check to see if it over laps with segment on the right half
-        else if ( mouse_position.x > $(this).offset.left + $(this).width()/2 && mouse_position.x <= $(this).offset.left + $(this).width() ) {
+        else if ( mouse_event.pageX > $(segment).offset().left + $(segment).width()/2 && mouse_event.pageX <= $(segment).offset().left + $(segment).width() ) {
             // Move segment to the left of conflicting segment
             console.log('move to right');
         }

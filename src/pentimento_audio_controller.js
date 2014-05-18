@@ -8,7 +8,7 @@ pentimento.audio_controller = function() {
 	var self = this;
 
 	// Array of pentimento.audio_track
-	var audio_tracks = [];
+	audio_tracks = [];
 
 	// RecordRTC is used to record the audio stream
 	var recordRTC = null;
@@ -201,18 +201,41 @@ pentimento.audio_controller = function() {
                 				"width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, 
                 				"height": $("#audio_timeline").height()/2 });
         
-                // Setup the dragging
+                // Setup the dragging on audio segment
                 new_segment.draggable({
-                    containment: ("#" + new_track_id),
+                    preventCollision: true,
+                    obstacle: ".obstacle",
+                    // containment: ("#" + new_track_id),
                     axis: "x",
                     opacity: 0.75
+                }).on( "drag", function( event, ui) {
+                    // restrict movement so it doesnt overlap with other segments
+
                 }).on( "dragstart", function( event, ui ) {
+                    // When you drag an object, all others become obstacles for dragging
+                    $(".audio_segment").each(function(index, segment) {
+                        // Don't check itself
+                        console.log(segment === ui.helper[0])
+                        if (segment !== ui.helper[0]) {
+                            $(segment).addClass('obstacle');
+                        };
+                        
+                    });
+
                     ui.helper.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
                     // Call shift function in model
                     // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
                     // figure out if segment needs to be moved (if dropped on top of something)
-                    pentimento.audio_track.place_segment(ui.helper.attr('id'), ui.helper.data);
+                    pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
+
+                    // When you finish dragging an object, remove the obstacles classes
+                    $(".audio_segment").each(function(index, segment) {
+                        // Don't check itself
+                        if (segment !== ui.helper[0]) {
+                            $(segment).removeClass('obstacle');
+                        };
+                    });
                     ui.helper.removeClass('dragged')
                 }).resizable({
                     handles: "e, w",
