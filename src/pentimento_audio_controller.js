@@ -204,18 +204,15 @@ pentimento.audio_controller = function() {
                 // Setup the dragging on audio segment
                 new_segment.draggable({
                     preventCollision: true,
+                    containment: "#audio_timeline",
                     obstacle: ".obstacle",
                     // containment: ("#" + new_track_id),
                     axis: "x",
                     opacity: 0.75
-                }).on( "drag", function( event, ui) {
-                    // restrict movement so it doesnt overlap with other segments
-
                 }).on( "dragstart", function( event, ui ) {
                     // When you drag an object, all others become obstacles for dragging
                     $(".audio_segment").each(function(index, segment) {
                         // Don't check itself
-                        console.log(segment === ui.helper[0])
                         if (segment !== ui.helper[0]) {
                             $(segment).addClass('obstacle');
                         };
