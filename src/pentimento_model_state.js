@@ -4,7 +4,9 @@
 pentimento.state = new function() {
 	this.isRecording = false;
     this.recordingType = null;
-    this.visualsInsertionIndex = null;
+    // The wisdom of the internet says we will not get interleaving Javascript
+    // this.isShifting = false;
+    // this.isDrawing = false; 
     
 	this.color = '#777';
 	this.width = 2;

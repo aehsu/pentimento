@@ -12,6 +12,7 @@ function LectureController(lec) {
 
     this.visualsController = new VisualsController(lecture);
     // this.audioController = new AudioController(lecture);
+    this.retimingController = new RetimingController(lecture);
 
     //utility
     this.setStateSlide = function() {
@@ -41,79 +42,36 @@ function LectureController(lec) {
         return time;
     }
 
-    //recording mode function
-    this.endSlide = function(shift) {
-        var originalDuration = state.currentSlide.getDuration();
-        var slide = state.currentSlide;
-        slide.setDuration(originalDuration + shift);
-
-        um.addToStartOfGroup(ActionGroups.SlideGroup, function() {
-            unEndSlide(shift);
-        });
-    }
-
-    function unEndSlide(shift) {
-        var newDuration = state.currentSlide.getDuration();
-        var slide = state.currentSlide;
-        slide.setDuration(newDuration - shift);
-
-        var self = this;
-        um.add(function() {
-            self.reEndSlide(shift);
-        }, ActionTitles.ShiftSlide)
-    }
-
-    function reEndSlide(shift) {
-        var originalDuration = state.currentSlide.getDuration();
-        var slide = state.currentSlide;
-        slide.setDuration(originalDuration + shift);
-
-        var self = this;
-        um.add(function() {
-            self.unEndSlide(shift);
-        }, ActionTitles.ShiftSlide)
-    }
-
-    function unaddSlide(prevSlide, newSlide, index) {
+    //recording mode function. undoing logic local to recording controller
+    this.unAddSlide = function(prevSlide, newSlide, index) {
         if(newSlide != state.currentSlide) { console.log('Error in unadding a slide!'); }
-//not delete        this.deleteSlide(newSlide);
-//TODO FIXXXX
-
         var duration = 0;
-        var slideIter = pentimento.lectureController.getLectureAccessor();
-        
         while(slideIter.hasNext()) {
             var slide = slideIter.next();
             if(slideIter.index == index) { break; }
             duration+= slide.getDuration();
         }
-
         pentimento.timeController.updateTime(duration);
         state.currentSlide = prevSlide;
-        updateVisuals();
-        
-        var self = this;
-        um.add(function() {
-            self.addSlide(newSlide);
-        }, ActionTitles.AdditionOfSlide);
     }
     
-    //recording mode function
-    this.addSlide = function() {
-        var prevSlide = state.currentSlide;
-        var newSlide = new Slide();
+    //recording mode function. undoing logic local to recording controller
+    this.addSlide = function(prevSlide, newSlide) {
         var slides = lecture.getSlides();
         var index = slides.indexOf(prevSlide);
 
         slides.splice(index+1, 0, newSlide);
-        state.currentSlide = newSlide;
-
-        um.add(function() {
-            //TODO need to restore the insertion index!
-            unaddSlide(prevSlide, newSlide, index);
-        }, ActionTitles.AdditionOfSlide);
     }
 
+    this.shiftSlideDuration = function(slide, amount) {
+        slide.setDuration(slide.getDuration() + amount);
+
+        um.add(function() {
+            self.shiftSlideDuration(slide, -1.0*amount);
+        }, ActionTitles.ShiftSlide)
+    }
+
+    /**********************************EDITING OF LECTURE**********************************/
     function unDeleteSlide(slide, index, time) {
         lecture.getSlides().splice(index, 0, slide);
         var duration = 0;

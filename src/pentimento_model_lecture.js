@@ -17,7 +17,7 @@ function SlideTransform(type, tmin, durate, mat) {
 }
 
 SlideTransform.prototype.getClone = function() {
-    
+
 }
 
 function Slide() {
@@ -40,7 +40,7 @@ function Slide() {
 ConstraintTypes = {
 	Manual: "Manual",
 	Automatic: "Automatic"
-}
+} //necessary?
 
 function Constraint(tvis, taud, mytype) {
     var tVis = tvis;
@@ -65,12 +65,11 @@ function Lecture() {
     this.getSlides = function() { return slides; }
     this.getAudioTracks = function() { return audioTracks; }
     this.getConstraints = function() { return constraints; }
-    // this.getTransforms = function() { return transforms; }
 
     this.setSlides = function(newSlides) { slides = newSlides; }
     this.setAudioTracks = function(newAudioTracks) { audioTracks = newAudioTracks; }
     this.setConstraints = function(newConstraints) { constraints = newConstraints; }
-    // this.setTransforms = function(newTransforms) { transforms = newTransforms; }
 
     this.getSlidesIterator = function() { return new Iterator(slides); }
+    this.getConstraintsIterator = function() { return new Iterator(constraints); }
 };

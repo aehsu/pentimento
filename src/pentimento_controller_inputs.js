@@ -46,30 +46,38 @@ function keyUpHandler(evt) {
 function undoListener(event) {
     if(um.getUndoLength() > 0) {
         $('.um-tool[data-toolname="undo"]').removeAttr('disabled');
-        var title = um.getUndoGroups();
-        title = title[title.length-1];
-        $('.um-tool[data-toolname="undo"]').each(function() {
-            $(this).text('Undo-'+title);
-        });
+        for(var attr in ActionGroups) {
+            if(um.canUndo(attr)) {
+                $('.um-tool[data-toolname="undo"]').each(function() {
+                    $(this).text('Undo-'+attr);
+                    $(this).attr('data-group', attr)
+                });
+                break;
+            }
+        }
     } else {
         $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
         $('.um-tool[data-toolname="undo"]').each(function() { $(this).text('Undo'); });
+        $('.um-tool[data-toolname="undo"]').removeAttr('data-group');
     }
 }
 
 function redoListener(event) {
     if(um.getRedoLength() > 0) {
         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
-        // Support for the redo Group names is not yet okay
-        // var title = um.getUndoGroups();
-        // title = title[title.length-1];
-        // $('.um-tool[data-toolname="redo"]').each(function() {
-        //     $(this).text('Redo-'+title);
-        // });
+        for(var attr in ActionGroups) {
+            if(um.canRedo(attr)) {
+                $('.um-tool[data-toolname="redo"]').each(function() {
+                    $(this).text('Redo-'+attr);
+                    $(this).attr('data-group', attr)
+                });
+                break;
+            }
+        }
     } else {
         $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
-        // Support for the redo Group names is not yet okay
-        // $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
+        $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
+        $('.um-tool[data-toolname="redo"]').removeAttr('data-group');
     }
 }
 

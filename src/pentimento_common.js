@@ -1,5 +1,6 @@
 /***********************CONFIGURATION***********************/
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
+SHIFT_INTERVAL = 1000;
 DEBUG = true;
 snapRecording = true;
 canvasId = "sketchpad";
@@ -11,10 +12,11 @@ tickerId = "ticker";
 pentimento = {};
 
 ActionGroups = {
-    RecordingGroup: "RecordingGroup",
-    SlideGroup: "SlideGroup",
-    VisualGroup: "VisualGroup",
-    EditGroup: "EditGroup",
+    EditGroup: "EditGroup", //editing is basically standalone, so you only ever have one group when editing
+    VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
+    ShiftGroup: "ShiftGroup", //encapsulates a shift block
+    SlideGroup: "SlideGroup", //encapsulates the portion of a slide when recording
+    RecordingGroup: "RecordingGroup" //the largest group when recording, encapsulates an entire recording
     // CustomGroup: "CustomGroup"
 };
 

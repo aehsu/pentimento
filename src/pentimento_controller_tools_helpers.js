@@ -185,8 +185,6 @@ function editSelectMouseMove(event) {
 
 function editSelectMouseUp(event) {
     var state =  pentimento.state;
-
-<<<<<<< HEAD
     for(var i in state.selection) {
         var visCopy = state.selection[i].getClone();
         var propsCopy = visCopy.getProperties();
@@ -196,7 +194,3 @@ function editSelectMouseUp(event) {
     }
 }
 /**********************************EDITING-MODE TOOLS**********************************/
-=======
-    updateVisuals();
-}
->>>>>>> 54cad5bcd438a5beefb5432fb4d5fac83cc35230

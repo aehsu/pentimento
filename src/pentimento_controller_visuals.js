@@ -7,70 +7,6 @@ function VisualsController(lec) {
     var lecture = lec;
     var state = pentimento.state;
 
-    this.MakeVisualDirty = function(visual) {
-        var wrapper = {};
-        wrapper.visual = visual;
-        wrapper.tMin = visual.getTMin();
-        visual.setTMin(NaN); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
-        wrapper.times = [];
-        var vertices = visual.getVertices();
-        for(var i in vertices) {
-            wrapper.times.push(vertices[i].getT());
-            vertices[i].setT(NaN);
-        }
-        return wrapper;
-    }
-
-    /*********************************CLEANING OF VISUALS*********************************/
-    this.cleanVisuals = function(dirtyWrappers, shift) {
-        if(dirtyWrappers.lenght==0) { return; } //DONT add anything to the beginning of the group if we don't need to
-        for(var i in dirtyWrappers) {
-            var dirtyObj = dirtyWrappers[i];
-            var visual = dirtyObj.visual;
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(dirtyObj.times[j]+shift);
-            }
-            visual.setTMin(dirtyObj.tMin + shift);
-        }
-
-        um.addToStartOfGroup(ActionGroups.SlideGroup, function() {
-            reDirtyVisuals(dirtyVisuals, shift);
-        });
-    }
-
-    function reDirtyVisuals(dirtyVisuals, shift) {
-        for(var i in dirtyVisuals.length) {
-            var dirtyObj = dirtyVisuals[i];
-            var visual = dirtyObj.visual;
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(NaN);
-            }
-            visual.setTMin(NaN);
-        }
-
-        um.add(function() {
-            reCleanVisuals(dirtyVisuals, shift);
-        }, ActionTitles.ShiftVisuals);
-    }
-
-    function reCleanVisuals(dirtyVisuals, shift) {
-        for(var i in dirtyVisuals.length) {
-            var dirtyObj = dirtyVisuals[i];
-            var visual = dirtyObj.visual;
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(dirtyObj.times[j]+shift);
-            }
-            visual.setTMin(dirtyObj.tMin + shift);
-        }
-
-        um.add(function() {
-            reDirtyVisuals(dirtyVisuals, shift);
-        }, ActionTitles.ShiftVisuals);
-    }
-    /*********************************CLEANING OF VISUALS*********************************/
     /**********************************ADDING OF VISUALS**********************************/
     function unaddVisual(slide, visual) {
         var idx = lecture.getSlides().indexOf(slide);
@@ -79,10 +15,8 @@ function VisualsController(lec) {
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
         
         slide.getVisuals().splice(idx, 1);
-        state.visualsInsertionIndex--;
         um.add(function() {
             self.addVisual(slide, visual);
-            updateVisuals();
         }, ActionTitles.AdditionOfVisual);
         return visual;
     }
@@ -91,11 +25,10 @@ function VisualsController(lec) {
         var idx = lecture.getSlides().indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
-        slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
-        state.visualsInsertionIndex++;
+        // slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
+        slide.getVisuals().push(visual);
         um.add(function() {
             unaddVisual(slide, visual);
-            updateVisuals();
         }, ActionTitles.AdditionOfVisual);
         return visual;
     }
@@ -123,7 +56,6 @@ function VisualsController(lec) {
 
         um.add(function() {
             unEditWidths(visuals, widths, newWidth);
-            updateVisuals();
         }, ActionTitles.EditOfVisual)
     }
 
@@ -135,7 +67,6 @@ function VisualsController(lec) {
 
         um.add(function() {
             self.editWidth(visuals, newWidth);
-            updateVisuals();
         }, ActionTitles.EditOfVisual);
     }
 
@@ -155,15 +86,25 @@ function VisualsController(lec) {
             vert.setT(vert.getT() + amount);
         }
         if(visual.getTDeletion()!=null) { visual.setTDeletion(visual.getTDeletion() + amount);}
+        var propTransIter = visual.getPropertyTransformsIterator();
+        while(propTransIter.hasNext()) {
+            var propTrans = propTransIter.next();
+            propTrans.setT(propTrans.getT() + amount);
+        }
+        var spatTransIter = visual.getSpatialTransformsIterator();
+        while(spatTransIter.hasNext()) {
+            var spatTrans = spatTransIter.next();
+            spatTrans.setT(spatTrans.getT() + amount);
+        }
     }
     
     this.shiftVisuals = function(visuals, amount) {
+        if(visuals.length==0) { return; }
         for(var vis in visuals) { doShiftVisual(visuals[vis], amount); }
         
-        //black magic, move to beginning?
-        var shift = um.addToStartOfGroup(ActionGroups.RecordingGroup, function() {
+        var shift = um.add(function() {
             for(var vis in visuals) { doShiftVisual(visuals[vis], -1.0*amount); }
-        });
+        }, ActionTitles.ShiftVisuals);
         
         if(DEBUG) { console.log(shift); }
     }
@@ -196,7 +137,6 @@ function VisualsController(lec) {
         //TODO shift video cursor
         um.add(function() {
             self.deleteVisuals(slide, visuals);
-            updateVisuals();
         }, ActionTitles.DeleteVisual);
     }
     
@@ -232,7 +172,6 @@ function VisualsController(lec) {
         //should we change the duration of the slide?!?
         um.add(function() {
             undeleteVisuals(slide, visuals, indices, shifts);
-            updateVisuals();
         }, ActionTitles.DeleteVisual);
     }
     /**********************************EDITING OF VISUALS**********************************/

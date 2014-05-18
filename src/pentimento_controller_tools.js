@@ -8,7 +8,7 @@ function lectureToolHandler(tool, event) {
     switch(tool) {
     	case 'pen':
             pentimento.state.canvas.on('mousedown', function(event) {
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.state.isRecording){ return; }
                 event.preventDefault();
                 penMouseDown(event);
             });
@@ -127,7 +127,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
-            pentimento.state.selection = [];
+            // pentimento.state.selection = []; //Richard says no!
             updateVisuals();
     		break;
         case 'redraw':
@@ -182,18 +182,16 @@ function umToolHandler(event) {
     if(elt.prop('disabled')=='disabled') {
         return;
     } else if(elt.attr('data-toolname')=='undo') {
-        var group = um.getUndoGroups();
-        group = group[group.length-1];
+        var group = $(this).attr('data-group');
         um.undoHierarchy(group);
+        updateVisuals();
     } else if(elt.attr('data-toolname')=='redo') {
-        // var group = um.getRedoGroups();
-        // group = group[group.length-1];
-        // um.redoHierarchy(group);
-
-        //so very temporary
-        alert('Redo is currently disabled with the view. Once groups are handled with undo manager with redo-ing, we\'ll support this. Sorry for any inconvenience.');
-        throw {name: "RedoActionError", message:"The undo manager does not currently support group\
-         labelling on the redo, hence redo has been disabled."};
+        var group = $(this).attr('data-group');
+        um.redoHierarchy(group);
+        updateVisuals();
+        // alert('Redo is currently disabled with the view. Once groups are handled with undo manager with redo-ing, we\'ll support this. Sorry for any inconvenience.');
+        // throw {name: "RedoActionError", message:"The undo manager does not currently support group\
+        //  labelling on the redo, hence redo has been disabled."};
     }
     $(window).click(); //updates the state of the undo and redo buttons correctly
 }
