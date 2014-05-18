@@ -127,6 +127,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         //visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
         visualsInsertionTime = state.videoCursor - duration;
         slideBegin = globalTime();
+        recordingBegin = slideBegin;
         
         setDirtyConstraints();
         //setDirtySlide(); -- always state.currentSlide
@@ -147,6 +148,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         um.addToStartOfGroup(ActionGroups.RecordingGroup, function() {
             pentimento.lectureController.visualsController.shiftVisuals(tmp, -1.0*diff);
         });
+        ;;;;//shift constraints
         pentimento.state.isRecording = false;
         pentimento.timeController.stopRecording(gt);
         try {
