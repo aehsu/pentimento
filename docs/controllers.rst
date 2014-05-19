@@ -4,55 +4,64 @@ Controllers
 ============
  The controllers are the logic behind the application itself.
 
+
+.. _time-controller:
+
+Time Controller
+---------------
+ The controller in charge of managing time for the session
+
+ .. js:class:: pentimento.timeController
+
+ 	it is what it is
+
+ 	.. js:function:: stopRecording(endTime)
+
+ 		ends the recording with the given time
+
+ 	.. js:function:: beginRecording(time)
+
+ 		begins a recording with the given time
+
+ 	.. js:function:: updateVideoTime(time)
+
+ 		updates the ``videoCursor`` of the state to reflect the given time
+
+.. _input-controller:
+
+Input Controller
+-----------------
+ Not especially a controller, but maintains handlers which listen in on events and update the state accordingly.
+
+	.. js:function:: mouseDownHandler(event)
+
+ 	updates the state about the mouse buttons accordingly
+
+ 	.. js:function:: mouseUpHandler(event)
+
+ 	updates the state about the mouse buttons accordingly
+
+ 	.. js:function:: keyDownHandler(event)
+
+ 	updates the state about the keyboard buttons accordingly
+
+ 	.. js:function:: keyUpHandler(event)
+
+ 	updates the state about the keyboard buttons accordingly
+
+ 	.. js:function:: undoListener(event)
+
+ 	updates the UI to reflect whether or not undo events are possible
+
+ 	.. js:function:: redoListener(event)
+
+ 	updates the UI to reflect whether or not redo events are possible
+
 .. _recording-controller:
 
 Recording Controller
 --------------------
- Any lecture is composed of one or more recordings pieced together correctly. This controller holds all the information necessary to do a recording. Recordings themselves cannot be edited, only after the recording is incorporated into the lecture can it be edited.
-
- .. js:data:: pentimento.recording_controller
-
- 	.. js:function:: slide()
-
- 		Internal constructor function used to create an empty ``slide`` object.
-
- 		.. js:attribute:: visuals[]
-
- 			Array of the visuals within the slide.
-
- 		.. js:attribute:: duration
-
- 			Duration of the slide from beginning of recording to end of recording.
-
- 	.. js:function:: slide_change(from_page, to_page, time)
-
- 		Internal constructor function used to create a ``slide_change`` object.
-
- 		:param Number from_page: page from which the current transition occurs
- 		:param Number to_page: page to which the current transition occurs
- 		:param Number time: the time at which this transition occurs
-
- 	.. js:function:: add_slide()
-
- 		Public function which allows for the addition of a slide to the current recording. Edits ``pentimento.state`` to refer to the new slide.
-
- 	.. js:function:: end_slide()
-
- 		Internal function which stops the recording of the current slide and updates its duration. Only used when adding a new slide with ``add_slide()`` or when ending the recording.
-
- 	.. js:function:: add_visual(visual)
-
- 		Public function, adds the ``visual`` to the current slide.
-
- 		:param Object visual: visual to be appended to the visuals in the current slide.
-
- 	.. js:function:: do_record()
-
- 		Public function, is the insertion point to begin a recording. Initializes an internal ``pentimento.lecture`` variable to hold the data for the current recording.
-
- 	.. js:function:: stop_record()
-
- 		Public function, is the end point for a recording. This controller then gives up its internal ``pentimento.lecture`` variable and passes it over to the ``pentimento.lecture_controller`` to handle insertion correctly.
+ 
 
 .. _lecture-controller:
 
@@ -78,39 +87,91 @@ Lecture Controller
 
  	:param Object recording: lecture which comes from the recording controller.
 
-.. _time-controller:
-
-Time Controller
----------------
- **UGHHH RENAME THIS SHIT** This is really the **time** controller
-
- .. js:data:: pentimento.uiux_controller
-
- 	it is what it is
-
- 	.. js:function:: stop_recording()
-
- 		paired with the other stop_recording function
-
- 	.. js:function:: update_ticker(time)
-
- 		just updates the ticker
-
- 	.. js:function:: begin_recording()
-
- 		does what it sounds like
-
- 	.. js:function:: update_time(time)
-
- 		globally updates the time and state to the given time
-
-
 .. _visuals-controller:
 
 Visuals Controller
 --------------------
 
+ .. js:class:: VisualsController
+
+ 	The controller in charge of manipulating the visuals of a lecture, regardless of which slide it passed in
+
+ 	.. js:function:: makeVisualDirty(visuals)
+
+ 	makes the visuals given "dirty", meaning to disable them for the duration of the recording
+
+ 	.. js:function:: cleanVisuals(dirtyWrappers, amount)
+
+ 	"cleans" the visuals which are wrapped inside of the "dirty" objects, and shifts them by the appropriate amount
+
+ 	.. js:function:: addVisual(slide, visual)
+
+ 	adds the visual to the slide appropriately
+
+	.. js:function:: appendVertex(visual, vertex)
+
+	appends the vertex to the visual
+
+	.. js:function:: addProperty(visual, property)
+
+	appends the property transformation into the visual
+
+	.. js:function:: setTDeletion(visual, time)
+
+	sets the ``tDeletion`` for the visual to the given time
+
+	.. js:function:: editWidth(visual, newWidth)
+
+	changes the original width of the given visual
+
+	.. js:function:: shiftVisuals(visuals, amount)
+
+	shifts the given visuals by the specified amount
+
+	.. js:function:: deleteVisuals(slide, visuals)
+
+	deletes the given visuals from the slide
+
 .. _retiming-controller:
 
 Retiming Controller
 --------------------
+ The controller in charge of handling everything associated with constraints
+
+ .. js:class:: RetimingController
+
+ 	constructor for the retiming controller
+
+ 	:returns: a new retiming controller object
+
+ 	.. js:function:: makeConstraintDirty(constraint)
+
+ 	disables the given constraint
+
+ 	.. js:function:: checkConstraint(constraint)
+
+ 	ensures that the given constraint does not conflict with any others
+
+ 	:returns: a boolean indicating whether the constraint is okay or not
+
+ 	.. js:function:: addConstraint(constraint)
+
+ 	places the constraint within the array of constraints for the lecture if it's compatible
+
+ 	:returns: whether the addition was successful or not
+
+ 	.. js:function:: deleteConstraint(constraint)
+
+ 	deletes the constraint from the array of constraints
+
+ 	.. js:function:: shiftConstraints(constraints, amount)
+
+ 	shifts the given constraints by the amount specified
+
+ 	.. js:function:: getVisualTime(audioTime)
+
+ 	:returns: a linear interpolation of the audioTime given the constraints and returns the visual time that would result from interpolating the audioTime
+
+ 	.. js:function:: getAudioTime(visualTime)
+
+ 	:returns: a linear interpolation of the visualTime given the constraints and returns the audio time that would result from interpolating the visualTime

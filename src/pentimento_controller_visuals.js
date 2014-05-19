@@ -35,19 +35,6 @@ function VisualsController(lec) {
         }
     }
 
-    this.muckVisuals = function(dirtyWrappers) {
-        for(var i in dirtyWrappers) {
-            var dirtyWrapper = dirtyWrappers[i];
-            var visual = dirtyWrapper.visual;
-            visual.setTMin(Number.POSITIVE_INFINITY);
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(Number.POSITIVE_INFINITY);
-            }
-            //would have to disable transforms
-        }
-    }
-
     /**********************************ADDING OF VISUALS**********************************/
     function unaddVisual(slide, visual) {
         var idx = lecture.getSlides().indexOf(slide);

@@ -83,10 +83,6 @@ pentimento.timeController = new function() {
             pentimento.lectureController.setStateSlide(state.videoCursor);
         }
     }
-
-    this.refresh = function() {
-
-    }
 };
 
 $(document).ready(function() {
