@@ -97,20 +97,20 @@ function RetimingController(lec) {
 	}
 
 	function getPreviousConstraint(time, type) {
-		if(type!="Audio" || type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
+		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
 
 		var constraints = lecture.getConstraints();
 		var best;
 		if(type=="Audio") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTAudio() > time) { break; }
+				if(constraint.getTAudio() >= time) { break; }
 				best = constraint;
 			}
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVideo() > time) { break; }
+				if(constraint.getTVisual() >= time) { break; }
 				best = constraint;
 			}
 		}
@@ -118,7 +118,7 @@ function RetimingController(lec) {
 	}
 
 	function getNextConstraint(time, type) {
-		if(type!="Audio" || type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
+		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
 
 		var constraints = lecture.getConstraints();
 		constraints.reverse();
@@ -132,7 +132,7 @@ function RetimingController(lec) {
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVideo() < time) { break; }
+				if(constraint.getTVisual() < time) { break; }
 				best = constraint;
 			}
 		}
@@ -140,17 +140,25 @@ function RetimingController(lec) {
 		return best;
 	}
 
+	// function tryConstraint(time, type) {
+	// 	if(type=="Audio") {
+	// 		for(var i in constraints) {
+	// 		}
+	// 	} else if(type=="Video") {
+	// 	}
+	// }
+
 	this.getVisualTime = function(audioTime) {
 		var prev = getPreviousConstraint(audioTime, "Audio");
 		var next = getNextConstraint(audioTime, "Audio");
-		if(next==undefined || next.getDisabled()) { return audioTime; }
-		return (next.getTVideo()-prev.getTVideo())/(next.getTAudio()-prev.getTAudio())*(audioTime-prev.getTAudio())+prev.getTVideo();
+		if(prev==undefined || next==undefined || next.getDisabled()) { return audioTime; }
+		return (next.getTVisual()-prev.getTVisual())/(next.getTAudio()-prev.getTAudio())*(audioTime-prev.getTAudio())+prev.getTVisual();
 	}
 
 	this.getAudioTime = function(visualTime) {
 		var prev = getPreviousConstraint(visualTime, "Video");
 		var next = getNextConstraint(visualTime, "Video");
-		if(next==undefined || next.getDisabled()) { return visualTime; }
-		return (next.getTAudio()-prev.getTAudio())/(next.getTVideo()-prev.getTVideo())*(videoTime-prev.getTVideo())+prev.getTAudio();
+		if(prev==undefined || next==undefined || next.getDisabled()) { return visualTime; }
+		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
 	}
 }

@@ -89,7 +89,7 @@ testSuite = {
 		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
 		var start = globalTime();
 		pentimento.recordingController.beginRecording();
-		while(globalTime() < start + 1000) {} //block
+		while(globalTime() < start + 500) {} //block
 		pentimento.recordingController.stopRecording();
 		if(pentimento.lectureController.getLectureDuration() == 0) {
 			return false;
@@ -108,7 +108,7 @@ testSuite = {
 			var visual = visuals[i];
 			pentimento.recordingController.addVisual(visual);
 		}
-		while(globalTime() < start + 1000) {} //block
+		while(globalTime() < start + 500) {} //block
 		pentimento.recordingController.stopRecording();
 		if(pentimento.lecture.getSlides()[0].getVisuals().length != visuals.length) {
 			return false;
@@ -126,7 +126,7 @@ testSuite = {
 		for(var i=0; i<additions; i++) {
 			pentimento.recordingController.addSlide();
 		}
-		while(globalTime() < start + 1000) {} //block
+		while(globalTime() < start + 500) {} //block
 		pentimento.recordingController.stopRecording();
 		if(additions+1 != pentimento.lecture.getSlides().length) {
 			return false;
@@ -134,6 +134,90 @@ testSuite = {
 			return true;
 		}
 	},
+	"testDirtyConstraints": function() {
+		pentimento.lecture = new Lecture();
+		pentimento.lectureController = new LectureController(pentimento.lecture);
+		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
+		var first = new Constraint(0,0,ConstraintTypes.Automatic);
+		var second = new Constraint(1,1,ConstraintTypes.Automatic);
+		pentimento.lectureController.retimingController.addConstraint(first);
+		pentimento.lectureController.retimingController.addConstraint(second);
+		var start = globalTime();
+		var initialDuration = 0;
+		pentimento.recordingController.beginRecording();
+		while(globalTime() < start + 500) {} //block
+		pentimento.recordingController.stopRecording();
+		var finalDuration = pentimento.lectureController.getLectureDuration();
+		if(second.getTVisual() - finalDuration == 1 && first.getTVisual() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+	"testDirtyVisuals": function() {
+		pentimento.lecture = new Lecture();
+		pentimento.lectureController = new LectureController(pentimento.lecture);
+		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
+		var visuals1 = makeTestVisuals();
+		for(var i in visuals1) {
+			var visual = visuals1[i];
+			visual.setTMin(0);
+			pentimento.lectureController.visualsController.addVisual(pentimento.state.currentSlide, visual);
+		}
+		var visuals2 = makeTestVisuals();
+		for(var i in visuals2) {
+			var visual = visuals2[i];
+			visual.setTMin(1);
+			pentimento.lectureController.visualsController.addVisual(pentimento.state.currentSlide, visual);
+		}
+		var start = globalTime();
+		pentimento.recordingController.beginRecording();
+		while(globalTime() < start + 500) {} //block
+		pentimento.recordingController.stopRecording();
+		for(var i in visuals1) {
+			if(visuals1[i].getTMin() != 0) { return false; }
+		}
+		for(var i in visuals2) {
+			if(visuals2[i].getTMin() == 1) { return false; }
+		}
+		return true;
+	},
+	"testRetimingController": function() {
+		pentimento.lecture = new Lecture();
+		pentimento.lectureController = new LectureController(pentimento.lecture);
+		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
+		var first = new Constraint(1,1,ConstraintTypes.Automatic);
+		var second = new Constraint(11,2,ConstraintTypes.Automatic);
+		var third = new Constraint(100,3,ConstraintTypes.Automatic);
+		pentimento.lectureController.retimingController.addConstraint(first);
+		pentimento.lectureController.retimingController.addConstraint(second);
+		pentimento.lectureController.retimingController.addConstraint(third);
+		var interp = pentimento.lectureController.retimingController.getVisualTime(1.5);
+		if(interp != 6) { return false; }
+		var interp = pentimento.lectureController.retimingController.getVisualTime(1);
+		if(interp != 1) { return false; }
+		var interp = pentimento.lectureController.retimingController.getVisualTime(2);
+		if(interp != 11) { return false; }
+		var interp = pentimento.lectureController.retimingController.getVisualTime(1000000);
+		if(interp != 1000000) { return false; }
+		return true;
+	},
+	"testConstraintConflict": function() {
+		pentimento.lecture = new Lecture();
+		pentimento.lectureController = new LectureController(pentimento.lecture);
+		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
+		var first = new Constraint(1,1,ConstraintTypes.Automatic);
+		var second = new Constraint(11,2,ConstraintTypes.Automatic);
+		var third = new Constraint(0,3,ConstraintTypes.Automatic);
+		pentimento.lectureController.retimingController.addConstraint(first);
+		pentimento.lectureController.retimingController.addConstraint(second);
+		pentimento.lectureController.retimingController.addConstraint(third);
+		if(pentimento.lecture.getConstraints().length > 2) { return false; }
+		return true;
+	}
+	//testDelete
+	//testChangestrokewidth
+	//testDeleteSlide
 }
 
 function runTests() {
