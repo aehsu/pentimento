@@ -1,14 +1,18 @@
 .. highlight:: rst
 
+.. _pentimento-models:
+
 Models
 =======
- Models in our system represent the raw data itself, but do not have any notion of how to manipulate the data. Models are purely a container for data, almost like channels. Any additional classes that might be defined for data should be made as a model.
+ Models in our system are the raw data itself, but do not have any notion of how to manipulate the data. Models are purely a container for data, with ``get.*`` and ``.*`` methods for all fields when appropriate. Any additional classes that might be defined for data should be made as a model.
+
+.. _lecture-model:
 
 Lecture Model
 --------------
- The lecture model represents a constructor function, or something similar to classes in the traditional sense. The lecture model itself contains only fields, and any future extension to the data a lecture should store can be made in the lecture model.
+ The lecture model is a constructor function. Any future extension to the data a lecture should store can be made in the lecture model. For a lecture, there is only one ``pentimento.lecture`` at any point in time. Modifications to the lecture are performed directly on the object.
 
- .. js:class:: pentimento.lecture()
+ .. js:class:: Lecture
 
  	Constructor function for lecture objects
 
@@ -16,16 +20,184 @@ Lecture Model
 
  	.. js:attribute:: slides[]
 
- 		Array of slides within the lecture. Initially empty, slides are 0-indexed.
+ 		Array of slides within the lecture. Slides are 0-indexed
 
- 	.. js:attribute:: slide_changes[]
-
- 		Array of slide_changes within the lecture. Begins with a ``{from_slide:-1, to_slide:0, time:0}`` slide_change. 
-
- 	.. js:attribute:: audio_tracks[]
+ 	.. js:attribute:: audioTracks[]
 
  		**SOME DESCRIPTION, JONATHAN**
 
+ 	.. js:attribute:: constraints[]
+
+ 		A time-ordered array of constraints within the lecture
+
+.. _constraint-model:
+
+Constraint Model
+------------------
+ .. js:class:: Constraint
+
+    Constructor function for constraint objectts
+
+    :returns: new constraint object
+
+    .. js:attribute:: tVis
+
+        The visual time of the constraint
+
+    .. js:attribute:: tAud
+
+        The audio time of the constraint
+
+    .. js:attribute:: type
+
+        Whether the constraint was manually placed or automatically placed
+
+    .. js:attribute:: disabled
+
+        Whether or not the constraint is disabled, used during recording
+
+.. _vertex-model:
+
+Vertex Model
+--------------
+ .. js:class:: Vertex
+
+    Constructor function for new vertex objects
+
+    :returns: new vertex object
+
+    .. js:attribute:: x
+
+        x coordinate
+
+    .. js:attribute:: y
+
+        y coordinate
+
+    .. js:attribute:: t
+
+        time coordinate
+
+    .. js:attribute:: p
+
+        pressue coordinate
+
+.. _visualproperty-model:
+
+VisualProperty Model
+---------------------
+ .. js:class:: VisualProperty
+
+    Constructor function for new ``VisualProperty`` objects
+
+    :returns: new ``VisualProperty`` object
+
+    .. js:attribute:: color
+
+        the color for the visual
+
+    .. js:attribute:: width
+
+        the width for the visual
+
+.. _visualpropertytransform-model:
+
+VisualPropertyTransform Model
+-------------------------------
+
+  .. js:class:: VisualPropertyTransform
+
+    Constructor function for new ``VisualPropertyTransform`` objects
+
+    :returns: new ``VisualPropertyTransform`` object
+
+    .. js:attribute:: property
+
+        the property which is being transformed
+
+    .. js:attribute:: value
+
+        the new value for the property
+
+    .. js:attribute:: time
+
+        the time of the property transformation
+
+.. _basicvisual-model:
+
+BasicVisual Model
+------------------
+
+  .. js:class:: BasicVisual
+
+    Abstract class for visuals
+
+    :returns: basic visuals object
+
+    .. js:attribute:: type
+
+        the type of this visual
+
+    .. js:attribute:: hyperlink
+
+        the hyperlink for this visual
+
+    .. js:attribute:: tMin
+
+        the time when this visual came into existence within the lecture
+
+    .. js:attribute:: properties
+
+        a ``VisualProperty`` object about this visual's color and width
+
+    .. js:attribute:: tDeletion
+
+        the time when this visual was deleted within the lecture
+
+    .. js:attribute:: propertyTransforms[]
+
+        an array of transformations of this visual's properties
+
+.. _strokevisual-model:
+
+StrokeVisual Mode
+-------------------
+
+ .. js:class:: StrokeVisual
+
+    constructor function for a stroke visual
+
+    :returns: stroke visual object
+
+    .. js:attribute:: vertices[]
+
+        an array of ``Vertex`` objectts for this visual
+
+.. _slide-model:
+
+Slide Model
+--------------
+The state model is a constructor function.
+
+  .. js:class:: Slide
+
+    Constructor function for new slide objects
+
+    :returns: new slide object
+
+    .. js:attribute:: visuals[]
+
+        Array of visuals within the lecture
+
+    .. js:attribute:: transforms[]
+
+        A time-ordered array of transforms which have been applied to the slide
+
+    .. js:attribute:: duration
+
+        In ms, the duration of a slide. The duration of a lecture is the sum of the slide durations
+
+.. _state-model:
 
 State Model
 --------------
@@ -37,74 +209,86 @@ State Model
 
     Maintains information about the recording session
 
-    .. js:attribute:: is_recording
+    .. js:attribute:: isRecording
 
  	``boolean`` about whether the system is currently recording
 
-    .. js:attribute:: current_slide
+    .. js:attribute:: recordingType
+
+    an enum of ``RecordingTypes`` indicating what kind of recording is currently underway
+
+    .. js:attribute:: currentSlide
 
  	``reference`` to which slide the user is currently viewing or editing. Alias to an element within ``pentimento.lecture.slides``
 
-    .. js:attribute:: color
+    .. js:attribute:: videoCursor
 
- 	Hex-value referring to the most-recently selected color for visuals
+    an integer in milliseconds representing the current time within the lecture for the visuals channel
 
-    .. js:attribute:: width
+    .. js:attribute:: audioCursor
 
- 	``string`` referring to the most-recently selected width for visuals
-
-    .. js:attribute:: current_tool
-
- 	``string`` referring to which tool is currently enabled by the user
-
-    .. js:attribute:: lmb_down
-
-	``boolean`` referring to whether the left mouse button is down
-
-    .. js:attribute:: last_point
-
-	Object with an ``x`` and ``y`` attribute referring to the last point the ``current_tool`` needs to utilize its function
-
-    .. js:attribute:: context
-
-	The context of the drawing canvas
+    an integer in milliseconds representing the current time within the lecture for the audio channel
 
     .. js:attribute:: canvas
 
-	The HTML ``canvas`` element
+    a jQuery object referring to the ``canvas`` element on the page
 
-    .. js:attribute:: current_visual
+    .. js:attribute:: context
 
-	The current visual which the tool is modifying
+    the context object for the ``canvas`` on the page
+
+    .. js:attribute:: color
+
+ 	string hex-value referring to the most-recently used color for visuals
+
+    .. js:attribute:: width
+
+ 	integer referring to the most-recently used width for visuals
 
     .. js:attribute:: pressure
 
-	``boolean`` about whether or not the hardware supports pressure sensitivity
+    boolean indicating whether to consider pressure on the canvas
 
-    .. js:attribute:: pressure_color
+    .. js:attribute:: keyboardShortcuts
 
-	Hex-value representing the color to interpolate into if pressure sensitivity is applicable
+    ``boolean`` referring to whether to fire keyboard shortcuts
 
-    .. js:attribute:: pressure_width
+    .. js:attribute:: lmb
 
-	Width to interpolate to if pressure sensitivity is applicable
+    ``boolean`` referring to whether the left mouse button is down
+
+    .. js:attribute:: mmb
+
+    ``boolean`` referring to whether the middle mouse button is down
+
+    .. js:attribute:: rmb
+
+    ``boolean`` referring to whether the right mouse button is down
+
+    .. js:attribute:: ctrlKey
+
+    ``boolean`` referring to whether the ``ctrl`` key is down
+
+    .. js:attribute:: shiftKey
+
+    ``boolean`` referring to whether the ``shift`` key is down
+
+    .. js:attribute:: altKey
+
+    ``boolean`` referring to whether the ``alt`` key is down
 
     .. js:attribute:: tool
 
-	**LOL LIKE I KNOW?! I HAVE NO IDEA, CURRENT_TOOL?**
+ 	``string`` referring to which tool is currently enabled by the user
 
-    .. js:attribute:: current_time = 0
+    .. js:attribute:: lastPoint
 
-	The time within the lecture that a user is currently at. Initialized to a default value of 0.
+	``Vertex`` object referring to the last useful point for the current tool
 
-    .. js:attribute:: last_time_update = null
+    .. js:attribute:: currentVisual
 
-	Represents the clock time when the system last updated as it was recording. As the timers in JavaScript are unreliable, updates to the recording interval are based on this field.
+	The current visual which the tool is modifying
 
-    .. js:attribute:: interval_timing = 50
+    .. js:attribute:: selection
 
-	I don't know. **Represents something I have forgotten.**
-
-    .. js:attribute:: selection = []
-
-	If the tool currently enabled is the selection tool, maintains an array of references to the visuals which are selected.
+	An array of references to the visuals which are selected

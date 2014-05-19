@@ -112,9 +112,9 @@ function Segment(a, b, props) {
 }
 
 //unnecessary
-Segment.prototype.getClone = function() {
-    return new Segment(this.getFromPoint().getClone(), this.getToPoint().getClone(), this.getProperties().getClone());
-}
+// Segment.prototype.getClone = function() {
+//     return new Segment(this.getFromPoint().getClone(), this.getToPoint().getClone(), this.getProperties().getClone());
+// }
 
 function BasicVisual(tmin, props) {
     //could alternatively take in an object of properties    

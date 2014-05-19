@@ -2,7 +2,7 @@
 
 Design
 =======
- Though version 1.0 of the framework is designed for hand-written lecture notes specifically, the mentality of Pentimento was to design a base for any type of lecture. Text-based lectures are an area to which we hope to quickly migrate, leveraging the existing structure of Pentimento. The first version of Pentimento was developed using Cocoa, and was therefore specific to OS X. The current version of Pentimento uses JavaScript and is based in the browser for cross-compatibility across platforms.
+ Though Pentimento is designed for hand-written lecture notes specifically, the mentality of Pentimento was to design a base for any type of lecture. Text-based lectures are an area to which we hope to quickly migrate, leveraging the existing structure of Pentimento. The first version of Pentimento was developed using Cocoa, and was therefore specific to OS X. The current version of Pentimento uses JavaScript and is based in the browser for cross-compatibility across platforms.
 
 
 Ideology
@@ -16,10 +16,5 @@ Architecture
 High-level Overview
 -------------------
  The basic observation which we work upon is that a majority of lectures which we are targeting can be fundamentally broken down into discrete chunks similar to slides or blackboards.
-
- Hence, a ``slide`` is the largest granularity of aggregation within the lecture. Necessary also to accompany ``slides`` is are ``slide_changes``.
-
- Each ``slide`` maintains an array of ``visuals``, and each ``visual`` has a number of fields it maintains, including ``properties`` such as color and size. Most important to each ``visual``, though, is that it maintains a an array of ``verticies``, which describe the resolution of the browser to track drawing events.
-
  
  **JONATHAN AUDIO**

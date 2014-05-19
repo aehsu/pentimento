@@ -4,6 +4,8 @@ Controllers
 ============
  The controllers are the logic behind the application itself.
 
+.. _recording-controller:
+
 Recording Controller
 --------------------
  Any lecture is composed of one or more recordings pieced together correctly. This controller holds all the information necessary to do a recording. Recordings themselves cannot be edited, only after the recording is incorporated into the lecture can it be edited.
@@ -52,6 +54,7 @@ Recording Controller
 
  		Public function, is the end point for a recording. This controller then gives up its internal ``pentimento.lecture`` variable and passes it over to the ``pentimento.lecture_controller`` to handle insertion correctly.
 
+.. _lecture-controller:
 
 Lecture Controller
 ------------------
@@ -75,7 +78,9 @@ Lecture Controller
 
  	:param Object recording: lecture which comes from the recording controller.
 
-UIUX Controller
+.. _time-controller:
+
+Time Controller
 ---------------
  **UGHHH RENAME THIS SHIT** This is really the **time** controller
 
@@ -98,3 +103,14 @@ UIUX Controller
  	.. js:function:: update_time(time)
 
  		globally updates the time and state to the given time
+
+
+.. _visuals-controller:
+
+Visuals Controller
+--------------------
+
+.. _retiming-controller:
+
+Retiming Controller
+--------------------
