@@ -56,7 +56,6 @@ pentimento.timeController = new function() {
         var type = state.recordingType;
         lastTimeUpdate = beginTime;
         interval = setInterval(function() {
-            if(state.isShifting) { return; }
             var gt = globalTime();
             if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
                 self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate));

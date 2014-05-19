@@ -66,12 +66,12 @@ function VisualsController(lec) {
     }
 
     function unaddProperty(visual, property) {
-        var idx = visual.getProperyTransforms().indexOf(property);
+        var idx = visual.getPropertyTransforms().indexOf(property);
         visual.getPropertyTransforms().splice(idx, 1);
 
         um.add(function() {
             self.addProperty(visual, property);
-        }, ActionTitles.AdditionOfPropery);
+        }, ActionTitles.AdditionOfProperty);
     }
 
     this.addProperty = function(visual, property) {
@@ -79,7 +79,7 @@ function VisualsController(lec) {
 
         um.add(function() {
             unaddProperty(visual, property);
-        }, ActionTitles.AdditionOfPropery);
+        }, ActionTitles.AdditionOfProperty);
     }
 
     this.setTDeletion = function(visual, time) {

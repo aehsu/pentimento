@@ -154,7 +154,7 @@ function editToolHandler(tool, event) {
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
             pentimento.timeController.updateVideoTime(t);
-            //begin a recording
+            $('.recording-tool:visible').click()
             break;
         case 'width':
             if(event.target.value=="" || pentimento.state.isRecording || pentimento.state.selection.length==0) { return; }

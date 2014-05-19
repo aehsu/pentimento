@@ -13,19 +13,19 @@ Time Controller
 
  .. js:class:: pentimento.timeController
 
- 	it is what it is
+ 	the constructor function for the timeController
 
  	.. js:function:: stopRecording(endTime)
 
- 		ends the recording with the given time
+ 	ends the recording with the given time
 
  	.. js:function:: beginRecording(time)
 
- 		begins a recording with the given time
+ 	begins a recording with the given time
 
  	.. js:function:: updateVideoTime(time)
 
- 		updates the ``videoCursor`` of the state to reflect the given time
+ 	updates the ``videoCursor`` of the state to reflect the given time
 
 .. _input-controller:
 
@@ -60,32 +60,72 @@ Input Controller
 .. _recording-controller:
 
 Recording Controller
---------------------
- 
+----------------------
+
+ .. js:class:: pentimento.recordingController
+
+ 	Constructor function for the recordingController
+
+ 	.. js:function:: addSlide
+
+ 	adds a slide into the lecture; this function should be called by the UI whenever a slide is added
+
+ 	.. js:function:: addVisual(visual)
+
+ 	adds a visual into the current slide which is active
+
+ 	.. js:function:: appendVertex(visual, vertex)
+
+ 	appends a vertex into the list of vertices for the visual
+
+ 	.. js:function:: addProperty(visual, visualPropertyTransform)
+
+ 	adds in a property transform into the list of property transforms for the visual
+
+ 	.. js:function:: setTDeletion(visual, time)
+
+ 	sets the ``tDeletion`` time for the visual
+
+ 	.. js:function:: beginRecording
+
+ 	this function is what begins all recordings; the UI should call this function whenever it's about to begin a recording
+
+ 	.. js:function:: stopRecording
+
+ 	this function is what ends a recording; it will ask the ``timeController`` to end its recording process as well. The UI should call this function whenver it's trying to end a recording
 
 .. _lecture-controller:
 
 Lecture Controller
 ------------------
- This controller is responsible for the master lecture which is the aggregation of the recordings together. It holds a private ``lecture`` object which must be accessed only through the controller.
 
- .. js:function:: pentimento.lecture_controller
+ .. js:class:: pentimento.lectureController
 
- 	The lecture controller itself.
+ 	the constructor function for the lectureController
 
- 	.. js:function:: rewind()
+ 	.. js:function:: setStateSlide
 
- 	Public function, simply goes back to the most previous ``slide_change``. Sets the appropriate state variables as well.
+ 	sets the ``state.currentSlide`` variable when asked to update it appropraitely based on ``state.videoCursor``
 
- 	.. js:function:: full_rewind()
+ 	.. js:function:: getLectureDuration
 
- 	Public function, directly goes to the beginning of the lecture. Sets the appropriate state variables as well.
+ 	:returns: the duration of the entire lecture
 
- 	.. js:function:: insert_recording(recording)
+ 	.. js:function:: removeSlide(newSlide)
 
- 	Public function, takes in a lecture object which comes from ``pentimento.recording_controller`` and inserts it correctly into the master lecture based on when the recording started.
+ 	removes the slide from the lecture's list of slides
 
- 	:param Object recording: lecture which comes from the recording controller.
+ 	.. js:function:: addSlide(prevSlide, newSlide)
+
+ 	inserts the ``newSlide`` right after the ``prevSlide``
+
+ 	.. js:function:: shiftSlideDuration(slide, amount)
+
+ 	changes the duration of the slide by the specified amount
+
+ 	.. js:function:: deleteSlide(slide)
+
+ 	removes the slide from the lecture's list of slides. different from removeSlide since this function is an edit mode function and will add actions onto the undo stack
 
 .. _visuals-controller:
 

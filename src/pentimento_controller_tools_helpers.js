@@ -183,8 +183,7 @@ function highlightMouseUp(event) {
     var state = pentimento.state;
     var highlightTime = 750; //duration for a highlighter, in ms
     if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
-        var verts = state.currentVisual.getVertices();
-        state.currentVisual.setTDeletion(verts[verts.length-1].getT()+highlightTime); //should be moved else where...
+        pentimento.recordingController.setTDeletion([state.currentVisual], globalTime() + highlightTime);
         state.currentVisual = null;
         state.lastPoint = null;
     }
@@ -246,7 +245,7 @@ function lectureSelectMouseUp(event) {
 
 function lectureDelete() {
     var state = pentimento.state;
-    
+
 }
 /**********************************LECTURE-MODE TOOLS**********************************/
 

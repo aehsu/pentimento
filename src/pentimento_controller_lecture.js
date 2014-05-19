@@ -56,7 +56,7 @@ function LectureController(lec) {
     // }
 
     //recording mode function. undoing logic local to recording controller
-    this.removeSlide = function(prevSlide, newSlide) {
+    this.removeSlide = function(newSlide) {
         var slides = lecture.getSlides();
         var index = slides.indexOf(newSlide);
 

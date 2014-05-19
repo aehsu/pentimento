@@ -8,6 +8,14 @@ function RetimingController(lec) {
 		return constraint;
 	}
 
+	this.cleanConstraints = function(constraints, amount) {
+		for(var i in constraints) {
+			var constraint = constraints[i];
+			doShiftConstraint(constraint, amount);
+			constraint.setDisabled(false);
+		}
+	}
+
 	this.checkConstraint = function(constraint) {
 		var constraints = lecture.getConstraints();
 		for(var i in constraints) {
@@ -83,9 +91,9 @@ function RetimingController(lec) {
 			doShiftConstraint(constraint, amount);
 		}
 
-		um.add(function() {
-			self.shiftConstraints(constraints, -1.0*amount);
-		}, ActionTitles.ShiftConstraints);
+		// um.add(function() {
+		// 	self.shiftConstraints(constraints, -1.0*amount);
+		// }, ActionTitles.ShiftConstraints);
 	}
 
 	function getPreviousConstraint(time, type) {
@@ -135,14 +143,14 @@ function RetimingController(lec) {
 	this.getVisualTime = function(audioTime) {
 		var prev = getPreviousConstraint(audioTime, "Audio");
 		var next = getNextConstraint(audioTime, "Audio");
-		if(next.getDisabled()) { return audioTime; }
+		if(next==undefined || next.getDisabled()) { return audioTime; }
 		return (next.getTVideo()-prev.getTVideo())/(next.getTAudio()-prev.getTAudio())*(audioTime-prev.getTAudio())+prev.getTVideo();
 	}
 
 	this.getAudioTime = function(visualTime) {
 		var prev = getPreviousConstraint(visualTime, "Video");
 		var next = getNextConstraint(visualTime, "Video");
-		if(next.getDisabled()) { return visualTime; }
+		if(next==undefined || next.getDisabled()) { return visualTime; }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVideo()-prev.getTVideo())*(videoTime-prev.getTVideo())+prev.getTAudio();
 	}
 }

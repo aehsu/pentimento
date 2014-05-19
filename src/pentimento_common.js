@@ -42,7 +42,7 @@ RecordingTypes = {
     AudioVideo: "AudioVideo"
 };
 
-um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], DEBUG);
+um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], DEBUG);
 
 function globalTime() {
     return (new Date()).getTime();
