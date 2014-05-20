@@ -34,12 +34,21 @@ pentimento.audio_controller = function() {
     	console.log("initialize: pentimento_audio_controller")
 
     	// RecordRTC setup
-		navigator.getUserMedia({audio: true}, function(mediaStream) {
-	    recordRTC = RecordRTC(mediaStream, {
-	            autoWriteToDisk: true
-	        });
-	       recordRTC.startRecording();
-	    });
+		navigator.getUserMedia(
+            // Constraints
+            {video: false, audio: true},
+            // Sucess Callback
+            function(mediaStream) {
+	           recordRTC = RecordRTC(mediaStream, {
+	               autoWriteToDisk: true
+	           });
+
+	           recordRTC.startRecording();
+	       },
+            // errorCallback
+            function(err) {
+                console.log("The following error occured: " + err);
+            });
 
     	// Button listener to start playing the audio
     	var play_pause_button = $("#play_pause_button");
