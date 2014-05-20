@@ -1,5 +1,9 @@
 pentimento.audio_controller = function() {
 
+    // set global mouse position in relation to page
+    mouseX = null;
+    mouseY = null;
+
 	//
 	// Member vars
 	//
@@ -170,6 +174,10 @@ pentimento.audio_controller = function() {
             $.plot(gradation_container, plot_data, options);
             // Bind hover callback to get mouse location
             $('#audio_timeline').bind("mousemove", function (event) {
+
+                    // Set mouse position
+                    mouseX = event.pageX;
+                    mouseY = event.pageY;
                     // Display bar behind mouse
                     $('#timeline_cursor').css({
                        left:  event.pageX
@@ -209,6 +217,58 @@ pentimento.audio_controller = function() {
                 new_segment.css({ "padding": 0, 
                 				"width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, 
                 				"height": $("#audio_timeline").height()/2 });
+
+                // add hover method to audio segment divs
+                // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
+                new_segment.hover( function(event) {
+                    var this_segment = $(this);
+
+                    // Add left or right border highlight on hover
+                    mouseHover = setInterval(function(){
+                        if (this_segment.hasClass("obstacle")) {
+                            // Check to see if it over laps with segment on the left half
+                            if ( mouseX >= this_segment.offset().left && mouseX <= this_segment.offset().left + this_segment.width()/2 ) {
+                                // Highlight left edge
+                                // if (!this_segment.hasClass('left_edge_highlight')) {
+                                //     this_segment.removeClass('right_edge_highlight');
+                                //     this_segment.addClass('left_edge_highlight');
+
+                                // };
+                                $('#right_target_div').remove();
+                                if($('#left_target_div').length == 0) {
+                                    var target_div = $("<div>", {id: "left_target_div"}).offset({ top: this_segment.offset().top, left: this_segment.offset().left});
+                                    $("#audio_timeline").append(target_div);
+                                }
+                               
+                            }
+                            // Check to see if it over laps with segment on the right half
+                            else if ( mouseX > this_segment.offset().left + this_segment.width()/2 && mouseX <= this_segment.offset().left + this_segment.width() ) {
+                                // Highlight right edge
+                                // if (!this_segment.hasClass('right_edge_highlight')) {
+                                //     this_segment.removeClass('left_edge_highlight');
+                                //     this_segment.addClass('right_edge_highlight');
+
+                                // };
+                                $('#left_target_div').remove();
+                                if($('#right_target_div').length == 0) {
+                                    var target_div = $("<div>", {id: "right_target_div"}).offset({ top: this_segment.offset().top, left: this_segment.offset().left + this_segment.width() });
+                                    $("#audio_timeline").append(target_div);
+                                }
+
+
+                            };
+                        }
+                    }, 100);
+
+                    
+                }, function() {
+                    var this_segment = $(this);
+                    clearInterval(mouseHover);
+                    $('#left_target_div').remove();
+                    $('#right_target_div').remove();
+
+
+                });
         
                 // Setup the dragging on audio segment
                 new_segment.draggable({
