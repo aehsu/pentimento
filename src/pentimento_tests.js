@@ -214,7 +214,14 @@ testSuite = {
 		pentimento.lectureController.retimingController.addConstraint(third);
 		if(pentimento.lecture.getConstraints().length > 2) { return false; }
 		return true;
-	}
+	},
+	"testDelete": function() {
+		pentimento.lecture = new Lecture();
+		pentimento.lectureController = new LectureController(pentimento.lecture);
+		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
+		//
+		return true;
+	},
 	//testDelete
 	//testChangestrokewidth
 	//testDeleteSlide
