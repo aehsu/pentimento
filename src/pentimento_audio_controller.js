@@ -229,14 +229,11 @@ pentimento.audio_controller = function() {
                             // Check to see if it over laps with segment on the left half
                             if ( mouseX >= this_segment.offset().left && mouseX <= this_segment.offset().left + this_segment.width()/2 ) {
                                 // Highlight left edge
-                                // if (!this_segment.hasClass('left_edge_highlight')) {
-                                //     this_segment.removeClass('right_edge_highlight');
-                                //     this_segment.addClass('left_edge_highlight');
 
-                                // };
                                 $('#right_target_div').remove();
                                 if($('#left_target_div').length == 0) {
                                     var target_div = $("<div>", {id: "left_target_div"}).offset({ top: this_segment.offset().top, left: this_segment.offset().left});
+                                    target_div.height(this_segment.height());
                                     $("#audio_timeline").append(target_div);
                                 }
                                
@@ -244,11 +241,7 @@ pentimento.audio_controller = function() {
                             // Check to see if it over laps with segment on the right half
                             else if ( mouseX > this_segment.offset().left + this_segment.width()/2 && mouseX <= this_segment.offset().left + this_segment.width() ) {
                                 // Highlight right edge
-                                // if (!this_segment.hasClass('right_edge_highlight')) {
-                                //     this_segment.removeClass('left_edge_highlight');
-                                //     this_segment.addClass('right_edge_highlight');
-
-                                // };
+          
                                 $('#left_target_div').remove();
                                 if($('#right_target_div').length == 0) {
                                     var target_div = $("<div>", {id: "right_target_div"}).offset({ top: this_segment.offset().top, left: this_segment.offset().left + this_segment.width() });
@@ -277,8 +270,10 @@ pentimento.audio_controller = function() {
                     obstacle: ".obstacle",
                     // containment: ("#" + new_track_id),
                     axis: "x",
-                    opacity: 0.75
+                    opacity: 0.65
                 }).on( "dragstart", function( event, ui ) {
+                    // Remove cursor object
+                    $('#timeline_cursor').hide(100);
                     // When you drag an object, all others become obstacles for dragging
                     $(".audio_segment").each(function(index, segment) {
                         // Don't check itself
@@ -290,9 +285,14 @@ pentimento.audio_controller = function() {
 
                     ui.helper.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
+                    
+                    $('#timeline_cursor').show(100);
+
                     // Call shift function in model
                     // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
                     // figure out if segment needs to be moved (if dropped on top of something)
+
+
                     pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
 
                     // When you finish dragging an object, remove the obstacles classes
