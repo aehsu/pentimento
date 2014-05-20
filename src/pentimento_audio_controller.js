@@ -245,6 +245,7 @@ pentimento.audio_controller = function() {
                                 $('#left_target_div').remove();
                                 if($('#right_target_div').length == 0) {
                                     var target_div = $("<div>", {id: "right_target_div"}).offset({ top: this_segment.offset().top, left: this_segment.offset().left + this_segment.width() });
+                                    target_div.height(this_segment.height());
                                     $("#audio_timeline").append(target_div);
                                 }
 
@@ -286,7 +287,7 @@ pentimento.audio_controller = function() {
                     ui.helper.addClass('dragged')
                 }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
                     
-                    $('#timeline_cursor').show(100);
+                    $('#timeline_cursor').show(50);
 
                     // Call shift function in model
                     // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
