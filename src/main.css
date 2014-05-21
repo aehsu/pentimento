@@ -61,7 +61,7 @@ fieldset > *{
     display: inline;
 }
 .center{
-    vertical-align: middle;
+    /*vertical-align: middle;*/
     height: 40px;
 }
 
@@ -147,10 +147,37 @@ font-size: 0.1px;
     right: -5px;
 }
 
+.ui-label{
+    font-family: Calibri, sans-serif;
+}
 
-/*input .image{
-    width:40px;
-}*/
-/*.side-menu{
+.menu-table{
+    display:inline-block;
+    position:relative;
+    top:10px;
+}
+
+.label-table{
+    display:inline-block;
+    position:relative;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.slider-container{
+    height:15px;
+    padding-top:5px;
+    padding-bottom:5px;
+}
+
+.lecture-tool-image{
+    height: 40px;
+    margin-top:10px;
+}
+
+.lecture-tool-button{
+    margin-top:15px;
+}
+/*.side-menu{f
     display:inline-block;
 }*/

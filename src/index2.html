@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Capture Widget/Sketchpad</title>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <script src='jquery-1.10.2.min.js'></script>
+    <script src='jquery-ui.js'></script>
+    <link href="jquery-ui.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='undo/errors.js'></script>
+    <script type='text/javascript' src='undo/compatibility.js'></script>
+    <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
+    <script type='text/javascript' src='undo/undo.js'></script>
+    
+    <script type='text/javascript' src='pentimento_common.js'></script>
+    <script type='text/javascript' src="wavesurfer.min.js"></script>
+    <script type='text/javascript' src="RecordRTC.js"></script>
+    <script type='text/javascript' src='pentimento_model_visuals.js'></script>
+    <script type='text/javascript' src='pentimento_model_lecture.js'></script>    
+    <script type='text/javascript' src='pentimento_model_state.js'></script>
+    <script type='text/javascript' src='pentimento_controller_inputs.js'></script>
+    <script type='text/javascript' src='pentimento_controller_recording.js'></script>
+    <script type='text/javascript' src='pentimento_controller_visuals.js'></script>
+    <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
+    <script type='text/javascript' src='pentimento_controller_time.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools.js'></script>
+    <script src='spectrum.js'></script>
+    <link rel='stylesheet' href='spectrum.css' />
+</head>
+
+<body>
+        <div>
+            <input type="image" src="icons/media_record.png" class="recording-tool center" data-label="begin">
+            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-label="stop">
+            
+            <table class="menu-table">
+                <tr>
+                    <td>
+                    <input type="checkbox"> <span class="ui-label">Visuals</span>
+                    <input type="checkbox"><span class="ui-label">Auto</span><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td><input type="checkbox"><span class="ui-label">Audio</span></td>
+                </tr>
+            </table>
+
+
+<!--             <input type="image" src="icons/skipback.png" height="40px" class="top-button">
+            <input type="image" src="icons/skipahead.png" height="40px" class="top-button">
+            <input type="image" src="icons/selection.png" height="40px" class="top-button">
+            <input type="image" src="icons/redraw.png" height="40px" class="top-button"> -->
+
+            <input type="image" src="icons/media_playback_start.png" class="nonlive-tool center" data-toolname="play">
+            <input type="image" src="icons/pause.png" class="nonlive-tool hidden center" data-toolname="stop">
+
+            <table class="menu-table">
+                <tr>
+                    <td><input type="checkbox"><span class="ui-label">No Pause</span></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox"><span class="ui-label">Fast Replay</span></td>
+                </tr>
+            </table>
+
+            <!-- <input type="image" src="icons/media_skip_backward.png" class="nonlive-tool center" data-toolname="rewind">
+            <input type="image" src="icons/media_skip_forward.png" class="nonlive-tool center" data-toolname="fastforward"> -->
+        
+           <!--  <input type="image" src="icons/selection.png" class="nonlive-tool center" data-toolname="select">
+            <label class="ui-label">select |</label> -->
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/selection.png" class="nonlive-tool center" data-toolname="select">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Select</label></td>
+                </tr>
+            </table>
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/scratch.png" class="nonlive-tool center" data-toolname="scratch">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Delete</label></td>
+                </tr>
+            </table>
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/pen.png" class="nonlive-tool center" data-toolname="redraw">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Redraw Selection</label></td>
+                </tr>
+            </table>
+       
+            <button class="forever-tool" data-toolname="undo" disabled="true">Undo</button>
+            <button class="forever-tool" data-toolname="redo" disabled="true">Redo</button>
+
+            <!-- <label>Move selection to current time</label> -->
+<!--
+            <input type="image" src="icons/moveInTime.png" class="nonlive-tool center" data-toolname="move-in-time">
+             <input type="image" src="icons/redraw.png" class="nonlive-tool center" data-toolname="redraw"> 
+             <input type="image" src="icons/delete.png" class="nonlive-tool center" data-toolname="redraw"> 
+-->
+
+            <!-- <input type="checkbox" class="center">ghosts
+            <input type="checkbox" class="center">grid
+            <input type="checkbox" class="center">margin -->
+        </div>
+
+        <hr>
+
+        <div class="slider-container">
+            <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        </div>
+<!--
+        <div>
+            <label width="150px"> Editing Tools </label>
+            <label>stroke</label>
+
+            <select>
+              <option value="one">1</option>
+              <option value="two">2</option>
+              <option value="five">5</option>
+              <option value="ten">10</option>
+              <option value="twenty">20</option>
+            </select>
+
+            <input type='color' name='pen-color' height="10px" width="20px">
+            <input type="checkbox">Calligraphy  
+
+            <label>| fill</label>
+            <input type="checkbox" class="center">
+            <input type='color' name='fill-color' height="10px" width="20px">
+
+            <label>| Background</label>
+            <input type='color' name='background-color' height="10px" width="20px">
+
+            <label>| Output Size</label>
+            <select>
+                <option value="size1">640x480</option>
+                <option value="size2">1024x768</option>
+                <option value="size3">1920x1080</option>
+            </select>
+
+            <label>| Hyperlink</label>
+            <input type="text">
+        </div>
+-->
+        <div class="container">
+            <div class="left-col">
+
+                <label class="ui-label">In-Lecture Tools</label><br>
+                <hr>
+
+                <input type="image" src="icons/selection.png" class="live-tool lecture-tool-image" data-toolname="select"><br>
+                <label class="ui-label">Selection for editing <br> (eraser side of stylus)</label><br>
+
+                <input type="image" src="icons/feather-2.png" class="live-tool lecture-tool-image" data-toolname="pen"><br>
+                <label class="ui-label">Pen</label><br>
+
+                <input type="image" src="icons/highlighter.png" class="live-tool lecture-tool-image" data-toolname="highlight"><br>
+                <label class="ui-label">Highlighter</label><br>
+
+                <img src="icons/width.png" width="90px" class="lecture-tool-image"><br>
+                <select class="live-tool" data-toolname="width">
+                    <option value="2">Default width</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                </select><br>
+                <label class="ui-label">Stroke Width</label><br>
+
+                <button class="live-tool lecture-tool-button" data-toolname="add-slide">Add Slide</button><br>
+
+                <button class="forever-tool" data-toolname="undo" disabled="true">Undo</button>
+                <button class="forever-tool" data-toolname="redo" disabled="true">Redo</button>
+
+                <!-- <input type="image" src="icons/emphasize.png" height="40px">
+                <input type="image" src="icons/revertEmphasis.png" height="40px"><br>
+
+                <input type="image" src="icons/copylasso.png" height="40px">
+                <input type="image" src="icons/eraser.png" height="40px"><br>
+
+                <input type="image" src="icons/delete.png" height="40px">
+                <input type="image" src="icons/duplicate.png" height="40px"><br>
+
+                <input type="image" src="icons/handScrolling.png" height="40px">
+                <input type="image" src="icons/pageRecenter.png" height="40px"><br>
+
+                <input type="image" src="icons/zoomIn.png" height="40px">
+                <input type="image" src="icons/zoomOut.png" height="40px"><br>
+
+                <input type="image" src="icons/pageUp.png" height="40px">
+                <input type="image" src="icons/pageDown.png" height="40px"><br> -->
+<!--                 <label>Emphasis Lasso</label>
+                <label>In-lecture revert last epmhasis</label> -->
+
+            </div>
+            <div style="float:right">
+                <canvas id='sketchpad'></canvas>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" data-action="play">
+            <i class="glyphicon glyphicon-play"></i>
+            Audio Play
+            /
+            <i class="glyphicon glyphicon-pause"></i>
+            Audio Pause
+        </button>
+        <div id="audio_timeline"></div>
+</body>
+</html>
+j
