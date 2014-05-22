@@ -55,6 +55,14 @@ var groupUndoError = function(group) {
     };
 };
 
+var improperInverseError = function() {
+    return {
+        name: 'improperInverseError',
+        message: "The inverse action did not add anything to the undoManager.",
+        toString: getMessage
+    };
+};
+
 var indexOutOfBoundsError = function(index) {
     return {
         name: 'indexOutOfBoundsError',

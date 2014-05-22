@@ -188,6 +188,9 @@ var getUndoManager = function(groupTypes, debug) {
         // the relevant action object is now on the redo stack, but some properties haven't been defined yet.
         // they should be the same as they were before the action was undone.
         var nextRedo = getNextRedo();
+        if (!nextRedo) {
+            throw improperInverseError();
+        }
         nextRedo['title'] = actionObj.title;
         nextRedo['inGroups'] = actionObj.inGroups;
         nextRedo['atStartOfGroups'] = actionObj.atStartOfGroups;
