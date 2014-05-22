@@ -92,13 +92,14 @@ var getUndoManager = function(groupTypes, debug) {
         var title = null;
         var index = undoStack.length-1;
         var atStart = false;
-
         // iterate through each action in the group
         while (!atStart) {
             if (index < 0 || index >= undoStack.length) {
                 throw indexOutOfBoundsError(index); //TODO: test
             }
             if (undoStack[index].inGroups.indexOf(group) === -1) {
+                // console.log(index);
+                // console.log(undoStack);
                 throw notInGroupError(group); //TODO: test
             }
             if (isNull(title)) {
@@ -250,9 +251,11 @@ var getUndoManager = function(groupTypes, debug) {
                         if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) {
                             currentNextUndo.atEndOfGroups.push(group);
                         }
+                        
                 }
             }
         }
+
         // update the open groups to be those that the redone action is in
         // this results in the closing of any groups that were opened, but not populated, right before the redo
 
@@ -273,6 +276,7 @@ var getUndoManager = function(groupTypes, debug) {
                 openGroups.push(group);
             }
         }
+
         
         redoing = false;    
         fireEvent('operationDone');
@@ -413,7 +417,7 @@ var getUndoManager = function(groupTypes, debug) {
             // allow undoing of group2, but keep track of whether or not to end group 1
             var nextUndo = getNextUndo();
             if (nextUndo) {
-                nextUndo.atEndOfGroups = nextUndo.inGroups;
+                nextUndo.atEndOfGroups = nextUndo.inGroups.slice(0);
             }
             fireEvent('operationDone');
             return publicFunctions;

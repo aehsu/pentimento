@@ -23,6 +23,8 @@
             undoManager.endHierarchy('group1');
             undoManager.undoHierarchy('group1');
             undoManager.redoHierarchy('group1');
+            console.log(undoManager.canUndo('group2'));
+
             // $('#color').val('blue').trigger('change');
             // $('#color').val('green').trigger('change');
             // undoManager.undo();
