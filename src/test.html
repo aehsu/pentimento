@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Capture Widget/Sketchpad</title>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <script src='jquery-ui-1.10.4/js/jquery-1.10.2.js'></script>
+    <script src='jquery-ui-1.10.4/js/jquery-ui-1.10.4.js'></script>
+    <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='undo/errors.js'></script>
+    <script type='text/javascript' src='undo/compatibility.js'></script>
+    <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
+    <script type='text/javascript' src='undo/undo.js'></script>
+    
+    <script type='text/javascript' src='pentimento_common.js'></script>
+    <script type='text/javascript' src='pentimento_model_visuals.js'></script>
+    <script type='text/javascript' src='pentimento_model_lecture.js'></script>    
+    <script type='text/javascript' src='pentimento_model_state.js'></script>
+    <script type='text/javascript' src='pentimento_controller_inputs.js'></script>
+    <script type='text/javascript' src='pentimento_controller_recording.js'></script>
+    <script type='text/javascript' src='pentimento_controller_visuals.js'></script>
+    <script type='text/javascript' src='pentimento_controller_retiming.js'></script>
+    <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
+    <script type='text/javascript' src='pentimento_controller_time.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
+    <script type='text/javascript' src='pentimento_controller_tools.js'></script>
+    <script type='text/javascript' src='pentimento_renderer.js'></script>
+    <script type='text/javascript' src='pentimento_tests.js'></script>
+</head>
+
+<body>
+		<br><br>
+        <div style="height:15px;">
+            <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        </div>
+        <div style="float:right">
+            <canvas id='sketchpad'></canvas>
+        </div>
+</body>
+</html>

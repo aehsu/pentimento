@@ -1,76 +1,40 @@
 //Because of integration with the undo manager, the undo actions should call updateVisuals()
 //appropriately. Only the undo actions, though, not the forward actions! Therefore, any time
-//the um.add is called, it should have an updateVisuals inside of the function if necessary
+//um.add is called, it should have an updateVisuals inside of the function if necessary
 
 function VisualsController(lec) {
     var self = this;
     var lecture = lec;
     var state = pentimento.state;
 
-    this.MakeVisualDirty = function(visual) {
+    this.makeVisualDirty = function(visual) {
         var wrapper = {};
         wrapper.visual = visual;
         wrapper.tMin = visual.getTMin();
-        visual.setTMin(NaN); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
+        visual.setTMin(Number.POSITIVE_INFINITY); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
         wrapper.times = [];
         var vertices = visual.getVertices();
         for(var i in vertices) {
             wrapper.times.push(vertices[i].getT());
-            vertices[i].setT(NaN);
+            vertices[i].setT(Number.POSITIVE_INFINITY);
         }
+        //would have to disable transforms
         return wrapper;
     }
 
-    /*********************************CLEANING OF VISUALS*********************************/
-    this.cleanVisuals = function(dirtyWrappers, shift) {
-        if(dirtyWrappers.lenght==0) { return; } //DONT add anything to the beginning of the group if we don't need to
+    this.cleanVisuals = function(dirtyWrappers, amount) {
         for(var i in dirtyWrappers) {
-            var dirtyObj = dirtyWrappers[i];
-            var visual = dirtyObj.visual;
+            var dirtyWrapper = dirtyWrappers[i];
+            var visual = dirtyWrapper.visual;
+            visual.setTMin(dirtyWrapper.tMin + amount);
             var vertices = visual.getVertices();
             for(var j in vertices) {
-                vertices[j].setT(dirtyObj.times[j]+shift);
+                vertices[j].setT(dirtyWrapper.times[j] + amount);
             }
-            visual.setTMin(dirtyObj.tMin + shift);
+            //would have to re-enable transforms
         }
-
-        um.addToStartOfGroup(ActionGroups.SlideGroup, function() {
-            reDirtyVisuals(dirtyVisuals, shift);
-        });
     }
 
-    function reDirtyVisuals(dirtyVisuals, shift) {
-        for(var i in dirtyVisuals.length) {
-            var dirtyObj = dirtyVisuals[i];
-            var visual = dirtyObj.visual;
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(NaN);
-            }
-            visual.setTMin(NaN);
-        }
-
-        um.add(function() {
-            reCleanVisuals(dirtyVisuals, shift);
-        }, ActionTitles.ShiftVisuals);
-    }
-
-    function reCleanVisuals(dirtyVisuals, shift) {
-        for(var i in dirtyVisuals.length) {
-            var dirtyObj = dirtyVisuals[i];
-            var visual = dirtyObj.visual;
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(dirtyObj.times[j]+shift);
-            }
-            visual.setTMin(dirtyObj.tMin + shift);
-        }
-
-        um.add(function() {
-            reDirtyVisuals(dirtyVisuals, shift);
-        }, ActionTitles.ShiftVisuals);
-    }
-    /*********************************CLEANING OF VISUALS*********************************/
     /**********************************ADDING OF VISUALS**********************************/
     function unaddVisual(slide, visual) {
         var idx = lecture.getSlides().indexOf(slide);
@@ -79,11 +43,9 @@ function VisualsController(lec) {
         if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
         
         slide.getVisuals().splice(idx, 1);
-        state.visualsInsertionIndex--;
         um.add(function() {
             self.addVisual(slide, visual);
-        }, ActionTitles.UnaddVisual);
-        updateVisuals();
+        }, ActionTitles.AdditionOfVisual);
         return visual;
     }
     
@@ -91,41 +53,96 @@ function VisualsController(lec) {
         var idx = lecture.getSlides().indexOf(slide);
         if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
         
-        slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
-        state.visualsInsertionIndex++;
+        // slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
+        slide.getVisuals().push(visual);
         um.add(function() {
             unaddVisual(slide, visual);
         }, ActionTitles.AdditionOfVisual);
         return visual;
     }
+
+    this.appendVertex = function(visual, vertex) {
+        visual.getVertices().push(vertex);
+    }
+
+    function unaddProperty(visual, property) {
+        var idx = visual.getPropertyTransforms().indexOf(property);
+        visual.getPropertyTransforms().splice(idx, 1);
+
+        um.add(function() {
+            self.addProperty(visual, property);
+        }, ActionTitles.AdditionOfProperty);
+    }
+
+    this.addProperty = function(visual, property) {
+        visual.getPropertyTransforms().push(property);
+
+        um.add(function() {
+            unaddProperty(visual, property);
+        }, ActionTitles.AdditionOfProperty);
+    }
+
+    this.setTDeletion = function(visual, time) {
+        var tdel = visual.getTDeletion()
+        visual.setTDeletion(time);
+
+        um.add(function() {
+            self.setTDeletion(visual, tdel);
+        }, ActionTitles.DeleteVisual)
+    }
     /**********************************ADDING OF VISUALS**********************************/
+    /*******************************TRANSFORMING OF VISUALS********************************/
+    //Typically during a recording, these are the handlers for transforms to be applied to visuals
+    //Resizing or such actions are transformations which may happen during editing
+
+
+    /*******************************TRANSFORMING OF VISUALS********************************/
     /**********************************EDITING OF VISUALS**********************************/
     //This section is primarily concerned with the direct editing of the properties of
     //a visual. Recording edits to a visual are transforms, which is in a later section
     this.editWidth = function(visuals, newWidth) {
-        var widths = [];
+        var widthObjs = [];
         for(var i in visuals) {
             var visual = visuals[i];
-            widths.push(visual.getProperties().getWidth());
+            var widthObj = {};
+            widthObj.widthTrans = [];
+            widthObj.indices = [];
+            widthObj.width  = visual.getProperties().getWidth();
             visual.getProperties().setWidth(newWidth);
+            var propTrans = visual.getPropertyTransforms();
+            for(var j in propTrans) {
+                if(propTrans[j].type=="width") {
+                    widthObj.widthTrans.push(propTrans[j]);
+                    widthObj.indices.push(j);
+                }
+            }
+            for(var j in widthObj.widthTrans) {
+                propTrans.splice(propTrans.indexOf(widthObj.widthTrans[j]), 1);
+            }
+            widthObjs.push(widthObj);
         }
 
         um.add(function() {
-            unEditWidths(visuals, widths, newWidth);
-            updateVisuals();
-        }, ActionTitles.EditOfVisual)
+            unEditWidths(visuals, widthObjs, newWidth);
+        }, ActionTitles.Edit)
     }
 
-    function unEditWidths(visuals, widths, newWidth) {
+    function unEditWidths(visuals, widthObjs, newWidth) {
         for(var i in visuals) {
             var visual = visuals[i];
-            visual.getProperties().setWidth(widths[i]);
+            var widthObj = widthObjs[i];
+            visual.getProperties().setWidth(widthObjs[i].width);
+            widthObj.indices.reverse();
+            widthObj.widthTrans.reverse();
+            var propTrans = visual.getPropertyTransforms();
+            for(var j in widthObj.indices) {
+                propTrans.splice(widthObj.indices[j], 0, widthObj.widthTrans[j]);
+            }
         }
 
         um.add(function() {
             self.editWidth(visuals, newWidth);
-            updateVisuals();
-        }, ActionTitles.EditOfVisual);
+        }, ActionTitles.Edit);
     }
 
     this.editColor = function(visuals, newColor) {
@@ -135,8 +152,7 @@ function VisualsController(lec) {
     function unEditColors(visuals, colors) {
         //TODO FILL
     }
-    /**********************************EDITING OF VISUALS**********************************/
-    /*********************************DELETING OF VISUALS**********************************/
+
     function doShiftVisual(visual, amount) {
         visual.setTMin(visual.getTMin() + amount);
         var vertIter = visual.getVerticesIterator();
@@ -144,15 +160,26 @@ function VisualsController(lec) {
             var vert = vertIter.next();
             vert.setT(vert.getT() + amount);
         }
+        if(visual.getTDeletion()!=null) { visual.setTDeletion(visual.getTDeletion() + amount);}
+        var propTransIter = visual.getPropertyTransformsIterator();
+        while(propTransIter.hasNext()) {
+            var propTrans = propTransIter.next();
+            propTrans.setT(propTrans.getT() + amount);
+        }
+        var spatTransIter = visual.getSpatialTransformsIterator();
+        while(spatTransIter.hasNext()) {
+            var spatTrans = spatTransIter.next();
+            spatTrans.setT(spatTrans.getT() + amount);
+        }
     }
     
     this.shiftVisuals = function(visuals, amount) {
+        if(visuals.length==0) { return; }
         for(var vis in visuals) { doShiftVisual(visuals[vis], amount); }
         
-        //black magic, move to beginning?
-        var shift = um.addToStartOfGroup(ActionGroups.RecordingGroup, function() {
+        var shift = um.add(function() {
             for(var vis in visuals) { doShiftVisual(visuals[vis], -1.0*amount); }
-        });
+        }, ActionTitles.ShiftVisuals);
         
         if(DEBUG) { console.log(shift); }
     }
@@ -178,14 +205,13 @@ function VisualsController(lec) {
             slide.getVisuals().splice(index, 0, visual);
         }
         
-        visuals.reverse(); //this is not necessary
+        // visuals.reverse(); //this is not necessary
         //no need to reverse indices here cause it will just get garbagecollected
         //shifts will likewise just get garbagecollected
-        
+
         um.add(function() {
             self.deleteVisuals(slide, visuals);
         }, ActionTitles.DeleteVisual);
-        updateVisuals();
     }
     
     this.deleteVisuals = function(slide, visuals) {
@@ -204,7 +230,7 @@ function VisualsController(lec) {
             if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
         }
         
-        console.log("post-DELETION visuals"); console.log(state.currentSlide.visuals);
+        console.log("post-DELETION visuals"); console.log(state.currentSlide.getVisuals());
         
         for(var sh in shifts) {
             var shift = shifts[sh];
@@ -215,20 +241,13 @@ function VisualsController(lec) {
             }
         }
         shifts.reverse();
-        
         //should we change the duration of the slide?!?
         um.add(function() {
-            undeleteVisuals(state.currentSlide, visuals, indices, shifts);
+            undeleteVisuals(slide, visuals, indices, shifts);
         }, ActionTitles.DeleteVisual);
-        updateVisuals();
+        return shifts[0].tMin;
     }
-    /*********************************DELETING OF VISUALS**********************************/
-    /*******************************TRANSFORMING OF VISUALS********************************/
-    //Typically during a recording, these are the handlers for transforms to be applied to visuals
-    //Resizing or such actions are transformations which may happen during editing
-
-
-    /*******************************TRANSFORMING OF VISUALS********************************/
+    /**********************************EDITING OF VISUALS**********************************/
     /**********************************HELPER FUNCTIONS***********************************/
     function prevNeighbor(visual) {
         var prev;

@@ -13,10 +13,12 @@ pentimento.timeController = new function() {
             max: pentimento.lectureController.getLectureDuration()
         });
         var type = state.recordingType;
-        if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) { self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate)); }
+        if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
+            self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate));
+            updateVisuals();
+        }
         if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.videoCursor + (endTime - lastTimeUpdate)); }
         lastTimeUpdate = null;
-//        $('#slider').slider('value', state.current_time);
     }
 
     function updateTicker(time) {
@@ -55,8 +57,13 @@ pentimento.timeController = new function() {
         lastTimeUpdate = beginTime;
         interval = setInterval(function() {
             var gt = globalTime();
-            if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) { self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate)); }
-            if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate)); }
+            if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
+                self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate));
+                updateVisuals();
+            }
+            if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) {
+                self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate));
+            }
             lastTimeUpdate = gt;
         }, INTERVAL_TIMING);
     }
@@ -68,6 +75,9 @@ pentimento.timeController = new function() {
         state.videoCursor = time;
         updateTicker(time);
         if(!state.isRecording) {
+            $('#slider').slider('option', {
+                max: pentimento.lectureController.getLectureDuration()
+            });
             $('#slider').slider('value', time);
             pentimento.lectureController.setStateSlide(state.videoCursor);
         }

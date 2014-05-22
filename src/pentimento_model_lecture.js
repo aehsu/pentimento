@@ -1,6 +1,24 @@
 /*************************************************
 					MODEL
 *************************************************/
+
+function SlideTransform(type, tmin, durate, mat) {
+    var self = this;
+    self.tMin = tmin;
+    self.duration = durate;
+    self.matrix = mat;
+
+    this.getTMin = function() { return self.tMin; }
+    this.getDuration = function() { return self.duration; }
+    this.getMatrix = function() { return self.matrix; }
+    this.setTMin = function(newTMin) { self.tMin = newTMin; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
+}
+
+// SlideTransform.prototype.getClone = function() {
+// }
+
 function Slide() {
     var visuals = [];
     var transforms = [];
@@ -21,33 +39,24 @@ function Slide() {
 ConstraintTypes = {
 	Manual: "Manual",
 	Automatic: "Automatic"
-}
+} //necessary?
 
 function Constraint(tvis, taud, mytype) {
-    var tVis = tvis;
-    var tAud = taud;
-    var type = mytype;
+    var self = this;
+    self.tVis = tvis;
+    self.tAud = taud;
+    self.type = mytype;
+    self.disabled = false;
 
-    this.getTVis = function() { return tVis; }
-    this.getTAud = function() { return tAud; }
-    this.getType = function() { return type; }
+    this.getTVisual = function() { return self.tVis; }
+    this.getTAudio = function() { return self.tAud; }
+    this.getType = function() { return self.type; }
+    this.getDisabled = function() { return self.disabled; }
 
-    this.setTVis = function(newTVis) { tVis = newTVis; }
-    this.setTAud = function(newTAud) { tAud = newTAud; }
-    this.setType = function(newType) { type = newType; }
-}
-
-function SlideTransform(tmin, durate, mat) {
-    var tMin = tmin;
-    var duration = durate;
-    var matrix = mat;
-
-    this.getTMin = function() { return tMin; }
-    this.getDuration = function() { return duration; }
-    this.getMatrix = function() { return matrix; }
-    this.setTMin = function(newTMin) { tMin = newTMin; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
-    this.setMatrix = function(newMatrix) { matrix = newMatrix; }
+    this.setTVisual = function(newTVis) { self.tVis = newTVis; }
+    this.setTAudio = function(newTAud) { self.tAud = newTAud; }
+    this.setType = function(newType) { self.type = newType; }
+    this.setDisabled = function(newBool) { self.disabled = newBool; }
 }
 
 function Lecture() {
@@ -59,12 +68,11 @@ function Lecture() {
     this.getSlides = function() { return slides; }
     this.getAudioTracks = function() { return audioTracks; }
     this.getConstraints = function() { return constraints; }
-    // this.getTransforms = function() { return transforms; }
 
     this.setSlides = function(newSlides) { slides = newSlides; }
     this.setAudioTracks = function(newAudioTracks) { audioTracks = newAudioTracks; }
     this.setConstraints = function(newConstraints) { constraints = newConstraints; }
-    // this.setTransforms = function(newTransforms) { transforms = newTransforms; }
 
     this.getSlidesIterator = function() { return new Iterator(slides); }
+    this.getConstraintsIterator = function() { return new Iterator(constraints); }
 };
