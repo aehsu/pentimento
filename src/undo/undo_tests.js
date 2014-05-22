@@ -97,6 +97,7 @@ var testUM = function (guiFunctions) {
         for (var key in getUMfunctions()){
             try {
                 um = getUndoManager(['group1', 'group2', 'group3'], true); //get a clean undo manager
+                um.toggleWarningSuppression();
                 scenario();
                 results[key] = [ignoreErrors(getUMfunctions()[key])];
                 results[key][1] = um.getUndoLength();

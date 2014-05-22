@@ -10,11 +10,13 @@ var getUndoManager = function(groupTypes, debug) {
         debug = false; // keeps track of whether debug mode is on or off
     } 
 
+    var suppressWarnings = false; // if true, don't show debug warnings
+
     // Used to display a warning in the console, but only if debug mode is on.
     // msg - the message to display in the warning
     // The console text will read "WARNING: " followed by msg.
     var displayDebugWarning = function(msg) {
-        if (debug) {
+        if (debug && !suppressWarnings) {
             console.log("WARNING: " + msg);
         }
     }
@@ -98,8 +100,6 @@ var getUndoManager = function(groupTypes, debug) {
                 throw indexOutOfBoundsError(index); //TODO: test
             }
             if (undoStack[index].inGroups.indexOf(group) === -1) {
-                // console.log(index);
-                // console.log(undoStack);
                 throw notInGroupError(group); //TODO: test
             }
             if (isNull(title)) {
@@ -244,11 +244,13 @@ var getUndoManager = function(groupTypes, debug) {
             // backwards for-loop to avoid indexing problems with splicing
             for (var i = initialNextUndo.atEndOfGroups.length-1; i >= 0; i--) {
                 group = initialNextUndo.atEndOfGroups[i];
-                // if the action just redone is supposed to be in a group with initialNextUndo, 
-                // it should be made the current end of that group
-                if (currentNextUndo.inGroups.indexOf(group) !== -1 && currentNextUndo.atStartOfGroups.indexOf(group) === -1) {
+                // if the action just redone is supposed to be in a group with initialNextUndo 
+                // and initialNextUndo is currently the end of that group, the newly redone action
+                // should be made the end of the group instead
+                if (initialNextUndo.atEndOfGroups.indexOf(group) !== -1 && currentNextUndo.inGroups.indexOf(group) !== -1 && 
+                    currentNextUndo.atStartOfGroups.indexOf(group) === -1) {
                         unorderedSplice(initialNextUndo.atEndOfGroups, i, 1);
-                        if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) {
+                        if (currentNextUndo.atEndOfGroups.indexOf(group) === -1) { // make sure to not list the group twice
                             currentNextUndo.atEndOfGroups.push(group);
                         }
                         
@@ -364,8 +366,9 @@ var getUndoManager = function(groupTypes, debug) {
             var index = hierarchyOrder.indexOf(group);
             if (index !== -1) {
                 if (index+1 < hierarchyOrder.length) {
-                    publicFunctions.endHierarchy(hierarchyOrder[index+1]); // will recursively end the groups from innermost to outermost
-                    displayDebugWarning(groupAutoClose(group));
+                    var innerGroup = hierarchyOrder[index+1];
+                    publicFunctions.endHierarchy(innerGroup); // will recursively end the groups from innermost to outermost
+                    displayDebugWarning(groupAutoClose(innerGroup));
                 }
                 hierarchyOrder.pop(); //the group should be at the end of hierarchyOrder by this point, can pop it instead of splicing
             }
@@ -408,16 +411,16 @@ var getUndoManager = function(groupTypes, debug) {
                 }
                 undo(true);
             }
-
-            // Undoing the group may have undone part of other groups.
-            // Make the next undo object the end of those groups.
-            // TODO: desired? What if those groups hadn't been ended yet?
-            // scenario1: s1 a1 a2 a3 s2 a4 a5 e2 e1 u2 --> s1 a1 a2 a3 e1 makes sense
-            // scenario2: s1 a1 a2 a3 s2 a4 a5 e2 a6 a7 ua7 ua6 u2 --> would still want group1 open? No.
-            // allow undoing of group2, but keep track of whether or not to end group 1
+            // Undoing the group may have undone part of other groups, which may or may not still be open.
+            // Add the groups that weren't open to atEndOfGroups of the next undo action.
             var nextUndo = getNextUndo();
             if (nextUndo) {
-                nextUndo.atEndOfGroups = nextUndo.inGroups.slice(0);
+                for (var i in nextUndo.inGroups) {
+                    group = nextUndo.inGroups[i];
+                    if (hierarchyOrder.indexOf(group) === -1) { // if the group isn't in hierarchyOrder, then it should be ended
+                        nextUndo.atEndOfGroups.push(group);
+                    }
+                }
             }
             fireEvent('operationDone');
             return publicFunctions;
@@ -598,6 +601,12 @@ var getUndoManager = function(groupTypes, debug) {
             }
             groupTitles[group] = title;
             return true;
+        },
+        // Switches the (boolean) value of suppressWarnings and returns the new value.
+        // (if suppressWarnings is true, debug messages will not be shown)
+        toggleWarningSuppression: function() {
+            suppressWarnings = !suppressWarnings;
+            return suppressWarnings;
         }
     };
 
