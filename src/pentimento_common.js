@@ -1,6 +1,8 @@
 /***********************CONFIGURATION***********************/
 INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
+SHIFT_INTERVAL = 1000;
 DEBUG = true;
+snapRecording = true;
 canvasId = "sketchpad";
 sliderId = "slider";
 tickerId = "ticker";
@@ -10,20 +12,28 @@ tickerId = "ticker";
 pentimento = {};
 
 ActionGroups = {
-    RecordingGroup: "RecordingGroup",
-    SlideGroup: "SlideGroup",
-    CustomGroup: "CustomGroup"
+    VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
+    SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
+    ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
+    RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
+    // CustomGroup: "CustomGroup"
+    EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
 };
 
 ActionTitles = {
+    Recording: "Recording",
     AdditionOfSlide: "AdditionOfSlide",
     DeleteSlide: "DeleteSlide",
-    UnaddSlide: "UnaddSlide",
+    ShiftSlide: "ShiftSlide",
     AdditionOfVisual: "AdditionOfVisual",
-    UnaddVisual: "UnaddVisual",
     DeleteVisual: "DeleteVisual",
     ShiftVisuals: "ShiftVisual(s)",
-    ShiftSlide: "ShiftSlide"
+    AdditionOfConstraint: "AdditionOfConstraint",
+    DeletionOfConstraint: "DeletionOfConstraint",
+    ShiftConstraints: "ShiftConstraints",
+    AdditionOfProperty: "AdditionOfProperty",
+    Edit: "Edit",
+    Dummy: "Dummy"
 };
 
 RecordingTypes = {
@@ -32,7 +42,7 @@ RecordingTypes = {
     AudioVideo: "AudioVideo"
 };
 
-um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.VisualGroup, ActionGroups.AudioGroup], DEBUG);
+um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], DEBUG);
 
 function globalTime() {
     return (new Date()).getTime();
@@ -52,60 +62,13 @@ function Iterator(array) {
     };
 }
 
-/***********************RENDERING CODE***********************/
-//renderer code. temporary stint until renderer code gets well integrated
-function updateVisuals() {
-    clear();
-    var slideIter = pentimento.lecture.getSlidesIterator();
-    var state = pentimento.state;
-    var slideTime = state.videoCursor;
-    var visuals = [];
-    while(slideIter.hasNext()) {
-        var slide = slideIter.next();
-        if(slide==state.currentSlide) { //if(running_time + slide_accessor.duration() < pentimento.state.current_time) //
-            var visualsIter = slide.getVisualsIterator();
-            while(visualsIter.hasNext()) {
-                var visual = visualsIter.next();
-                if(slideTime > visual.getTMin() && 
-                    (visual.getTDeletion()==null) || (slideTime < visual.getTDeletion()) ) {
-                    drawVisual(visual);
-                }
-            }
-        } else {
-            slideTime -= slide.duration;
-        }
-    }
+function Matrix() {
+    //TODO
 }
 
-function clear() {
-    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-}
+Matrix.prototype.getClone = function() {
 
-function drawVisual(visual) {
-    switch(visual.getType()) {
-        case VisualTypes.basic:
-            console.log("someone actually made a basic type?!",visual);
-            break;
-        case VisualTypes.stroke:
-            var vertsIter = visual.getVerticesIterator();
-            var prev;
-            if(vertsIter.hasNext()) {
-                prev = vertsIter.next();
-            }
-            while (vertsIter.hasNext()) {
-                var curr = vertsIter.next();
-                var line = new Segment(prev, curr, visual.getProperties());
-                drawLine(line);
-                prev = curr;
-            }
-            break;
-        case VisualTypes.dot:
-            break;
-        case VisualTypes.img:
-            break;
-    }
 }
-/***********************RENDERING CODE***********************/
 
 $(document).ready(function(){
     var iw = $(window).width();

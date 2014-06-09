@@ -45,17 +45,36 @@ function keyUpHandler(evt) {
 
 function undoListener(event) {
     if(um.getUndoLength() > 0) {
-        $('.forever-tool[data-toolname="undo"]').removeAttr('disabled');
+        $('.um-tool[data-toolname="undo"]').removeAttr('disabled'); //everything
+
+        for(var attr in ActionGroups) {
+            if(um.canUndo(attr)) {
+                $('.um-tool[data-toolname="undo"]').text('Undo-'+attr);
+                $('.um-tool[data-toolname="undo"]').attr('data-group', attr)
+                break;
+            }
+        }
     } else {
-        $('.forever-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="undo"]').each(function() { $(this).text('Undo'); });
+        $('.um-tool[data-toolname="undo"]').removeAttr('data-group');
     }
 }
 
 function redoListener(event) {
     if(um.getRedoLength() > 0) {
-        $('.forever-tool[data-toolname="redo"]').removeAttr('disabled');
+        $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
+        for(var attr in ActionGroups) {
+            if(um.canRedo(attr)) {
+                $('.um-tool[data-toolname="redo"]').text('Redo-'+attr);
+                $('.um-tool[data-toolname="redo"]').attr('data-group', attr);
+                break;
+            }
+        }
     } else {
-        $('.forever-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+        $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
+        $('.um-tool[data-toolname="redo"]').removeAttr('data-group');
     }
 }
 
@@ -65,5 +84,5 @@ $(document).ready(function() {
     $(window).on('keydown', keyDownHandler);
     $(window).on('keyup', keyUpHandler);
     $(window).on('click', undoListener);
-    $(window).on('click', redoListener)
+    $(window).on('click', redoListener);
 })
