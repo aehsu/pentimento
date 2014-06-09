@@ -9,8 +9,7 @@
     <script type='text/javascript' src='undo/errors.js'></script>
     <script type='text/javascript' src='undo/compatibility.js'></script>
     <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
-    <script type='text/javascript' src='undo/undo.js'></script>
-    
+    <script type='text/javascript' src='undo/undo.js'></script>   
     <script type='text/javascript' src='pentimento_common.js'></script>
     <script type='text/javascript' src="wavesurfer.min.js"></script>
     <script type='text/javascript' src="RecordRTC.js"></script>
@@ -34,41 +33,65 @@
         <div>
             <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
             <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
-            
-            <table style="display:inline-block;position:relative;top:15px;">
+
+            <table class="menu-table">
                 <tr>
                     <td>
-                    <input type="checkbox">Visuals
-                    <input type="checkbox">Auto<br>
+                    <input type="checkbox"> <span class="ui-label">Visuals</span>
+                    <input type="checkbox"><span class="ui-label">Auto</span><br>
                     </td>
                 </tr>
 
                 <tr>
-                    <td><input type="checkbox">Audio</td>
+                    <td><input type="checkbox"><span class="ui-label">Audio</span></td>
                 </tr>
             </table>
 
-            |
             <input type="image" src="icons/media_playback_start.png" class="edit-tool center" data-toolname="play">
             <input type="image" src="icons/pause.png" class="edit-tool hidden center" data-toolname="pause">
-            <table style="display:inline-block;position:relative;top:15px;">
+
+            <table class="menu-table">
                 <tr>
-                    <td><input type="checkbox">No Pause</td>
+                    <td><input type="checkbox"><span class="ui-label">No Pause</span></td>
                 </tr>
                 <tr>
-                    <td><input type="checkbox">Fast Replay</td>
+                    <td><input type="checkbox"><span class="ui-label">Fast Replay</span></td>
                 </tr>
             </table>
 
             <!-- <input type="image" src="icons/media_skip_backward.png" class="edit-tool center" data-toolname="rewind">
             <input type="image" src="icons/media_skip_forward.png" class="edit-tool center" data-toolname="fastforward"> -->
-            | 
-            <input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
-            <label>select |</label>
-            <input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="delete">
-            <label>delete |</label>
-            <input type="image" src="icons/pen.png" class="edit-tool center" data-toolname="redraw">
-            <label>redraw selection |</label>
+            
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Select</label></td>
+                </tr>
+            </table>
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="delete">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Delete</label></td>
+                </tr>
+            </table>
+
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/pen.png" class="edit-tool center" data-toolname="redraw">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Redraw Selection</label></td>
+                </tr>
+            </table>
 
             <select class="edit-tool" data-toolname="width">
                 <option value="">Change Stroke Width</option>
@@ -83,7 +106,6 @@
                 <option value="18">18</option>
                 <option value="20">20</option>
             </select>
-            <label> | </label>
             <button class="edit-tool" data-toolname="delete-slide">Delete Slide</button>
             <button class="um-tool edit-tool" data-toolname="undo" disabled="true">Undo</button>
             <button class="um-tool edit-tool" data-toolname="redo" disabled="true">Redo</button>
@@ -129,19 +151,19 @@
 
         <div class="container">
             <div class="left-col">
-                <label>In-Lecture Tools</label><br>
+                <label class="ui-label">In-Lecture Tools</label><br>
                 <hr>
 
-                <input type="image" src="icons/selection.png" height="40px" class="lecture-tool" data-toolname="select"><br>
-                <label>Selection for editing <br> (eraser side of stylus)</label><br>
+                <input type="image" src="icons/selection.png" class="lecture-tool lecture-tool-image" data-toolname="select"><br>
+                <label class="ui-label">Selection for editing <br> (eraser side of stylus)</label><br>
 
-                <input type="image" src="icons/feather-2.png" height="40px" class="lecture-tool" data-toolname="pen"><br>
-                <label>Pen</label><br>
+                <input type="image" src="icons/feather-2.png" class="lecture-tool lecture-tool-image" data-toolname="pen"><br>
+                <label class="ui-label">Pen</label><br>
 
-                <input type="image" src="icons/highlighter.png" height="40px" class="lecture-tool" data-toolname="highlight"><br>
-                <label>Highlighter</label><br>
+                <input type="image" src="icons/highlighter.png" class="lecture-tool lecture-tool-image" data-toolname="highlight"><br>
+                <label class="ui-label">Highlighter</label><br>
 
-                <img src="icons/width.png" height="40px" width="90px"><br>
+                <img src="icons/width.png" width="90px" class="lecture-tool-image"><br>
                 <select class="lecture-tool" data-toolname="width">
                     <option value="2">Default width</option>
                     <option value="4">4</option>
@@ -154,8 +176,9 @@
                     <option value="18">18</option>
                     <option value="20">20</option>
                 </select><br>
-                <label>Stroke Width</label><br>
-                <button class="lecture-tool" data-toolname="delete">Delete Visual</button><br>
+                <label class="ui-label">Stroke Width</label><br>
+
+                <button class="lecture-too lecture-tool-button" data-toolname="delete">Delete Visual</button><br>
                 <button class="lecture-tool" data-toolname="add-slide">Add Slide</button><br>
 
                 <button class="um-tool lecture-tool" data-toolname="undo" disabled="true">Undo</button>
