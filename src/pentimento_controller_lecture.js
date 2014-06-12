@@ -53,7 +53,7 @@ pentimento.lecture_controller = new function() {
             var total_duration = 0;
             for(slide in lecture.slides) { //something...equals...something...
                 if (state.current_time > total_duration && state.current_time <= total_duration+lecture.slides[slide].duration) {
-                    recording_params =  {
+                    recording_params = {
                         'current_slide': slide,
                         'time_in_slide': state.current_time - total_duration
                     };
@@ -262,7 +262,7 @@ pentimento.lecture_controller = new function() {
         shift_visuals(shifts[0]['tMin'], duration);
         for(vis in new_visuals) {
             shift_visual(new_visuals[vis], -1.0*offset);
-            state.current_slide.visuals.push(new_visuals[vis]);   
+            state.current_slide.visuals.push(new_visuals[vis]);
         }
         state.current_slide.duration += duration;
     }
