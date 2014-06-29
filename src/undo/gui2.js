@@ -79,50 +79,60 @@ $(document).ready(function(){
         for (var j in modes) {
             setButtonDisability(groups[i], modes[j], false);
         }
+        setButtonDisability(groups[i], 'start', true);
     }
 
     // create and register the event listeners
 
-    // changes the titles of the undo and redo buttons
-    var changeTitles = function(evt) {
-        $('.undo').html("Undo " + evt.undoTitle);
-        $('.redo').html("Redo " + evt.redoTitle);
-    };
-    undoManager.addListener('actionPerformed', changeTitles);
-    undoManager.addListener('actionUndone', changeTitles);
-    undoManager.addListener('actionRedone', changeTitles);
-
-    // disables/enables the undo button for a particular group (or just the individual undo button, if the group is null)
-    var setUndoDisability = function(evt) {
-        setButtonDisability(evt.group, 'undo', evt.enabled);
-    };
-    undoManager.addListener('undoStatusChange', setUndoDisability);
-
-    // disables/enables the redo button for a particular group (or just the individual redo button, if the group is null)
-    var setRedoDisability = function(evt) {
-        setButtonDisability(evt.group, 'redo', evt.enabled);
-    };
-    undoManager.addListener('redoStatusChange', setRedoDisability);
-
-    // disables the end button for a particular group
-    var disableEnd = function(evt) {
-        setButtonDisability(evt.group, 'end', false);
-    };
-    undoManager.addListener('groupEnded', disableEnd);
-
-    // enables the end button for a particular group
-    var enableEnd = function(evt) {
-        setButtonDisability(evt.group, 'end', true);
-    };
-    undoManager.addListener('groupStarted', enableEnd);
-
-    var changeGroupTitles = function(evt) {
-        console.log(evt.redoTitle);
-        $("#undo." + evt.group).html("Undo " + evt.undoTitle);
-        $("#redo." + evt.group).html("Redo " + evt.redoTitle);
+    // checks if each group can be undone, changes the corresponding buttons as necessary
+    var checkUndo = function() {
+        for (var i in groups) {
+            var group = groups[i];
+            var title = undoManager.canUndo(group);
+            var enabled = true;
+            if (title === false) {
+                enabled = false;
+                title = group;
+            }
+            setButtonDisability(group, 'undo', enabled);
+            $('#undo.'+group).text('Undo ' + title);
+        }
     }
-    undoManager.addListener('groupUndone', changeGroupTitles);
-    undoManager.addListener('groupRedone', changeGroupTitles);
+    undoManager.addListener('groupStatusChange', checkUndo);
+    undoManager.addListener('actionDone', checkUndo);
+    undoManager.addListener('operationDone', checkUndo);
+
+    //TODO: consider firing separate events for different groups
+    // checks if each group can be redone, changes the corresponding buttons as necessary
+    var checkRedo = function() {
+        for (var i in groups) {
+            var group = groups[i];
+            var title = undoManager.canRedo(group);
+            var enabled = true;
+            if (title === false) {
+                enabled = false;
+                title = group;
+            }
+            setButtonDisability(group, 'redo', enabled);
+            $('#redo.'+group).text('Redo ' + title);
+        }
+    }
+    undoManager.addListener('operationDone', checkRedo);
+    undoManager.addListener('actionDone', checkRedo);
+
+    // enables or disables the end button for each group as necessary
+    var changeGroupStatus = function() {
+        for (var i in groups) {
+            var group = groups[i];
+            var enabled = true;
+            if (!undoManager.isGroupOpen(group)) {
+                enabled = false;
+            }
+            setButtonDisability(group, 'end', enabled);
+        }
+    }
+    undoManager.addListener('groupStatusChange', changeGroupStatus);
+    undoManager.addListener('operationDone', changeGroupStatus); // sometimes groups are auto-closed during undo/redo
 
     // Set up the event handler for the dropdowns. Changing the value changes the corresponding css value
     // for the example text.

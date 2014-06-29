@@ -55,6 +55,14 @@ var groupUndoError = function(group) {
     };
 };
 
+var improperInverseError = function() {
+    return {
+        name: 'improperInverseError',
+        message: "The inverse action did not add anything to the undoManager.",
+        toString: getMessage
+    };
+};
+
 var indexOutOfBoundsError = function(index) {
     return {
         name: 'indexOutOfBoundsError',
@@ -165,3 +173,7 @@ var unorderedSpliceError = function() {
 var groupAutoClose = function(group) {
     return "The group '" + group + "' is being automatically ended.";
 };
+
+var groupReopened = function(group) {
+    return "The group '" + group + "' is being automatically reopened.";
+}

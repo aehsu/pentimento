@@ -97,6 +97,7 @@ var testUM = function (guiFunctions) {
         for (var key in getUMfunctions()){
             try {
                 um = getUndoManager(['group1', 'group2', 'group3'], true); //get a clean undo manager
+                um.toggleWarningSuppression();
                 scenario();
                 results[key] = [ignoreErrors(getUMfunctions()[key])];
                 results[key][1] = um.getUndoLength();
@@ -879,7 +880,6 @@ var testUM = function (guiFunctions) {
     }; 
 
     concatStandardRes();
-
     failedScenarios['test18'] = getFailedFunctions(expectedResults, scenario);
     
     /*
@@ -1038,7 +1038,7 @@ var testUM = function (guiFunctions) {
         TEST 23
         group1 started, actions performed, last action undone, group ended, action redone, new action performed
         test that new action is not considered part of the group (only the redone action should be part of the group, 
-        relevant to Test 16)
+        relevant to Test 17)
     */
     
     scenario = function () {
@@ -1356,7 +1356,121 @@ var testUM = function (guiFunctions) {
 
     failedScenarios['test30'] = getFailedFunctions(expectedResults, scenario);
 
+    /*
+        TEST 31
+        group2 poulated, group1 started, group2 undone, group1 started, action performed
+        test that group1 was ended properly when group2 was undone
+        (if not, results show 'internal errors' (recursion errors))
+    */
+
+    scenario = function () {
+        um.startHierarchy('group2');
+        changeBodyColor('red');
+        um.endHierarchy('group2');
+        um.startHierarchy('group1');
+        um.undoHierarchy('group2');
+        um.startHierarchy('group1');
+        changeBodyColor('blue');
+    };
     
+    standardResults = [1, 0, getBodyColorTitle('blue'), null];
+
+    expectedResults = {
+        undo: [true, 0, 1, null, getBodyColorTitle('blue')],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [true],
+        undoH1: [true, 0, 1, null, getBodyColorTitle('blue')],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [errorNames['endH2']],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test31'] = getFailedFunctions(expectedResults, scenario);  
+
+    /*
+        TEST 32
+        Start a group, perform an action, undo that action.
+        Test that the action can be redone both through individual redo and group redo.
+    */
+
+    scenario = function () {
+        um.startHierarchy('group2');
+        changeBodyColor('red');
+        um.undo();
+    };
+    
+    standardResults = [0, 1, null, getBodyColorTitle('red')];
+
+    expectedResults = {
+        undo: [errorNames['undo']],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [errorNames['undoH1']],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [true],
+        undoH2: [errorNames['undoH2']],
+        redoH2: [true, 1, 0, getBodyColorTitle('red'), null],
+        startH3: [true],
+        endH3: [errorNames['endH3']],
+        undoH3: [errorNames['undoH3']],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test32'] = getFailedFunctions(expectedResults, scenario);
+
+    /*
+        TEST 33
+        Test that redoing group1 will leave group2 and group3 open
+    */
+
+    scenario = function () {
+        um.startHierarchy('group3');
+        um.startHierarchy('group2');
+        um.startHierarchy('group1');
+        changeBodyColor('red');
+        um.endHierarchy('group1');
+        um.startHierarchy('group1');
+        changeBodyColor('blue');
+        um.endHierarchy('group1');
+        um.undoHierarchy('group1');
+        um.redoHierarchy('group1');
+    };
+    
+    standardResults = [2, 0, getBodyColorTitle('blue'), null];
+
+    expectedResults = {
+        undo: [true, 1, 1, getBodyColorTitle('red'), getBodyColorTitle('blue')],
+        redo: [errorNames['redo']],
+        startH1: [true],
+        endH1: [errorNames['endH1']],
+        undoH1: [true, 1, 1, getBodyColorTitle('red'), getBodyColorTitle('blue')],
+        redoH1: [errorNames['redoH1']],
+        startH2: [true],
+        endH2: [true],
+        undoH2: [true, 0, 2, null, getBodyColorTitle('red')],
+        redoH2: [errorNames['redoH2']],
+        startH3: [true],
+        endH3: [true],
+        undoH3: [true, 0, 2, null, getBodyColorTitle('red')],
+        redoH3: [errorNames['redoH3']]
+    }; 
+
+    concatStandardRes();
+
+    failedScenarios['test33'] = getFailedFunctions(expectedResults, scenario);  
 
     var nonEmptyFailedScenarios = {}; //will hold values from failedScenarios that aren't just empty arrays
 

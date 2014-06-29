@@ -14,6 +14,7 @@ Contents:
    Intro <intro>
    Tutorial <tutorial>
    Design <design>
+   Namespace <namespace>
    Models <models>
    Controllers <controllers>
 

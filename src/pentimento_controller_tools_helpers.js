@@ -1,21 +1,16 @@
-var VisualTypes = {
-    stroke: 'stroke',
-    dots: 'dots',
-};
+//This helps in redering, but is fundamental to the tool handlers themselves.
+//Only "finished" visuals leave the buffer and are put into the model, so
+//something needs to draw the buffered visuals, like the handlers.
 
-function draw_point(coord) { //PORTED
+//Draws a line segment based on a from point and a to point,
+//with a set of properties. Whoever calls this is in charge of giving the
+//segment the correct properties
+function drawLine(segment) {
     var ctx = pentimento.state.context;
     ctx.globalAlpha = 1.0;
     ctx.beginPath();
-    ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
-}
-
-function draw_line(line) {
-    var ctx = pentimento.state.context;
-    ctx.globalAlpha = 1.0;
-    ctx.beginPath();
-    ctx.moveTo(line.from.x, line.from.y);
-    ctx.lineTo(line.to.x, line.to.y);
+    ctx.moveTo(segment.getFromPoint().getX(), segment.getFromPoint().getY());
+    ctx.lineTo(segment.getToPoint().getX(), segment.getToPoint().getY());
 
     if (pentimento.state.pressure) { //some fancy stuff based on pressure
         /*var avg_pressure = 0.5 * (line.from.pressure + line.to.pressure)
@@ -24,324 +19,284 @@ function draw_line(line) {
             var alpha = (1 - 0.5) + 0.5 * avg_pressure
             line.color = 'rgba(32,32,32,' + alpha + ')' // todo use defaults
         }
-        else {
-            line.color = 'rgba(64,64,64,1)'  // todo use defaults
-        }
+        else { line.color = 'rgba(64,64,64,1)' }   // todo use defaults
 
-        if (pressure_width) {
-            line.width = 1 + Math.round(max_extra_line_width * avg_pressure) // todo use defaults
-        }
-        else {
-            line.width = 2 // todo use defaults
-        }
+        if (pressure_width) { line.width = 1 + Math.round(max_extra_line_width * avg_pressure) }  // todo use defaults
+        else { line.width = 2 } // todo use defaults
 
-        canvas.draw_line(line)*/
+        canvas.drawLine(line)*/
     } else {
-        if(line.properties) {
-            ctx.strokeStyle = line.properties.color;
-            ctx.lineWidth = line.properties.width;
-        } else {
-            ctx.strokeStyle = pentimento.state.color;
-            ctx.lineWidth = pentimento.state.width;
-        }
+        ctx.strokeStyle = segment.getProperties().getColor();
+        ctx.lineWidth = segment.getProperties().getWidth();
         ctx.lineCap = 'round';
         ctx.stroke();
     }
 }
 
+//The semantic is that visuals are visible exactly ON their tMin, not later
+//Therefore, when time hits tMin, the visual is visible
+//Likewise, visuals are deleted ON their tDeletion, not later
+//Therefore, when time his tDeletion, the visual is no longer visible
+function isVisualVisible(visual, tVisual) {
+    if(visual.getTMin() > tVisual) { return false; }
+    if(visual.getTDeletion() != null && visual.getTDeletion() <= tVisual) { return false; }
 
-// Returns the location of the event on the canvas, as opposed to on the page
-function get_canvas_point(event){
-    var pt = {
-        x: event.pageX - pentimento.state.canvas.offset().left,
-        y: event.pageY - pentimento.state.canvas.offset().top,
-        t: global_time()
-    };
-
-    if (pentimento.state.pressure) {
-        pt.pressure = event.pressure;
-    }
-
-    return pt;
+    return true;
 }
 
-// Initializes a dummy visual
-function empty_visual(){
-    return {
-        type: null,
-        doesItGetDeleted: null,
-        tDeletion: null,
-        tEndEdit: null,
-        tMin: global_time(),
-        properties: {
-            'color': pentimento.state.color,
-            'width': pentimento.state.width,
-        },
-        transforms: {},
-        vertices:[]
-    }
+//The semantic is the same as that for a visual, a vertex is visible ON its t value
+//This function can be modified if we decide to later support erasure
+function isVertexVisible(vertex, tVisual) {
+    if(vertex.getT() > tVisual) { return false; }
+
+    return true;
 }
 
-function draw_visual(visual) {
-    if (visual.type == VisualTypes.dots) {
-        for(var j=0; j<visual.vertices.length; j++) {
-            var vertex = visual.vertices[j];
-            draw_point(vertex);
-        }   
-    } else if(visual.type == VisualTypes.stroke) {
-        for(var j=1; j<visual.vertices.length; j++){
-            var from = visual.vertices[j-1]
-            var to = visual.vertices[j]
-            var line = {
-                from: from,
-                to: to,
-                properties: visual.properties
-            };  
-            draw_line(line);
-        }   
-    } else {
-        console.log('unknown visual type');
-    }
+function isInside(startPoint, endPoint, testPoint) {
+    var xStart = startPoint.getX();
+    var yStart = startPoint.getY();
+    var xEnd = endPoint.getX();
+    var yEnd = endPoint.getY();
+    var x = testPoint.getX();
+    var y = testPoint.getY();
+    var xcheck = (xEnd >= xStart && xEnd >= x && x >= xStart) || (xEnd <= xStart && xEnd <= x && x <= xStart);
+    var ycheck = (yEnd >= yStart && yEnd >= y && y >= yStart) || (yEnd <= yStart && yEnd <= y && y <= yStart);
+
+    return xcheck && ycheck;
 }
 
-function draw_visuals(visuals){ // PORTED
-    for (var i=0; i<visuals.length; i++){
-        draw_visual(visuals[i]);
-    }
-}
-
-function update_visuals(time, doclear) { //just always take for state.current_time? //need to change to support multiple slides?
-    if(doclear) {
-        clear();
-    }
-    var visuals = [];
-    var running_time = 0;
-    var slide;
-    for(var i=0; i<pentimento.lecture_controller.get_slides_length(); i++) {
-        slide = pentimento.lecture_controller.get_slide(i)
-        if(running_time + slide.duration < time) {
-            running_time += slide.duration;
-        } else {
-            for(visual in slide.visuals) {
-                if(slide.visuals[visual].tMin + running_time <= time) {
-                    visuals.push(slide.visuals[visual]);
-                }
+function getPreviousLastRelevant(visual, property, tVis) {
+    var last = getLastRelevant(visual, property, tVis);
+    if(property=="width") {
+        var prev = visual.getProperties().width;
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < last.getTime()) {
+                prev = propTrans[i].getValue();
             }
-            running_time+= slide.duration;
+        }
+        return prev;
+    } else if(property=="color") {
+        var prev = visual.getProperties().color;
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < last.getTime()) {
+                prev = propTrans[i].getValue();
+            }
+        }
+        return prev;
+    }
+}
+
+//property is either width or color
+function getLastRelevant(visual, property, tVis) {
+    if(property=="width") {
+        var last = visual.getProperties();
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < tVis) {
+                last = propTrans[i];
+            }
+        }
+        return last;
+    } else if(property=="color") {
+        var last = visual.getProperties();
+        var propTrans = visual.getPropertyTransforms();
+        for(var i in propTrans) {
+            if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < tVis) {
+                last = propTrans[i];
+            }
+        }
+        return last;
+    }
+}
+
+// Gives the location of the event on the canvas, as opposed to on the page
+// Returns: Vertex(x,y,t,p) with x,y on the canvas, and t a global time
+function getCanvasPoint(event){
+    var x = event.pageX - pentimento.state.canvas.offset().left;
+    var y = event.pageY - pentimento.state.canvas.offset().top;
+    var t = globalTime();
+    
+    if(pentimento.state.pressure) {
+        return new Vertex(x, y, t, event.pressure);
+    } else {
+        return new Vertex(x, y, t);
+    }
+}
+
+//Removes handlers from the previous tool, while preserving other handlers
+//not related to the previous tool
+function clearPreviousHandlers() {
+    pentimento.state.canvas.off('mousedown');
+    pentimento.state.canvas.off('mousemove');
+    $(window).off('mouseup');
+    
+    //re-attach the necessary ones
+    $(pentimento.state.canvas).on('mousedown', mouseDownHandler);
+    $(window).on('mouseup', mouseUpHandler);
+    $(window).on('keydown', keyDownHandler);
+    $(window).on('keyup', keyUpHandler);
+    $(window).on('click', undoListener);
+    $(window).on('click', redoListener);
+}
+
+/***********************************************************************/
+/***********************************************************************/
+/***********************************************************************/
+
+/**********************************LECTURE-MODE TOOLS**********************************/
+function penMouseDown(event) {
+    var state = pentimento.state;
+    state.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(state.color, state.width));
+    state.lastPoint = getCanvasPoint(event);
+    state.currentVisual.getVertices().push(state.lastPoint);
+    pentimento.recordingController.addVisual(state.currentVisual);
+}
+
+function penMouseMove(event) {
+    var state = pentimento.state;
+    if (state.lmb) {
+        var curPoint = getCanvasPoint(event);
+        state.lastPoint = curPoint;
+        pentimento.recordingController.appendVertex(state.currentVisual, curPoint);
+    }
+}
+
+function penMouseUp(event) {
+    var state = pentimento.state;
+    if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
+        state.currentVisual = null;
+        state.lastPoint = null;
+    }
+}
+
+function highlightMouseDown(event) {
+    penMouseDown(event);
+}
+
+function highlightMouseMove(event) {
+    penMouseMove(event);
+}
+
+function highlightMouseUp(event) {
+    var state = pentimento.state;
+    var highlightTime = 750; //duration for a highlighter, in ms
+    if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
+        pentimento.recordingController.setTDeletion([state.currentVisual], globalTime() + highlightTime);
+        state.currentVisual = null;
+        state.lastPoint = null;
+    }
+}
+
+function lectureSelection(event) {
+    var state = pentimento.state;
+    var coord = getCanvasPoint(event);
+    var ctx = state.context;
+    var visualsIter = state.currentSlide.getVisualsIterator();
+    while(visualsIter.hasNext()) {
+        var visual = visualsIter.next();
+        if (!isVisualVisible(visual, state.videoCursor)) { continue; }
+
+        var nVert = 0;
+        var vertIter = visual.getVerticesIterator();
+        while (vertIter.hasNext()) {
+            var vertex = vertIter.next();
+            if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
+            if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
+        }
+        if(nVert/visual.getVertices().length >= .45 && state.selection.indexOf(visual)==-1) {
+            var gt = globalTime();
+            state.selection.push(visual);
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
+            //TODO should be fixed to be 
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.state.videoCursor).width+1, gt));
+        } else if(nVert/visual.getVertices().length < .45 && state.selection.indexOf(visual)>-1) {
+            state.selection.splice(state.selection.indexOf(visual), 1);
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.state.videoCursor), gt));
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.state.videoCursor), gt));
         }
     }
-    draw_visuals(visuals);
 }
 
-function clear_previous_handlers(new_tool) {
-    var benign = ['clear', 'color', 'width'];
-
-    if ($.inArray(new_tool, benign) > -1) {
-        return false;
-    } else {
-        //clear some handlers
-        pentimento.state.canvas.off('mousedown');
-        pentimento.state.canvas.off('mousemove');
-        $(window).off('mouseup');
-        pentimento.state.tool = null;
-        return true;
-    }
+function lectureSelectMouseDown(event) {
+    pentimento.state.lastPoint = getCanvasPoint(event);
+    lectureSelection(event);
 }
 
-function clear() {
-    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-}
-
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
-
-
-// Handler function for a mousedown on the canvas
-function dots_mousedown(event) {
-    if (! pentimento.state.is_recording){return;}
-    var state = pentimento.state; //reference
-
-    event.preventDefault();
-    state.lmb_down = true;
-
-    state.current_visual = empty_visual();
-    state.current_visual.type = 'dots';
-    var coord = get_canvas_point(event)
-    
-    state.current_visual.vertices.push(coord);
-
-    //draw_point
-    var ctx = pentimento.state.context;
-    ctx.beginPath();
-    ctx.fillStyle = state.color;
-    ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
-}
-
-function dots_mousemove(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();
-    
-    var state = pentimento.state; //reference
-    if (state.lmb_down) {
-        var coord = get_canvas_point(event);
-        var ctx = pentimento.state.context;
-        ctx.beginPath();
-        ctx.fillStyle = state.color;
-        ctx.fillRect(coord.x - 1, coord.y - 1, 3, 3);
-        
-        state.current_visual.vertices.push(coord);
-    }
-}
-
-function dots_mouseup(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();
-    console.log('dots_mouseup');
-
+function lectureSelectMouseMove(event) {
     var state = pentimento.state;
-    if (state.lmb_down) {
-        state.lmb_down = false;
-        var visual = state.current_visual;
-        state.current_visual = null;
-        state.last_point = null;
-        return visual;
-    }
-}
-
-// Handler function for a mousedown on the canvas
-function pen_mousedown(event) {
-    if (! pentimento.state.is_recording){return;}
-    var state = pentimento.state; //reference
-
-    event.preventDefault();
-    state.lmb_down = true; //FUCK TODO FIX.
-
-    state.current_visual = empty_visual();
-    state.current_visual.type = VisualTypes.stroke;//active_visual_type; move to state? update empty visual based on this
-    state.last_point = get_canvas_point(event);
-    state.current_visual.vertices.push(state.last_point);
-}
-
-function pen_mousemove(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();  
-    var state = pentimento.state; //reference
-
-    if (state.lmb_down) {
-        var cur_point = get_canvas_point(event);
-        draw_line({
-            from: state.last_point,
-            to: cur_point,
-        });
-        
-        state.last_point = cur_point;
-        state.current_visual.vertices.push(cur_point);
-    }
-}
-
-function pen_mouseup(event) {
-    if (! pentimento.state.is_recording){return;}
-    event.preventDefault();
-    //console.log('pen_mouseup');
-
-    var state = pentimento.state;
-    if (state.lmb_down) {
-        state.lmb_down = false;
-        var visual = state.current_visual;
-        state.current_visual = null;
-        state.last_point = null;
-        return visual; // why need to return?
-    }
-}
-
-function select_mousedown(event) { //non-live handler
-    if (pentimento.state.is_recording) {return ;}
-    event.preventDefault();
-    var state = pentimento.state;
-
-    update_visuals(state.current_time, true);
-    state.lmb_down = true;
-    state.last_point = get_canvas_point(event);
-    state.selection = [];
-}
-
-function select_mousemove(event) {
-    if (pentimento.state.is_recording||!pentimento.state.lmb_down) {return ;}
-    event.preventDefault();
-    var state = pentimento.state;
-
-    update_visuals(state.current_time, true);
-    var coord = get_canvas_point(event);
     var ctx = state.context;
-    var width = state.width;
-    var style = state.color;
+    var coord = getCanvasPoint(event);
+    
+    lectureSelection(event);
+
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
-    ctx.strokeRect(state.last_point.x, state.last_point.y, coord.x-state.last_point.x, coord.y-state.last_point.y);
+    ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
+
+    ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
+    ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
+}
+
+function lectureSelectMouseUp(event) {
+    //do nothing
+}
+
+function lectureDelete() {
+    var state = pentimento.state;
+
+}
+/**********************************LECTURE-MODE TOOLS**********************************/
+
+/**********************************EDITING-MODE TOOLS**********************************/
+function editSelectMouseDown(event) {
+    var state = pentimento.state;
+    state.lastPoint = getCanvasPoint(event);
+    state.selection = [];
+}
+
+function editSelectMouseMove(event) {
+    var state = pentimento.state;
+
+    var coord = getCanvasPoint(event);
+    var ctx = state.context;
     state.selection = [];
 
-    function determine_inside(state, x_pt, y_pt, coord) {
-        if(x_pt >= state.last_point.x && x_pt <= coord.x) {
-            if (y_pt>=state.last_point.y && y_pt<=coord.y) {
-                return true;
-            } else if(y_pt<=state.last_point.y && y_pt>=coord.y) {
-                return true;
-            }
-        } else if(x_pt<=state.last_point.x && x_pt>=coord.x) {
-            if (y_pt>=state.last_point.y && y_pt<=coord.y) {
-                return true;
-            } else if(y_pt<=state.last_point.y && y_pt>=coord.y) {
-                return true;
-            }
-        }
-        return false;
-    }
+    var visualsIter = state.currentSlide.getVisualsIterator();
+    while(visualsIter.hasNext()) {
+        var visual = visualsIter.next();
+        if (!isVisualVisible(visual, state.videoCursor)) { continue; }
 
-    if(!state.current_slide) {
-        ctx.strokeStyle = style; // should be valid if you say pentimento.state.color
-        ctx.lineWidth = width; // should be valid if you say pentimento.state.width
-        return;
-    }
-    for(vis in state.current_slide.visuals) {
-        var visual = state.current_slide.visuals[vis];
-        var n_vert = 0;
-        for (vert in visual.vertices) {
-            var x = visual.vertices[vert].x;
-            var y = visual.vertices[vert].y;
-
-            if (determine_inside(state,x,y,coord)) { //check for deletion/appearance.
-                n_vert++;
-            }
+        var nVert = 0;
+        var vertIter = visual.getVerticesIterator();
+        while (vertIter.hasNext()) {
+            var vertex = vertIter.next();
+            if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
+            if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
         }
-        if(n_vert/visual.vertices.length >= .4) {
+        if(nVert/visual.getVertices().length >= .45) {
             state.selection.push(visual);
         }
     }
 
-    for(vis in state.selection) {
-        var vis_copy = $.extend(true, {}, state.selection[vis]);
-        vis_copy.properties.width = state.selection[vis].properties.width+1;
-        vis_copy.properties.color = "#0000FF";
-        draw_visual(vis_copy);
-    }
+    updateVisuals();
+    ctx.strokeStyle = "#0000FF";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
 
-    ctx.strokeStyle = style; // should be valid if you say pentimento.state.color
-    ctx.lineWidth = width; // should be valid if you say pentimento.state.width
+    ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
+    ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
 }
 
-function select_mouseup(event) {
-    if (pentimento.state.is_recording) {return ;}
-    event.preventDefault();
-
+function editSelectMouseUp(event) {
     var state =  pentimento.state;
-    state.lmb_down = false;
-    update_visuals(state.current_time, true);
-    for(vis in state.selection) {
-        var vis_copy = $.extend(true, {}, state.selection[vis]);
-        vis_copy.properties.width = state.selection[vis].properties.width+1;
-        vis_copy.properties.color = "#0000FF";
-        draw_visual(vis_copy);
+    for(var i in state.selection) {
+        var visCopy = state.selection[i].getClone();
+        var propsCopy = visCopy.getProperties();
+        propsCopy.setWidth(propsCopy.getWidth()+1);
+        propsCopy.setColor("#0000FF");
+        drawVisual(visCopy);
     }
 }
-
+/**********************************EDITING-MODE TOOLS**********************************/

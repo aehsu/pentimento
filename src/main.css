@@ -61,7 +61,7 @@ fieldset > *{
     display: inline;
 }
 .center{
-    vertical-align: middle;
+    /*vertical-align: middle;*/
     height: 40px;
 }
 
@@ -160,30 +160,6 @@ font-size: 0.1px;
     right: -5px;
 }
 
-#gradation_container {
-    position: absolute;
-}
-#gradation_container canvas {
-    border-style: none;
-}
-
-/* CONDITIONAL selectors*/
-
-#left_target_div {
-    height: 500px;
-    width: 1px;
-    z-index: 20;
-    position: absolute;
-    box-shadow: 0px 0px 14px 7px rgba(121,223,255,.63);
-}
-#right_target_div {
-    height: 400px;
-    width: 0px;
-    z-index: 20;
-    position: absolute;
-    box-shadow: 0px 0px 14px 7px rgba(121,223,255,.63);
-}
-
 .ui-label{
     font-family: Calibri, sans-serif;
 }
@@ -215,9 +191,6 @@ font-size: 0.1px;
 .lecture-tool-button{
     margin-top:15px;
 }
-/*input .image{
-    width:40px;
-}*/
-/*.side-menu{
+/*.side-menu{f
     display:inline-block;
 }*/

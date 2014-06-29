@@ -2,26 +2,78 @@
 					MODEL
 *************************************************/
 
-//PUBLIC
-pentimento.lecture = function() {
-	this.slides = [];
-	this.slide_changes = [];
-	this.audio_tracks = [];
 
-    this.get_slides_length = function() {
-        return lecture.slides.length;
-    }
+function SlideTransform(type, tmin, durate, mat) {
+    var self = this;
+    self.tMin = tmin;
+    self.duration = durate;
+    self.matrix = mat;
 
-    this.get_slide = function(index) {
-        return lecture.slides[index];
-    }
+    this.getTMin = function() { return self.tMin; }
+    this.getDuration = function() { return self.duration; }
+    this.getMatrix = function() { return self.matrix; }
+    this.setTMin = function(newTMin) { self.tMin = newTMin; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
+}
 
-    this.get_duration = function() {
-        var time = 0;
-        for(slide in lecture.slides) {
-            time += lecture.slides[slide].duration;
-        }
-        return time;
-    }
+// SlideTransform.prototype.getClone = function() {
+// }
+
+function Slide() {
+    var visuals = [];
+    var transforms = [];
+    var duration = 0.0;
+    
+    this.getVisuals = function() { return visuals; }
+    this.getDuration = function() { return duration; }
+    this.getTransforms = function() { return transforms; }
+
+    this.setVisuals = function(newVisuals) { visuals = newVisuals; }
+    this.setDuration = function(newDuration) { duration = newDuration; }
+    this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+
+    this.getVisualsIterator = function() { return new Iterator(visuals); }
+    this.getTransformsIterator = function() { return new Iterator(transforms); }
 };
 
+ConstraintTypes = {
+	Manual: "Manual",
+	Automatic: "Automatic"
+} //necessary?
+
+function Constraint(tvis, taud, mytype) {
+    var self = this;
+    self.tVis = tvis;
+    self.tAud = taud;
+    self.type = mytype;
+    self.disabled = false;
+
+    this.getTVisual = function() { return self.tVis; }
+    this.getTAudio = function() { return self.tAud; }
+    this.getType = function() { return self.type; }
+    this.getDisabled = function() { return self.disabled; }
+
+    this.setTVisual = function(newTVis) { self.tVis = newTVis; }
+    this.setTAudio = function(newTAud) { self.tAud = newTAud; }
+    this.setType = function(newType) { self.type = newType; }
+    this.setDisabled = function(newBool) { self.disabled = newBool; }
+}
+
+function Lecture() {
+    var slides = [];
+    var audioTracks = [];
+    var constraints = [];
+    // var transforms = [];
+    
+    this.getSlides = function() { return slides; }
+    this.getAudioTracks = function() { return audioTracks; }
+    this.getConstraints = function() { return constraints; }
+
+    this.setSlides = function(newSlides) { slides = newSlides; }
+    this.setAudioTracks = function(newAudioTracks) { audioTracks = newAudioTracks; }
+    this.setConstraints = function(newConstraints) { constraints = newConstraints; }
+
+    this.getSlidesIterator = function() { return new Iterator(slides); }
+    this.getConstraintsIterator = function() { return new Iterator(constraints); }
+};
