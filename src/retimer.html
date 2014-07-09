@@ -1,18 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Retimer</title>
+    <link rel='stylesheet' href='main.css' />
+    <link rel='stylesheet' href='retimer.css' />
+    <script src='jquery-ui-1.10.4/js/jquery-1.10.2.js'></script>
+    <script src='jquery-ui-1.10.4/js/jquery-ui-1.10.4.js'></script>
+    <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
+    <script src='jcanvas.min.js'></script>
+    <script type='text/javascript' src='pentimento_controller_retiming.js'></script>
+
+<!--     // <script type='text/javascript' src='undo/errors.js'></script>
+    // <script type='text/javascript' src='undo/compatibility.js'></script>
+    // <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
+    // <script type='text/javascript' src='undo/undo.js'></script>
+    // <script type='text/javascript' src='pentimento_common.js'></script>
+    // <script type='text/javascript' src="wavesurfer.min.js"></script>
+    // <script type='text/javascript' src="RecordRTC.js"></script>
+    // <script type='text/javascript' src='pentimento_model_visuals.js'></script>
+    // <script type='text/javascript' src='pentimento_model_lecture.js'></script>
+    // <script type='text/javascript' src='pentimento_model_state.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_inputs.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_recording.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_visuals.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_retiming.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_time.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
+    // <script type='text/javascript' src='pentimento_controller_tools.js'></script>
+    // <script type='text/javascript' src='pentimento_renderer.js'></script>
+    // <script src='spectrum.js'></script> -->
 </head>
 
 <body>
-<div>
+<div id="thumbnails_div">
     <image src="icons/thumbnails-example.png"></image>
 </div>
-<div>
-    <canvas id="retimer_arrows" width="1200" height="150px"style="border:1px solid #000000;"></canvas> 
+<div id="constraints_div">
+    <canvas id="retimer_constraints" width="1000px" height="200px"></canvas> 
 </div>
-<div style="height:15px;">
+<div id="timer_div">
         <hr>
-        <div id="retimer_time"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        <div id="retimer_time"></div> <input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+</div>
+
+<div id="controls_div">
+    <div id="playback_controls" class="retimer_controls">
+        <input type="image" src="icons/recordAudio.png" id="retimer_record_Audio" class="retiming_button">
+        <input type="image" src="icons/scratch.png" id="retimer_scratch" class="retiming_button">
+        <input type="image" src="icons/media_playback_start.png" id="retimer_play" class="retiming_button">
+        <input type="image" src="icons/media_playback_stop.png" id="retimer_stop" class="retiming_button">
+        <input type="image" src="icons/media_skip_backward.png" id="retimer_skipback" class="retiming_button">
+        <input type="image" src="icons/media_skip_forward.png" id="retimer_skipahead" class="retiming_button">
+    </div>
+
+    <div id="retiming_controls" class="retimer_controls">
+        <input type="image" src="icons/beginLink.png" id="sync_start" class="retiming_button">
+        <input type="image" src="icons/endLink.png" id="sync_end" class="retiming_button">
+        <input type="image" src="icons/link.png" id="sync" class="retiming_button">
+        <input type="image" src="icons/trashLink.png" id="delete_sync" class="retiming_button">
+        <input type="image" src="icons/trashLink.png" id="reset_all_syncs" class="retiming_button">
+    </div>
+
+    <div id="deletion_controls" class="retimer_controls">
+        <input type="image" src="icons/deleteAudio.png" class="retiming_button">
+        <input type="image" src="icons/autoDeleteSilence.png" class="retiming_button">
+        <input type="image" src="icons/trashAv.png" class="retiming_button">
+    </div>
+
+    <div id="pause_controls" class="retimer_controls">
+        <input type="image" src="icons/addPause.png" class="retiming_button">
+        <input type="image" src="icons/trashPause.png" class="retiming_button">
+        <input type="image" src="icons/tick.png" class="retiming_button">
+        <input type="image" src="icons/trashTick.png" class="retiming_button">
+    </div>
+
+    <div id="temporal_deletion_controls" class="retimer_controls">
+        <input type="image" src="icons/trashPage.png" class="retiming_button">
+        <input type="image" src="icons/trashCursor.png" class="retiming_button">
+    </div>
+
+    <div id="move_visuals" class="retimer_controls">
+        <input type="image" src="icons/moveInTime.png" class="retiming_button">
+    </div>
+
+    <div id="help" class="retimer_controls">
+        <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
+        <p> Blue lines are boundaries of audio segments. Top is beginning, bottom is end. Drag to trim the segment and change when it starts or ends. </p>
+        <p> Select a time interval and delete its audio with the delete key. To delete both audio and visuals, use command delete. </p>
+    </div>
+
 </div>
 </body>
 </html>

@@ -1,0 +1,21 @@
+body{
+    width: 100%;
+    height: 100%;
+}
+#retimer_constraints{
+    border:1px solid #000000;
+}
+
+#timer_div{
+    height: 15px;
+    margin-bottom: 30px;
+}
+
+.retimer_controls{
+    border:1px solid #000000;
+    display: inline-block;
+}
+
+.retiming_button{
+    height: 40px;
+}
