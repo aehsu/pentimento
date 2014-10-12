@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>   
+    <script type="text/javascript">
+        pentimento = {};
+        getUndoManager = function() {return null;};
+        canvasId = 'cursor';
+    </script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type='text/javascript' src='../pentimento_common.js'></script>
+    <script type='text/javascript' src='../pentimento_model_state.js'></script>
+    
+    <link rel="stylesheet" type="text/css" href="text_entry.css">
+    
+    <script type='text/javascript' src='text_entry.js'></script>
+    <script type='text/javascript' src='model.js'></script>
+    <script type='text/javascript' src='controller.js'></script>
+    <script type='text/javascript' src='helpers.js'></script>
+    <script type='text/javascript' src='errors.js'></script>
+
+          
+</head>
+
+<body>
+    <div id='cursor' style='position:absolute;z-index=1' hidden='True'>|</div>
+    <button id='place_box'>Place Text Box</button>
+    <select id='font_size'></select>
+    <div id='text_canvas' class='textbox' style='position:relative;height:0px;width:0px'contentEditable='true'>
+        <div style='position:absolute;top:700px;left:1600px;bottom:0px;right:0px'></div>
+    </div>
+    
+    <canvas id="sketchpad"></canvas>
+    <div id="slider"></div>
+</body>
+</html>

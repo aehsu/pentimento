@@ -1,0 +1,18 @@
+textarea  {
+	/*font-family:     for future font changing options*/
+	background-color: transparent;
+	border: solid lightgray 1px;
+}
+
+textarea.display-mode{
+    resize: none;
+    border: none;    
+}    
+
+body {
+    height: 800px;
+}
+
+div[contenteditable=true]{
+    background-color: transparent;
+}
