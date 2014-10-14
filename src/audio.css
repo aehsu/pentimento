@@ -1,0 +1,83 @@
+#audio_timeline {
+    height: 400px;
+    width: 100%;
+    display: inline-block;
+    border-style: none;
+    overflow-x: auto;
+    /*disable text selection*/
+    -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
+}
+
+#timeline_cursor {
+    position: absolute;
+    width: 0px;
+    height: inherit;
+    border-left: solid #79DFFF;
+}
+
+#gradation_container {
+    position: absolute;
+}
+
+.audio_track {
+    position: absolute;
+    padding-left: 22px;
+}
+
+.audio_segment {
+    border-style: solid;
+    border-color: black;
+    border-width: 2px;
+    margin-top: 7px; 
+    float: left;
+    box-shadow: 0;
+    transition: box-shadow .15s;
+}
+
+.audio_segment wave {
+    position: absolute;
+    left:0;
+    right: 0;
+    border-style: none;
+}
+
+.dragged {
+    /*box-shadow: 0 0 3px #515151;*/
+    box-shadow: 8px 10px 24px 0px rgba(0,0,0,0.75);
+}
+
+
+.draggable-box {
+    padding: 0.5em;
+    border-style: solid;
+    border-color: black;
+    margin: 0 10px 10px 0;
+    z-index: 10;
+}
+
+wave canvas {
+    border-style: none;
+}
+
+.ui-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.ui-resizable-handle {
+    height: 100%;
+    width: 5px;
+    position: absolute;
+    font-size: 0.1px;
+}
+.ui-resizable-w {
+    cursor: w-resize;
+}
+.ui-resizable-e {
+    cursor: e-resize;
+    top:0px;
+    right: -5px;
+}
+
+.ui-label{
+    font-family: Calibri, sans-serif;
+}

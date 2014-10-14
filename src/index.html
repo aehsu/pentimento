@@ -3,9 +3,12 @@
 <head>
     <title>Capture Widget/Sketchpad</title>
     <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="audio.css">
     <script src='jquery-ui-1.10.4/js/jquery-1.10.2.js'></script>
     <script src='jquery-ui-1.10.4/js/jquery-ui-1.10.4.js'></script>
     <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='jquery.flot.js'></script>
+    <script type='text/javascript' src='jquery.flot.time.js'></script>
     <script type='text/javascript' src='undo/errors.js'></script>
     <script type='text/javascript' src='undo/compatibility.js'></script>
     <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
@@ -32,6 +35,19 @@
 </head>
 
 <body>
+
+        <button id="play_pause_button" class="btn btn-primary" data-action="play">
+            <i class="glyphicon glyphicon-play"></i>
+            Audio Play
+            /
+            <i class="glyphicon glyphicon-pause"></i>
+            Audio Pause
+        </button>
+        <button id="record_audio_button" class="btn btn-primary" data-action="record_audio">
+            Record
+        </button>
+        <div id="audio_timeline"></div>
+        
         <div>
             <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
             <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
@@ -211,17 +227,5 @@
                 <canvas id='sketchpad'></canvas>
             </div>
         </div>
-
-        <button id="play_pause_button" class="btn btn-primary" data-action="play">
-            <i class="glyphicon glyphicon-play"></i>
-            Audio Play
-            /
-            <i class="glyphicon glyphicon-pause"></i>
-            Audio Pause
-        </button>
-        <button id="record_audio_button" class="btn btn-primary" data-action="record_audio">
-            Record
-        </button>
-        <div id="audio_timeline"></div>
 </body>
 </html>

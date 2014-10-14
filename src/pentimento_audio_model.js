@@ -52,9 +52,16 @@ pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_
 	this.audio_resource = audio_resource;
 	this.audio_start_time = audio_start_time;
 	this.audio_end_time = audio_end_time;
-	this.audio_length = audio_end_time - audio_start_time;
 	this.lecture_start_time = lecture_start_time;
 	this.lecture_end_time = lecture_end_time;
+
+    this.lectureLength = function() {
+        return this.lecture_end_time - this.lecture_start_time;
+    }
+
+    this.audioLength = function() {
+        return this.audio_end_time - this.audio_start_time;
+    }
 
 // this.shift = function(x_shift) {
 // 	this.slide.begin_time += x_shift * timeline_scale;

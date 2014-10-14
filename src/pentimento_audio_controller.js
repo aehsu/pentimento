@@ -23,10 +23,15 @@ function AudioController() {
     var wavesurfers = [[]];
 
     // begin_record_time is the global lecture time when the recording was started
+    // The time is in milliseconds UTC
     // -1 indicates that there is no recording in progress
     var begin_record_time = -1;
 
-    var audio_timeline_scale = 100;
+    // The current location of the lecture in milliseconds
+    var lectureTime = 0;
+
+    // The scale of the timeline in pixels per second
+    var timeline_pixels_per_sec = 10;
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -35,6 +40,7 @@ function AudioController() {
 
     var timelineID = 'audio_timeline';
     var timelineCursorID = 'audio_timeline_cursor'
+    var gradationContainerID = 'gradation_container';
 
     // Track
     var trackClass = "audio_track";
@@ -54,9 +60,22 @@ function AudioController() {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////
 
+    // Convert milliseconds to pixels according to the current scale
+    var millisecondsToPixels = function(millSec) {
+        return Math.round((millSec/1000.0) * timeline_pixels_per_sec);
+    }
+
+    // Convert pixels to milliseconds according to the current scale
+    var pixelsToMilliseconds = function(pixels) {
+        return 1000*(pixels/timeline_pixels_per_sec);
+    }
+
     // Draw a segment into the track
     // Return new jQuery segment
     var drawSegment = function(trackIndex, segmentIndex) {
+
+        // TODO: don't draw if one already exists
+
         var audio_track = audio_tracks[trackIndex];
         var audio_segment = audio_track.audio_segments[segmentIndex];
 
@@ -66,9 +85,12 @@ function AudioController() {
         $('#'+trackID(trackIndex)).append(new_segment);
 
         // Set the css for the new segment
+        console.log(millisecondsToPixels(audio_segment.lectureLength()));
         new_segment.css({ "padding": 0, 
-                        "width": (audio_segment.end_time - audio_segment.start_time)*audio_timeline_scale, 
+                        "width": millisecondsToPixels(audio_segment.lectureLength()), 
                         "height": $('#'+timelineID).height()/2 });
+        console.log(new_segment.css("width"));
+
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
@@ -124,7 +146,6 @@ function AudioController() {
                 if (segment !== ui.helper[0]) {
                     $(segment).addClass('obstacle');
                 };
-                
             });
 
             ui.helper.addClass('dragged')
@@ -160,25 +181,19 @@ function AudioController() {
         });
 
         // Load the waveform to be displayed inside the segment div
-        console.log("#"+segmentID(segmentIndex));
-
-        // Initialize wavesurfer
-
+        // Initialize wavesurfer for the segment
         var wavesurfer = Object.create(WaveSurfer);
         wavesurfers[trackIndex][segmentIndex] = wavesurfer;
         wavesurfer.init({
             container: document.querySelector("#"+segmentID(segmentIndex)),
             waveColor: 'violet',
             progressColor: 'purple',
-            height: $('#'+timelineID).height()/2
+            height: $('#'+timelineID).height()/2 + "px"
         });
-
         wavesurfer.on('ready', function () {
             wavesurfer.play();
         });
-
         wavesurfer.load(audio_segment.audio_resource);
-
 
         // Return the new segment
         return new_segment;
@@ -188,12 +203,19 @@ function AudioController() {
     // Return the new jQuery track
     var drawTrack = function(trackIndex) {
 
+        // TODO: don't draw if one already exists
+
         // Create a new track div and set it's data
         var audio_track = audio_tracks[trackIndex];
         console.log(audio_track);
         var new_track = $('<div></div>').attr({"id": trackID(trackIndex) , "class": trackClass});
         new_track.data(audio_track);
         $('#'+timelineID).append(new_track);
+
+        // Set the css for the new track
+        new_track.css({ "padding": 0, 
+                "width": "auto",
+                "height": $('#'+timelineID).height()/2 } + "px");
 
         // Iterate over all segments for that track and draw the segments (inside the track)
         console.log("Number of audio segments in track " + trackIndex + ": " + audio_track.audio_segments.length);
@@ -223,7 +245,11 @@ function AudioController() {
     var drawGradations = function() { 
         var timeline = $('#' + timelineID);
         var gradation_container = $('<div></div>');
-        gradation_container.attr('id', 'gradation_container').css('width', timeline.width()).css('height', timeline.height());
+        console.log("timeline width: " + timeline.width());
+        gradation_container.attr('id', '#'+gradationContainerID)
+            .css('width', timeline.width() + "px")
+            .css('height', timeline.height() + "px")
+            .css('position', 'absolute');
         timeline.append(gradation_container);
 
         var options = {
@@ -244,11 +270,11 @@ function AudioController() {
             }
         };
 
+        // Use flot to draw the graduations
+
         // Dummy data
         var plot_data = [ [0, 0], [0, 10] ];
-
-        // $.plot(gradation_container, plot_data, options);
-
+        $.plot(gradation_container, plot_data, options);
     };
 
     // create cursor object for tracking mouse location
@@ -352,10 +378,13 @@ function AudioController() {
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Insert the audio segment into the track
-            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, begin_record_time, end_record_time);
+            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, lectureTime, lectureTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
             track.audio_segments.push(segment);
+
+            // Increment the lecture time by the length of the audio recording
+            lectureTime += audio_duration;
 
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
