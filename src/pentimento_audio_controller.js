@@ -17,38 +17,69 @@ function AudioController() {
 	// RecordRTC is used to record the audio stream
 	var recordRTC = null;
 
+    // The flot object is used for plotting the graduations for the timeline
+    var flotPlot = null;
+
     // Wavesurfer is used to display audio waveforms
     // There is one wavesurfer object for each segment, so we use a 2D array to hold the wavesurfer objects
     // The outer array is for tracks, and the inner array is for segments
     var wavesurfers = [[]];
 
-    // begin_record_time is the global lecture time when the recording was started
+    // begin_record_time is the global time when the recording was started
     // The time is in milliseconds UTC
     // -1 indicates that there is no recording in progress
     var begin_record_time = -1;
 
-    // The current location of the lecture in milliseconds
-    var lectureTime = 0;
+    // lecture time when the recording began in milliseconds
+    var lectureBeginRecordTime = 0;
+
+    // Playhead values (the thing which indicates the current location in playback)
+    var prevPlayheadGlobalTime = -1;  // The previous global time the playhead was updated (-1 if playback stopped)
+    var playheadLectureTime = 0;  // The current location of the playhead in lecture time
+
+    // Keep track of the timer/interval IDs used for playback
+    // These should get cancelled when playback is stopped and the values set to -1
+    var playheadAnimationIntervalID = -1;
+    var trackNextSegmentTimeoutIDs = [];  // Array of the timeouts for the next segment to be played back for each track
 
     // The scale of the timeline in pixels per second
     var timeline_pixels_per_sec = 10;
+
+    // Interval durations for events and animations in milliseconds
+    var playheadAnimationIntervalDuration = 10;
 
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM object IDs and classes
     ///////////////////////////////////////////////////////////////////////////////
 
-    var timelineID = 'audio_timeline';
-    var timelineCursorID = 'audio_timeline_cursor'
-    var gradationContainerID = 'gradation_container';
+    // the timeline used for displaying the audio tracks and plot ticks
+    var timelineID = 'audio_timeline';  
+
+    // TODO
+    var timelineCursorID = 'audio_timeline_cursor';
+
+    // audio tracks display, contained by audio_timeline
+    // contained inside audio_timeline
+    var tracksContainerID = 'audio_tracks_container';  
+
+    // plot used for showing the timeline ticks
+    // contained inside audio_timeline
+    var gradationContainerID = 'gradation_container';  
+
+    // playhead that shows the current location of the play
+    // contained inside audio_tracks_container
+    var playheadID = 'playhead';  
 
     // Track
+    // contained inside audio_tracks_container
     var trackClass = "audio_track";
     var trackID = function(trackIndex) {
         return "track-" + trackIndex;
     };
 
     // Segment
+    // contained inside an audio_track
     var segmentClass = "audio_segment";
     var segmentID = function(segmentIndex) {
         return "segment-" + segmentIndex;
@@ -85,12 +116,9 @@ function AudioController() {
         $('#'+trackID(trackIndex)).append(new_segment);
 
         // Set the css for the new segment
-        console.log(millisecondsToPixels(audio_segment.lectureLength()));
         new_segment.css({ "padding": 0, 
                         "width": millisecondsToPixels(audio_segment.lectureLength()), 
                         "height": $('#'+timelineID).height()/2 });
-        console.log(new_segment.css("width"));
-
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
@@ -182,16 +210,15 @@ function AudioController() {
 
         // Load the waveform to be displayed inside the segment div
         // Initialize wavesurfer for the segment
+        console.log(new_segment.css('height'));
         var wavesurfer = Object.create(WaveSurfer);
         wavesurfers[trackIndex][segmentIndex] = wavesurfer;
         wavesurfer.init({
             container: document.querySelector("#"+segmentID(segmentIndex)),
             waveColor: 'violet',
             progressColor: 'purple',
-            height: $('#'+timelineID).height()/2 + "px"
-        });
-        wavesurfer.on('ready', function () {
-            wavesurfer.play();
+            height: parseInt(new_segment.css('height')),
+            minPxPerSec: 1
         });
         wavesurfer.load(audio_segment.audio_resource);
 
@@ -207,15 +234,14 @@ function AudioController() {
 
         // Create a new track div and set it's data
         var audio_track = audio_tracks[trackIndex];
-        console.log(audio_track);
         var new_track = $('<div></div>').attr({"id": trackID(trackIndex) , "class": trackClass});
         new_track.data(audio_track);
-        $('#'+timelineID).append(new_track);
+        $('#'+tracksContainerID).append(new_track);
 
         // Set the css for the new track
         new_track.css({ "padding": 0, 
                 "width": "auto",
-                "height": $('#'+timelineID).height()/2 } + "px");
+                "height": '40%'});
 
         // Iterate over all segments for that track and draw the segments (inside the track)
         console.log("Number of audio segments in track " + trackIndex + ": " + audio_track.audio_segments.length);
@@ -241,15 +267,29 @@ function AudioController() {
         return time;
     }
 
+    // Draw the container that will be used to hold the tracks
+    var drawTracksContainer = function() {
+        var timeline = $('#' + timelineID);
+        var tracksContainer = $('<div></div>');
+        tracksContainer.attr('id', tracksContainerID);
+        // The position and size is set to overlay and fit the gradation container
+        // The flotPlot.offset() function only returns the global offset, so we
+        // need to subtract the offset of the gradation_container
+        var gradationContainer = $('#'+gradationContainerID);
+        tracksContainer.css('left', flotPlot.offset().left - gradationContainer.offset().left)
+            .css('top', flotPlot.offset().top - gradationContainer.offset().top)                  
+            .css('width', flotPlot.width())
+            .css('height', flotPlot.height());
+        timeline.append(tracksContainer);
+    };
+
     // Draw the graduation marks on the timeline
     var drawGradations = function() { 
         var timeline = $('#' + timelineID);
         var gradation_container = $('<div></div>');
-        console.log("timeline width: " + timeline.width());
-        gradation_container.attr('id', '#'+gradationContainerID)
-            .css('width', timeline.width() + "px")
-            .css('height', timeline.height() + "px")
-            .css('position', 'absolute');
+        gradation_container.attr('id', gradationContainerID)
+            .css('width', timeline.width())
+            .css('height', timeline.height());
         timeline.append(gradation_container);
 
         var options = {
@@ -263,10 +303,20 @@ function AudioController() {
             xaxis: {
                 min: 0, // Min and Max refer to the range
                 max: 100,
-                tickFormatter: tickFormatter
+                tickFormatter: tickFormatter,
+                labelHeight: 10,
             },
             grid: {
                 // hoverable: true
+                margin: {
+                top: 20,
+                left: 20,
+                bottom: 20,
+                right: 20
+                },
+                minBorderMargin: 0,
+                borderWidth: 1,
+                labelMargin: 10,
             }
         };
 
@@ -274,7 +324,15 @@ function AudioController() {
 
         // Dummy data
         var plot_data = [ [0, 0], [0, 10] ];
-        $.plot(gradation_container, plot_data, options);
+        flotPlot = $.plot(gradation_container, plot_data, options);
+    };
+
+    // draw the playhead for showing playback location
+    var drawPlayhead = function() {
+        // Create the playhead and append it to the timeline
+        var playhead = $('<div></div>').attr({'id': playheadID});
+        playhead.draggable({ axis: "x" });
+        $('#'+timelineID).append(playhead);        
     };
 
     // create cursor object for tracking mouse location
@@ -287,7 +345,6 @@ function AudioController() {
 
         // Bind hover callback to get mouse location
         $('#'+timelineID).bind("mousemove", function (event) {
-
             // Set mouse position
             mouseX = event.pageX;
             mouseY = event.pageY;
@@ -296,6 +353,16 @@ function AudioController() {
                left:  event.pageX
             });
         });
+    };
+
+    var animatePlayhead = function() {
+        // Calculate the amount of time since the playhead was last moved
+        var currentGlobalTime = globalTime();
+        var timePassed = currentGlobalTime - prevPlayheadGlobalTime;
+        prevPlayheadGlobalTime = currentGlobalTime;
+
+        // Move the playhead by the amount in pixels
+        $('#'+playheadID).positi
     };
 
 
@@ -378,13 +445,14 @@ function AudioController() {
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Insert the audio segment into the track
-            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, lectureTime, lectureTime+audio_duration);
+            var segment = new pentimento.audio_segment(audioURL, 0, audio_duration, lectureBeginRecordTime, lectureBeginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
             track.audio_segments.push(segment);
 
             // Increment the lecture time by the length of the audio recording
-            lectureTime += audio_duration;
+            // TODO remove this, this should be set by the playhead instead
+            lectureBeginRecordTime += audio_duration;
 
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
@@ -407,12 +475,18 @@ function AudioController() {
         // Draw gradations into the timeline
         drawGradations();
 
+        // Draw the container for the audio tracks
+        drawTracksContainer();
+
         // Iterate over all audio tracks and draw them
         console.log("Number of audio tracks: " + audio_tracks.length);
         for (var i = 0; i < audio_tracks.length; i++) {
             // Draw the track and get the jquery object for that track
             var jqTrack = drawTrack(i);
         };
+
+        // Show the playhead that is used to display the current position in the timeline
+        drawPlayhead();
     };
 
     this.insert_segment = function (audio_segment_idx, lecture_time) {
@@ -428,6 +502,33 @@ function AudioController() {
         // Put segment at lecture_time
         audio_segment.lecture_start_time = lecture_time;
         audio_segment.lecture_end_time = lecture_time + audio_segment.length;
+    };
+
+    // Start the playback at the current playhead location
+    this.startPlayback = function() {
+        // Use the prevPlayheadGlobalTime to detect whether playback is occurring
+        if (prevPlayheadGlobalTime != -1) {
+            return;
+        };
+
+        // Start the playhead animation
+        prevPlayheadGlobalTime = globalTime();
+        playheadAnimationIntervalID = setInterval(animatePlayhead, playheadAnimationIntervalDuration);
+
+        // Start the track playback for each track
+        // TODO
+    };
+
+    this.stopPlayback = function() {
+        // Set the prevPlayheadGlobalTime to indicate that playback is stopped
+        prevPlayheadGlobalTime = -1;
+
+        // Stop the playhead animation
+        clearInterval(playheadAnimationIntervalID);
+        playheadAnimationIntervalID = -1;
+
+        // Stop the track playback for each track
+        // TODO
     };
 
 }
