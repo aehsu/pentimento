@@ -331,8 +331,21 @@ function AudioController() {
     var drawPlayhead = function() {
         // Create the playhead and append it to the timeline
         var playhead = $('<div></div>').attr({'id': playheadID});
-        playhead.draggable({ axis: "x" });
-        $('#'+timelineID).append(playhead);        
+        $('#'+tracksContainerID).append(playhead);  
+        
+        // Function to update the playhead lecture time during dragging
+        var updatePlayheadTime = function(event, ui) {
+            playheadLectureTime = pixelsToMilliseconds(ui.position.left);
+            // console.log("playhead position: " + ui.position.left)
+            // console.log("Playhead lecture time: " + playheadLectureTime); 
+        };
+
+        // Set the playhead to be draggable in the x-axis within the tracksContainer
+        playhead.draggable({ axis: "x",
+                            containment: '#'+tracksContainerID,
+                            drag: updatePlayheadTime,
+                            start: updatePlayheadTime,
+                            stop: updatePlayheadTime});      
     };
 
     // create cursor object for tracking mouse location

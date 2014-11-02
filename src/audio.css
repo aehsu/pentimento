@@ -27,8 +27,8 @@
 
 #playhead {
     position: absolute;
-    height: 400px;
-    width: 10px;
+    height: 100%;
+    width: 8px;
     background-color: blue;
 }
 
