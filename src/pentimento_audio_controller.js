@@ -34,13 +34,14 @@ function AudioController() {
     var lectureBeginRecordTime = 0;
 
     // Playhead values (the thing which indicates the current location in playback)
-    var prevPlayheadGlobalTime = -1;  // The previous global time the playhead was updated (-1 if playback stopped)
     var playheadLectureTime = 0;  // The current location of the playhead in lecture time
 
-    // Keep track of the timer/interval IDs used for playback
-    // These should get cancelled when playback is stopped and the values set to -1
-    var playheadAnimationIntervalID = -1;
-    var trackNextSegmentTimeoutIDs = [];  // Array of the timeouts for the next segment to be played back for each track
+    // Keep track of the playback status
+    var isPlayingBack = false;
+
+    // Keep track of the timer IDs used for playback
+    // These should get cancelled when playback is stopped and the array emptied
+    var segmentPlaybackTimeoutIDs = [];
 
     // The scale of the timeline in pixels per second
     var timeline_pixels_per_sec = 10;
@@ -85,6 +86,9 @@ function AudioController() {
         return "segment-" + segmentIndex;
     };
 
+    // Buttons
+    var playPauseButtonID = 'play_pause_button';
+    var recordAudioButtonID = 'record_audio_button';
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -367,6 +371,8 @@ function AudioController() {
         });
     };
 
+    // Returns a funtion to play the next segment in the track
+    var playNextSegmentIn
 
     ///////////////////////////////////////////////////////////////////////////////
     // Pubilc methods
@@ -395,14 +401,18 @@ function AudioController() {
         );
 
     	// Button listener to start playing the audio
-    	var play_pause_button = $("#play_pause_button");
+    	var play_pause_button = $('#'+playPauseButtonID);
+        play_pause_button.html('Play Audio');
 		play_pause_button.click(function() { 
-            self.startPlayback();
-    	    // wavesurfer.playPause();
+            if (isPlayingBack) {
+                self.stopPlayback();
+            } else {
+                self.startPlayback();
+            };
 		});
 
 		// Button listener to record or stop the current recording
-		var record_audio_button = $("#record_audio_button");
+		var record_audio_button = $('#'+recordAudioButtonID);
 		record_audio_button.click(function() {
         	var isRecording = begin_record_time > 0;
 
@@ -509,17 +519,19 @@ function AudioController() {
 
     // Start the playback at the current playhead location
     this.startPlayback = function() {
-        // Use the prevPlayheadGlobalTime to detect whether playback is occurring
         // Don't start playback if already in progress
-        if (prevPlayheadGlobalTime != -1) {
+        if (isPlayingBack == true) {
             return;
         };
+        isPlayingBack = true;
+
+        // Update the button display
+        $('#'+playPauseButtonID).html('Stop Audio');
 
         // Find the lecture time when the playback should end
         // Get the greatest end time in all of the tracks
         var playbackLectureEndTime = -1;
         for (var i = 0; i < audio_tracks.length; i++) {
-            console.log(audio_tracks[i].endTimeLecture());
             playbackLectureEndTime = Math.max(playbackLectureEndTime, audio_tracks[i].endTimeLecture());
         };
 
@@ -531,30 +543,90 @@ function AudioController() {
 
 
         // Start the playhead animation and update the playhead time at each interval
-        // TODO: maybe update playhead time is only needed at the end
-        // TODO: is previous global time necessary here
-        prevPlayheadGlobalTime = globalTime();
+        // Call the stopPlayback method when finished
         $('#'+playheadID).animate({left: playbackEndPixel+'px'}, 
                                 {duration: playbackDuration,
                                 easing:'linear',
                                 progress:updatePlayheadTime,
-                                start:updatePlayheadTime,
-                                always:updatePlayheadTime});
+                                always:self.stopPlayback});
 
-        // Start the track playback for each track
-        // TODO
+        // Start the track playback for each segment in each track
+        for (var i = 0; i < audio_tracks.length; i++) {
+            var track = audio_tracks[i];
+            for (var j = 0; j < track.audio_segments.length; j++) {
+                var segment = track.audio_segments[j];
+                var segmentWavesurfer = wavesurfers[i][j];
+
+                // Get the delay in milliseconds from now until when the playback will occur
+                // Compute the start time of the audio (sometimes starts play in middle of segment)
+                var playbackDelay;
+                var audioStartTime;
+                // If the segment starts after the current playhead time
+                if (segment.lecture_start_time >= playheadLectureTime) {
+                    playbackDelay = segment.lecture_start_time - playheadLectureTime;
+                    audioStartTime = segment.audio_start_time;
+                }
+                // If the playhead time is in the middle of the segment 
+                else if (segment.lecture_end_time > playheadLectureTime) {
+                    playbackDelay = 0;
+                    audioStartTime = segment.audio_start_time + (playheadLectureTime-segment.lecture_start_time);
+                }
+                // If the playhead time is after the entire segment
+                else {
+                    // Don't even play this segment
+                    continue;
+                };
+
+                // Generate a function used for playback to be registered with a timer
+                var playbackSegment = function(audioSegment, wavesurfer, startTimeAudio) {
+                    var result = function() {
+                        // Play the wavesurfer over the specified range
+                        wavesurfer.play(startTimeAudio, audioSegment.audio_end_time);
+                        console.log("playback start time in audio: " + startTimeAudio);
+                        console.log(segment);
+                    };
+                    return result;
+                }(segment, segmentWavesurfer, audioStartTime);
+
+                // Register a timer and save the timeout ID so it can be cancelled
+                var timeoutID = setTimeout(playbackSegment, playbackDelay);
+                segmentPlaybackTimeoutIDs.push(timeoutID);
+            };
+        };
     };
 
     this.stopPlayback = function() {
-        // Set the prevPlayheadGlobalTime to indicate that playback is stopped
-        prevPlayheadGlobalTime = -1;
+        // Don't stop playback if not already in progress
+        if (isPlayingBack == false) {
+            return;
+        };
+        isPlayingBack = false;
+
+        console.log("Stop playback");
+
+        // Update the button text
+        $('#'+playPauseButtonID).html('Play Audio');
 
         // Stop the playhead animation
-        clearInterval(playheadAnimationIntervalID);
-        playheadAnimationIntervalID = -1;
+        $('#'+playheadID).stop();
 
-        // Stop the track playback for each track
-        // TODO
+        // Stop all of currently running segment playbacks
+        // Loop through all wavesurfers only because we don't store the currently playing ones
+        for (var i = 0; i < wavesurfers.length; i++) {
+            var trackWavesurfers = wavesurfers[i];
+            for (var j = 0; j < trackWavesurfers.length; j++) {
+                console.log("ws curtime " + trackWavesurfers[j].getCurrentTime());
+                if (trackWavesurfers[j].getCurrentTime() != 0) {
+                    trackWavesurfers[j].stop();
+                };
+            };
+        };
+
+        // Stop all of the pending playbacks
+        for (var i = 0; i < segmentPlaybackTimeoutIDs.length; i++) {
+            clearTimeout(segmentPlaybackTimeoutIDs[i]);
+        };
+        segmentPlaybackTimeoutIDs = [];
     };
 
 }
