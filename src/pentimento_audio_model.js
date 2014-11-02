@@ -1,5 +1,6 @@
 // Audio track contains non-overlapping audio segments
 pentimento.audio_track = function() {
+    // The segments should be arranged in order by their start times
 	this.audio_segments = [];
 
 	// Shifts the specified segment left or right by a certain number of milliseconds.
@@ -23,6 +24,16 @@ pentimento.audio_track = function() {
 	this.scale_segment = function(segment_idx, scale_factor) {
 
 	};
+
+    // Get the end time in the lecture of the track in milliseconds
+    // Returns -1 if the track is empty
+    this.endTimeLecture = function() {
+        if (this.audio_segments.length == 0) {
+            return -1;
+        };
+        var lastSegment = this.audio_segments[this.audio_segments.length-1]
+        return lastSegment.lecture_end_time;
+    };
 };
 
 // Given the location where the segment is dropped, this function figures out where to place the audio

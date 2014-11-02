@@ -320,11 +320,17 @@ function AudioController() {
             }
         };
 
-        // Use flot to draw the graduations
-
         // Dummy data
         var plot_data = [ [0, 0], [0, 10] ];
+
+        // Use flot to draw the graduations
         flotPlot = $.plot(gradation_container, plot_data, options);
+    };
+
+    // Function to update the playhead lecture time during dragging or play
+    var updatePlayheadTime = function() {
+        var playhead = $('#'+playheadID);
+        playheadLectureTime = pixelsToMilliseconds(playhead.position().left);
     };
 
     // draw the playhead for showing playback location
@@ -332,13 +338,6 @@ function AudioController() {
         // Create the playhead and append it to the timeline
         var playhead = $('<div></div>').attr({'id': playheadID});
         $('#'+tracksContainerID).append(playhead);  
-        
-        // Function to update the playhead lecture time during dragging
-        var updatePlayheadTime = function(event, ui) {
-            playheadLectureTime = pixelsToMilliseconds(ui.position.left);
-            // console.log("playhead position: " + ui.position.left)
-            // console.log("Playhead lecture time: " + playheadLectureTime); 
-        };
 
         // Set the playhead to be draggable in the x-axis within the tracksContainer
         playhead.draggable({ axis: "x",
@@ -366,16 +365,6 @@ function AudioController() {
                left:  event.pageX
             });
         });
-    };
-
-    var animatePlayhead = function() {
-        // Calculate the amount of time since the playhead was last moved
-        var currentGlobalTime = globalTime();
-        var timePassed = currentGlobalTime - prevPlayheadGlobalTime;
-        prevPlayheadGlobalTime = currentGlobalTime;
-
-        // Move the playhead by the amount in pixels
-        $('#'+playheadID).positi
     };
 
 
@@ -408,7 +397,8 @@ function AudioController() {
     	// Button listener to start playing the audio
     	var play_pause_button = $("#play_pause_button");
 		play_pause_button.click(function() { 
-    	    wavesurfer.playPause();
+            self.startPlayback();
+    	    // wavesurfer.playPause();
 		});
 
 		// Button listener to record or stop the current recording
@@ -427,7 +417,7 @@ function AudioController() {
 				self.end_recording();
 			};
 		});
-    }
+    };
 
     // Start recording the audio at the lecture time
     this.begin_recording = function() {
@@ -520,13 +510,36 @@ function AudioController() {
     // Start the playback at the current playhead location
     this.startPlayback = function() {
         // Use the prevPlayheadGlobalTime to detect whether playback is occurring
+        // Don't start playback if already in progress
         if (prevPlayheadGlobalTime != -1) {
             return;
         };
 
-        // Start the playhead animation
+        // Find the lecture time when the playback should end
+        // Get the greatest end time in all of the tracks
+        var playbackLectureEndTime = -1;
+        for (var i = 0; i < audio_tracks.length; i++) {
+            console.log(audio_tracks[i].endTimeLecture());
+            playbackLectureEndTime = Math.max(playbackLectureEndTime, audio_tracks[i].endTimeLecture());
+        };
+
+        // Calculate the duration of the playback and the end location in pixels
+        var playbackDuration = playbackLectureEndTime-playheadLectureTime;
+        var playbackEndPixel = millisecondsToPixels(playbackLectureEndTime);
+        console.log("Playback end time: " + playbackLectureEndTime);
+        console.log("Playback end pixel: " + playbackEndPixel);
+
+
+        // Start the playhead animation and update the playhead time at each interval
+        // TODO: maybe update playhead time is only needed at the end
+        // TODO: is previous global time necessary here
         prevPlayheadGlobalTime = globalTime();
-        playheadAnimationIntervalID = setInterval(animatePlayhead, playheadAnimationIntervalDuration);
+        $('#'+playheadID).animate({left: playbackEndPixel+'px'}, 
+                                {duration: playbackDuration,
+                                easing:'linear',
+                                progress:updatePlayheadTime,
+                                start:updatePlayheadTime,
+                                always:updatePlayheadTime});
 
         // Start the track playback for each track
         // TODO
