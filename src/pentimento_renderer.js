@@ -1,4 +1,4 @@
-function updateVisuals() {
+function updateVisuals(isThumbnail) {
     clear();
     var slideIter = pentimento.lecture.getSlidesIterator();
     var state = pentimento.state;
@@ -11,7 +11,7 @@ function updateVisuals() {
                 var visual = visualsIter.next();
                 //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
                 if (isVisualVisible(visual, slideTime)) {
-                    drawVisual(visual, slideTime);
+                    drawVisual(visual, slideTime, isThumbnail, {});
                 }
             }
         } else {
@@ -19,13 +19,13 @@ function updateVisuals() {
         }
     }
     if (state.currentVisual != null)
-        drawVisual(state.currentVisual, globalTime());
+        drawVisual(state.currentVisual, globalTime(), isThumbnail, {});
     for(var i in state.selection) {
         var visCopy = state.selection[i].getClone();
         var propsCopy = visCopy.getProperties();
         propsCopy.setWidth(propsCopy.getWidth()+1);
         propsCopy.setColor("#0000FF");
-        drawVisual(visCopy, slideTime);
+        drawVisual(visCopy, slideTime, isThumbnail,{});
     }
 }
 
@@ -33,7 +33,7 @@ function clear() {
     pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
 }
 
-function drawVisual(visual, tVisual) {
+function drawVisual(visual, tVisual, isThumbnail, thumbParams) {
     tVisual = tVisual || pentimento.state.videoCursor;
     //TODO SUPPORT FOR TRANSFORMS
     switch(visual.getType()) {
@@ -41,7 +41,7 @@ function drawVisual(visual, tVisual) {
             console.log("someone actually made a basic type?!",visual);
             break;
         case VisualTypes.stroke:
-            renderCalligraphicStroke(visual, tVisual);
+            renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams);
             break;
         case VisualTypes.dot:
             break;
@@ -50,18 +50,56 @@ function drawVisual(visual, tVisual) {
     }
 }
 
-function drawVisuals(visuals) {
+function drawVisuals(visuals, isThumbnail) {
     for (var i in visuals) {
-        drawVisual(visuals[i]);
+        drawVisual(visuals[i], isThumbnail, {});
     }
 }
 
-function renderCalligraphicStroke(visual, tVisual) {
+function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
     var calligraphic_path = [];
     var vertsIter = visual.getVerticesIterator();
     var prev, curr;
     var old_angle;
     var old_direction;
+
+    // Parameters for thumbnails
+    var origional_width;
+    var original_height;
+    var scale;
+    var width_offset;
+
+    if(isThumbnail){
+        original_width = window.opener.pentimento.state.context.canvas.width;
+        original_height = window.opener.pentimento.state.context.canvas.height;
+
+        scale = $('#thumbnails_div').height()/original_height;
+        width_offset = Math.round(scale * original_width);
+
+        var thumbOffset = thumbParams.thumbOffset;
+        var firstVisual = thumbParams.firstVisual;
+        var currZoom = thumbParams.currZoom;
+        var thumbTimeMin = thumbParams.timeMin;
+        var thumbTimeMax = thumbParams.timeMax;
+        var thumbTime = thumbParams.thumbTime;
+
+        if(firstVisual){   
+            // var canvas_html = '<canvas id="thumbnails_canvas_' + thumbOffset + '" width="' + width_offset + '" data-currzoom="' + currZoom + '"></canvas>';
+            var canvas_html = '<canvas id="thumbnails_canvas_' + thumbOffset + '" width="' + width_offset +'" data-timemin="' + thumbTimeMin +'" data-timemax="' + thumbTimeMax +'"></canvas>';
+            console.log('HTML' + canvas_html);
+            $('#thumbnails_div').data("currzoom", currZoom).css({
+                'width' : width_offset*(thumbOffset+2)
+            });
+
+            console.log('WIDTH: ' + $('#thumbnails_div').width());
+            $('#thumbnails_div').append(canvas_html)
+            $('#thumbnails_canvas_'+thumbOffset).css({
+                'border' : '1px solid #D8D8D8',
+                'padding' : '1px'
+                });
+        }
+    }
+
     if(vertsIter.hasNext()) {
         prev = vertsIter.next();
     }
@@ -77,20 +115,46 @@ function renderCalligraphicStroke(visual, tVisual) {
             }
             old_angle = new_angle;
             old_direction = new_direction;
-            calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), breaking]);
+            if(isThumbnail){
+                calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), breaking]);
+            }
+            else{
+                calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), breaking]);
+            }
         }
         prev = curr;
     }
     if (curr && tVisual >= curr.getT())
-        calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
+        if(isThumbnail){
+            // calligraphic_path.push([curr.getX() + thumbOffset*width_offset, curr.getY(), visual.getProperties().getWidth(), false]);
+            calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
+        }
+        else{
+            calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
+        }
     if (calligraphic_path.length > 0) { // draw calligraphic path
-        var ctx = pentimento.state.context;
+        var ctx;
+        if(isThumbnail){
+            var canvas_value = '#thumbnails_canvas_' + thumbOffset;
+            console.log("val: " + canvas_value);
+            ctx = $(canvas_value)[0].getContext('2d');
+        }
+        else{  
+            ctx = pentimento.state.context;
+        }
         ctx.globalAlpha = 1.0;
         ctx.strokeStyle = visual.getProperties().getColor();
         ctx.fillStyle = visual.getProperties().getColor();
         ctx.lineWidth = 1;
         ctx.lineCap = 'round';
-        drawCalligraphicPath(0, calligraphic_path, false, ctx);
+        if(isThumbnail){
+            ctx.scale(scale, scale);
+            drawCalligraphicPath(0, calligraphic_path, false, ctx);
+            ctx.scale(1/scale, 1/scale);
+        }
+        else{
+            drawCalligraphicPath(0, calligraphic_path, false, ctx);
+        }
     }
 }
 
@@ -100,6 +164,7 @@ function absolute_angle(x1,y1,x2,y2) {
 };
 
 function drawCalligraphicPath(startIndex, path, reversed, context) {
+    // console.log("path: " + path);
     if(startIndex === 0)
         context.beginPath();
     var point = path[startIndex];
@@ -107,21 +172,26 @@ function drawCalligraphicPath(startIndex, path, reversed, context) {
     context.moveTo(point[0]+point[2],point[1]-point[2]);
     for(var i=startIndex+1; i<path.length-1; i++) {
         point = path[i];
-        if(point[3]) { // 
+        if(point[3]) { 
             endIndex = i+1;
             i = path.length-2;
         }
-        if(reversed)
+        if(reversed){
             context.lineTo(point[0]-point[2],point[1]+point[2]);
-        else
+        }
+        else{
             context.lineTo(point[0]+point[2],point[1]-point[2]);
+        }
     }
     for(var i=endIndex; i>=startIndex; i--) {
+        // console.log("here..." + i);
         point = path[i];
-        if(reversed)
+        if(reversed){
             context.lineTo(point[0]+point[2],point[1]-point[2]);
-        else
+        }
+        else{
             context.lineTo(point[0]-point[2],point[1]+point[2]);
+        }
     }
     point = path[startIndex];
     context.lineTo(point[0]+point[2],point[1]-point[2]);

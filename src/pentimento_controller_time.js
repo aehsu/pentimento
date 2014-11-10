@@ -5,6 +5,7 @@ pentimento.timeController = new function() {
     var lastTimeUpdate;
     
     this.stopRecording = function(endTime) {
+
         clearInterval(interval);
         interval = null;
         
@@ -12,13 +13,22 @@ pentimento.timeController = new function() {
             disabled: false,
             max: pentimento.lectureController.getLectureDuration()
         });
+
         var type = state.recordingType;
         if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
             self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate));
-            updateVisuals();
+            updateVisuals(false);
+            drawThumbnails();
         }
         if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.videoCursor + (endTime - lastTimeUpdate)); }
         lastTimeUpdate = null;
+
+        var tickerTime = $('#ticker').val();
+        console.log('tickerTimeEnd: ' + tickerTime);
+        var tickerSplit = tickerTime.split(/[.|:]/g);
+        var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
+        window.retimer_window.$('#thumbnails_div').data('endrecord', tickerTimeMS);
+
     }
 
     function updateTicker(time) {
@@ -49,6 +59,12 @@ pentimento.timeController = new function() {
     }
 
     this.beginRecording = function(beginTime) {
+
+        var tickerTime = $('#ticker').val();
+        var tickerSplit = tickerTime.split(/[.|:]/g);
+        var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
+        window.retimer_window.$('#thumbnails_div').data('beginrecord', tickerTimeMS);
+
         $('#slider').slider("option", {
             disabled: true
         });
@@ -59,7 +75,8 @@ pentimento.timeController = new function() {
             var gt = globalTime();
             if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
                 self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate));
-                updateVisuals();
+                updateVisuals(false);
+                drawThumbnails();
             }
             if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) {
                 self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate));
@@ -92,11 +109,20 @@ $(document).ready(function() {
         slide: function(event, ui) {
             pentimento.state.selection = [];
             pentimento.timeController.updateVideoTime(ui.value);
-            updateVisuals();
+            updateVisuals(false);
+            drawThumbnails();
         },
         stop: function(event, ui) {
             pentimento.timeController.updateVideoTime(ui.value);
-            updateVisuals();
+            updateVisuals(false);
+            drawThumbnails();
+            // console.log("autoConstraint");
+            // drawAutomaticConstraint(0, 0);
+            // console.log("drawing?")
+            // var endTime = $('#slider').slider('value');
+            // console.log("endtime: " + endTime);
+            // drawAutomaticConstraint(endTime, endTime);
+            // console.log("DREW IT!");
         }
     });
 });
