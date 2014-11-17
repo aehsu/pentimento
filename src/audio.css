@@ -34,7 +34,9 @@
 
 .audio_track {
     position: absolute;
-    padding-left: 22px;
+    height: 40%;
+    width: 100%;
+    padding: 0;
 }
 
 .audio_segment {
@@ -48,6 +50,7 @@
     float: left;
     box-shadow: 0;
     transition: box-shadow .15s;
+    padding: 0;
 }
 
 .audio_segment wave {
