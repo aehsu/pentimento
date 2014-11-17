@@ -51,6 +51,7 @@
     box-shadow: 0;
     transition: box-shadow .15s;
     padding: 0;
+    height: 100%;
 }
 
 .audio_segment wave {
