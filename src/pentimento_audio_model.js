@@ -3,11 +3,106 @@ pentimento.audio_track = function() {
     // The segments should be arranged in order by their start times
 	this.audio_segments = [];
 
+    // Returns whether the specified segment can be shifted to the left or right
+    // If a negative number is given for shift_millisec, then the shift will be left.
+    // The final value of the segment starting time cannot be negative.
+    // The segment cannot overlap existing segments in the track.
+    // If the shift will cause either of these conditions to be true,
+    // then the shift cannot occur.
+    // Returns true if the shift is valid.
+    this.canShiftSegment = function(segment_idx, shift_millisec) {
+        // Get the segment and check that it exists
+        var shiftSegment = this.audio_segments[segment_idx];
+        if (shiftSegment === undefined) {
+            return false;
+        };
+
+        // Get the new lecture start/end times and check for non-negative start time
+        var newLectureStartTime = shiftSegment.lecture_start_time + shift_millisec;
+        var newLectureEndTime = shiftSegment.lecture_end_time + shift_millisec;
+        if (newLectureStartTime < 0) {
+            return false;
+        };
+
+        // Check for overlap with existing segments
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            var currentSegment = this.audio_segments[i];
+
+            // The newLectureStartTime must be greater than currentSegment.lecture_end_time
+            // or the newLectureEndTime must be less than currentSegment.lecture_start_time
+            // Check for the inverse of this
+            if (newLectureStartTime < currentSegment.lecture_end_time &&
+                newLectureEndTime > currentSegment.lecture_start_time) {
+                return false;
+            };
+
+            // Overlaps if newLectureStart/EndTime is inside the range of
+            // (currentSegment.lecture_start_time, currentSegment.lecture_end_time)
+            // if ( (newLectureStartTime > currentSegment.lecture_start_time &&
+            //     newLectureStartTime < currentSegment.lecture_end_time) || 
+            //     (newLectureEndTime > currentSegment.lecture_start_time &&
+            //     newLectureEndTime < currentSegment.lecture_end_time) ) {
+            //     return false;
+            // };
+
+            // Overlaps if any segment's start or end time is inside the range
+            // of (newLectureStartTime, newLectureEndTime)
+            // if ( () || () ) {
+            //     return false;
+            // };
+        };
+
+        return true;
+    };
+
 	// Shifts the specified segment left or right by a certain number of milliseconds.
 	// If a negative number is given for shift_millisec, then the shift will be left.
-	// It modifies the lecture object passed in to it. Other segments will be shifted as a result.
-	this.shift_segment = function(segment_idx, shift_millisec) {
+    // checkValid specifies whether to if the shift is valid and defaults to true.
+    // The segments will be rearranged so that they are still in order
+    // Return the new index of the segment after the shift
+    // Return -1 if the shift fails
+	this.shift_segment = function(segment_idx, shift_millisec, checkValid) {
+        if(typeof(checkValid)==='undefined') checkValid = true;
 
+        // Get the segment and check that it exists
+        var shiftSegment = this.audio_segments[segment_idx];
+        if (shiftSegment === undefined) {
+            return -1;
+        };
+
+        // Check for validity if specified
+        if (checkValid) {
+            var canShift = this.canShiftSegment(segment_idx, shift_millisec);
+            if (!canShift) {
+                return -1;
+            };
+        };
+
+        // Get the new times for the segment
+        var newLectureStartTime = shiftSegment.lecture_start_time + shift_millisec;
+        var newLectureEndTime = shiftSegment.lecture_end_time + shift_millisec;
+
+        // Remove the segment from the array
+        this.audio_segments.splice(segment_idx, 1);
+
+        // Figure out the index to reinsert the segment at by looping through the 
+        // segments and stopping once the shifted segment is greater than a segment.
+        // A starting insertIndex of 0 is used in case the shifted segment is less than
+        // all of the current segments.
+        var insertIndex = 0;
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            // Once the begin time of the shifted segment is greater than the end time
+            // of the current segment, then break at the current index plus one
+            if (newLectureStartTime >= this.audio_segments[i].lecture_end_time) {
+                insertIndex = i+1;
+                break;
+            };
+        };
+
+        // Splice the array of segments to insert the shifted segment
+        this.audio_segments.splice(insertIndex, 0, shiftSegment);
+
+        return insertIndex;
 	};
 
 	// Crop the specified segment by the specified number of milliseconds

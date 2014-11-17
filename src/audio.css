@@ -38,6 +38,9 @@
 }
 
 .audio_segment {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
     border-style: solid;
     border-color: black;
     border-width: 2px;
