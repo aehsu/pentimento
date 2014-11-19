@@ -1,0 +1,4 @@
+var AudioTrackController = function() {
+
+
+};

@@ -1,4 +1,4 @@
-function AudioTimelineController() {
+var AudioTimelineController = function() {
 
     ////////////////////////
     // Member vars
@@ -637,13 +637,13 @@ function AudioTimelineController() {
         segmentPlaybackTimeoutIDs = [];
     };
 
-}
+};
 
 
 
 $(document).ready(function() {
-    pentimento.audioController = new AudioTimelineController();
-    pentimento.audioController.init();
+    pentimento.audioTimelineController = new AudioTimelineController();
+    pentimento.audioTimelineController.init();
 });
 
 
