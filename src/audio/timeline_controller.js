@@ -4,15 +4,11 @@ var AudioTimelineController = function() {
     // Member vars
     ////////////////////////
 
-    // set global mouse position in relation to page
-    var mouseX = null;
-    var mouseY = null;
-
 	// self can be used to refer to the object in different scopes (such as listeners)
 	var self = this;
 
-	// Array of pentimento.audio_track
-	var audio_tracks = [];
+	// Audio controller for managing the audio model
+    var audioController = null;
 
 	// RecordRTC is used to record the audio stream
 	var recordRTC = null;
@@ -20,10 +16,9 @@ var AudioTimelineController = function() {
     // The flot object is used for plotting the graduations for the timeline
     var flotPlot = null;
 
-    // Wavesurfer is used to display audio waveforms
-    // There is one wavesurfer object for each segment, so we use a 2D array to hold the wavesurfer objects
-    // The outer array is for tracks, and the inner array is for segments
-    var wavesurfers = [[]];
+    // set global mouse position in relation to page
+    var mouseX = null;
+    var mouseY = null;
 
     // begin_record_time is the global time when the recording was started
     // The time is in milliseconds UTC
@@ -72,36 +67,10 @@ var AudioTimelineController = function() {
     // contained inside audio_tracks_container
     var playheadID = 'playhead';  
 
-    // Track
-    // contained inside audio_tracks_container
-    var trackClass = "audio_track";
-    var trackID = function(trackIndex) {
-        return "track-" + trackIndex;
-    };
-
-    // Segment
-    // contained inside an audio_track
-    var segmentClass = "audio_segment";
-    var segmentID = function(segmentIndex) {
-        return "segment-" + segmentIndex;
-    };
-
     // Buttons
     var playPauseButtonID = 'play_pause_button';
     var recordAudioButtonID = 'record_audio_button';
 
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Callback methods
-    ///////////////////////////////////////////////////////////////////////////////
-
-    var segmentDragging = function() {
-
-    };
-
-    var segmentStopDragging = function() {
-
-    };
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -118,151 +87,6 @@ var AudioTimelineController = function() {
         return 1000*(pixels/timeline_pixels_per_sec);
     }
 
-    // Draw a segment into the track
-    // Return new jQuery segment
-    var drawSegment = function(trackIndex, segmentIndex) {
-
-        var audio_track = audio_tracks[trackIndex];
-        var audio_segment = audio_track.audio_segments[segmentIndex];
-
-        // Create a new segment div 
-        var new_segment = $("<div></div>").attr({"id": segmentID(segmentIndex), "class": segmentClass});
-        new_segment.data(audio_segment);
-        $('#'+trackID(trackIndex)).append(new_segment);
-
-        // Set the css for the new segment
-        new_segment.css({"width": millisecondsToPixels(audio_segment.lectureLength())});
-
-        // add hover method to audio segment divs
-        // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
-        new_segment.hover( function(event) {
-            var this_segment = $(this);
-
-            // Add left or right border highlight on hover
-            mouseHover = setInterval(function(){
-                if (this_segment.hasClass("obstacle")) {
-                    // Check to see if it over laps with segment on the left half
-                    if ( mouseX >= this_segment.offset().left &&
-                         mouseX <= this_segment.offset().left + this_segment.width()/2 ) {
-                        // Highlight left edge
-                        $('#right_target_div').remove();
-                        if($('#left_target_div').length == 0) {
-                            var target_div = $("<div>", {id: "left_target_div"}).
-                            offset({ top: this_segment.offset().top, left: this_segment.offset().left});
-                            target_div.height(this_segment.height());
-                            $('#'+timelineID).append(target_div);
-                        }
-                    }
-                    // Check to see if it over laps with segment on the right half
-                    else if ( mouseX > this_segment.offset().left + this_segment.width()/2 && 
-                              mouseX <= this_segment.offset().left + this_segment.width() ) {
-                        // Highlight right edge
-                        $('#left_target_div').remove();
-                        if($('#right_target_div').length == 0) {
-                            var target_div = $("<div>", {id: "right_target_div"})
-                            .offset({ top: this_segment.offset().top, left: this_segment.offset().left + this_segment.width() });
-                            target_div.height(this_segment.height());
-                            $('#'+timelineID).append(target_div);
-                        }
-                    };
-                }
-            }, 100);
-        }, function() {
-            var this_segment = $(this);
-            clearInterval(mouseHover);
-            $('#left_target_div').remove();
-            $('#right_target_div').remove();
-        });
-
-        // Setup the dragging on audio segment
-        new_segment.draggable({
-            preventCollision: true,
-            containment: 'parent',
-            obstacle: ".obstacle",
-            axis: "x",
-            opacity: 0.65
-        }).on( "dragstart", function( event, ui ) {
-            // Remove cursor object
-            $('#'+timelineCursorID).hide(100);
-            // When you drag an object, all others become obstacles for dragging
-            $('.'+segmentClass).each(function(index, segment) {
-                // Don't check itself
-                if (segment !== ui.helper[0]) {
-                    $(segment).addClass('obstacle');
-                };
-            });
-
-            ui.helper.addClass('dragged')
-        }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-            
-            $('#'+timelineCursorID).show(50);
-
-            // Call shift function in model
-            // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
-            // figure out if segment needs to be moved (if dropped on top of something)
-            pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
-
-            // When you finish dragging an object, remove the obstacles classes
-            $('.'+segmentClass).each(function(index, segment) {
-                // Don't check itself
-                if (segment !== ui.helper[0]) {
-                    $(segment).removeClass('obstacle');
-                };
-            });
-            ui.helper.removeClass('dragged')
-        }).resizable({
-            handles: "e, w",
-            minWidth: 1,
-            stop: function( event, ui ) {
-                dwidth = ui.originalSize.width - ui.size.width;
-                if (ui.position.left === ui.originalPosition.left) // then right handle was used
-                    // Trim audio from Right
-                    audio_segment.crop_segment(dwidth, "right");
-                else
-                    // Trim audio from Left
-                    audio_segment.crop_segment(dwidth, "left");
-            }
-        });
-
-        // Load the waveform to be displayed inside the segment div
-        // Initialize wavesurfer for the segment
-        console.log(new_segment.css('height'));
-        var wavesurfer = Object.create(WaveSurfer);
-        wavesurfers[trackIndex][segmentIndex] = wavesurfer;
-        wavesurfer.init({
-            container: document.querySelector("#"+segmentID(segmentIndex)),
-            waveColor: 'violet',
-            progressColor: 'purple',
-            height: parseInt(new_segment.css('height')),
-            minPxPerSec: 1
-        });
-        wavesurfer.load(audio_segment.audio_resource);
-
-        // Return the new segment
-        return new_segment;
-    };
-
-    // Draw a track onto the timeline
-    // Return the new jQuery track
-    var drawTrack = function(trackIndex) {
-
-        // TODO: don't draw if one already exists
-
-        // Create a new track div and set it's data
-        var audio_track = audio_tracks[trackIndex];
-        var new_track = $('<div></div>').attr({"id": trackID(trackIndex) , "class": trackClass});
-        new_track.data(audio_track);
-        new_track.sortable();
-        $('#'+tracksContainerID).append(new_track);
-
-        // Iterate over all segments for that track and draw the segments (inside the track)
-        console.log("Number of audio segments in track " + trackIndex + ": " + audio_track.audio_segments.length);
-        for (var i = 0; i < audio_track.audio_segments.length; i++) {
-            var jqSegment = drawSegment(trackIndex, i);
-        };
-
-        return new_track;
-    };
 
     // Changes tickpoints into time display (ex: 00:30:00)
     // Each tickpoint unit is one second which is then scaled by the audio_timeline_scale
@@ -380,7 +204,7 @@ var AudioTimelineController = function() {
     };
 
     // Returns a funtion to play the next segment in the track
-    var playNextSegmentIn
+    // var playNextSegmentIn
 
     ///////////////////////////////////////////////////////////////////////////////
     // Pubilc methods
@@ -389,7 +213,6 @@ var AudioTimelineController = function() {
     // Initializes the audio controller
     // Should only be called after the document is ready
     this.init = function () {
-    	console.log("initialize: pentimento_audio_controller");
 
     	// RecordRTC setup
 		navigator.getUserMedia(
