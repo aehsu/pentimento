@@ -52,7 +52,7 @@ function RetimingController(lec) {
 			if(other.getTVisual() > constraint.getTVisual()) { break; }
 			index++;
 		}
-		constraints.splice(index+1, 0, constraint);
+		constraints.splice(index, 0, constraint);
 
 		um.add(function() {
 			unAddConstraint(constraint);
@@ -126,13 +126,13 @@ function RetimingController(lec) {
 		if(type=="Audio") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTAudio() < time) { break; }
+				if(constraint.getTAudio() <= time) { break; }
 				best = constraint;
 			}
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVisual() < time) { break; }
+				if(constraint.getTVisual() <= time) { break; }
 				best = constraint;
 			}
 		}
@@ -163,77 +163,22 @@ function RetimingController(lec) {
 	}
 }
 
-	function drawConstraint(constraint_num){
-
-		$('#retimer_constraints').on('mousedown', function addArrow(e){
-
-
-			var x = e.pageX;
-			var y = e.pageY;
-
-			var arrow_name = "arrow_"+constraint_num;
-			var visuals_constraint = "visuals_constraint"+constraint_num;
-			var audio_constraint = "audio_constraint"+constraint_num;
-
-					$('#retimer_constraints').drawLine({
-							layer: true,
-							name: arrow_name,
-							strokeStyle: '#000',
-							strokeWidth: 4,
-							rounded: true,
-							x1: x, y1: 185,
-							x2: x, y2: 15
-						})
-						.drawArc({
-							layer: true,
-							name: visuals_constraint,
-							draggable: true,
-							fillStyle: '#000',
-							x: x, y: 15,
-							radius: 10,
-							drag: function(layer) {
-								console.log("x: " + $('canvas').getLayer(visuals_constraint).x);
-								console.log("y: " + $('canvas').getLayer(visuals_constraint).y);
-								$('canvas').setLayer(visuals_constraint,{				      
-									x: $('canvas').getLayer(visuals_constraint).x , y: 15,
-								})
-								$('canvas').setLayer(arrow_name,{				      
-									x1: $('canvas').getLayer(visuals_constraint).x , y1: 15,
-									x2: $('canvas').getLayer(audio_constraint).x , y2: $('canvas').getLayer(audio_constraint).y
-								})
-
-							}
-						})
-						.drawArc({
-							layer: true,
-							name: audio_constraint,
-							draggable: true,
-							fillStyle: '#000',
-							x: x, y: 185,
-							radius: 10,
-							drag: function(layer) {
-								console.log("x: " + $('canvas').getLayer(audio_constraint).x);
-								console.log("y: " + $('canvas').getLayer(audio_constraint).y);
-								$('canvas').setLayer(audio_constraint,{				      
-									x: $('canvas').getLayer(audio_constraint).x , y: 185,
-								})
-								$('canvas').setLayer(arrow_name,{				      
-									x1: $('canvas').getLayer(visuals_constraint).x , y1: $('canvas').getLayer(visuals_constraint).y,
-									x2: $('canvas').getLayer(audio_constraint).x , y2: 185
-								})
-
-							}
-						});
-						
-			$('#retimer_constraints').unbind('mousedown', addArrow);	
-		});
-	}
-
-
 $(document).ready(function() {
 	var constraint_num = 0;
     $('#sync').click(function(){
+    	console.log("clicked!");
+		// updateRetimerView();
 		drawConstraint(constraint_num);
 		constraint_num += 1;
 	});
+
+	// $('#thumb_zoom_in').click(function(){
+	// 	var endTime = window.opener.pentimento.lectureController.getLectureDuration();
+	// 	scaleThumb(2, 0, endTime);
+	// })
+
+	// $('#thumb_zoom_out').click(function(){
+	// 	var endTime = window.opener.pentimento.lectureController.getLectureDuration();
+	// 	scaleThumb(0.5, 0, endTime);
+	// })
 })

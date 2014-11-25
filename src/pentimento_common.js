@@ -80,4 +80,7 @@ $(document).ready(function(){
     $('#'+tickerId).css('position', 'absolute');
     $('#'+tickerId).css('left', parseInt($('#'+sliderId).width())+20 + 'px');
     $('#'+tickerId).css('top', parseInt($('#'+sliderId).position().top)-10 + 'px');
+
+    window.retimer_window = window.open("retimer.html");
+
 });
