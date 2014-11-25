@@ -75,8 +75,27 @@ label{
     float:left;
 }
 
-.container{
-    overflow: hidden;
+.ui-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.ui-resizable-handle {
+height: 100%;
+width: 5px;
+position: absolute;
+font-size: 0.1px;
+}
+.ui-resizable-w {
+    cursor: w-resize;
+}
+.ui-resizable-e {
+    cursor: e-resize;
+    top:0px;
+    right: -5px;
+}
+
+.ui-label{
+    font-family: Calibri, sans-serif;
 }
 
 .menu-table{
