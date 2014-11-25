@@ -369,9 +369,6 @@ var AudioTimelineController = function() {
         // Calculate the duration of the playback and the end location in pixels
         var playbackDuration = playbackLectureEndTime-playheadLectureTime;
         var playbackEndPixel = millisecondsToPixels(playbackLectureEndTime);
-        console.log("Playback end time: " + playbackLectureEndTime);
-        console.log("Playback end pixel: " + playbackEndPixel);
-
 
         // Start the playhead animation and update the playhead time at each interval
         // Call the stopPlayback method when finished
@@ -413,8 +410,6 @@ var AudioTimelineController = function() {
                     var result = function() {
                         // Play the wavesurfer over the specified range
                         wavesurfer.play(startTimeAudio, audioSegment.audio_end_time);
-                        console.log("playback start time in audio: " + startTimeAudio);
-                        console.log(segment);
                     };
                     return result;
                 }(segment, segmentWavesurfer, audioStartTime);

@@ -148,6 +148,11 @@ var AudioSegmentController = function(segment, audio_controller) {
         // Return the new segment
         return new_segment;
     };
+
+    // Start playback of wavesurfer for the specified time
+    this.startPlayback() = function() {
+        
+    };
 };
 
 ///////////////////////////////////////////////////////////////////////////////
