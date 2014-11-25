@@ -280,7 +280,8 @@ function editSelectMouseMove(event) {
         }
     }
 
-    updateVisuals();
+    updateVisuals(false);
+    drawThumbnails();
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
@@ -296,7 +297,7 @@ function editSelectMouseUp(event) {
         var propsCopy = visCopy.getProperties();
         propsCopy.setWidth(propsCopy.getWidth()+1);
         propsCopy.setColor("#0000FF");
-        drawVisual(visCopy);
+        drawVisual(visCopy, false, 0, false, {});
     }
 }
 /**********************************EDITING-MODE TOOLS**********************************/

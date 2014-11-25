@@ -19,3 +19,9 @@ body{
 .retiming_button{
     height: 40px;
 }
+
+#thumbnails_div{
+    height: 150px;
+    background-color: black;
+    width: 10000px;
+}
