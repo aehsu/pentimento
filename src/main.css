@@ -75,61 +75,8 @@ label{
     float:left;
 }
 
-.container{
-    overflow: hidden;
-}
-
-
-#audio_timeline {
-    height: 500px;
-    width: 100%;
-    display: inline-block;
-
-    border-style: solid;
-    border-color: black;
-    /*disable text selection*/
-    -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
-
-}
-.draggable-box {
-    width: 100px; 
-    height: 100px;
-    padding: 0.5em;
-    border-style: solid;
-    border-color: black;
-    margin: 0 10px 10px 0;
-    z-index: 10;
-}
-.audio_segment {
-    width: 100px; 
-    height: 100px;
-    border-style: solid;
-    border-color: black;
-    border-width: 2px;
-    float: left;
-}
-
-.audio_segment wave {
-    position: absolute;
-    left:0;
-    right: 0;
-    border-style: none;
-}
-
-wave canvas {
-
-    border-style: none;
-}
-
-
 .ui-button:hover {
     background: rgba(0, 0, 0, 0.1);
-}
-
-.audio_track {
-    padding: 0;
-    width: 300;
-    height: 300;
 }
 
 .ui-resizable-handle {
