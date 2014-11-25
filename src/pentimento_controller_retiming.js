@@ -126,13 +126,13 @@ function RetimingController(lec) {
 		if(type=="Audio") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTAudio() < time) { break; }
+				if(constraint.getTAudio() <= time) { break; }
 				best = constraint;
 			}
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVisual() < time) { break; }
+				if(constraint.getTVisual() <= time) { break; }
 				best = constraint;
 			}
 		}

@@ -204,11 +204,26 @@ function scaleThumbs(tVisOld, tVisPrev, tVisNew, tVisNext){
     // drawThumbnails(currZoom, zoomFactor);
     $('#' + thumbnails_div).children().each(function () {
         console.log(this);
+        console.log("type: " + (typeof this))
         var id = this.id;
         console.log("canvas_id " + this.id);
         console.log("canvasMinTime:" + $('#' + id).data('timemin'));
         console.log("canvasMaxTime: " + $('#' + id).data('timemax'));
+        var currTMin = $('#' + id).data('timemin');
+        var currTMax = $('#' + id).data('timemax');
+
+        if(currTMin > tVisPrev && currTMax < tVisNext){
+            $('#thumbnails_cache').append('<span>SCALING</span>');
+        }
+        else{
+            var htmlStr = $('#' + id).prop('outerHTML');
+            console.log("str: " + htmlStr);
+            $('#thumbnails_cache').append('<span>KEEP</span>');
+            $('#thumbnails_cache').append(htmlStr);
+        }
+        // $('#' + thumbnails_div).remove('#' + id);
     });
+     $('#' + thumbnails_div).empty();
 }
 
 function drawConstraint(constraint_num){
@@ -400,13 +415,13 @@ function getNextConstraint(time, type) {
     if(type=="Audio") {
         for(var i in constraints) {
             var constraint = constraints[i];
-            if(constraint.getTAudio() < time) { break; }
+            if(constraint.getTAudio() <= time) { break; }
             best = constraint;
         }
     } else if(type=="Video") {
         for(var i in constraints) {
             var constraint = constraints[i];
-            if(constraint.getTVisual() < time) { break; }
+            if(constraint.getTVisual() <= time) { break; }
             best = constraint;
         }
     }
