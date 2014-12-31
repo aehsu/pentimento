@@ -74,7 +74,8 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
         original_height = window.opener.pentimento.state.context.canvas.height;
 
         scale = $('#thumbnails_div').height()/original_height;
-        width_offset = Math.round(scale * original_width);
+        // width_offset = Math.round(scale * original_width);
+        width_offset = scale * original_width;
 
         var thumbOffset = thumbParams.thumbOffset;
         var firstVisual = thumbParams.firstVisual;
