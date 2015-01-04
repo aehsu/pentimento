@@ -1,7 +1,51 @@
+// Audio model contains all the tracks and segments that make up all of the audio data
+// All audio model data should be modified only through the class methods provided.
+pentimento.audio_model = function() {
+
+    this.audio_tracks = [];
+
+    // Create a new empty audio track and return it.
+    this.createTrack = function() {
+        var newTrack = new pentimento.audio_track();
+        this.audio_tracks.push(newTrack);
+        return newTrack;
+    };
+
+    // Remove the specified audio track
+    this.removeTrack = function(track) {
+
+    };
+};
+
 // Audio track contains non-overlapping audio segments
 pentimento.audio_track = function() {
-    // The segments should be arranged in order by their start times
+
 	this.audio_segments = [];
+
+    // Insert the provided segment and return an array of new segments created
+    // due to the insertion (can happen if the insert splits a segment).
+    // Returns null if there are no new segments.
+    this.insertSegment = function(newSegment) {
+
+        // Iterate over all segments for the track
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            var shift_segment = this.audio_segments[i];
+
+            // If the segment is fully to the right of the inserted segment, then shift
+            if ( newSegment.lecture_end_time <= shift_segment.lecture_start_time ) {
+                this.shift_segment( shift_segment , newSegment.lectureLength());
+            };
+        };
+
+        // Insert the segment
+        this.audio_segments.push(newSegment);
+
+        // TODO: handle if the insertion splits an existing segment
+        return null;
+    };
+
+    // Remove the specified segment
+    
 
     // Returns whether the specified segment can be shifted to the left or right
     // If a negative number is given for shift_millisec, then the shift will be left.
@@ -11,6 +55,7 @@ pentimento.audio_track = function() {
     // then the shift cannot occur.
     // Returns true if the shift is valid.
     this.canShiftSegment = function(segment_idx, shift_millisec) {
+
         // Get the segment and check that it exists
         var shiftSegment = this.audio_segments[segment_idx];
         if (shiftSegment === undefined) {
@@ -139,13 +184,15 @@ pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
     	// Don't check itself
     	if (index != segment_idx) {
     		// Check to see if it overlaps with segment on the left half
-    		if ( mouse_event.pageX >= $(segment).offset().left && mouse_event.pageX <= $(segment).offset().left + $(segment).width()/2 ) {
+    		if ( mouse_event.pageX >= $(segment).offset().left && 
+                mouse_event.pageX <= $(segment).offset().left + $(segment).width()/2 ) {
     		    console.log('move to left');
     		    // Move segment to the left of conflicting segment
     		   
     		}
     		// Check to see if it over laps with segment on the right half
-    		else if ( mouse_event.pageX > $(segment).offset().left + $(segment).width()/2 && mouse_event.pageX <= $(segment).offset().left + $(segment).width() ) {
+    		else if ( mouse_event.pageX > $(segment).offset().left + $(segment).width()/2 && 
+                mouse_event.pageX <= $(segment).offset().left + $(segment).width() ) {
     		    // Move segment to the left of conflicting segment
     		    console.log('move to right');
     		}
@@ -155,6 +202,7 @@ pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
 
 // Audio segments contain an audio clip and a location within the lecture
 pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_time, lecture_start_time, lecture_end_time) {
+
 	this.audio_resource = audio_resource;
 	this.audio_start_time = audio_start_time;
 	this.audio_end_time = audio_end_time;

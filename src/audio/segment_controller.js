@@ -1,14 +1,14 @@
 // Controller for the DOM audio segment inside the DOM audio track
-var AudioSegmentController = function(segment, audio_controller) {
+var AudioSegmentController = function(segment) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ///////////////////////////////////////////////////////////////////////////////
 
-    var audio_segment = null;  // audio_segment from the model
-    var audioController = audio_controller;
+    var audioSegment = null;  // audio_segment from the model
     var segmentID = null;  // HTML ID used to identify the segment
     var segmentClass = "audio_segment";
+    var playbackTimeoutID = -1;  // Timeout ID for delayed playback (-1 is null)
     var wavesurfer = null;  // wavesurfer to play audio
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -16,14 +16,14 @@ var AudioSegmentController = function(segment, audio_controller) {
     ///////////////////////////////////////////////////////////////////////////////
     
     // Audio model segment is passed on input
-    audio_segment = segment;
+    audioSegment = segment;
 
     // Create a new segment ID of the form
     // 'segment#' where '#' is a positive integer
     segmentID = 'segment' + (AudioSegmentController.counter++);
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Public Methods
+    // Getter methods
     ///////////////////////////////////////////////////////////////////////////////
 
     // Get the ID of the segment
@@ -31,16 +31,75 @@ var AudioSegmentController = function(segment, audio_controller) {
         return segmentID;
     };
 
-    // Draw a segment into the track
+    // Get the segment
+    this.getAudioSegment = function() {
+        return audioSegment;
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Managing audio methods
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Playback the audio segment after a delay at the specied time interval (milliseconds).
+    // If the end time is undefined, play until the end.
+    // If playback is currently going or scheduled, then cancel the current and start a new one.
+    this.startPlayback = function(delay, startTime, endTime) {
+
+        // Stop any ongoing playback
+        this.stopPlayback();
+
+        // If the end time is undefined, set it to the end
+        if (typeof endTime === 'undefined') {
+            endTime = audioSegment.audio_end_time;
+        };
+
+        // Generate a function used for playback to be registered with a timer.
+        // Times are in milliseconds
+        var playbackSegment = function() {
+            var result = function() {
+                // Play the wavesurfer over the specified range
+                wavesurfer.play(startTime, endTime);
+            };
+            return result;
+        }();
+
+        // Register a timer and save the timeout ID so it can be cancelled
+        playbackTimeoutID = setTimeout(playbackSegment, delay);
+    };
+
+    // Stop any ongoing or scheduled playback.
+    this.stopPlayback = function() {
+
+        // Stop the wavesurfer playing if it is playing and the current time is not 0.
+        if (wavesurfer.getCurrentTime() > 0) {
+            wavesurfer.stop();
+        };
+
+        // Stop the pending playback if there is one
+        if (playbackTimeoutID != -1) {
+            clearTimeout(playbackTimeoutID);
+        };
+        playbackTimeoutID = -1;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Drawing Methods
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Draw a segment into the jquery parent object
     // Return new jQuery segment
-    this.draw = function() {
+    this.draw = function(jqParent) {
 
         // Create a new segment div 
         var new_segment = $("<div></div>").attr({"id": segmentID, "class": segmentClass});
-        new_segment.data(audio_segment);
+        new_segment.data(audioSegment);
+
+        // Add the segment to the parent
+        jqParent.append(new_segment);
 
         // Set the css for the new segment
-        new_segment.css({"width": millisecondsToPixels(audio_segment.lectureLength())});
+        new_segment.css({"width": pentimento.audioController.millisecondsToPixels(audioSegment.lectureLength())});
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
@@ -91,8 +150,6 @@ var AudioSegmentController = function(segment, audio_controller) {
             axis: "x",
             opacity: 0.65
         }).on( "dragstart", function( event, ui ) {
-            // Remove cursor object
-            $('#'+timelineCursorID).hide(100);
             // When you drag an object, all others become obstacles for dragging
             $('.'+segmentClass).each(function(index, segment) {
                 // Don't check itself
@@ -104,8 +161,6 @@ var AudioSegmentController = function(segment, audio_controller) {
             ui.helper.addClass('dragged')
         }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
             
-            $('#'+timelineCursorID).show(50);
-
             // Call shift function in model
             // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
             // figure out if segment needs to be moved (if dropped on top of something)
@@ -124,12 +179,14 @@ var AudioSegmentController = function(segment, audio_controller) {
             minWidth: 1,
             stop: function( event, ui ) {
                 dwidth = ui.originalSize.width - ui.size.width;
-                if (ui.position.left === ui.originalPosition.left) // then right handle was used
+                if (ui.position.left === ui.originalPosition.left) { // then right handle was used
                     // Trim audio from Right
-                    audio_segment.crop_segment(dwidth, "right");
-                else
+                    audioSegment.crop_segment(dwidth, "right");
+                }
+                else {
                     // Trim audio from Left
-                    audio_segment.crop_segment(dwidth, "left");
+                    audioSegment.crop_segment(dwidth, "left");
+                }
             }
         });
 
@@ -143,16 +200,12 @@ var AudioSegmentController = function(segment, audio_controller) {
             height: parseInt(new_segment.css('height')),
             minPxPerSec: 1
         });
-        wavesurfer.load(audio_segment.audio_resource);
+        wavesurfer.load(audioSegment.audio_resource);
 
         // Return the new segment
         return new_segment;
     };
 
-    // Start playback of wavesurfer for the specified time
-    this.startPlayback() = function() {
-        
-    };
 };
 
 ///////////////////////////////////////////////////////////////////////////////
