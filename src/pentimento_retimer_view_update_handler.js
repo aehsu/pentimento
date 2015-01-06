@@ -258,9 +258,12 @@ function drawConstraint(constraint_num){
         var visuals_constraint = "visuals_constraint"+constraint_num;
         var audio_constraint = "audio_constraint"+constraint_num;
 
+        console.log("DRAWING!");
+
             $('#' + retimer_constraints).drawLine({
                     layer: true,
                     name: arrow_name,
+                    bringToFront: true,
                     strokeStyle: '#000',
                     strokeWidth: 4,
                     rounded: true,
@@ -271,6 +274,7 @@ function drawConstraint(constraint_num){
                     layer: true,
                     name: visuals_constraint,
                     draggable: true,
+                    bringToFront: true,
                     fillStyle: '#000',
                     x: x, y: 15,
                     radius: 10,
@@ -285,6 +289,7 @@ function drawConstraint(constraint_num){
                     layer: true,
                     name: audio_constraint,
                     draggable: true,
+                    bringToFront: true,
                     fillStyle: '#000',
                     x: x, y: 185,
                     radius: 10,
@@ -295,7 +300,10 @@ function drawConstraint(constraint_num){
                         updateAudioConstraint(audio_constraint, visuals_constraint);
                     }
                 });
-                    
+                
+                $('#' + retimer_constraints).drawLayers();
+                console.log("DREW?");
+
         $('#' +retimer_constraints).unbind('mousedown', addArrow);    
     });
 }
@@ -514,29 +522,119 @@ function extendRetimingConstraintsCanvas(){
     console.log("HEREEE");
     if(window.opener != null){
 
-    var original_width = window.opener.pentimento.state.context.canvas.width;
-    var original_height = window.opener.pentimento.state.context.canvas.height;
+        var original_width = window.opener.pentimento.state.context.canvas.width;
+        var original_height = window.opener.pentimento.state.context.canvas.height;
 
-    var scale = $('#thumbnails_div').height()/original_height;
-    var thumbnail_width = Math.round(scale * original_width);
+        var scale = $('#thumbnails_div').height()/original_height;
+        var thumbnail_width = Math.round(scale * original_width);
 
-    var numThumbs = $('#' + thumbnails_div).children().length;
+        var numThumbs = $('#' + thumbnails_div).children().length;
 
-    var new_width = numThumbs*thumbnail_width + 2*(numThumbs-1) + 2;
-    var curr_width = $('#' + retimer_constraints).width();
+        var new_width = numThumbs*thumbnail_width + 2*(numThumbs-1) + 2;
 
-    var scale = curr_width/new_width;
-    console.log("scale: " + scale);
+        console.log("new: " + new_width);
+        // var curr_width = $('#' + retimer_constraints).width();
 
+        // var canvas_scale = new_width/curr_width;
+        // console.log("scale: " + canvas_scale);
 
-    $('#constraints_div').css({
-         'width' : new_width,
-         'height' : "200px"
-    });
-    $('#' + retimer_constraints).css({
-         'width' : new_width,
-         'height' : "200px"
-    });
+        $('#' + retimer_constraints).clearCanvas();
+
+        console.log("width? :" +  $('#' + retimer_constraints).width());
+
+        var newCanvas = "<canvas id='retimer_constraints' height='200px' width='" + new_width + "px'></canvas>"
+
+        $('#constraints_div').html(newCanvas);
+
+        // $('#' + retimer_constraints).width(new_width);
+
+        console.log("reset width? :" +  $('#' + retimer_constraints).width());
+
+        // $('#constraints_div').css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#' + retimer_constraints).css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#' + retimer_constraints).scaleCanvas({
+        //   x: 0, y: 0,
+        //   scaleX: canvas_scale, scaleY: 1
+        // })
+        // .restoreCanvas();
+
+        redrawConstraints();
     }
+}
 
+function redrawConstraints(){
+    if(window.opener != null){
+        var audio_scale = $('#' + retimer_constraints).width()/window.opener.pentimento.lectureController.getLectureDuration();
+
+        var constraints = window.opener.pentimento.lecture.getConstraintsIterator();
+
+        var constraint_num = 0;
+
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var tAud = constraint.getTAudio();
+            var xVal = tAud * audio_scale;
+
+            var type = constraint.getType();
+            var color = '#000';
+            if(type == 'Automatic'){
+                color = '#BDBDBD';
+            }
+
+            redrawConstraint(constraint_num, xVal, color);
+
+            constraint_num += 1;
+        }
+    }   
+
+}
+
+function redrawConstraint(constraint_num, xVal, color){
+    var arrow_name = "arrow_"+constraint_num;
+    var visuals_constraint = "visuals_constraint"+constraint_num;
+    var audio_constraint = "audio_constraint"+constraint_num;
+
+    $('#' + retimer_constraints).drawLine({
+            layer: true,
+            name: arrow_name,
+            strokeStyle: color,
+            strokeWidth: 4,
+            rounded: true,
+            x1: xVal, y1: 185,
+            x2: xVal, y2: 15
+        })
+        .drawArc({
+            layer: true,
+            name: visuals_constraint,
+            draggable: true,
+            fillStyle: color,
+            x: xVal, y: 15,
+            radius: 10,
+            drag: function(layer){
+                constraintDrag(visuals_constraint, audio_constraint, 15, arrow_name)
+            },
+            dragstop: function(layer){
+                updateVisualConstraint(visuals_constraint, audio_constraint);
+            }
+        })
+        .drawArc({
+            layer: true,
+            name: audio_constraint,
+            draggable: true,
+            fillStyle: color,
+            x: xVal, y: 185,
+            radius: 10,
+            drag: function(layer) {
+                constraintDrag(audio_constraint, visuals_constraint, 185, arrow_name);
+            },
+            dragstop: function(layer){
+                updateAudioConstraint(audio_constraint, visuals_constraint);
+            }
+        });
 }
