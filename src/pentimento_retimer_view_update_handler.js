@@ -7,13 +7,14 @@ function drawThumbnails(currZoom, zoomFactor){
         var numThumbs;
         console.log("drawingThumb Zoom: " + currZoom);
         var max_time = window.opener.pentimento.lectureController.getLectureDuration();
+        console.log("MAX TIME: " + max_time);
         console.log("lectureLength: " + max_time);
 
         // If zoom is 1 (default) draw one thumbnail for every second (time measured in ms)
         var thumbZoom = Math.round(currZoom/zoomFactor);
         currZoom = thumbZoom;
 
-        if($('#' + thumbnails_div).children().length == 0){
+        if($('#' + thumbnails_div).children().length == 0 || max_time == 0){
             // original recording, draw thumbs as expected
             numThumbs = Math.ceil(max_time/thumbZoom);
 
@@ -60,6 +61,8 @@ function drawThumbnails(currZoom, zoomFactor){
             insertThumbnails(currZoom, thumbOffset, curr_min, curr_max);
         }
     }
+
+    extendRetimingConstraintsCanvas();
 }
 
 function generateThumbnails(currZoom, thumbOffset, curr_min, curr_max){
@@ -85,6 +88,23 @@ function generateThumbnails(currZoom, thumbOffset, curr_min, curr_max){
             firstVisual = false;
 
         }
+    }
+}
+
+function redrawThumbnails(numThumbs, thumbLength){
+    // thumbLength = audio ms
+    $('#' + thumbnails_div).empty();
+    var max_time = window.opener.pentimento.lectureController.getLectureDuration();
+    for(var i=0; i<=numThumbs; i++){
+        var thumbOffset = i;
+        var curr_audio_min = i*thumbLength;
+        var curr_audio_max = (i+1)*thumbLength;
+        if((i+1) == numThumbs){
+            curr_audio_max = max_time;
+        }
+        var curr_vis_min =  window.opener.pentimento.lectureController.retimingController.getVisualTime(curr_audio_min);
+        var curr_vis_max =  window.opener.pentimento.lectureController.retimingController.getVisualTime(curr_audio_max);
+        generateThumbnails(1000, thumbOffset, curr_vis_min, curr_vis_max);
     }
 }
 
@@ -223,7 +243,7 @@ function scaleThumbs(tVisOld, tVisPrev, tVisNew, tVisNext){
         }
         // $('#' + thumbnails_div).remove('#' + id);
     });
-     $('#' + thumbnails_div).empty();
+    $('#' + thumbnails_div).empty();
 }
 
 function drawConstraint(constraint_num){
@@ -238,9 +258,12 @@ function drawConstraint(constraint_num){
         var visuals_constraint = "visuals_constraint"+constraint_num;
         var audio_constraint = "audio_constraint"+constraint_num;
 
+        console.log("DRAWING!");
+
             $('#' + retimer_constraints).drawLine({
                     layer: true,
                     name: arrow_name,
+                    bringToFront: true,
                     strokeStyle: '#000',
                     strokeWidth: 4,
                     rounded: true,
@@ -251,6 +274,7 @@ function drawConstraint(constraint_num){
                     layer: true,
                     name: visuals_constraint,
                     draggable: true,
+                    bringToFront: true,
                     fillStyle: '#000',
                     x: x, y: 15,
                     radius: 10,
@@ -265,6 +289,7 @@ function drawConstraint(constraint_num){
                     layer: true,
                     name: audio_constraint,
                     draggable: true,
+                    bringToFront: true,
                     fillStyle: '#000',
                     x: x, y: 185,
                     radius: 10,
@@ -275,7 +300,10 @@ function drawConstraint(constraint_num){
                         updateAudioConstraint(audio_constraint, visuals_constraint);
                     }
                 });
-                    
+                
+                $('#' + retimer_constraints).drawLayers();
+                console.log("DREW?");
+
         $('#' +retimer_constraints).unbind('mousedown', addArrow);    
     });
 }
@@ -360,7 +388,11 @@ function updateVisualConstraint(visual_name, audio_name){
 
     // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(tAud, "Audio");
     // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(tAud,"Audio");
-    scaleThumbs(oldTVis, prevTVis, newTVis, nextTVis);
+    // scaleThumbs(oldTVis, prevTVis, newTVis, nextTVis);
+    var numThumbs = $('#' + thumbnails_div).children().length;
+    console.log("NUMBER TO DRAW: " + numThumbs);
+    var audioThumbTime = 1000; // ms per thumbnail in global/audio time.
+    redrawThumbnails(numThumbs, audioThumbTime);
 
 }
 
@@ -486,70 +518,123 @@ function drawAutomaticConstraint(tVis, tAud){
             });
 }
 
-/*function extendRetimingConstraintsCanvas(){
-    console.log("HEREEE")
-    var new_width = $('#' + thumbnails_div).width();
-    var curr_width = $('#' + retimer_constraints).width();
+function extendRetimingConstraintsCanvas(){
+    console.log("HEREEE");
+    if(window.opener != null){
 
-    var scale = curr_width/new_width;
-    console.log("scale: " + scale);
+        var original_width = window.opener.pentimento.state.context.canvas.width;
+        var original_height = window.opener.pentimento.state.context.canvas.height;
 
-    $('#' + retimer_constraints).saveCanvas();
-    // $('#prev_constraints').width(curr_width);
-    // $('#prev_constraints').height(200);
+        var scale = $('#thumbnails_div').height()/original_height;
+        var thumbnail_width = Math.round(scale * original_width);
 
-    // $('#' + retimer_constraints).setLayers({
-    //  scaleX: scale,
-    //  scaleY: 1
-    // })
+        var numThumbs = $('#' + thumbnails_div).children().length;
 
-    // var curr_layers = $('#' + retimer_constraints).getLayers();
-    // curr_layers.reverse();
-    // console.log(curr_layers);
-    // curr_layers.reverse();
-    // for(i=0; i < curr_layers.length; i++){
-    //  curr_layers[i].scaleX(scale);
-    //  curr_layers[i].scaleY(1);
-    // }
+        var new_width = numThumbs*thumbnail_width + 2*(numThumbs-1) + 2;
 
+        console.log("new: " + new_width);
+        // var curr_width = $('#' + retimer_constraints).width();
 
-    // $('#prev_constraints').drawLayers(curr_layers);
-    
+        // var canvas_scale = new_width/curr_width;
+        // console.log("scale: " + canvas_scale);
 
-    $('#' + retimer_constraints).width(new_width);
-    $('#' + retimer_constraints).height(200);
-    $('#' + retimer_constraints).restoreCanvas();
-    // $('#' + retimer_constraints).drawLayers();
-    // var new_layers = $('#' + retimer_constraints).getLayers();
-    // console.log(new_layers);
+        $('#' + retimer_constraints).clearCanvas();
 
+        console.log("width? :" +  $('#' + retimer_constraints).width());
 
+        var newCanvas = "<canvas id='retimer_constraints' height='200px' width='" + new_width + "px'></canvas>"
 
-    // $('#constraints_div').css({
- //         'width' : curr_width,
- //         'height' : "200px"
- //    });
-    // $('#' + retimer_constraints).css({
- //         'width' : curr_width,
- //         'height' : "200px"
- //    });
+        $('#constraints_div').html(newCanvas);
 
+        // $('#' + retimer_constraints).width(new_width);
 
-    // $('#prev_constraints').width(curr_width);
-    // $('#prev_constraints').height(200);
-    // $('#prev_constraints').drawImage({
-    //    source: $('#' + retimer_constraints).getCanvasImage(),
-    //    x: 0, y: 0
-    //  }); 
-    // // $('#' + retimer_constraints).css({
- // //         'width' : new_width,
- // //         'height' : 200
- // //    });
-    // $('#' + retimer_constraints).width(new_width);
-    // $('#' + retimer_constraints).height(200);
- //    $('#' + retimer_constraints).drawImage({
-    //    source: $('#prev_constraints').getCanvasImage(),
-    //    x: 0, y: 0
-    //  });
+        console.log("reset width? :" +  $('#' + retimer_constraints).width());
 
-}*/
+        // $('#constraints_div').css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#' + retimer_constraints).css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#' + retimer_constraints).scaleCanvas({
+        //   x: 0, y: 0,
+        //   scaleX: canvas_scale, scaleY: 1
+        // })
+        // .restoreCanvas();
+
+        redrawConstraints();
+    }
+}
+
+function redrawConstraints(){
+    if(window.opener != null){
+        var audio_scale = $('#' + retimer_constraints).width()/window.opener.pentimento.lectureController.getLectureDuration();
+
+        var constraints = window.opener.pentimento.lecture.getConstraintsIterator();
+
+        var constraint_num = 0;
+
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var tAud = constraint.getTAudio();
+            var xVal = tAud * audio_scale;
+
+            var type = constraint.getType();
+            var color = '#000';
+            if(type == 'Automatic'){
+                color = '#BDBDBD';
+            }
+
+            redrawConstraint(constraint_num, xVal, color);
+
+            constraint_num += 1;
+        }
+    }   
+
+}
+
+function redrawConstraint(constraint_num, xVal, color){
+    var arrow_name = "arrow_"+constraint_num;
+    var visuals_constraint = "visuals_constraint"+constraint_num;
+    var audio_constraint = "audio_constraint"+constraint_num;
+
+    $('#' + retimer_constraints).drawLine({
+            layer: true,
+            name: arrow_name,
+            strokeStyle: color,
+            strokeWidth: 4,
+            rounded: true,
+            x1: xVal, y1: 185,
+            x2: xVal, y2: 15
+        })
+        .drawArc({
+            layer: true,
+            name: visuals_constraint,
+            draggable: true,
+            fillStyle: color,
+            x: xVal, y: 15,
+            radius: 10,
+            drag: function(layer){
+                constraintDrag(visuals_constraint, audio_constraint, 15, arrow_name)
+            },
+            dragstop: function(layer){
+                updateVisualConstraint(visuals_constraint, audio_constraint);
+            }
+        })
+        .drawArc({
+            layer: true,
+            name: audio_constraint,
+            draggable: true,
+            fillStyle: color,
+            x: xVal, y: 185,
+            radius: 10,
+            drag: function(layer) {
+                constraintDrag(audio_constraint, visuals_constraint, 185, arrow_name);
+            },
+            dragstop: function(layer){
+                updateAudioConstraint(audio_constraint, visuals_constraint);
+            }
+        });
+}

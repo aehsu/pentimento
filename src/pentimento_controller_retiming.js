@@ -164,12 +164,13 @@ function RetimingController(lec) {
 }
 
 $(document).ready(function() {
-	var constraint_num = 0;
+	// var constraint_num = 0;
     $('#sync').click(function(){
     	console.log("clicked!");
 		// updateRetimerView();
+		var constraint_num = window.opener.pentimento.lecture.getConstraints().length;
 		drawConstraint(constraint_num);
-		constraint_num += 1;
+		// constraint_num += 1;
 	});
 
 	// $('#thumb_zoom_in').click(function(){
