@@ -90,6 +90,8 @@ var AudioController = function() {
             recordingTrackController = newController;
         };
         trackControllers.push(newController);
+        // Draw the new controller
+        newController.draw($('#'+tracksContainerID));
         return newController;
     };
 
@@ -147,8 +149,8 @@ var AudioController = function() {
             // recordRTC.writeToDisk();
         });
 
-        // Update the audio display
-        this.refresh_audio_display();
+        // Refresh the audio display
+        this.refreshView();
 
         // Reset the begin_record_time, which is used to indicate the recording status
         begin_record_time = -1;
@@ -349,8 +351,21 @@ var AudioController = function() {
         });
     };
 
-    // Refreshes the audio timeline display to show the tracks and segments
-    this.refresh_audio_display = function() {
+    // Refreshes the view to reflect changes in the audio model.
+    // This only changes the tracks and segments parts of the view because the other parts are
+    // not dependent on model data.
+    this.refreshView = function() {
+
+        // Refresh each of the tracks
+        for (var i = 0; i < trackControllers.length; i++) {
+            trackControllers[i].refreshView();
+        };
+
+    };
+
+    // Draws all parts of the timeline into the page.
+    // Removes all parts of the existing view if it has already been drawn.
+    this.draw = function() {
 
         // Clear the existing audio timeline
         $('#'+timelineID).html("");
@@ -370,6 +385,9 @@ var AudioController = function() {
 
         // Show the playhead that is used to display the current position in the timeline
         drawPlayhead();
+
+        // Refresh the view
+        this.refreshView();
     };
 
 
@@ -427,6 +445,9 @@ var AudioController = function() {
             self.end_recording();
         };
     });
+
+    // Draw the view
+    this.draw();
 
 };
 

@@ -87,19 +87,31 @@ var AudioSegmentController = function(segment) {
     // Drawing Methods
     ///////////////////////////////////////////////////////////////////////////////
 
+    // Refresh the view to reflect the state of the model (audioSegment)
+    this.refreshView = function() {
+
+        var jqSegment = $('#'+this.getID());
+
+        // Update the position and size of the segments
+        jqSegment.css({'top': 0,
+                        'left': pentimento.audioController.millisecondsToPixels(audioSegment.start_time),
+                        'width': pentimento.audioController.millisecondsToPixels(audioSegment.getLength()) 
+                        });
+
+        // Update the parameters of wavesurfer
+        // TODO!!!
+    };
+
     // Draw a segment into the jquery parent object
     // Return new jQuery segment
     this.draw = function(jqParent) {
 
         // Create a new segment div 
         var new_segment = $("<div></div>").attr({"id": segmentID, "class": segmentClass});
-        new_segment.data(audioSegment);
+        // new_segment.data(audioSegment);
 
         // Add the segment to the parent
         jqParent.append(new_segment);
-
-        // Set the css for the new segment
-        new_segment.css({"width": pentimento.audioController.millisecondsToPixels(audioSegment.lectureLength())});
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped

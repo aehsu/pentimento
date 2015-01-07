@@ -32,8 +32,8 @@ pentimento.audio_track = function() {
             var shift_segment = this.audio_segments[i];
 
             // If the segment is fully to the right of the inserted segment, then shift
-            if ( newSegment.lecture_end_time <= shift_segment.lecture_start_time ) {
-                this.shift_segment( shift_segment , newSegment.lectureLength());
+            if ( newSegment.end_time <= shift_segment.start_time ) {
+                this.shift_segment( shift_segment , newSegment.getLength());
             };
         };
 
@@ -45,7 +45,10 @@ pentimento.audio_track = function() {
     };
 
     // Remove the specified segment
-    
+    this.removeSegment = function() {
+        // TODO
+    };
+
 
     // Returns whether the specified segment can be shifted to the left or right
     // If a negative number is given for shift_millisec, then the shift will be left.
@@ -62,10 +65,10 @@ pentimento.audio_track = function() {
             return false;
         };
 
-        // Get the new lecture start/end times and check for non-negative start time
-        var newLectureStartTime = shiftSegment.lecture_start_time + shift_millisec;
-        var newLectureEndTime = shiftSegment.lecture_end_time + shift_millisec;
-        if (newLectureStartTime < 0) {
+        // Get the new start/end times and check for non-negative start time
+        var newStartTime = shiftSegment.start_time + shift_millisec;
+        var newEndTime = shiftSegment.end_time + shift_millisec;
+        if (newStartTime < 0) {
             return false;
         };
 
@@ -73,25 +76,25 @@ pentimento.audio_track = function() {
         for (var i = 0; i < this.audio_segments.length; i++) {
             var currentSegment = this.audio_segments[i];
 
-            // The newLectureStartTime must be greater than currentSegment.lecture_end_time
-            // or the newLectureEndTime must be less than currentSegment.lecture_start_time
+            // The newStartTime must be greater than currentSegment.end_time
+            // or the newEndTime must be less than currentSegment.start_time
             // Check for the inverse of this
-            if (newLectureStartTime < currentSegment.lecture_end_time &&
-                newLectureEndTime > currentSegment.lecture_start_time) {
+            if (newStartTime < currentSegment.end_time &&
+                newEndTime > currentSegment.start_time) {
                 return false;
             };
 
-            // Overlaps if newLectureStart/EndTime is inside the range of
-            // (currentSegment.lecture_start_time, currentSegment.lecture_end_time)
-            // if ( (newLectureStartTime > currentSegment.lecture_start_time &&
-            //     newLectureStartTime < currentSegment.lecture_end_time) || 
-            //     (newLectureEndTime > currentSegment.lecture_start_time &&
-            //     newLectureEndTime < currentSegment.lecture_end_time) ) {
+            // Overlaps if newStart/EndTime is inside the range of
+            // (currentSegment.start_time, currentSegment.end_time)
+            // if ( (newStartTime > currentSegment.start_time &&
+            //     newStartTime < currentSegment.end_time) || 
+            //     (newEndTime > currentSegment.start_time &&
+            //     newEndTime < currentSegment.end_time) ) {
             //     return false;
             // };
 
             // Overlaps if any segment's start or end time is inside the range
-            // of (newLectureStartTime, newLectureEndTime)
+            // of (newStartTime, newEndTime)
             // if ( () || () ) {
             //     return false;
             // };
@@ -124,8 +127,8 @@ pentimento.audio_track = function() {
         };
 
         // Get the new times for the segment
-        var newLectureStartTime = shiftSegment.lecture_start_time + shift_millisec;
-        var newLectureEndTime = shiftSegment.lecture_end_time + shift_millisec;
+        var newStartTime = shiftSegment.start_time + shift_millisec;
+        var newEndTime = shiftSegment.end_time + shift_millisec;
 
         // Remove the segment from the array
         this.audio_segments.splice(segment_idx, 1);
@@ -138,7 +141,7 @@ pentimento.audio_track = function() {
         for (var i = 0; i < this.audio_segments.length; i++) {
             // Once the begin time of the shifted segment is greater than the end time
             // of the current segment, then break at the current index plus one
-            if (newLectureStartTime >= this.audio_segments[i].lecture_end_time) {
+            if (newStartTime >= this.audio_segments[i].end_time) {
                 insertIndex = i+1;
                 break;
             };
@@ -152,33 +155,36 @@ pentimento.audio_track = function() {
 
 	// Crop the specified segment by the specified number of milliseconds
 	// crop_left is a boolean indicating whether the left or right side will be cropped
-	// It modifies the lecture object passed in to it. Other segments will be shifted as a result.
+	// Other segments will be shifted as a result.
 	this.crop_segment = function(segment_idx, crop_millisec, crop_left) {
 
 	};
 
 	// Scales the audio segment by the specified factor.
 	// A factor from 0 to 1 shrinks, and a factor above 1 expands.
-	// It modifies the lecture object passed in to it. The anchor point is the left hand side.
+	// The anchor point is the left hand side.
 	// Other segments to the right will be shifted as a result.
 	this.scale_segment = function(segment_idx, scale_factor) {
 
 	};
 
-    // Get the end time in the lecture of the track in milliseconds
-    // Returns -1 if the track is empty
-    this.endTimeLecture = function() {
-        if (this.audio_segments.length == 0) {
-            return -1;
+    // Get the end time of the track in milliseconds
+    // Returns 0 if the track is empty
+    this.endTime = function() {
+
+        // Iterate over all the segments in the track and get the greatest time
+        var timeEnd = 0;
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            timeEnd = Math.max(this.audio_segments[i].end_time, timeEnd);
         };
-        var lastSegment = this.audio_segments[this.audio_segments.length-1]
-        return lastSegment.lecture_end_time;
+        return timeEnd;
     };
 };
 
 // Given the location where the segment is dropped, this function figures out where to place the audio
 // segment and returns the new location in the track
 pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
+
     // Iterate over audio tracks in DOM
     $(".audio_segment").each(function(index, segment) {
     	// Don't check itself
@@ -200,45 +206,21 @@ pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
     });
 };
 
-// Audio segments contain an audio clip and a location within the lecture
-pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_time, lecture_start_time, lecture_end_time) {
+// Audio segments contain an audio clip (audio_resource, audio_start_time, audio_end_time)
+// and a location within the lecture (start_time, end_time)
+pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_time, start_time, end_time) {
 
 	this.audio_resource = audio_resource;
 	this.audio_start_time = audio_start_time;
 	this.audio_end_time = audio_end_time;
-	this.lecture_start_time = lecture_start_time;
-	this.lecture_end_time = lecture_end_time;
+	this.start_time = start_time;
+	this.end_time = end_time;
 
-    this.lectureLength = function() {
-        return this.lecture_end_time - this.lecture_start_time;
+    this.getLength = function() {
+        return this.end_time - this.start_time;
     }
 
-    this.audioLength = function() {
+    this.getAudioLength = function() {
         return this.audio_end_time - this.audio_start_time;
     }
-
-// this.shift = function(x_shift) {
-// 	this.slide.begin_time += x_shift * timeline_scale;
-// 	this.slide.end_time += x_shift * timeline_scale;
-// };
-
-// this.resize = function(x_shift, side_shifted) {
-// 	//need to restrict to constraints
-// 	if (side_shifted === "left")
-// 		this.audio_start_time += x_shift;
-// 	else if (side_shifted === "right")
-// 		this.audio_end_time += x_shift;
-// };
-
-	this.play_audio = function() {
-		// Need to handle event listener removal after playing
-		this.addEventListener('timeupdate', function() {
-			if (this.audio_end_time && currentTime >= audio_end_time) {
-				this.audio.pause();
-			};
-
-		}, false);
-		this.audio.currentTime = this.audio_start_time;
-		this.audio.play();
-	};
 };

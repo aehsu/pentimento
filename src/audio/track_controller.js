@@ -45,7 +45,7 @@ var AudioTrackController = function(track) {
 
     // Get the length of the track in milliseconds
     this.getLength = function() {
-        return audioTrack.endTimeLecture();
+        return audioTrack.endTime();
     };
 
 
@@ -61,6 +61,8 @@ var AudioTrackController = function(track) {
         var newController = new AudioSegmentController(newSegment);
         // TODO: handle the new split segments
         segmentControllers.push(newController);
+        // Draw the new controller
+        newController.draw($('#'+trackID));
         return newController;
     };
 
@@ -94,14 +96,14 @@ var AudioTrackController = function(track) {
             var audioStartTime;
 
             // If the segment starts after the current start time
-            if (segment.lecture_start_time >= startTime) {
-                playbackDelay = segment.lecture_start_time - startTime;
+            if (segment.start_time >= startTime) {
+                playbackDelay = segment.start_time - startTime;
                 audioStartTime = segment.audio_start_time;
             }
             // If the start time is in the middle of the segment 
-            else if (segment.lecture_end_time > startTime) {
+            else if (segment.end_time > startTime) {
                 playbackDelay = 0;
-                audioStartTime = segment.audio_start_time + (startTime-segment.lecture_start_time);
+                audioStartTime = segment.audio_start_time + (startTime-segment.start_time);
             }
             // If the start time is after the entire segment
             else {
@@ -128,13 +130,21 @@ var AudioTrackController = function(track) {
     // Drawing methods
     /////////////////////////////////////////////////////////////////////////////// 
 
+    // Refresh the view to reflect the state of the model (audioTrack)
+    this.refreshView = function() {
+
+        // Refresh each of the segments
+        for (var i = 0; i < segmentControllers.length; i++) {
+            segmentControllers[i].refreshView();
+        };
+    };
+
     // Draw a track into the parent jquery container
     // Return the new jQuery track
     this.draw = function(jqParent) {
 
         // Create a new jquery track div
         var new_track = $('<div></div>').attr({"id": trackID , "class": trackClass});
-        new_track.sortable();
 
         // Add the track to the parent
         jqParent.append(new_track);
