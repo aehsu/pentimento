@@ -48,7 +48,7 @@ var AudioController = function() {
     var timeline_pixels_per_sec = 10;
 
     // Limits for the timeline scale
-    var timeline_min_mixels_per_sec = 2
+    var timeline_min_mixels_per_sec = 4
     var timeline_max_pixels_per_sec = 150
 
     // The scale factor when zooming on the timeline
@@ -260,21 +260,30 @@ var AudioController = function() {
         return time;
     };
 
+    // Refresh the size of the tracks container
+    var refreshTracksContainer = function() {
+        var tracksContainer = $('#'+tracksContainerID);
+        var gradationContainer = $('#'+gradationContainerID);
+        // The position and size is set to overlay and fit the gradation container
+        // The flotPlot.offset() function only returns the global offset, so we
+        // need to subtract the offset of the gradation_container
+        tracksContainer.css('left', flotPlot.offset().left - gradationContainer.offset().left)
+            .css('top', flotPlot.offset().top - gradationContainer.offset().top)                  
+            .css('width', flotPlot.width())
+            .css('height', flotPlot.height());
+    };
+
     // Draw the container that will be used to hold the tracks
     // Return the jquery tracks container object.
     var drawTracksContainer = function() {
         var timeline = $('#' + timelineID);
         var tracksContainer = $('<div></div>');
         tracksContainer.attr('id', tracksContainerID);
-        // The position and size is set to overlay and fit the gradation container
-        // The flotPlot.offset() function only returns the global offset, so we
-        // need to subtract the offset of the gradation_container
-        var gradationContainer = $('#'+gradationContainerID);
-        tracksContainer.css('left', flotPlot.offset().left - gradationContainer.offset().left)
-            .css('top', flotPlot.offset().top - gradationContainer.offset().top)                  
-            .css('width', flotPlot.width())
-            .css('height', flotPlot.height());
         timeline.append(tracksContainer);
+
+        // Refresh parameters related to size
+        refreshTracksContainer();
+
         return tracksContainer;
     };
 
@@ -284,7 +293,6 @@ var AudioController = function() {
         flotPlot.resize();
         flotPlot.setupGrid();
         flotPlot.draw();
-
     };
 
     // Draw the graduation marks on the timeline
@@ -392,7 +400,7 @@ var AudioController = function() {
             return;
         };
 
-        // Update the size of the gradations container
+        // Update the size of the gradations container and tracks container
         // TODO: should be moved to refresh view with another parameter to set the size
         var gradation_container = $('#'+gradationContainerID);
         gradation_container.width(gradation_container.width() / zoomFactor);
@@ -417,6 +425,9 @@ var AudioController = function() {
 
         // Refresh the gradations
         refreshGradations();
+
+        // Refresh the tracks container
+        refreshTracksContainer();
     };
 
     // Draws all parts of the timeline into the page.
