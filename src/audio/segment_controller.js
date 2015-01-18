@@ -100,6 +100,7 @@ var AudioSegmentController = function(segment) {
 
         // Update the parameters of wavesurfer
         // TODO!!!
+        wavesurfer.load(audioSegment.audio_resource);
     };
 
     // Draw a segment into the jquery parent object
@@ -212,6 +213,8 @@ var AudioSegmentController = function(segment) {
             height: parseInt(new_segment.css('height')),
             minPxPerSec: 1
         });
+
+        // The audio segment is also loaded upon refresh
         wavesurfer.load(audioSegment.audio_resource);
 
         // Return the new segment

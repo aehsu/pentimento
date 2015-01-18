@@ -47,6 +47,13 @@ var AudioController = function() {
     // The scale of the timeline in pixels per second
     var timeline_pixels_per_sec = 10;
 
+    // Limits for the timeline scale
+    var timeline_min_mixels_per_sec = 2
+    var timeline_max_pixels_per_sec = 150
+
+    // The scale factor when zooming on the timeline
+    var timeline_zoom_factor = 1.5;
+
     // Interval durations for events and animations in milliseconds
     var playheadAnimationIntervalDuration = 10;
 
@@ -56,6 +63,7 @@ var AudioController = function() {
     ///////////////////////////////////////////////////////////////////////////////
 
     // the timeline used for displaying the audio tracks and plot ticks
+    // Allows scrolling to accomodate changing timeline scales.
     var timelineID = 'audio_timeline';  
 
     // TODO
@@ -66,7 +74,7 @@ var AudioController = function() {
     var tracksContainerID = 'audio_tracks_container';  
 
     // plot used for showing the timeline ticks
-    // contained inside audio_timeline
+    // contained inside audio_timeline.
     var gradationContainerID = 'gradation_container';  
 
     // playhead that shows the current location of the play
@@ -76,6 +84,8 @@ var AudioController = function() {
     // Buttons
     var playPauseButtonID = 'play_pause_button';
     var recordAudioButtonID = 'record_audio_button';
+    var zoomInButtonID = 'zoom_in_button';
+    var zoomOutButtonID = 'zoom_out_button';
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -99,6 +109,7 @@ var AudioController = function() {
     var removeTrackController = function(trackController) {
         // If the current controller is the recording controller,
         // set another controller to be recording.
+        // TODO
     };
 
     // Start recording the audio at the lecture time
@@ -135,7 +146,8 @@ var AudioController = function() {
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL,0,audio_duration,lectureBeginRecordTime,lectureBeginRecordTime+audio_duration);
+            var segment = new pentimento.audio_segment(audioURL,0,audio_duration,lectureBeginRecordTime,
+                                                    lectureBeginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
             recordingTrackController.insertSegmentController(segment);
@@ -266,10 +278,21 @@ var AudioController = function() {
         return tracksContainer;
     };
 
+    // Refresh the gradation container to account for changes in the zoom scale.
+    var refreshGradations = function() {
+        // TODO: incorporate the changes from zoom into this function, which should be called from refresh and draw
+        flotPlot.resize();
+        flotPlot.setupGrid();
+        flotPlot.draw();
+
+    };
+
     // Draw the graduation marks on the timeline
     var drawGradations = function() { 
         var timeline = $('#' + timelineID);
+        var gradation_scroll_parent = $('<div></div>');
         var gradation_container = $('<div></div>');
+
         gradation_container.attr('id', gradationContainerID)
             .css('width', timeline.width())
             .css('height', timeline.height());
@@ -308,6 +331,9 @@ var AudioController = function() {
 
         // Use flot to draw the graduations
         flotPlot = $.plot(gradation_container, plot_data, options);
+
+        // Refresh parameters
+        refreshGradations();
     };
 
     // Function to update the playhead lecture time during dragging or play
@@ -351,6 +377,34 @@ var AudioController = function() {
         });
     };
 
+    // Zoom in or out.
+    // Input true to indicate zoom out (default)
+    this.zoom = function(zoomOut) {
+        if(typeof(zoomOut)!=='boolean') zoomOut = true;
+
+        // Set the zoom factor based on whether we are zooming in or out
+        var zoomFactor = (zoomOut ? timeline_zoom_factor : 1/timeline_zoom_factor);
+
+        // Check if the new scale is within range before proceeding
+        var newPixelsPerSec = timeline_pixels_per_sec / zoomFactor;
+        if (newPixelsPerSec < timeline_min_mixels_per_sec || 
+            newPixelsPerSec > timeline_max_pixels_per_sec) {
+            return;
+        };
+
+        // Update the size of the gradations container
+        // TODO: should be moved to refresh view with another parameter to set the size
+        var gradation_container = $('#'+gradationContainerID);
+        gradation_container.width(gradation_container.width() / zoomFactor);
+
+        // Update the measurement for pixels per second
+        timeline_pixels_per_sec = newPixelsPerSec;       
+
+        // Refreshing will update the size of the segments and wavesurfers
+        // as well as the gradations.
+        this.refreshView();
+    };
+
     // Refreshes the view to reflect changes in the audio model.
     // This only changes the tracks and segments parts of the view because the other parts are
     // not dependent on model data.
@@ -361,6 +415,8 @@ var AudioController = function() {
             trackControllers[i].refreshView();
         };
 
+        // Refresh the gradations
+        refreshGradations();
     };
 
     // Draws all parts of the timeline into the page.
@@ -444,6 +500,16 @@ var AudioController = function() {
         } else{
             self.end_recording();
         };
+    });
+
+    // Button listeners for zooming in and out
+    var zoom_in_button = $('#'+zoomInButtonID);
+    zoom_in_button.click(function() {
+        self.zoom(false);  // false indicates zoom in
+    });
+    var zoom_out_button = $('#'+zoomOutButtonID);
+    zoom_out_button.click(function() {
+        self.zoom(true);  // true indicates zoom out
     });
 
     // Draw the view

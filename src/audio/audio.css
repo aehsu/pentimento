@@ -1,13 +1,34 @@
 #audio_timeline {
     position: relative;
     height: 400px;
-    width: 100%;
+    width: 1000px;
     display: inline-block;
     border-style: none;
-    overflow-x: auto;
+    overflow-x: scroll;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
 }
+
+/* Set the scrollbars to always visible in the timeline by
+    modifying the webkit scrollbar properties. Chrome and Safari only. */
+#audio_timeline::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+#audio_timeline::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+#audio_timeline::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+#audio_timeline::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+#audio_timeline::-webkit-scrollbar-track { 
+    background-color: #fff; 
+    border-radius: 8px; 
+} 
 
 #timeline_cursor {
     position: absolute;
