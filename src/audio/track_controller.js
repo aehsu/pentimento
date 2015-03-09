@@ -1,10 +1,12 @@
 // Controller for the DOM audio track inside the DOM track container
-var AudioTrackController = function(track) {
+var AudioTrackController = function(track, audioController) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ///////////////////////////////////////////////////////////////////////////////
 
+    var self = this;  // Use self to refer to this in callbacks
+    var parentAudioController = null;
     var audioTrack = null;  // audio_track from the model
     var segmentControllers = [];  // Controllers for each of the segments in the track
     var isPlayingBack = false;  // Indicates playback status
@@ -16,23 +18,12 @@ var AudioTrackController = function(track) {
     ///////////////////////////////////////////////////////////////////////////////
     
     audioTrack = track;
+    parentAudioController = audioController;
 
     // Create a new track ID of the form
     // 'track#' where '#' is a positive integer 
     trackID = 'track' + (AudioTrackController.counter++);
 
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Callback methods
-    ///////////////////////////////////////////////////////////////////////////////
-
-    var segmentDragging = function() {
-
-    };
-
-    var segmentStopDragging = function() {
-
-    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Getter Methods
@@ -50,6 +41,36 @@ var AudioTrackController = function(track) {
 
 
     ///////////////////////////////////////////////////////////////////////////////
+    // Callback methods
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.segmentStartDrag = function() {
+
+    };
+
+    this.segmentDrag = function(event, ui, segmentController) {
+        // If the drag is overlaps another segment, then set the position back to the original position
+        // ui.position.left = Math.min( 100, ui.position.left );
+        var audioSegment = segmentController.getAudioSegment();
+        var shiftMilli = parentAudioController.pixelsToMilliseconds(ui.position.left) - audioSegment.start_time;
+        var shiftResult = audioTrack.shiftSegment(audioSegment, shiftMilli);
+        console.log(shiftResult);
+
+        // Prevent the direct dragging that jQuery UI does if the shift is not valid
+        if (shiftResult !== true) {
+            ui.position.left = $('#'+segmentController.getID());
+        };
+
+        // Refresh the view to display the dragging changes
+        // parentAudioController.refreshView();
+    };
+
+    this.segmentStopDrag = function() {
+
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
 
@@ -58,7 +79,8 @@ var AudioTrackController = function(track) {
         // Insert the segment into the model and keep track of the segments
         // that might have been created from the split.
         var newSplitSegments = audioTrack.insertSegment(newSegment);
-        var newController = new AudioSegmentController(newSegment);
+        var newController = new AudioSegmentController(newSegment, self);
+        newController.track
         // TODO: handle the new split segments
         segmentControllers.push(newController);
         // Draw the new controller

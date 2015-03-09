@@ -1,10 +1,12 @@
 // Controller for the DOM audio segment inside the DOM audio track
-var AudioSegmentController = function(segment) {
+var AudioSegmentController = function(segment, trackController) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ///////////////////////////////////////////////////////////////////////////////
 
+    var self = this;  // Use self to refer to this in callbacks
+    var parentTrackController = null;
     var audioSegment = null;  // audio_segment from the model
     var segmentID = null;  // HTML ID used to identify the segment
     var segmentClass = "audio_segment";
@@ -15,8 +17,8 @@ var AudioSegmentController = function(segment) {
     // Initialization
     ///////////////////////////////////////////////////////////////////////////////
     
-    // Audio model segment is passed on input
     audioSegment = segment;
+    parentTrackController = trackController;
 
     // Create a new segment ID of the form
     // 'segment#' where '#' is a positive integer
@@ -29,6 +31,11 @@ var AudioSegmentController = function(segment) {
     // Get the ID of the segment
     this.getID = function() {
         return segmentID;
+    };
+
+    // Get the name of the class used to represent audio segments
+    this.getClassName = function() {
+        return segmentClass;
     };
 
     // Get the segment
@@ -90,7 +97,7 @@ var AudioSegmentController = function(segment) {
     // Refresh the view to reflect the state of the model (audioSegment)
     this.refreshView = function() {
 
-        var jqSegment = $('#'+this.getID());
+        var jqSegment = $('#'+self.getID());
 
         // Update the position and size of the segments
         jqSegment.css({'top': 0,
@@ -155,7 +162,7 @@ var AudioSegmentController = function(segment) {
             $('#right_target_div').remove();
         });
 
-        // Setup the dragging on audio segment
+        // Setup the dragging and resizing on audio segment
         new_segment.draggable({
             preventCollision: true,
             containment: 'parent',
@@ -172,12 +179,16 @@ var AudioSegmentController = function(segment) {
             });
 
             ui.helper.addClass('dragged')
+        }).on( "drag", function( event, ui ) {
+            // Dragging relies on information in the entire track, so it is relayed to the parent track
+            parentTrackController.segmentDrag(event, ui, self);
+
         }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
             
             // Call shift function in model
             // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
             // figure out if segment needs to be moved (if dropped on top of something)
-            pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
+            // pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
 
             // When you finish dragging an object, remove the obstacles classes
             $('.'+segmentClass).each(function(index, segment) {

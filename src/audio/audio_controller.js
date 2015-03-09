@@ -95,7 +95,7 @@ var AudioController = function() {
     // Insert a new track controller with an empty track and return the new controller
     var createTrackController = function() {
         var newTrack = audioModel.createTrack();
-        var newController = new AudioTrackController(newTrack);
+        var newController = new AudioTrackController(newTrack, self);
         if (recordingTrackController === null) {
             recordingTrackController = newController;
         };
@@ -242,7 +242,7 @@ var AudioController = function() {
 
     // Convert pixels to milliseconds according to the current scale
     this.pixelsToMilliseconds = function(pixels) {
-        return 1000*(pixels/timeline_pixels_per_sec);
+        return (1000*pixels)/timeline_pixels_per_sec;
     };
 
     // Changes tickpoints into time display (ex: 00:30:00)
