@@ -44,10 +44,6 @@ var AudioTrackController = function(track, audioController) {
     // Callback methods
     ///////////////////////////////////////////////////////////////////////////////
 
-    this.segmentStartDrag = function() {
-
-    };
-
     this.segmentDrag = function(event, ui, segmentController) {
         // If the drag is overlaps another segment, then set the position back to the original position
         // ui.position.left = Math.min( 100, ui.position.left );
@@ -60,13 +56,19 @@ var AudioTrackController = function(track, audioController) {
         if (shiftResult !== true) {
             ui.position.left = $('#'+segmentController.getID());
         };
-
-        // Refresh the view to display the dragging changes
-        // parentAudioController.refreshView();
     };
 
-    this.segmentStopDrag = function() {
-
+    this.segmentCrop = function(event, ui, segmentController) {
+        var audioSegment = segmentController.getAudioSegment();
+        var dwidth = ui.originalSize.width - ui.size.width;
+        if (ui.position.left === ui.originalPosition.left) { // then right handle was used
+            // Trim audio from Right
+            audioSegment.crop_segment(dwidth, "right");
+        }
+        else {
+            // Trim audio from Left
+            audioSegment.crop_segment(dwidth, "left");
+        }
     };
 
 

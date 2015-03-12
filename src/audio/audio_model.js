@@ -49,7 +49,6 @@ pentimento.audio_track = function() {
         // TODO
     };
 
-
     // Returns whether the specified segment can be shifted to the left or right
     // If a negative number is given for shift_millisec, then the shift will be left.
     // The final value of the segment starting time cannot be negative.
@@ -97,21 +96,6 @@ pentimento.audio_track = function() {
                     return currentSegment.start_time - segment.end_time;
                 };
             };
-
-            // Overlaps if newStart/EndTime is inside the range of
-            // (currentSegment.start_time, currentSegment.end_time)
-            // if ( (newStartTime > currentSegment.start_time &&
-            //     newStartTime < currentSegment.end_time) || 
-            //     (newEndTime > currentSegment.start_time &&
-            //     newEndTime < currentSegment.end_time) ) {
-            //     return false;
-            // };
-
-            // Overlaps if any segment's start or end time is inside the range
-            // of (newStartTime, newEndTime)
-            // if ( () || () ) {
-            //     return false;
-            // };
         };
 
         return true;
@@ -135,10 +119,14 @@ pentimento.audio_track = function() {
         return true;
 	};
 
+    // TODO
+    this.canCropSegment = function(segment, crop_millisec) {
+
+    };
+
 	// Crop the specified segment by the specified number of milliseconds
-	// crop_left is a boolean indicating whether the left or right side will be cropped
-	// Other segments will be shifted as a result.
-	this.crop_segment = function(segment, crop_millisec, crop_left) {
+	// If a negative number is given for crop_millisec, then the crop will be on the left side
+	this.cropSegment = function(segment, crop_millisec) {
 
 	};
 

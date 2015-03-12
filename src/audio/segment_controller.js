@@ -168,49 +168,16 @@ var AudioSegmentController = function(segment, trackController) {
             containment: 'parent',
             obstacle: ".obstacle",
             axis: "x",
-            opacity: 0.65
-        }).on( "dragstart", function( event, ui ) {
-            // When you drag an object, all others become obstacles for dragging
-            $('.'+segmentClass).each(function(index, segment) {
-                // Don't check itself
-                if (segment !== ui.helper[0]) {
-                    $(segment).addClass('obstacle');
-                };
-            });
-
-            ui.helper.addClass('dragged')
-        }).on( "drag", function( event, ui ) {
-            // Dragging relies on information in the entire track, so it is relayed to the parent track
-            parentTrackController.segmentDrag(event, ui, self);
-
-        }).on( "dragstop", function( event, ui ) { // check to see if segment was dragged to an end of another segment
-            
-            // Call shift function in model
-            // audio_segment.shift_segment(ui.position.left - ui.originalPosition.left)
-            // figure out if segment needs to be moved (if dropped on top of something)
-            // pentimento.audio_track.place_segment(ui.helper.attr('id').substring(8), event);
-
-            // When you finish dragging an object, remove the obstacles classes
-            $('.'+segmentClass).each(function(index, segment) {
-                // Don't check itself
-                if (segment !== ui.helper[0]) {
-                    $(segment).removeClass('obstacle');
-                };
-            });
-            ui.helper.removeClass('dragged')
+            opacity: 0.65,
+            drag: function( event, ui ) {
+                // Dragging relies on information in the entire track, so it is relayed to the parent track
+                parentTrackController.segmentDrag(event, ui, self);
+            }
         }).resizable({
             handles: "e, w",
             minWidth: 1,
             stop: function( event, ui ) {
-                dwidth = ui.originalSize.width - ui.size.width;
-                if (ui.position.left === ui.originalPosition.left) { // then right handle was used
-                    // Trim audio from Right
-                    audioSegment.crop_segment(dwidth, "right");
-                }
-                else {
-                    // Trim audio from Left
-                    audioSegment.crop_segment(dwidth, "left");
-                }
+                parentTrackController.segmentCrop(event, ui, self);
             }
         });
 
