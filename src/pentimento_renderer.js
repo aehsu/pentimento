@@ -1,37 +1,7 @@
-function updateVisuals(isThumbnail) {
-    clear();
-    var slideIter = pentimento.lecture.getSlidesIterator();
-    var state = pentimento.state;
-    var slideTime = state.videoCursor;
-    while(slideIter.hasNext()) {
-        var slide = slideIter.next();
-        if(slide==state.currentSlide) {
-            var visualsIter = slide.getVisualsIterator();
-            while(visualsIter.hasNext()) {
-                var visual = visualsIter.next();
-                //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
-                if (isVisualVisible(visual, slideTime)) {
-                    drawVisual(visual, slideTime, isThumbnail, {});
-                }
-            }
-        } else {
-            slideTime -= slide.getDuration();
-        }
-    }
-    if (state.currentVisual != null)
-        drawVisual(state.currentVisual, globalTime(), isThumbnail, {});
-    for(var i in state.selection) {
-        var visCopy = state.selection[i].getClone();
-        var propsCopy = visCopy.getProperties();
-        propsCopy.setWidth(propsCopy.getWidth()+1);
-        propsCopy.setColor("#0000FF");
-        drawVisual(visCopy, slideTime, isThumbnail,{});
-    }
+retimer.constraintsHandler = function(){
+
 }
 
-function clear() {
-    pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
-}
 
 function drawVisual(visual, tVisual, isThumbnail, thumbParams) {
     tVisual = tVisual || pentimento.state.videoCursor;
@@ -69,14 +39,24 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
     var scale;
     var width_offset;
 
+    // If the stroke is being drawn as a thumbnail
     if(isThumbnail){
+        // Get the size of the main visuals canvas where the visuals were drawn
         original_width = window.opener.pentimento.state.context.canvas.width;
         original_height = window.opener.pentimento.state.context.canvas.height;
 
+        // Calculate the scale of the size of the thumbnail relative to the main canvas size
+        // (height of the thumbnails display is set, so use that for calculation, but thumbnails can be any width)
         scale = $('#thumbnails_div').height()/original_height;
-        // width_offset = Math.round(scale * original_width);
         width_offset = scale * original_width;
 
+        // Parameters associated with each visual in the thumbnail
+        // thumbOffset: number that the thumbnail is in the series
+        // firstVisual: whether or not this visual is the first one of the slide
+        // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
+        // timeMin: the minimum time of the current thumbnail
+        // timeMax: the maximum time of the current thumbnail
+        // thumbTime: the moment to be displayed on the thumbnail (half way between the min/max times)
         var thumbOffset = thumbParams.thumbOffset;
         var firstVisual = thumbParams.firstVisual;
         var currZoom = thumbParams.currZoom;
@@ -84,16 +64,21 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
         var thumbTimeMax = thumbParams.timeMax;
         var thumbTime = thumbParams.thumbTime;
 
-        if(firstVisual){   
-            // var canvas_html = '<canvas id="thumbnails_canvas_' + thumbOffset + '" width="' + width_offset + '" data-currzoom="' + currZoom + '"></canvas>';
+        // If the visual being rendered is the first visual on the thumbnail the thumbnail needs to be created
+        // Each thumbnail is it's own canvas with an ID that is the number of the thumbnail in the overall thumbnail sequence
+        if(firstVisual){
+            // Create the canvas for the current thumbnail to be displayed
             var canvas_html = '<canvas id="thumbnails_canvas_' + thumbOffset + '" width="' + width_offset +'" data-timemin="' + thumbTimeMin +'" data-timemax="' + thumbTimeMax +'"></canvas>';
-            console.log('HTML' + canvas_html);
+            
+            // Set the current zoom to the amount of time per thumbnail ***CHANGE THIS WITH RETIMER INFO
+            // Extend the width of the overall thumbnails container to hold the new thumbnail
             $('#thumbnails_div').data("currzoom", currZoom).css({
                 'width' : width_offset*(thumbOffset+2)
             });
 
-            console.log('WIDTH: ' + $('#thumbnails_div').width());
+            // Add the thumbnail to the thumbnails string
             $('#thumbnails_div').append(canvas_html)
+            // Add a border to the thumbnail to divide it from the others.
             $('#thumbnails_canvas_'+thumbOffset).css({
                 'border' : '1px solid #D8D8D8',
                 'padding' : '1px'
@@ -136,6 +121,7 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
     if (calligraphic_path.length > 0) { // draw calligraphic path
         var ctx;
         if(isThumbnail){
+            // If it is a thumbnail, set the context canvas to the appropriate thumbnail to draw the stroke
             var canvas_value = '#thumbnails_canvas_' + thumbOffset;
             console.log("val: " + canvas_value);
             ctx = $(canvas_value)[0].getContext('2d');
@@ -149,6 +135,7 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
         ctx.lineWidth = 1;
         ctx.lineCap = 'round';
         if(isThumbnail){
+            // For the thumbnail scale down the visual to the appropriate size.
             ctx.scale(scale, scale);
             drawCalligraphicPath(0, calligraphic_path, false, ctx);
             ctx.scale(1/scale, 1/scale);
