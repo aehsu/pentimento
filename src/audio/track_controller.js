@@ -54,21 +54,74 @@ var AudioTrackController = function(track, audioController) {
 
         // Prevent the direct dragging that jQuery UI does if the shift is not valid
         if (shiftResult !== true) {
-            ui.position.left = $('#'+segmentController.getID());
+            ui.position.left = ui.originalPosition.left;
         };
     };
 
-    this.segmentCrop = function(event, ui, segmentController) {
+    // Callback for when the segment UI div is being cropped.
+    // If the cropping is valid, it does nothing.
+    // If the cropping is invalid, it sets the UI div back to the original size and position.
+    this.segmentCropping = function(event, ui, segmentController) {
         var audioSegment = segmentController.getAudioSegment();
-        var dwidth = ui.originalSize.width - ui.size.width;
-        if (ui.position.left === ui.originalPosition.left) { // then right handle was used
-            // Trim audio from Right
-            audioSegment.crop_segment(dwidth, "right");
-        }
-        else {
-            // Trim audio from Left
-            audioSegment.crop_segment(dwidth, "left");
-        }
+
+        // Figure out whether the left or right side is being cropped by looking at the left position
+        var leftSide = (ui.position.left !== ui.originalPosition.left);
+
+        // Crop amount should be positive if expanding, and negative if contracting
+        var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
+        var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, leftSide);
+
+        // If the crop was valid, set the cropResult to the original value because it needs to be added to the length
+        // for adjusting the UI
+        if (cropResult === true) {
+            cropResult = cropMilli;
+        };
+
+        // If the crop result is not valid number, then it is an error
+        if(typeof cropResult !== "number") {
+            console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
+        };
+
+        ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
+        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.getLength() + cropResult);
+    };
+
+    // Callback for when the segment UI div has finished being cropped.
+    // The cropping should always be valid because the 'segmentCropping' callback
+    // only allows cropping to happen in valid ranges.
+    this.segmentCropFinished = function(event, ui, segmentController) {
+        var audioSegment = segmentController.getAudioSegment();
+
+        // Figure out whether the left or right side is being cropped by looking at the left position
+        var leftSide = (ui.position.left !== ui.originalPosition.left);
+
+        // Crop amount should be positive if expanding, and negative if contracting
+        var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
+
+        // Crop should be tested first
+        var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, leftSide);
+
+        // If the crop was valid, set the cropResult to the original value to be used in the actual cropping
+        if (cropResult === true) {
+            cropResult = cropMilli;
+        };
+
+        // If the crop result is not valid, then it is an error
+        if(typeof cropResult !== "number") {
+            console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
+        };
+
+        // Perform the actual crop
+        cropResult = audioTrack.cropSegment(audioSegment, cropResult, leftSide);
+
+        // If the crop result is not valid, then it is an error
+        if (cropResult !== true) {
+            console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
+        };
+
+        // Recalculate the size and position based on the segment size
+        ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
+        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.getLength());
     };
 
 

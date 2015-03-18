@@ -104,6 +104,7 @@ pentimento.audio_track = function() {
 	// Shifts the specified segment left or right by a certain number of milliseconds.
 	// If a negative number is given for shift_millisec, then the shift will be left.
     // Return true if the shift succeeds
+    // Otherwise, return the shift value of the greatest magnitude that would have produced a valid shift
 	this.shiftSegment = function(segment, shift_millisec) {
 
         // Check for validity of the shift
@@ -119,15 +120,97 @@ pentimento.audio_track = function() {
         return true;
 	};
 
-    // TODO
-    this.canCropSegment = function(segment, crop_millisec) {
+    // Returns whether the specified segment can be cropped on the left or right
+    // If a negative number is given for crop_millisec, then the crop will shrink the segment.
+    // If a positive number is given for crop_millisec, then the crop will extend the segment.
+    // The segment cannot overlap existing segments in the track.
+    // The segment cannot extend past the audio length and cannot shrink below a length of 0.
+    // left_side is a bool indicating whether the left side is being cropped.
+    // Returns true if the crop is valid.
+    // Otherwise, return a crop millisecond of the greatest magnitude that would have produced a valid crop.
+    this.canCropSegment = function(segment, crop_millisec, left_side) {
 
+        // Check that the segment exists in the track
+        if (this.audio_segments.indexOf(segment) < 0) {
+            return "segment does not exist";
+        };
+
+        // Get the old and new side for the segment. This is calculated differently depending on whether the
+        // left or right side is being cropped.
+        var oldSide;
+        var newSide;
+        var newLength;
+        if (left_side === true) {  // left side
+            // On the left side, a positive crop reduces the time of the side to expand the segment
+            oldSide = segment.start_time;
+            newSide = oldSide - crop_millisec;
+            newLength = segment.end_time - newSide;
+        } else {  // right side
+            // On the right side, a positive crop increases the time of the side to expand the segment
+            oldSide = segment.end_time;
+            newSide = oldSide + crop_millisec;
+            newLength = newSide - segment.start_time;
+        };
+
+        // Check to make sure the segment does not exceed the length of the audio clip and does not drop below 0.
+        // If invalid, return the value of maximum magnitude that can be cropped
+        if (newLength < 0) {
+            return -segment.getLength();
+        } else if (newLength > segment.getAudioLength()) {
+            return segment.getAudioLength() - segment.getLength();
+        };
+
+        // Check for overlap with existing segments
+        var minDiff = Number.MAX_VALUE;  // Always positive, distance between new side and end of last valid crop point
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            var currentSegment = this.audio_segments[i];
+
+            // Don't check against itself
+            if (currentSegment === segment) {
+                continue;
+            };
+
+            // Check that the current segment is not inside the area between the old and new side
+            if (left_side === true && newSide < currentSegment.end_time && segment.end_time > currentSegment.end_time) {  // left side
+                minDiff = Math.min(currentSegment.end_time - newSide, minDiff);
+
+            } else if (newSide > currentSegment.start_time && segment.start_time < currentSegment.start_time) {  // right side
+                minDiff = Math.min(newSide - currentSegment.start_time, minDiff);
+            };
+        }
+
+        // If there was an overlap, then return the largest valid crop (positive number always)
+        if (minDiff !== Number.MAX_VALUE) {
+            return minDiff;
+        };
+
+        return true;
     };
 
 	// Crop the specified segment by the specified number of milliseconds
-	// If a negative number is given for crop_millisec, then the crop will be on the left side
-	this.cropSegment = function(segment, crop_millisec) {
+	// If a negative number is given for crop_millisec, then the crop will shrink the segment side
+    // left_side is a bool indicating whether the left side is being cropped.
+    // Returns true if the crop is valid.
+    // Otherwise, return a crop millisecond of the greatest magnitude that would have produced a valid crop.
+	this.cropSegment = function(segment, crop_millisec, left_side) {
 
+        // Check for validity of the crop
+        var cropResult = this.canCropSegment(segment, crop_millisec, left_side);
+        if (cropResult !== true) {
+            return cropResult;
+        };
+
+        // Get the new times for the segment
+        if (left_side === true) {  // left side
+            // On the left side, a positive crop reduces the time of the side to expand the segment
+            segment.start_time -= crop_millisec;
+
+        } else {  // right side
+            // On the right side, a positive crop increases the time of the side to expand the segment
+            segment.end_time += crop_millisec;
+        }
+        console.log('segment after crop: ' + segment.start_time + " " + segment.end_time);
+        return true;
 	};
 
 	// Scales the audio segment by the specified factor.
@@ -149,31 +232,6 @@ pentimento.audio_track = function() {
         };
         return timeEnd;
     };
-};
-
-// Given the location where the segment is dropped, this function figures out where to place the audio
-// segment and returns the new location in the track
-pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
-
-    // Iterate over audio tracks in DOM
-    $(".audio_segment").each(function(index, segment) {
-    	// Don't check itself
-    	if (index != segment_idx) {
-    		// Check to see if it overlaps with segment on the left half
-    		if ( mouse_event.pageX >= $(segment).offset().left && 
-                mouse_event.pageX <= $(segment).offset().left + $(segment).width()/2 ) {
-    		    console.log('move to left');
-    		    // Move segment to the left of conflicting segment
-    		   
-    		}
-    		// Check to see if it over laps with segment on the right half
-    		else if ( mouse_event.pageX > $(segment).offset().left + $(segment).width()/2 && 
-                mouse_event.pageX <= $(segment).offset().left + $(segment).width() ) {
-    		    // Move segment to the left of conflicting segment
-    		    console.log('move to right');
-    		}
-    	};
-    });
 };
 
 // Audio segments contain an audio clip (audio_resource, audio_start_time, audio_end_time)
