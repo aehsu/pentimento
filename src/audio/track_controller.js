@@ -83,7 +83,7 @@ var AudioTrackController = function(track, audioController) {
         };
 
         ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
-        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.getLength() + cropResult);
+        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack() + cropResult);
     };
 
     // Callback for when the segment UI div has finished being cropped.
@@ -121,7 +121,7 @@ var AudioTrackController = function(track, audioController) {
 
         // Recalculate the size and position based on the segment size
         ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
-        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.getLength());
+        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack());
     };
 
 

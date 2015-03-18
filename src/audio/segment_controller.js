@@ -56,7 +56,7 @@ var AudioSegmentController = function(segment, trackController) {
         // Stop any ongoing playback
         this.stopPlayback();
 
-        // If the end time is undefined, set it to the end
+        // If the end time is undefined, set it to the end of the segment
         if (typeof endTime === 'undefined') {
             endTime = audioSegment.audio_end_time;
         };
@@ -102,12 +102,12 @@ var AudioSegmentController = function(segment, trackController) {
         // Update the position and size of the segments
         jqSegment.css({'top': 0,
                         'left': pentimento.audioController.millisecondsToPixels(audioSegment.start_time),
-                        'width': pentimento.audioController.millisecondsToPixels(audioSegment.getLength()) 
+                        'width': pentimento.audioController.millisecondsToPixels(audioSegment.lengthInTrack())
                         });
 
         // Update the parameters of wavesurfer
         // TODO!!!
-        wavesurfer.load(audioSegment.audio_resource);
+        wavesurfer.load(audioSegment.audioResource());
     };
 
     // Draw a segment into the jquery parent object
@@ -196,7 +196,7 @@ var AudioSegmentController = function(segment, trackController) {
         });
 
         // The audio segment is also loaded upon refresh
-        wavesurfer.load(audioSegment.audio_resource);
+        wavesurfer.load(audioSegment.audioResource());
 
         // Return the new segment
         return new_segment;

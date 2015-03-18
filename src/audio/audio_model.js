@@ -33,7 +33,7 @@ pentimento.audio_track = function() {
 
             // If the segment is fully to the right of the inserted segment, then shift
             if ( newSegment.end_time <= shift_segment.start_time ) {
-                this.shift_segment( shift_segment , newSegment.getLength());
+                this.shift_segment( shift_segment , newSegment.lengthInTrack());
             };
         };
 
@@ -155,9 +155,10 @@ pentimento.audio_track = function() {
         // Check to make sure the segment does not exceed the length of the audio clip and does not drop below 0.
         // If invalid, return the value of maximum magnitude that can be cropped
         if (newLength < 0) {
-            return -segment.getLength();
-        } else if (newLength > segment.getAudioLength()) {
-            return segment.getAudioLength() - segment.getLength();
+            return -segment.lengthInTrack();
+        } else if (newLength > segment.audioLength()) {
+            // TODO: fix return length here
+            return segment.audioLength() - segment.lengthInTrack();
         };
 
         // Check for overlap with existing segments
@@ -234,21 +235,34 @@ pentimento.audio_track = function() {
     };
 };
 
-// Audio segments contain an audio clip (audio_resource, audio_start_time, audio_end_time)
-// and a location within the lecture (start_time, end_time)
-pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_time, start_time, end_time) {
+// Audio segments contain an audio clip and a location within the track
+pentimento.audio_segment = function(audio_resource, audio_length, track_start_time) {
 
-	this.audio_resource = audio_resource;
-	this.audio_start_time = audio_start_time;
-	this.audio_end_time = audio_end_time;
-	this.start_time = start_time;
-	this.end_time = end_time;
+    // Audio clip data
+	var audio_resource = audio_resource;
+    var total_audio_length = audio_length;
 
-    this.getLength = function() {
+    // Specifies what part of the audio clip should be played back
+	this.audio_start_time = 0;
+	this.audio_end_time = audio_length;
+
+    // Location of the segment within the track
+	this.start_time = track_start_time;
+	this.end_time = track_start_time + audio_length;
+
+    this.audioResource = function() {
+        return audio_resource;
+    };
+
+    this.totalAudioLength = function() {
+        return total_audio_length;
+    };
+
+    this.lengthInTrack = function() {
         return this.end_time - this.start_time;
-    }
+    };
 
-    this.getAudioLength = function() {
+    this.audioLength = function() {
         return this.audio_end_time - this.audio_start_time;
-    }
+    };
 };

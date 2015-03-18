@@ -146,7 +146,7 @@ var AudioController = function() {
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL,0,audio_duration,lectureBeginRecordTime,
+            var segment = new pentimento.audio_segment(audioURL,audio_duration,lectureBeginRecordTime,
                                                     lectureBeginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
@@ -165,8 +165,8 @@ var AudioController = function() {
         this.refreshView();
 
         // Update the retimer view
-        console.log("updating retimer");
-        window.retimer_window.displayAudio();
+        // console.log("updating retimer");
+        // window.retimer_window.displayAudio();
 
         // Reset the begin_record_time, which is used to indicate the recording status
         begin_record_time = -1;
