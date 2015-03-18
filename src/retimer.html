@@ -5,6 +5,8 @@
     <script src='jquery-ui-1.10.4/js/jquery-1.10.2.js'></script>
     <script src='jquery-ui-1.10.4/js/jquery-ui-1.10.4.js'></script>
     <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
+    <script type='text/javascript' src='audio/jquery.flot.js'></script>
+    <script type='text/javascript' src='audio/jquery.flot.time.js'></script>
     <script src='jcanvas.min.js'></script>
     <script type='text/javascript' src='pentimento_renderer.js'></script>
     <script type='text/javascript' src='pentimento_retimer_view_update_handler.js'></script>
@@ -12,7 +14,15 @@
     <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
     <script type='text/javascript' src='pentimento_model_visuals.js'></script>
     <script type='text/javascript' src='pentimento_model_lecture.js'></script>
+    <script type='text/javascript' src='pentimento_common.js'></script>
+    <script type='text/javascript' src="audio/wavesurfer.min.js"></script>
+    <script type='text/javascript' src="audio/RecordRTC.js"></script>
+    <script type='text/javascript' src='audio/audio_model.js'></script>
+    <script type='text/javascript' src='audio/segment_controller.js'></script>
+    <script type='text/javascript' src='audio/track_controller.js'></script>
+    <script type='text/javascript' src='audio/audio_controller.js'></script>
     <link rel='stylesheet' href='retimer.css' />
+    <link rel="stylesheet" type="text/css" href="audio/audio.css">
 </head>
 
 <body>
@@ -28,6 +38,25 @@
 <div id="timer_div">
         <hr>
         <div id="retimer_time"></div> <input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+</div>
+<div id="audio_div_container">
+    <button id="play_pause_button" class="btn btn-primary">
+            <i class="glyphicon glyphicon-play"></i>
+            Audio Play
+            /
+            <i class="glyphicon glyphicon-pause"></i>
+            Audio Pause
+        </button>
+        <button id="record_audio_button" class="btn btn-primary">
+            Record
+        </button>
+        <button id="zoom_in_button" class="btn btn-primary">
+            Zoom In
+        </button>
+        <button id="zoom_out_button" class="btn btn-primary">
+            Zoom Out
+        </button>
+        <div id="audio_timeline"></div>
 </div>
 
 <div id="controls_div">

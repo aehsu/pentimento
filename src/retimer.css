@@ -25,3 +25,7 @@ body{
     background-color: black;
     width: 10000px;
 }
+
+#audio_div{
+    position: relative;
+}

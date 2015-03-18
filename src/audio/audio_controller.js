@@ -164,6 +164,10 @@ var AudioController = function() {
         // Refresh the audio display
         this.refreshView();
 
+        // Update the retimer view
+        console.log("updating retimer");
+        window.retimer_window.displayAudio();
+
         // Reset the begin_record_time, which is used to indicate the recording status
         begin_record_time = -1;
     };
@@ -270,7 +274,8 @@ var AudioController = function() {
         tracksContainer.css('left', flotPlot.offset().left - gradationContainer.offset().left)
             .css('top', flotPlot.offset().top - gradationContainer.offset().top)                  
             .css('width', flotPlot.width())
-            .css('height', flotPlot.height());
+            .css('height', flotPlot.height())
+            .css('position', 'absolute');
     };
 
     // Draw the container that will be used to hold the tracks
@@ -303,7 +308,8 @@ var AudioController = function() {
 
         gradation_container.attr('id', gradationContainerID)
             .css('width', timeline.width())
-            .css('height', timeline.height());
+            .css('height', timeline.height())
+            .css('position', "absolute");
         timeline.append(gradation_container);
 
         var options = {
@@ -432,10 +438,17 @@ var AudioController = function() {
 
     // Draws all parts of the timeline into the page.
     // Removes all parts of the existing view if it has already been drawn.
-    this.draw = function() {
+    this.draw = function(display_window) {
 
-        // Clear the existing audio timeline
-        $('#'+timelineID).html("");
+        if(display_window == "retimer"){
+            // Clear the existing audio timeline
+            window.retimer_window.$('#audio_div').html("");
+        }
+        else{
+            // Clear the existing audio timeline
+            $('#'+timelineID).html("");
+        }
+
 
         // Draw gradations into the timeline
         drawGradations();
