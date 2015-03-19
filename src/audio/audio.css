@@ -73,6 +73,7 @@ div.audio_segment {
     transition: box-shadow .15s;
     padding: 0;
     height: 100%;
+    overflow: hidden;
 }
 
 div.wavesurfer_container {

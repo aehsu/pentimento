@@ -197,17 +197,17 @@ var AudioTrackController = function(track, audioController) {
             // Get the delay in milliseconds from now until when the playback will occur
             // Compute the start time of the audio (sometimes starts play in middle of segment)
             var playbackDelay;
-            var audioStartTime;
+            var trackStartTime;
 
             // If the segment starts after the current start time
             if (segment.start_time >= startTime) {
                 playbackDelay = segment.start_time - startTime;
-                audioStartTime = segment.audio_start_time;
+                trackStartTime = segment.start_time;
             }
             // If the start time is in the middle of the segment 
             else if (segment.end_time > startTime) {
                 playbackDelay = 0;
-                audioStartTime = segment.audio_start_time + (startTime-segment.start_time);
+                trackStartTime = startTime-segment.start_time;
             }
             // If the start time is after the entire segment
             else {
@@ -216,7 +216,7 @@ var AudioTrackController = function(track, audioController) {
             };
 
             // Set the playback on the segment controller with the specified delay
-            segmentController.startPlayback(playbackDelay, audioStartTime);
+            segmentController.startPlayback(playbackDelay, trackStartTime);
         };
     };
 

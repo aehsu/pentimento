@@ -64,22 +64,26 @@ var AudioSegmentController = function(segment, trackController) {
     // Playback the audio segment after a delay at the specied time interval (milliseconds).
     // If the end time is undefined, play until the end.
     // If playback is currently going or scheduled, then cancel the current and start a new one.
-    this.startPlayback = function(delay, startTime, endTime) {
+    this.startPlayback = function(delay, trackStartTime, trackEndTime) {
 
         // Stop any ongoing playback
         this.stopPlayback();
 
         // If the end time is undefined, set it to the end of the segment
-        if (typeof endTime === 'undefined') {
-            endTime = audioSegment.audio_end_time;
+        if (typeof trackEndTime === 'undefined') {
+            trackEndTime = audioSegment.end_time;
         };
+
+        // Convert the start and end times from track time to audio time (seconds)
+        audioStartTime = audioSegment.trackToAudioTime(trackStartTime) / 1000.0;
+        audioEndTime = audioSegment.trackToAudioTime(trackEndTime) / 1000.0;
 
         // Generate a function used for playback to be registered with a timer.
         // Times are in milliseconds
         var playbackSegment = function() {
             var result = function() {
                 // Play the wavesurfer over the specified range
-                wavesurfer.play(startTime, endTime);
+                wavesurfer.play(audioStartTime, audioEndTime);
             };
             return result;
         }();
