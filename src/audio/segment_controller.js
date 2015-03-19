@@ -209,8 +209,7 @@ var AudioSegmentController = function(segment, trackController) {
             }, 
             stop: function( event, ui ) {
                 parentTrackController.segmentCropFinish(event, ui, self);
-            }, 
-            alsoResize: "#"+wavesurferContainerID
+            }
         });
 
         // Load the waveform to be displayed inside the segment div
