@@ -10,6 +10,8 @@ var AudioSegmentController = function(segment, trackController) {
     var audioSegment = null;  // audio_segment from the model
     var segmentID = null;  // HTML ID used to identify the segment
     var segmentClass = "audio_segment";
+    var wavesurferContainerID = null;  // wavesurfer is drawn in this container in the segment
+    var wavesurferContainerClass = "wavesurfer_container";
     var playbackTimeoutID = -1;  // Timeout ID for delayed playback (-1 is null)
     var wavesurfer = null;  // wavesurfer to play audio
 
@@ -22,7 +24,13 @@ var AudioSegmentController = function(segment, trackController) {
 
     // Create a new segment ID of the form
     // 'segment#' where '#' is a positive integer
-    segmentID = 'segment' + (AudioSegmentController.counter++);
+    segmentID = 'segment' + AudioSegmentController.counter;
+
+    // Create a new wavesurfer container ID of the form
+    // 'wavesurfer#' where '#' is a positive integer
+    wavesurferContainerID = 'wavesurfer' + AudioSegmentController.counter;
+
+    AudioSegmentController.counter++;
 
     ///////////////////////////////////////////////////////////////////////////////
     // Getter methods
@@ -31,6 +39,11 @@ var AudioSegmentController = function(segment, trackController) {
     // Get the ID of the segment
     this.getID = function() {
         return segmentID;
+    };
+
+    // Get the ID of the wavesurfer container
+    this.getWavesurferContainerID = function() {
+        return wavesurferContainerID;
     };
 
     // Get the name of the class used to represent audio segments
@@ -98,12 +111,23 @@ var AudioSegmentController = function(segment, trackController) {
     this.refreshView = function() {
 
         var jqSegment = $('#'+self.getID());
+        var jqWaveContainer = jqSegment.children('.'+wavesurferContainerClass);
 
-        // Update the position and size of the segments
+        // Update the position and size of the segment
         jqSegment.css({'top': 0,
                         'left': pentimento.audioController.millisecondsToPixels(audioSegment.start_time),
                         'width': pentimento.audioController.millisecondsToPixels(audioSegment.lengthInTrack())
                         });
+
+        // Update the position and size of the wavesurfer container.
+        // The left is offset so that the audio start will appear at the beginning of the segment
+        // The full width should always be displayed.
+        var offsetSegmentStartTime = audioSegment.audioToTrackTime(0) - audioSegment.start_time;  // always <= 0
+        var offsetSegmentWidth = audioSegment.audioToTrackTime(audioSegment.totalAudioLength()) - audioSegment.audioToTrackTime(0);
+        jqWaveContainer.css({'top': 0,
+                'left': pentimento.audioController.millisecondsToPixels(offsetSegmentStartTime),
+                'width': pentimento.audioController.millisecondsToPixels(offsetSegmentWidth)
+                });
 
         // Update the parameters of wavesurfer
         // TODO!!!
@@ -114,12 +138,13 @@ var AudioSegmentController = function(segment, trackController) {
     // Return new jQuery segment
     this.draw = function(jqParent) {
 
-        // Create a new segment div 
+        // Create a new segment div and wavesurfer container div
         var new_segment = $("<div></div>").attr({"id": segmentID, "class": segmentClass});
-        // new_segment.data(audioSegment);
+        var ws_container = $("<div></div>").attr({"id": wavesurferContainerID, "class": wavesurferContainerClass});
 
-        // Add the segment to the parent
+        // Add the segment to the parent and add the wavesurfer container div to the segment
         jqParent.append(new_segment);
+        new_segment.append(ws_container);
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
@@ -184,14 +209,15 @@ var AudioSegmentController = function(segment, trackController) {
             }, 
             stop: function( event, ui ) {
                 parentTrackController.segmentCropFinish(event, ui, self);
-            }
+            }, 
+            alsoResize: "#"+wavesurferContainerID
         });
 
         // Load the waveform to be displayed inside the segment div
         // Initialize wavesurfer for the segment
         wavesurfer = Object.create(WaveSurfer);
         wavesurfer.init({
-            container: document.querySelector('#'+segmentID),
+            container: ws_container[0],
             waveColor: 'violet',
             progressColor: 'purple',
             height: parseInt(new_segment.css('height')),
@@ -203,6 +229,15 @@ var AudioSegmentController = function(segment, trackController) {
 
         // Return the new segment
         return new_segment;
+    };
+
+    // Shift the internal wavesurfer container left (negative) or right (positive) in pixels.
+    // This is used when cropping to move the container so the cropping motion looks natural.
+    this.shiftWavesurferContainer = function(pixelShift) {
+        var jqSegment = $('#'+self.getID());
+        var jqWaveContainer = jqSegment.children('.'+wavesurferContainerClass);
+
+        jqWaveContainer.css({ left: jqWaveContainer.position().left + pixelShift });
     };
 
 };

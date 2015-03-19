@@ -1,6 +1,6 @@
-retimer.constraintsHandler = function(){
+// retimer.constraintsHandler = function(){
 
-}
+// }
 
 
 function drawVisual(visual, tVisual, isThumbnail, thumbParams) {

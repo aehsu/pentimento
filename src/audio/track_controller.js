@@ -13,6 +13,7 @@ var AudioTrackController = function(track, audioController) {
     var trackID = null;  // HTML ID used to identify the track
     var trackClass = "audio_track";
     var cropSide = null;  // 'w' for left sied, 'e' for right side. Set at the beginning of each crop
+    var prevCropPositionLeft = 0;  // Used to keep track of the previous position of the left side when cropping.
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -65,6 +66,9 @@ var AudioTrackController = function(track, audioController) {
 
         // Figure out whether the left or right side is being cropped by looking at the class of the element
         cropSide = event.toElement.classList.contains("ui-resizable-w") ? 'w' : 'e';
+
+        // Keep track of the previous position
+        prevCropPositionLeft = ui.originalPosition.left;
     };
 
     // Callback for when the segment UI div is being cropped.
@@ -92,11 +96,17 @@ var AudioTrackController = function(track, audioController) {
             console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
         };
 
-        // Update the position according to the model
+        // Update the position according to the model.
         // Account for the shift and change in size due to the possible crop.
         var leftShift = leftSide ? -cropResult : 0;
         ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time + leftShift);
         ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack() + cropResult);
+
+        // Also shift the wavesurfer container so that the wavesurfer is not moving along with the crop.
+        segmentController.shiftWavesurferContainer(prevCropPositionLeft - ui.position.left);
+
+        // Keep track of the previous position
+        prevCropPositionLeft = ui.position.left;
     };
 
     // Callback for when the segment UI div has finished being cropped.
@@ -166,6 +176,7 @@ var AudioTrackController = function(track, audioController) {
     };
 
     // Start the playback of the track at the specified time interval
+    // TODO: this is in audio time right now. It needs to be converted to segment time offets from segment start probably.
     // Stops the previous playback if there is on currently going.
     // The time is specified in milliseconds. If the end time is not specified,
     // playback goes until the end of the track.

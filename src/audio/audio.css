@@ -75,6 +75,10 @@ div.audio_segment {
     height: 100%;
 }
 
+div.wavesurfer_container {
+    position: absolute;
+}
+
 .audio_segment wave {
     position: absolute;
     left:0;
