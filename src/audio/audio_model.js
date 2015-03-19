@@ -152,13 +152,19 @@ pentimento.audio_track = function() {
             newLength = newSide - segment.start_time;
         };
 
-        // Check to make sure the segment does not exceed the length of the audio clip and does not drop below 0.
+        // Check to make sure the segment does not drop below 0.
         // If invalid, return the value of maximum magnitude that can be cropped
         if (newLength < 0) {
             return -segment.lengthInTrack();
-        } else if (newLength > segment.audioLength()) {
-            // TODO: fix return length here
-            return segment.audioLength() - segment.lengthInTrack();
+        }; 
+
+        // Check to make sure that the segment will not be expanded to exceed the bounds of the audio resource.
+        if (left_side === true && newSide < segment.audioToTrackTime(0)) {  // left side
+            console.log("left side exceed: newSide: " + newSide);
+            return crop_millisec - (segment.audioToTrackTime(0) - newSide);
+        } else if (newSide > segment.audioToTrackTime(segment.totalAudioLength()) ) { // right side
+            console.log("right side exceed: newSide: " + newSide);
+            return crop_millisec - (newSide - segment.audioToTrackTime(segment.totalAudioLength()) );
         };
 
         // Check for overlap with existing segments
@@ -205,10 +211,12 @@ pentimento.audio_track = function() {
         if (left_side === true) {  // left side
             // On the left side, a positive crop reduces the time of the side to expand the segment
             segment.start_time -= crop_millisec;
+            segment.audio_start_time -= crop_millisec;
 
         } else {  // right side
             // On the right side, a positive crop increases the time of the side to expand the segment
             segment.end_time += crop_millisec;
+            segment.audio_end_time += crop_millisec;
         }
         console.log('segment after crop: ' + segment.start_time + " " + segment.end_time);
         return true;
@@ -250,19 +258,63 @@ pentimento.audio_segment = function(audio_resource, audio_length, track_start_ti
 	this.start_time = track_start_time;
 	this.end_time = track_start_time + audio_length;
 
+    // Get the audio resource needed for playback
     this.audioResource = function() {
         return audio_resource;
     };
 
+    // Get the total length of the audio resource
     this.totalAudioLength = function() {
         return total_audio_length;
     };
 
+    // Get the length of the segment in the track
     this.lengthInTrack = function() {
         return this.end_time - this.start_time;
     };
 
+    // Get the length of the audio that should be played back
     this.audioLength = function() {
         return this.audio_end_time - this.audio_start_time;
+    };
+
+    // Convert a track time to the corresponding time in the audio resource at the current scale.
+    // Returns false if the trackTime is invalid.
+    this.trackToAudioTime = function(trackTime) {
+
+        // Track time should not be less than 0
+        if (trackTime < 0) {
+            return false;
+        };
+
+        // Convert the track time by using the current start_time as the offset
+        var audioTime = this.audio_start_time + (trackTime - this.start_time);
+
+        // Time should not exceed the bounds of the total audio length
+        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+            return false;
+        };
+
+        return audioTime;
+    };
+
+    // Convert a time in the audio resource to the corresponding time in the track at the current scale.
+    // Returns false if the audioTime is invalid.
+    this.audioToTrackTime = function(audioTime) {
+
+        // Time should not exceed the bounds of the total audio length
+        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+            return false;
+        };
+
+        // Convert the track time by using the current start_time as the offset
+        var trackTime = this.start_time + (audioTime - this.audio_start_time);
+
+        // Track time should not be less than 0
+        if (trackTime < 0) {
+            return false;
+        };
+
+        return trackTime;
     };
 };

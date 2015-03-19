@@ -176,11 +176,14 @@ var AudioSegmentController = function(segment, trackController) {
         }).resizable({
             handles: "e, w",
             minWidth: 1,
+            start: function( event, ui) {
+                parentTrackController.segmentCropStart(event, ui, self);
+            },
             resize: function( event, ui ) {
                 parentTrackController.segmentCropping(event, ui, self);
             }, 
             stop: function( event, ui ) {
-                parentTrackController.segmentCropFinished(event, ui, self);
+                parentTrackController.segmentCropFinish(event, ui, self);
             }
         });
 
