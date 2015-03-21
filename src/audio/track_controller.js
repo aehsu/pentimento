@@ -52,7 +52,6 @@ var AudioTrackController = function(track, audioController) {
         var audioSegment = segmentController.getAudioSegment();
         var shiftMilli = parentAudioController.pixelsToMilliseconds(ui.position.left) - audioSegment.start_time;
         var shiftResult = audioTrack.shiftSegment(audioSegment, shiftMilli);
-        console.log(shiftResult);
 
         // Prevent the direct dragging that jQuery UI does if the shift is not valid
         if (shiftResult !== true) {
@@ -79,7 +78,6 @@ var AudioTrackController = function(track, audioController) {
 
         // Figure out whether the left or right side is being cropped
         var leftSide = (cropSide === 'w');
-        console.log(leftSide);
 
         // Crop amount should be positive if expanding, and negative if contracting
         var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);

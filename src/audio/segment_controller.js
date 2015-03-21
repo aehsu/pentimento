@@ -10,6 +10,8 @@ var AudioSegmentController = function(segment, trackController) {
     var audioSegment = null;  // audio_segment from the model
     var segmentID = null;  // HTML ID used to identify the segment
     var segmentClass = "audio_segment";
+    var handleID = null;  // Handle used for dragging the segment
+    var handleClass = "segment_handle";
     var wavesurferContainerID = null;  // wavesurfer is drawn in this container in the segment
     var wavesurferContainerClass = "wavesurfer_container";
     var playbackTimeoutID = -1;  // Timeout ID for delayed playback (-1 is null)
@@ -26,10 +28,15 @@ var AudioSegmentController = function(segment, trackController) {
     // 'segment#' where '#' is a positive integer
     segmentID = 'segment' + AudioSegmentController.counter;
 
+    // Create a new hangle ID of the form
+    // 'handle#' where '#' is a positive integer
+    handleID = 'handle' + AudioSegmentController.counter;
+
     // Create a new wavesurfer container ID of the form
     // 'wavesurfer#' where '#' is a positive integer
     wavesurferContainerID = 'wavesurfer' + AudioSegmentController.counter;
 
+    // Increment the counter for when the next segment is created
     AudioSegmentController.counter++;
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -115,6 +122,7 @@ var AudioSegmentController = function(segment, trackController) {
     this.refreshView = function() {
 
         var jqSegment = $('#'+self.getID());
+        var jqHandle = $('#'+handleID);
         var jqWaveContainer = jqSegment.children('.'+wavesurferContainerClass);
 
         // Update the position and size of the segment
@@ -123,14 +131,18 @@ var AudioSegmentController = function(segment, trackController) {
                         'width': pentimento.audioController.millisecondsToPixels(audioSegment.lengthInTrack())
                         });
 
+        // The position of the handle is always fixed to the top left through CSS, and doesn't require updating.
+
         // Update the position and size of the wavesurfer container.
         // The left is offset so that the audio start will appear at the beginning of the segment
         // The full width should always be displayed.
+        // The wavesurfer displays below the handle (offset the top)
         var offsetSegmentStartTime = audioSegment.audioToTrackTime(0) - audioSegment.start_time;  // always <= 0
         var offsetSegmentWidth = audioSegment.audioToTrackTime(audioSegment.totalAudioLength()) - audioSegment.audioToTrackTime(0);
-        jqWaveContainer.css({'top': 0,
+        jqWaveContainer.css({'top': jqHandle.css('height'),
                 'left': pentimento.audioController.millisecondsToPixels(offsetSegmentStartTime),
-                'width': pentimento.audioController.millisecondsToPixels(offsetSegmentWidth)
+                'width': pentimento.audioController.millisecondsToPixels(offsetSegmentWidth), 
+                'height': jqWaveContainer.css('height')
                 });
 
         // Update the parameters of wavesurfer
@@ -142,12 +154,14 @@ var AudioSegmentController = function(segment, trackController) {
     // Return new jQuery segment
     this.draw = function(jqParent) {
 
-        // Create a new segment div and wavesurfer container div
+        // Create a new segment div, handle div, and wavesurfer container div
         var new_segment = $("<div></div>").attr({"id": segmentID, "class": segmentClass});
+        var new_handle = $("<div></div>").attr({"id": handleID, "class": handleClass});
         var ws_container = $("<div></div>").attr({"id": wavesurferContainerID, "class": wavesurferContainerClass});
 
-        // Add the segment to the parent and add the wavesurfer container div to the segment
+        // Add the segment to the parent and add the handle and wavesurfer container div to the segment
         jqParent.append(new_segment);
+        new_segment.append(new_handle);
         new_segment.append(ws_container);
 
         // add hover method to audio segment divs
@@ -198,6 +212,7 @@ var AudioSegmentController = function(segment, trackController) {
             obstacle: ".obstacle",
             axis: "x",
             opacity: 0.65,
+            handle: '#'+handleID,
             drag: function( event, ui ) {
                 // Dragging relies on information in the entire track, so it is relayed to the parent track
                 parentTrackController.segmentDrag(event, ui, self);
@@ -223,7 +238,7 @@ var AudioSegmentController = function(segment, trackController) {
             container: ws_container[0],
             waveColor: 'violet',
             progressColor: 'purple',
-            height: parseInt(new_segment.css('height')),
+            height: parseInt(ws_container.css('height')),
             minPxPerSec: 1
         });
 
