@@ -13,8 +13,8 @@ var AudioTrackController = function(track, audioController) {
     var trackID = null;  // HTML ID used to identify the track
     var trackClass = "audio_track";
     var focusClass = "focus";  // Class added to elements with focus
+    var lastValidPositionLeft = -1;  // Used to keep track of the last valid position when dragging or cropping.
     var cropSide = null;  // 'w' for left sied, 'e' for right side. Set at the beginning of each crop
-    var prevCropPositionLeft = 0;  // Used to keep track of the previous position of the left side when cropping.
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -49,28 +49,61 @@ var AudioTrackController = function(track, audioController) {
     // Callback methods
     ///////////////////////////////////////////////////////////////////////////////
 
-    this.segmentDrag = function(event, ui, segmentController) {
-        // If the drag is overlaps another segment, then set the position back to the original position
-        // ui.position.left = Math.min( 100, ui.position.left );
+    // Callback for when the segment UI div starts to be dragged.
+    // Sets initial internal variables.
+    this.segmentDragStart = function(event, ui, segmentController) {
+        // Sets the internal variable for the last valid position.
+        lastValidPositionLeft = ui.originalPosition.left;
+    };
+
+    // Callback for when the segment UI div is being dragged.
+    // Tests whether or not the drag is valid.
+    // If the dragging is valid, it does nothing, allowing the segment UI div to be dragged to the new position.
+    // If the dragging is invalid, it sets the segment UI div back to the last valid position.
+    this.segmentDragging = function(event, ui, segmentController) {
+        // We assume that the shift will be valid because of the snapping feature of jQuery draggable
+        // Shift the segment by the amount dragged
         var audioSegment = segmentController.getAudioSegment();
         var shiftMilli = parentAudioController.pixelsToMilliseconds(ui.position.left) - audioSegment.start_time;
-        var shiftResult = audioTrack.shiftSegment(audioSegment, shiftMilli);
+        var shiftResult = audioTrack.canShiftSegment(audioSegment, shiftMilli);
 
-        // Prevent the direct dragging that jQuery UI does if the shift is not valid
-        if (shiftResult !== true) {
-            ui.position.left = ui.originalPosition.left;
+        // If the shift is valid, then update the last valid position
+        if (shiftResult === true) {
+            lastValidPositionLeft = ui.position.left;
+        }
+        // Else reset the segment UI div to the last valid position
+        else {
+            ui.position.left = lastValidPositionLeft;
         };
     };
 
+    // Callback for when the segment UI div has finished being dragged.
+    // Actually performs the drag on the model.
+    this.segmentDragFinish = function(event, ui, segmentController) {
+        var audioSegment = segmentController.getAudioSegment();
+        var shiftMilli = parentAudioController.pixelsToMilliseconds(ui.position.left) - audioSegment.start_time;
+
+        // Perform the shift
+        var shiftResult = audioTrack.shiftSegment(audioSegment, shiftMilli);
+
+        // If the shift does not succeed, then there is a problem
+        if (shiftResult !== true) {
+            console.error("Shift error (" + (typeof shiftResult) + "): " + shiftResult);
+        };
+
+        // Reset the value of the last valid position
+        lastValidPositionLeft = -1;
+    };
+
     // Callback for when the segment UI div starts to be cropped.
-    // Sets the internal variable for left or right side cropping.
+    // Sets the initial internal variables.
     this.segmentCropStart = function(event, ui, segmentController) {
 
         // Figure out whether the left or right side is being cropped by looking at the class of the element
         cropSide = event.toElement.classList.contains("ui-resizable-w") ? 'w' : 'e';
 
         // Keep track of the previous position
-        prevCropPositionLeft = ui.originalPosition.left;
+        lastValidPositionLeft = ui.originalPosition.left;
     };
 
     // Callback for when the segment UI div is being cropped.
@@ -104,10 +137,10 @@ var AudioTrackController = function(track, audioController) {
         ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack() + cropResult);
 
         // Also shift the wavesurfer container so that the wavesurfer is not moving along with the crop.
-        segmentController.shiftWavesurferContainer(prevCropPositionLeft - ui.position.left);
+        segmentController.shiftWavesurferContainer(lastValidPositionLeft - ui.position.left);
 
         // Keep track of the previous position
-        prevCropPositionLeft = ui.position.left;
+        lastValidPositionLeft = ui.position.left;
     };
 
     // Callback for when the segment UI div has finished being cropped.

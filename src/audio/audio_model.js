@@ -31,9 +31,9 @@ pentimento.audio_track = function() {
         for (var i = 0; i < this.audio_segments.length; i++) {
             var shift_segment = this.audio_segments[i];
 
-            // If the segment is fully to the right of the inserted segment, then shift
-            if ( newSegment.end_time <= shift_segment.start_time ) {
-                this.shift_segment( shift_segment , newSegment.lengthInTrack());
+            // If the segment is to the right of the inserted segment's begin time, then shift
+            if ( newSegment.start_time <= shift_segment.start_time ) {
+                this.shiftSegment( shift_segment , newSegment.lengthInTrack());
             };
         };
 

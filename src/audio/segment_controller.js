@@ -217,13 +217,21 @@ var AudioSegmentController = function(segment, trackController) {
         new_segment.draggable({
             preventCollision: true,
             containment: 'parent',
-            obstacle: ".obstacle",
+            snap: "."+segmentClass,
+            snapMode: "outer",
+            snapTolerance: 0,
             axis: "x",
             opacity: 0.65,
             handle: '#'+handleID,
+            start: function( event, ui) {
+                parentTrackController.segmentDragStart(event, ui, self);
+            },
             drag: function( event, ui ) {
                 // Dragging relies on information in the entire track, so it is relayed to the parent track
-                parentTrackController.segmentDrag(event, ui, self);
+                parentTrackController.segmentDragging(event, ui, self);
+            },
+            stop: function( event, ui) {
+                parentTrackController.segmentDragFinish(event, ui, self);
             }
         }).resizable({
             handles: "e, w",

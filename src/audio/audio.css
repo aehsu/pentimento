@@ -7,6 +7,8 @@
     overflow-x: scroll;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
+    margin: 0;
+    padding: 0;
 }
 
 /* Set the scrollbars to always visible in the timeline by
@@ -35,14 +37,20 @@
     width: 0px;
     height: inherit;
     border-left: solid #79DFFF;
+    margin: 0;
+    padding: 0;
 }
 
 #audio_tracks_container {
     position: absolute;
+    margin: 0;
+    padding: 0;
 }
 
 #gradation_container {
     position: absolute;
+    margin: 0;
+    padding: 0;
 }
 
 #playhead {
@@ -51,12 +59,16 @@
     width: 8px;
     background-color: blue;
     cursor: move;
+    margin: 0;
+    padding: 0;
 }
 
 div.audio_track{
     position: absolute;
     height: 140px;
     width: 100%;
+    border-left: thick double #ff0000;
+    margin: 0;
     padding: 0;
 }
 
@@ -72,9 +84,10 @@ div.audio_segment {
     float: left;
     box-shadow: 0;
     transition: box-shadow .15s;
-    padding: 0;
     height: 140px;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 div.focus {
@@ -89,20 +102,22 @@ div.segment_handle {
     left: 0px;
     width: 100%;
     height: 20px;
-    padding: 0;
     border-style: ridge;
     border-width: 2px;
     border-color: crimson;
     background-color: darkorange;
     cursor: move;
+    margin: 0;
+    padding: 0;
 }
 
 div.wavesurfer_container {
     position: absolute;
     height: 120px;
-    padding: 0;
     border-width: 0;
     pointer-events:none;
+    margin: 0;
+    padding: 0;
 }
 
 .audio_segment wave {
@@ -111,28 +126,17 @@ div.wavesurfer_container {
     right: 0;
     border-style: none;
     pointer-events:none;
-}
-
-.dragged {
-    /*box-shadow: 0 0 3px #515151;*/
-    box-shadow: 8px 10px 24px 0px rgba(0,0,0,0.75);
-}
-
-
-.draggable-box {
-    padding: 0.5em;
-    border-style: solid;
-    border-color: black;
-    margin: 0 10px 10px 0;
-    z-index: 10;
+    margin: 0;
+    padding: 0;
 }
 
 wave canvas {
     border-style: none;
 }
 
-.ui-button:hover {
-    background: rgba(0, 0, 0, 0.1);
+.ui-draggable-dragging {
+    /*box-shadow: 0 0 3px #515151;*/
+    box-shadow: 8px 10px 24px 0px rgba(0,0,0,0.75);
 }
 
 .ui-resizable-handle {
@@ -148,8 +152,4 @@ wave canvas {
     cursor: e-resize;
     top:0px;
     right: -5px;
-}
-
-.ui-label{
-    font-family: Calibri, sans-serif;
 }
