@@ -77,6 +77,12 @@ div.audio_segment {
     overflow: hidden;
 }
 
+div.focus {
+    border-style: outset;
+    border-width: 4px;
+    background-color: darkorange;
+}
+
 div.segment_handle {
     position: absolute;
     top: 0px;

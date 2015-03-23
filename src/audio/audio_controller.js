@@ -8,7 +8,8 @@ var AudioController = function() {
     var self = this;
 
     // Audio model containig the audio data
-    var audioModel = null;
+    // public only for debugging purposes
+    this.audioModel = null;
 
     // Controllers for each of the audio tracks. Each controller handles all the MVC
     // responsibilities for that particular track. The recording controller is the
@@ -86,6 +87,7 @@ var AudioController = function() {
     var recordAudioButtonID = 'record_audio_button';
     var zoomInButtonID = 'zoom_in_button';
     var zoomOutButtonID = 'zoom_out_button';
+    var deleteSegmentButtonID = 'delete_segment_button';
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,7 @@ var AudioController = function() {
 
     // Insert a new track controller with an empty track and return the new controller
     var createTrackController = function() {
-        var newTrack = audioModel.createTrack();
+        var newTrack = self.audioModel.createTrack();
         var newController = new AudioTrackController(newTrack, self);
         if (recordingTrackController === null) {
             recordingTrackController = newController;
@@ -150,7 +152,7 @@ var AudioController = function() {
                                                     lectureBeginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
-            recordingTrackController.insertSegmentController(segment);
+            recordingTrackController.insertSegment(segment);
 
             // Increment the lecture time by the length of the audio recording
             // TODO remove this, this should be set by the playhead instead
@@ -479,7 +481,7 @@ var AudioController = function() {
     // Should only be called after the document is ready
 
     // Create a new audio model
-    audioModel = new pentimento.audio_model();
+    this.audioModel = new pentimento.audio_model();
 
     // RecordRTC setup
     navigator.getUserMedia(
@@ -534,6 +536,15 @@ var AudioController = function() {
     var zoom_out_button = $('#'+zoomOutButtonID);
     zoom_out_button.click(function() {
         self.zoom(true);  // true indicates zoom out
+    });
+
+    // Button listeners for deleting an audio segment
+    var deleteSegmentButton = $('#'+deleteSegmentButtonID);
+    deleteSegmentButton.click(function() {
+        // For each track, remove the segments that have focus
+        for (var i = 0; i < trackControllers.length; i++) {
+            trackControllers[i].removeFocusedSegments(); 
+        };
     });
 
     // Draw the view

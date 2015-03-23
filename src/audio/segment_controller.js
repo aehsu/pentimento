@@ -14,6 +14,7 @@ var AudioSegmentController = function(segment, trackController) {
     var handleClass = "segment_handle";
     var wavesurferContainerID = null;  // wavesurfer is drawn in this container in the segment
     var wavesurferContainerClass = "wavesurfer_container";
+    var focusClass = "focus";
     var playbackTimeoutID = -1;  // Timeout ID for delayed playback (-1 is null)
     var wavesurfer = null;  // wavesurfer to play audio
 
@@ -163,6 +164,13 @@ var AudioSegmentController = function(segment, trackController) {
         jqParent.append(new_segment);
         new_segment.append(new_handle);
         new_segment.append(ws_container);
+
+        // Add the click method to give focus on segments
+        new_segment.click(function() {
+            // Remove focus on all segments
+            $("."+segmentClass).removeClass(focusClass);
+            new_segment.addClass(focusClass);
+        });
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped

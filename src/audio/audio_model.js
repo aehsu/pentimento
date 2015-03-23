@@ -44,9 +44,18 @@ pentimento.audio_track = function() {
         return null;
     };
 
-    // Remove the specified segment
-    this.removeSegment = function() {
-        // TODO
+    // Remove the specified segment. 
+    // Returns true if the segment was removed.
+    this.removeSegment = function(segment) {
+        // Find the index of the segment to be removed
+        var index = this.audio_segments.indexOf(segment);
+
+        // Remove the segment from the segments array if it exists
+        if (index > -1) {
+            this.audio_segments.splice(index, 1);
+        };
+
+        return (index > -1);
     };
 
     // Returns whether the specified segment can be shifted to the left or right

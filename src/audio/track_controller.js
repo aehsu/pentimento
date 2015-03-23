@@ -12,6 +12,7 @@ var AudioTrackController = function(track, audioController) {
     var isPlayingBack = false;  // Indicates playback status
     var trackID = null;  // HTML ID used to identify the track
     var trackClass = "audio_track";
+    var focusClass = "focus";  // Class added to elements with focus
     var cropSide = null;  // 'w' for left sied, 'e' for right side. Set at the beginning of each crop
     var prevCropPositionLeft = 0;  // Used to keep track of the previous position of the left side when cropping.
 
@@ -40,6 +41,8 @@ var AudioTrackController = function(track, audioController) {
     this.getLength = function() {
         return audioTrack.endTime();
     };
+
+    // Get all the segment controllers
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -148,13 +151,27 @@ var AudioTrackController = function(track, audioController) {
         this.refreshView();
     };
 
+    // Remove all segments that have focus
+    this.removeFocusedSegments = function() {
+        // Find the segments that have focus, and removes them from the model
+        // and also deletes their controllers
+        for (var i = 0; i < segmentControllers.length; i++) {
+            // Focused segments have the segmentFocusClass
+            if ( $('#'+segmentControllers[i].getID()).hasClass(focusClass) ) {
+                this.removeSegment(segmentControllers[i].getAudioSegment());
+            };
+        };
+        // Refresh the view to load any changes
+        // TODO: maybe not necessary
+    };
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
 
-    // Insert a new segment controller with the provided segment and return the new controller
-    this.insertSegmentController = function(newSegment) {
+    // Insert a new segment into the track
+    this.insertSegment = function(newSegment) {
         // Insert the segment into the model and keep track of the segments
         // that might have been created from the split.
         var newSplitSegments = audioTrack.insertSegment(newSegment);
@@ -164,17 +181,29 @@ var AudioTrackController = function(track, audioController) {
         segmentControllers.push(newController);
         // Draw the new controller
         newController.draw($('#'+trackID));
-        return newController;
     };
 
-    // Remove a track controller and its track
-    this.removeSegmentController = function(segmentController) {
-        // If the current controller is the recording controller,
-        // set another controller to be recording.
+    // Remove a segment from the track. Also removes its segment controller.
+    this.removeSegment = function(segment) {
+        // Removes the segment from the model
+        audioTrack.removeSegment(segment);
+
+        // Removes the segment controller from the track controller
+        // Find the index of the segment controller to be removed.
+        for (var i = 0; i < segmentControllers.length; i++) {
+            if (segmentControllers[i].getAudioSegment() === segment) {
+                // Remove the element from the DOM
+                $('#'+segmentControllers[i].getID()).remove();
+
+                // Remove the segment controller from the segment controllers array
+                segmentControllers.splice(i, 1);
+
+                break;
+            };
+        };
     };
 
     // Start the playback of the track at the specified time interval
-    // TODO: this is in audio time right now. It needs to be converted to segment time offets from segment start probably.
     // Stops the previous playback if there is on currently going.
     // The time is specified in milliseconds. If the end time is not specified,
     // playback goes until the end of the track.
