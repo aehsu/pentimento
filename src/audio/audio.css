@@ -132,16 +132,35 @@ div.wavesurfer_container {
 
 wave canvas {
     border-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-.ui-draggable-dragging {
+.audio_segment.ui-draggable {
+    margin: 0;
+    padding: 0;
+}
+
+.audio_segment.ui-draggable-dragging {
     /*box-shadow: 0 0 3px #515151;*/
     box-shadow: 8px 10px 24px 0px rgba(0,0,0,0.75);
+    margin: 0;
+    padding: 0;
+}
+
+.audio_segment.ui-resizable {
+    margin: 0;
+    padding: 0;
+}
+
+.audio_segment.ui-resizable-resizing {
+    margin: 0;
+    padding: 0;
 }
 
 .ui-resizable-handle {
     height: 100%;
-    width: 5px;
+    width: 8px;
     position: absolute;
     font-size: 0.1px;
 }
@@ -150,6 +169,4 @@ wave canvas {
 }
 .ui-resizable-e {
     cursor: e-resize;
-    top:0px;
-    right: -5px;
 }

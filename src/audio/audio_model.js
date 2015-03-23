@@ -236,7 +236,7 @@ pentimento.audio_track = function() {
 	// The anchor point is the left hand side.
 	// Other segments to the right will be shifted as a result.
 	this.scale_segment = function(segment, scale_factor) {
-
+        // TODO
 	};
 
     // Get the end time of the track in milliseconds

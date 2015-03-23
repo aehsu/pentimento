@@ -215,7 +215,6 @@ var AudioSegmentController = function(segment, trackController) {
 
         // Setup the dragging and resizing on audio segment
         new_segment.draggable({
-            preventCollision: true,
             containment: 'parent',
             snap: "."+segmentClass,
             snapMode: "outer",
@@ -234,8 +233,10 @@ var AudioSegmentController = function(segment, trackController) {
                 parentTrackController.segmentDragFinish(event, ui, self);
             }
         }).resizable({
+            containment: 'parent',
             handles: "e, w",
-            minWidth: 1,
+            distance: 0,
+            minWidth: 10,
             start: function( event, ui) {
                 parentTrackController.segmentCropStart(event, ui, self);
             },

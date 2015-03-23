@@ -13,8 +13,9 @@ var AudioTrackController = function(track, audioController) {
     var trackID = null;  // HTML ID used to identify the track
     var trackClass = "audio_track";
     var focusClass = "focus";  // Class added to elements with focus
-    var lastValidPositionLeft = -1;  // Used to keep track of the last valid position when dragging or cropping.
-    var cropSide = null;  // 'w' for left sied, 'e' for right side. Set at the beginning of each crop
+    var lastValidPositionLeft = -1;  // Used to keep track of the last valid segment position when dragging or cropping.
+    var lastValidWidth = -1;  // Used to keep track of the last valid segment width when cropping.
+    var cropLeftSide = null;  // true if the left side is being cropped. Set at the beginning of each crop
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -100,10 +101,11 @@ var AudioTrackController = function(track, audioController) {
     this.segmentCropStart = function(event, ui, segmentController) {
 
         // Figure out whether the left or right side is being cropped by looking at the class of the element
-        cropSide = event.toElement.classList.contains("ui-resizable-w") ? 'w' : 'e';
+        cropLeftSide = event.toElement.classList.contains("ui-resizable-w");
 
-        // Keep track of the previous position
+        // Keep track of the last valid position and size
         lastValidPositionLeft = ui.originalPosition.left;
+        lastValidWidth = ui.originalSize.width;
     };
 
     // Callback for when the segment UI div is being cropped.
@@ -112,35 +114,32 @@ var AudioTrackController = function(track, audioController) {
     this.segmentCropping = function(event, ui, segmentController) {
         var audioSegment = segmentController.getAudioSegment();
 
-        // Figure out whether the left or right side is being cropped
-        var leftSide = (cropSide === 'w');
-
         // Crop amount should be positive if expanding, and negative if contracting
         var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
-        var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, leftSide);
+        var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, cropLeftSide);
+        console.log("cropMilli: " + cropMilli);
+        console.log("cropResult: " + cropResult);
 
-        // If the crop was valid, set the cropResult to the original value because it needs to be added to the length
-        // for adjusting the UI
+        // If the crop was valid, then update the last valid position and size.
+        // Also update the wavesurfer container view to appear consistent with the crop
         if (cropResult === true) {
-            cropResult = cropMilli;
+
+            // Shift the wavesurfer container so that the wavesurfer is not moving along with the crop.
+            segmentController.shiftWavesurferContainer(lastValidPositionLeft - ui.position.left);
+
+            // Update the last valid position and size to the current UI parameters
+            lastValidPositionLeft = ui.position.left;
+            lastValidWidth = ui.size.width;
+                    // // Recalculate the size and position based on the new segment size
+        // ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
+        // ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack());
+        }
+        // Else, reset the position and size to the last valid parameters
+        else {
+            ui.position.left = lastValidPositionLeft;
+            ui.size.width = lastValidWidth;
         };
 
-        // If the crop result is not valid number, then it is an error
-        if(typeof cropResult !== "number") {
-            console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
-        };
-
-        // Update the position according to the model.
-        // Account for the shift and change in size due to the possible crop.
-        var leftShift = leftSide ? -cropResult : 0;
-        ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time + leftShift);
-        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack() + cropResult);
-
-        // Also shift the wavesurfer container so that the wavesurfer is not moving along with the crop.
-        segmentController.shiftWavesurferContainer(lastValidPositionLeft - ui.position.left);
-
-        // Keep track of the previous position
-        lastValidPositionLeft = ui.position.left;
     };
 
     // Callback for when the segment UI div has finished being cropped.
@@ -149,39 +148,25 @@ var AudioTrackController = function(track, audioController) {
     this.segmentCropFinish = function(event, ui, segmentController) {
         var audioSegment = segmentController.getAudioSegment();
 
-        // Figure out whether the left or right side is being cropped
-        var leftSide = (cropSide === 'w');
-
         // Crop amount should be positive if expanding, and negative if contracting
         var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
 
-        // Crop should be tested first
-        var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, leftSide);
-
-        // If the crop was valid, set the cropResult to the original value to be used in the actual cropping
-        if (cropResult === true) {
-            cropResult = cropMilli;
-        };
-
-        // If the crop result is not valid, then it is an error
-        if(typeof cropResult !== "number") {
-            console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
-        };
-
         // Perform the actual crop
-        cropResult = audioTrack.cropSegment(audioSegment, cropResult, leftSide);
+        cropResult = audioTrack.cropSegment(audioSegment, cropMilli, cropLeftSide);
 
         // If the crop result is not valid, then it is an error
         if (cropResult !== true) {
             console.error("Crop error (" + (typeof cropResult) + "): " + cropResult);
         };
 
-        // Recalculate the size and position based on the new segment size
-        ui.position.left = parentAudioController.millisecondsToPixels(audioSegment.start_time);
-        ui.size.width = parentAudioController.millisecondsToPixels(audioSegment.lengthInTrack());
-
-        // Refresh the view to accurately display the latest positions
+        // Update the view so that it is consistent with the actual crop.
+        // This is necessary due to strange behavior with jQuery resizeable.
         this.refreshView();
+
+        // Reset the value of the last valid position, size, and crop side
+        lastValidPositionLeft = -1;
+        lastValidWidth = -1;
+        cropLeftSide = null;
     };
 
     // Remove all segments that have focus
