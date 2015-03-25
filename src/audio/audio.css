@@ -49,6 +49,8 @@
 
 #gradation_container {
     position: absolute;
+    top: 0;
+    left: 0;
     margin: 0;
     padding: 0;
 }
@@ -84,7 +86,7 @@ div.audio_segment {
     float: left;
     box-shadow: 0;
     transition: box-shadow .15s;
-    height: 140px;
+    height: 100%;
     overflow: hidden;
     margin: 0;
     padding: 0;

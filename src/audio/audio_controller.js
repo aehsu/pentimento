@@ -8,8 +8,7 @@ var AudioController = function() {
     var self = this;
 
     // Audio model containig the audio data
-    // public only for debugging purposes
-    this.audioModel = null;
+    audioModel = null;
 
     // Controllers for each of the audio tracks. Each controller handles all the MVC
     // responsibilities for that particular track. The recording controller is the
@@ -55,9 +54,18 @@ var AudioController = function() {
     // The scale factor when zooming on the timeline
     var timeline_zoom_factor = 1.5;
 
+    // The minumum timeline display length in seconds
+    var minumum_timeline_seconds = 100;
+
     // Interval durations for events and animations in milliseconds
     var playheadAnimationIntervalDuration = 10;
 
+    // Size and layout values used for calculations (pixels)
+    // These should match with any identical defined values in audio.css
+    var audio_track_height = 140;  // div.audio_track{height} div.audio
+    var audio_track_spacing = 20;  // Spacing between audio tracks TODO: incorporate this into adding tracks
+    var flotGraphMargin = 20;
+    var flotGraphBorder = 1;
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM object IDs and classes
@@ -96,7 +104,7 @@ var AudioController = function() {
 
     // Insert a new track controller with an empty track and return the new controller
     var createTrackController = function() {
-        var newTrack = self.audioModel.createTrack();
+        var newTrack = audioModel.createTrack();
         var newController = new AudioTrackController(newTrack, self);
         if (recordingTrackController === null) {
             recordingTrackController = newController;
@@ -296,24 +304,28 @@ var AudioController = function() {
 
     // Refresh the gradation container to account for changes in the zoom scale.
     var refreshGradations = function() {
-        // TODO: incorporate the changes from zoom into this function, which should be called from refresh and draw
-        flotPlot.resize();
-        flotPlot.setupGrid();
-        flotPlot.draw();
-    };
+        var gradation_container = $('#'+gradationContainerID);
 
-    // Draw the graduation marks on the timeline
-    var drawGradations = function() { 
-        var timeline = $('#' + timelineID);
-        var gradation_scroll_parent = $('<div></div>');
-        var gradation_container = $('<div></div>');
+        // Figure out how many seconds to display in the timeline.
+        // This should be twice as long as the longest track, or at least 100 seconds.
+        var longestTrackLength = 0;
+        for (var i = 0; i < trackControllers.length; i++) {
+            longestTrackLength = Math.max(trackControllers[i].getLength(), longestTrackLength);
+        };
+        var timelineLengthSeconds = Math.max(2*longestTrackLength/1000, minumum_timeline_seconds);
+        console.log("timelineLengthSeconds: " + timelineLengthSeconds);
 
-        gradation_container.attr('id', gradationContainerID)
-            .css('width', timeline.width())
-            .css('height', timeline.height())
-            .css('position', "absolute");
-        timeline.append(gradation_container);
+        // Set the width of the gradations container so that it can fit the entire range of timelineLengthSeconds.
+        // Set the height of the gradations container so that it can fit all the current tracks, with a minimum height of two tracks.
+        // Plus the margin and border widths (2 each).
+        var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
+        var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
+        var heightPixels = (Math.max(audioModel.audio_tracks, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
+        gradation_container.width(widthPixels);
+        gradation_container.height(heightPixels);
 
+        // Options for initializing flot
+        // The range of the plot is set to timelineLengthSeconds
         var options = {
             series: {
                 lines: { show: false },
@@ -324,29 +336,43 @@ var AudioController = function() {
             },
             xaxis: {
                 min: 0, // Min and Max refer to the range
-                max: 100,
+                max: timelineLengthSeconds,
                 tickFormatter: tickFormatter,
                 labelHeight: 10,
             },
             grid: {
                 // hoverable: true
                 margin: {
-                top: 20,
-                left: 20,
-                bottom: 20,
-                right: 20
+                top: flotGraphMargin,
+                left: flotGraphMargin,
+                bottom: flotGraphMargin,
+                right: flotGraphMargin
                 },
                 minBorderMargin: 0,
-                borderWidth: 1,
+                borderWidth: flotGraphBorder,
                 labelMargin: 10,
             }
         };
 
-        // Dummy data
-        var plot_data = [ [0, 0], [0, 10] ];
+        // Dummy data just for initiating the flot.
+        var plot_data = [ [0, 0], [0, timelineLengthSeconds] ];
 
         // Use flot to draw the graduations
         flotPlot = $.plot(gradation_container, plot_data, options);
+
+        // Resize flot to fit the parent container
+        flotPlot.resize();
+        flotPlot.setupGrid();
+        flotPlot.draw();
+    };
+
+    // Draw the graduation marks on the timeline
+    var drawGradations = function() { 
+        var timeline = $('#' + timelineID);
+        var gradation_scroll_parent = $('<div></div>');
+        var gradation_container = $('<div></div>');
+        gradation_container.attr('id', gradationContainerID);
+        timeline.append(gradation_container);
 
         // Refresh parameters
         refreshGradations();
@@ -407,11 +433,6 @@ var AudioController = function() {
             newPixelsPerSec > timeline_max_pixels_per_sec) {
             return;
         };
-
-        // Update the size of the gradations container and tracks container
-        // TODO: should be moved to refresh view with another parameter to set the size
-        var gradation_container = $('#'+gradationContainerID);
-        gradation_container.width(gradation_container.width() / zoomFactor);
 
         // Update the measurement for pixels per second
         timeline_pixels_per_sec = newPixelsPerSec;       
@@ -481,7 +502,7 @@ var AudioController = function() {
     // Should only be called after the document is ready
 
     // Create a new audio model
-    this.audioModel = new pentimento.audio_model();
+    audioModel = new pentimento.audio_model();
 
     // RecordRTC setup
     navigator.getUserMedia(
