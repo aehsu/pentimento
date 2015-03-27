@@ -43,7 +43,10 @@ var AudioTrackController = function(track, audioController) {
         return audioTrack.endTime();
     };
 
-    // Get all the segment controllers
+    // Get the audio track
+    this.getAudioTrack = function() {
+        return audioTrack;
+    };
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -194,8 +197,6 @@ var AudioTrackController = function(track, audioController) {
         // that might have been created from the split.
         var newSplitSegments = audioTrack.insertSegment(newSegment);
         var newController = new AudioSegmentController(newSegment, self);
-        newController.track
-        // TODO: handle the new split segments
         segmentControllers.push(newController);
         // Draw the new controller
         newController.draw($('#'+trackID));

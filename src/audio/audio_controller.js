@@ -11,10 +11,10 @@ var AudioController = function() {
     audioModel = null;
 
     // Controllers for each of the audio tracks. Each controller handles all the MVC
-    // responsibilities for that particular track. The recording controller is the
-    // active controller for recording new segments into.
+    // responsibilities for that particular track. The active controller is the
+    // track controller for recording new segments into.
     var trackControllers = [];
-    var recordingTrackController = null;
+    var activeTrackController = null;
 
     // RecordRTC is used to record the audio stream
     var recordRTC = null;
@@ -96,30 +96,74 @@ var AudioController = function() {
     var zoomInButtonID = 'zoom_in_button';
     var zoomOutButtonID = 'zoom_out_button';
     var deleteSegmentButtonID = 'delete_segment_button';
+    var insertTrackButtonID = 'insert_track_button';
+    var deleteTrackButtonID = 'delete_track_button';
+    var trackSelectID = 'track_select';
 
 
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
 
-    // Insert a new track controller with an empty track and return the new controller
+    // Insert a new track controller with an empty track and refresh the view
     var createTrackController = function() {
         var newTrack = audioModel.createTrack();
         var newController = new AudioTrackController(newTrack, self);
-        if (recordingTrackController === null) {
-            recordingTrackController = newController;
+        if (activeTrackController === null) {
+            activeTrackController = newController;
         };
         trackControllers.push(newController);
         // Draw the new controller
         newController.draw($('#'+tracksContainerID));
-        return newController;
+        
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
     };
 
-    // Remove a track controller and its track
+    // Remove a track controller and its track and refresh the view
     var removeTrackController = function(trackController) {
-        // If the current controller is the recording controller,
-        // set another controller to be recording.
-        // TODO
+        // Check that the controller exists in the array of track controllers
+        var index = trackControllers.indexOf(trackController);
+        if (index < 0) {
+            return;
+        };
+
+        // If the current controller is the active controller, set a new active
+        if (trackController === activeTrackController) {
+            for (var i = 0; i < trackControllers.length; i++) {
+                // Set a controller to active if it is not the controller being deleted
+                if (trackControllers[i] !== trackController) {
+                    activeTrackController = trackControllers[i];
+                    break;
+                };
+                
+            };
+        };
+
+        // Delete the track from the model
+        audioModel.removeTrack(trackController.getAudioTrack());
+
+        // Remove the track controller fro the array of controllers
+        trackControllers.splice(index, 1);
+
+        // Remove the element from the DOM
+        $('#'+trackController.getID()).remove();
+
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
+    };
+
+    var changeActiveTrackController = function(trackController) {
+        // Make sure the track controller is in the list of track controllers
+        if (trackControllers.indexOf(trackController) < 0) {
+            console.log('new active track controller not in list of track controllers');
+            return;
+        };
+
+        activeTrackController = trackController;
+
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
     };
 
     // Start recording the audio at the lecture time
@@ -130,7 +174,7 @@ var AudioController = function() {
 
         // Insert an audio track controller if there isn't one yet. 
         // This also makes it the recording track controller
-        if (recordingTrackController === null) {
+        if (activeTrackController === null) {
             console.log('creating new recording track controller');
             createTrackController();
         };
@@ -160,7 +204,7 @@ var AudioController = function() {
                                                     lectureBeginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
-            recordingTrackController.insertSegment(segment);
+            activeTrackController.insertSegment(segment);
 
             // Increment the lecture time by the length of the audio recording
             // TODO remove this, this should be set by the playhead instead
@@ -320,9 +364,9 @@ var AudioController = function() {
         // Plus the margin and border widths (2 each).
         var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
         var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
-        var heightPixels = (Math.max(audioModel.audio_tracks, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
-        gradation_container.width(widthPixels);
-        gradation_container.height(heightPixels);
+        var heightPixels = (Math.max(audioModel.audio_tracks.length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
+        gradation_container.css('width', widthPixels);
+        gradation_container.css('height', heightPixels);
 
         // Options for initializing flot
         // The range of the plot is set to timelineLengthSeconds
@@ -450,6 +494,8 @@ var AudioController = function() {
         // Refresh each of the tracks
         for (var i = 0; i < trackControllers.length; i++) {
             trackControllers[i].refreshView();
+            // Offset the top of the track by the size of the other tracks before it
+            $('#'+trackControllers[i].getID()).css('top', i * (audio_track_height + audio_track_spacing));
         };
 
         // Refresh the gradations
@@ -457,6 +503,18 @@ var AudioController = function() {
 
         // Refresh the tracks container
         refreshTracksContainer();
+
+        // Update the number of tracks in the track selector by appending the options
+        var trackSelect = $('#'+trackSelectID);
+        trackSelect.html('');
+        for (var i = 0; i < trackControllers.length; i++) {
+            var option = $('<option value="'+(i+1)+'">'+(i+1)+'</option>');
+            trackSelect.append(option);
+            // If the current track option is active, select it to be selected.
+            if (trackControllers[i] === activeTrackController) {
+                trackSelect.val(i+1);
+            };
+        };
     };
 
     // Draws all parts of the timeline into the page.
@@ -471,7 +529,6 @@ var AudioController = function() {
             // Clear the existing audio timeline
             $('#'+timelineID).html("");
         }
-
 
         // Draw gradations into the timeline
         drawGradations();
@@ -568,9 +625,26 @@ var AudioController = function() {
         };
     });
 
+    // Listeners for inserting and deleting a track
+    var insertTrackButton = $('#'+insertTrackButtonID);
+    insertTrackButton.click(function() {
+        createTrackController();
+    });
+    var deleteTrackButton = $('#'+deleteTrackButtonID);
+    deleteTrackButton.click(function() {
+        removeTrackController(activeTrackController);
+    });
+
+    // Selected the active track
+    var trackSelect = $('#'+trackSelectID);
+    trackSelect.change(function() {
+        var newActiveTrackIndex = (parseInt(trackSelect.val()) - 1);
+        console.log("new active track index: " + newActiveTrackIndex );
+        changeActiveTrackController(trackControllers[newActiveTrackIndex]);
+    });
+
     // Draw the view
     this.draw();
-
 };
 
 

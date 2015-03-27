@@ -146,8 +146,7 @@ var AudioSegmentController = function(segment, trackController) {
                 'height': jqWaveContainer.css('height')
                 });
 
-        // Update the parameters of wavesurfer
-        // TODO!!!
+        // Update the wavesurfer by reloading the existing audio resource
         wavesurfer.load(audioSegment.audioResource());
     };
 

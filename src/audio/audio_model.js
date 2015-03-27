@@ -13,7 +13,15 @@ pentimento.audio_model = function() {
 
     // Remove the specified audio track
     this.removeTrack = function(track) {
+        // Find the index of the track to be removed
+        var index = this.audio_tracks.indexOf(track);
 
+        // Remove the track from the tracks array if it exists
+        if (index > -1) {
+            this.audio_tracks.splice(index, 1);
+        };
+
+        return (index > -1);
     };
 };
 
@@ -22,9 +30,8 @@ pentimento.audio_track = function() {
 
 	this.audio_segments = [];
 
-    // Insert the provided segment and return an array of new segments created
-    // due to the insertion (can happen if the insert splits a segment).
-    // Returns null if there are no new segments.
+    // Insert the provided segment.
+    // Other segments in the track may be shifted as a result.
     this.insertSegment = function(newSegment) {
 
         // Iterate over all segments for the track
@@ -39,9 +46,6 @@ pentimento.audio_track = function() {
 
         // Insert the segment
         this.audio_segments.push(newSegment);
-
-        // TODO: handle if the insertion splits an existing segment
-        return null;
     };
 
     // Remove the specified segment. 
