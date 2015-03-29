@@ -26,16 +26,16 @@ var AudioController = function() {
     var mouseX = null;
     var mouseY = null;
 
-    // begin_record_time is the global time when the recording was started
+    // global_begin_record_time_utc is the global UTC time when the recording was started
     // The time is in milliseconds UTC
     // -1 indicates that there is no recording in progress
-    var begin_record_time = -1;
+    var global_begin_record_time_utc = -1;
 
-    // lecture time when the recording began in milliseconds
-    var lectureBeginRecordTime = 0;
+    // Track time when the recording began in milliseconds
+    var beginRecordTime = 0;
 
-    // Playhead values (the thing which indicates the current location in playback)
-    var playheadLectureTime = 0;  // The current location of the playhead in lecture time
+      // The current location of the playhead in track time (milliseconds)
+    var playheadTime = 0;
 
     // Keep track of the playback status
     var isPlayingBack = false;
@@ -63,7 +63,7 @@ var AudioController = function() {
     // Size and layout values used for calculations (pixels)
     // These should match with any identical defined values in audio.css
     var audio_track_height = 140;  // div.audio_track{height} div.audio
-    var audio_track_spacing = 20;  // Spacing between audio tracks TODO: incorporate this into adding tracks
+    var audio_track_spacing = 20;  // Spacing between audio tracks
     var flotGraphMargin = 20;
     var flotGraphBorder = 1;
 
@@ -75,7 +75,7 @@ var AudioController = function() {
     // Allows scrolling to accomodate changing timeline scales.
     var timelineID = 'audio_timeline';  
 
-    // TODO
+    // Cursor indicating mouse position
     var timelineCursorID = 'audio_timeline_cursor';
 
     // audio tracks display, contained by audio_timeline
@@ -166,11 +166,11 @@ var AudioController = function() {
         self.refreshView();
     };
 
-    // Start recording the audio at the lecture time
+    // Start recording the audio at the current time (playhead location)
     this.begin_recording = function() {
 
         // Stop playback if it is in progress
-        this.stopPlayback();
+        self.stopPlayback();
 
         // Insert an audio track controller if there isn't one yet. 
         // This also makes it the recording track controller
@@ -179,8 +179,8 @@ var AudioController = function() {
             createTrackController();
         };
 
-        begin_record_time = globalTime();
-        console.log("begin audio recording at " + begin_record_time);
+        global_begin_record_time_utc = globalTime();
+        console.log("begin audio recording at (global utc time) " + global_begin_record_time_utc);
         recordRTC.startRecording();
 
         // TODO: Add an indicator in the selected track to show the duration of the recording
@@ -188,27 +188,25 @@ var AudioController = function() {
 
     // End the recording (only applies if there is an ongoing recording)
     this.end_recording = function() {
-        var end_record_time = globalTime();
-        console.log("end audio recording at " + end_record_time);
+        var global_end_record_time_utc = globalTime();
+        console.log("end audio recording at (global utc time) " + global_end_record_time_utc);
 
         // Stop the recordRTC instance and use the callback to save the track
         recordRTC.stopRecording(function(audioURL) {
-           console.log(audioURL);
-            
-            // Get information about the recording audio track from looking at the lecture state
-            var audio_duration = end_record_time - begin_record_time;
+            console.log(audioURL);            
+            var audio_duration = global_end_record_time_utc - global_begin_record_time_utc;
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL,audio_duration,lectureBeginRecordTime,
-                                                    lectureBeginRecordTime+audio_duration);
+            var segment = new pentimento.audio_segment(audioURL, audio_duration, beginRecordTime,
+                                                    beginRecordTime+audio_duration);
             console.log("new audio segment:");
             console.log(segment);
             activeTrackController.insertSegment(segment);
 
             // Increment the lecture time by the length of the audio recording
             // TODO remove this, this should be set by the playhead instead
-            lectureBeginRecordTime += audio_duration;
+            beginRecordTime += audio_duration;
 
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
@@ -216,14 +214,14 @@ var AudioController = function() {
         });
 
         // Refresh the audio display
-        this.refreshView();
+        self.refreshView();
 
         // Update the retimer view
         // console.log("updating retimer");
         // window.retimer_window.displayAudio();
 
-        // Reset the begin_record_time, which is used to indicate the recording status
-        begin_record_time = -1;
+        // Reset the global_begin_record_time_utc, which is used to indicate the recording status
+        global_begin_record_time_utc = -1;
     };
 
     // Start the playback at the current playhead location
@@ -239,16 +237,16 @@ var AudioController = function() {
         // Update the button display
         $('#'+playPauseButtonID).html('Stop Audio');
 
-        // Find the lecture time when the playback should end
+        // Find the track time when the playback should end
         // Get the greatest end time in all of the tracks
-        var playbackLectureEndTime = -1;
+        var playbackEndTime = -1;
         for (var i = 0; i < trackControllers.length; i++) {
-            playbackLectureEndTime = Math.max(playbackLectureEndTime, trackControllers[i].getLength());
+            playbackEndTime = Math.max(playbackEndTime, trackControllers[i].getLength());
         };
 
         // Calculate the duration of the playback and the end location in pixels
-        var playbackDuration = playbackLectureEndTime-playheadLectureTime;
-        var playbackEndPixel = this.millisecondsToPixels(playbackLectureEndTime);
+        var playbackDuration = playbackEndTime-playheadTime;
+        var playbackEndPixel = self.millisecondsToPixels(playbackEndTime);
 
         // Start the playhead animation and update the playhead time at each interval
         // Call the stopPlayback method when finished
@@ -261,7 +259,7 @@ var AudioController = function() {
         // Start the track playback for each track controller
         for (var i = 0; i < trackControllers.length; i++) {
             var trackController = trackControllers[i];
-            trackController.startPlayback(playheadLectureTime, playbackLectureEndTime);
+            trackController.startPlayback(playheadTime, playbackEndTime);
         };
     };
 
@@ -286,6 +284,21 @@ var AudioController = function() {
             var trackController = trackControllers[i];
             trackController.stopPlayback();
         };
+    };
+
+    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
+    // Callback method
+    this.updatePlayheadTime = function(timeMilli) {
+        // Check the time for valid bounds
+        if (timeMilli < 0) {
+            return;
+        };
+
+        // Update the value of the playhead
+        playheadTime = timeMilli;
+
+        // Refresh the playhead position
+        refreshPlayhead();
     };
 
 
@@ -422,11 +435,11 @@ var AudioController = function() {
         refreshGradations();
     };
 
-    // Function to update the playhead lecture time during dragging or play
-    // Callback method
-    var updatePlayheadTime = function() {
-        var playhead = $('#'+playheadID);
-        playheadLectureTime = self.pixelsToMilliseconds(playhead.position().left);
+    // Refresh the playhead position
+    var refreshPlayhead = function() {
+        var jqPlayhead = $('#'+playheadID);
+        console.log("playheadTime: " + playheadTime);
+        jqPlayhead.css('left', self.millisecondsToPixels(playheadTime));
     };
 
     // draw the playhead for showing playback location
@@ -438,9 +451,13 @@ var AudioController = function() {
         // Set the playhead to be draggable in the x-axis within the tracksContainer
         playhead.draggable({ axis: "x",
                             containment: '#'+tracksContainerID,
-                            drag: updatePlayheadTime,
-                            start: updatePlayheadTime,
-                            stop: updatePlayheadTime});      
+                            drag: function() {
+                                self.updatePlayheadTime(self.pixelsToMilliseconds($('#'+playheadID).position().left));
+                            }
+                        });      
+
+        // Refreshe the playhead to update the position
+        refreshPlayhead();
     };
 
     // create cursor object for tracking mouse location
@@ -483,7 +500,7 @@ var AudioController = function() {
 
         // Refreshing will update the size of the segments and wavesurfers
         // as well as the gradations.
-        this.refreshView();
+        self.refreshView();
     };
 
     // Refreshes the view to reflect changes in the audio model.
@@ -500,6 +517,9 @@ var AudioController = function() {
 
         // Refresh the gradations
         refreshGradations();
+
+        // Refresh the playhead
+        refreshPlayhead();
 
         // Refresh the tracks container
         refreshTracksContainer();
@@ -547,7 +567,7 @@ var AudioController = function() {
         drawPlayhead();
 
         // Refresh the view
-        this.refreshView();
+        self.refreshView();
     };
 
 
@@ -592,7 +612,7 @@ var AudioController = function() {
     // Button listener to record or stop the current recording
     var record_audio_button = $('#'+recordAudioButtonID);
     record_audio_button.click(function() {
-        var isRecording = begin_record_time > 0;
+        var isRecording = global_begin_record_time_utc > 0;
 
         // Change the button text depending on the record status
         record_audio_button.html(isRecording ? 'Record': 'Stop');
@@ -644,7 +664,7 @@ var AudioController = function() {
     });
 
     // Draw the view
-    this.draw();
+    self.draw();
 };
 
 

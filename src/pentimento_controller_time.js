@@ -1,8 +1,23 @@
 pentimento.timeController = new function() {
-    var state = pentimento.state; //reference
     var self = this;
+    var state = pentimento.state; //reference
     var interval;
     var lastTimeUpdate;
+
+    // Updates audio and video time
+    // Updates specific to either the audio or visuals should be updated in their respective functions.
+    this.updateTime = function(time) {
+
+        // Updates video time only when video is active
+        if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
+            self.updateVideoTime(time);
+        };
+
+        // Updates audio time only when audio is active
+        if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) {
+            self.updateAudioTime(time);
+        };
+    };
     
     this.stopRecording = function(endTime) {
 
@@ -15,19 +30,14 @@ pentimento.timeController = new function() {
         });
 
         var type = state.recordingType;
-        if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
-            self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate));
-            updateVisuals(false);
-            drawThumbnails();
-        }
-        if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.videoCursor + (endTime - lastTimeUpdate)); }
+
         lastTimeUpdate = null;
 
         var tickerTime = $('#ticker').val();
         console.log('tickerTimeEnd: ' + tickerTime);
         var tickerSplit = tickerTime.split(/[.|:]/g);
         var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
-        window.retimer_window.$('#thumbnails_div').data('endrecord', tickerTimeMS);
+        // window.retimer_window.$('#thumbnails_div').data('endrecord', tickerTimeMS);
 
     }
 
@@ -63,7 +73,7 @@ pentimento.timeController = new function() {
         var tickerTime = $('#ticker').val();
         var tickerSplit = tickerTime.split(/[.|:]/g);
         var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
-        window.retimer_window.$('#thumbnails_div').data('beginrecord', tickerTimeMS);
+        // window.retimer_window.$('#thumbnails_div').data('beginrecord', tickerTimeMS);
 
         $('#slider').slider("option", {
             disabled: true
@@ -75,8 +85,7 @@ pentimento.timeController = new function() {
             var gt = globalTime();
             if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
                 self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate));
-                updateVisuals(false);
-                drawThumbnails();
+
             }
             if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) {
                 self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate));
@@ -85,19 +94,22 @@ pentimento.timeController = new function() {
         }, INTERVAL_TIMING);
     }
 
-    this.updateAudioTime = function(time) {
+    var updateAudioTime = function(timeMilli) {
+        pentimento.audioController.updatePlayheadTime(timeMilli);
     }
 
-    this.updateVideoTime = function(time) {
-        state.videoCursor = time;
-        updateTicker(time);
+    var updateVideoTime = function(timeMilli) {
+        state.videoCursor = timeMilli;
+        updateTicker(timeMilli);
         if(!state.isRecording) {
             $('#slider').slider('option', {
                 max: pentimento.lectureController.getLectureDuration()
             });
-            $('#slider').slider('value', time);
+            $('#slider').slider('value', timeMilli);
             pentimento.lectureController.setStateSlide(state.videoCursor);
         }
+        updateVisuals(false);
+        // drawThumbnails();
     }
 };
 
@@ -107,15 +119,18 @@ $(document).ready(function() {
         step:1,
         range: 'min',
         slide: function(event, ui) {
+            var timeMilli = ui.value;
             pentimento.state.selection = [];
-            pentimento.timeController.updateVideoTime(ui.value);
+            pentimento.timeController.updateVideoTime(timeMilli);
+            pentimento.timeController.updateAudioTime(timeMilli);
             updateVisuals(false);
-            drawThumbnails();
+            // drawThumbnails();
         },
         stop: function(event, ui) {
-            pentimento.timeController.updateVideoTime(ui.value);
+            var timeMilli = ui.value;
+            pentimento.timeController.updateVideoTime(timeMilli);
             updateVisuals(false);
-            drawThumbnails();
+            // drawThumbnails();
             // console.log("autoConstraint");
             // drawAutomaticConstraint(0, 0);
             // console.log("drawing?")

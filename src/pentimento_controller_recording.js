@@ -237,7 +237,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         dirtyVisuals = [];
         dirtyConstraints = [];
 
-        window.retimer_window.drawThumbnails(1000, 1);
+        // window.retimer_window.drawThumbnails(1000, 1);
         // window.retimer_window.extendRetimingConstraintsCanvas();
 	}
 };

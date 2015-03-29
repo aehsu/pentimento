@@ -102,7 +102,7 @@ function editToolHandler(tool, event) {
                 if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
                     pentimento.timeController.updateVideoTime(pentimento.state.videoCursor+INTERVAL_TIMING);
                     updateVisuals(false);
-                    drawThumbnails();
+                    
                 } else {
                     clearInterval(playInterval);
                     $('input[data-toolname="play"]').toggleClass('hidden');
@@ -126,21 +126,21 @@ function editToolHandler(tool, event) {
                 if (pentimento.state.isRecording) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
-                drawThumbnails();
+                  
                 editSelectMouseDown(event);
             });
             pentimento.state.canvas.mousemove(function(event) {
                 if (pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
-                drawThumbnails();
+                
                 editSelectMouseMove(event);
             });
             $(window).mouseup(function(event) {
                 if (pentimento.state.isRecording) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
-                drawThumbnails();
+                
                 editSelectMouseUp(event);
             });
             break;
@@ -152,7 +152,7 @@ function editToolHandler(tool, event) {
             pentimento.timeController.updateVideoTime(t);
             // pentimento.state.selection = []; //Richard says no!
             updateVisuals(false);
-            drawThumbnails();
+            
     		break;
         case 'redraw':
             um.startHierarchy(ActionGroups.EditGroup);
@@ -168,7 +168,7 @@ function editToolHandler(tool, event) {
             pentimento.lectureController.visualsController.editWidth(pentimento.state.selection, newWidth);
             um.endHierarchy(ActionGroups.EditGroup);
             updateVisuals(false);
-            drawThumbnails();
+            
             $('.edit-tool[data-toolname="width"]').val('');
             break;
         case 'delete-slide':
@@ -178,7 +178,7 @@ function editToolHandler(tool, event) {
             um.endHierarchy(ActionGroups.EditGroup);
             // pentimento.timeController.updateVideoTime(t);
             updateVisuals(false);
-            drawThumbnails();
+            
         case 'rewind':
             break;
     	case 'pan':
@@ -197,7 +197,7 @@ function recordingToolHandler(event) {
     var elt = $(event.target);
     pentimento.state.selection  = [];
     updateVisuals(false); //clear any selection when switching modes
-    drawThumbnails();
+    
     if (elt.attr('data-toolname')==='begin') {
         pentimento.state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz when audio comes into play
         pentimento.recordingController.beginRecording();
@@ -219,25 +219,25 @@ function umToolHandler(event) {
         var group = $(this).attr('data-group');
         um.undoHierarchy(group);
         updateVisuals(false);
-        drawThumbnails();
+        
     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
         if(!pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');
         um.undoHierarchy(group);
         updateVisuals(false);
-        drawThumbnails();
+        
     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
         if(pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals(false);
-        drawThumbnails();
+        
     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
         if(!pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals(false);
-        drawThumbnails();
+        
     }
     $(window).click(); //updates the state of the undo and redo buttons correctly
 }
