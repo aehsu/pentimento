@@ -658,7 +658,6 @@ var AudioController = function() {
     // Register callbacks with the time controller
     pentimento.timeController.addUpdateTimeCallback(self.updatePlayheadTime);
     pentimento.timeController.addBeginRecordingCallback(self.beginRecording);
-    pentimento.timeController.addUpdateRecordingTimeCallback(self.updatePlayheadTime);
     pentimento.timeController.addEndRecordingCallback(self.endRecording);
 
     // Button listener to start playing the audio

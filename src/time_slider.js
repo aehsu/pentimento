@@ -16,12 +16,6 @@ pentimento.time_slider_controller = new function() {
         });
     };
 
-    this.updateRecordingTimeCallback = function(time) {
-        updateTicker(time);
-        updateSlider(time);
-        updateCanvas(time);
-    };
-
     this.endRecordingCallback = function(beginTime, endTime) {
         updateTicker(endTime);
         updateSlider(endTime);
@@ -100,6 +94,5 @@ $(document).ready(function() {
     // Register callbacks with the time controller
     pentimento.timeController.addUpdateTimeCallback(pentimento.time_slider_controller.updateTimeCallback);
     pentimento.timeController.addBeginRecordingCallback(pentimento.time_slider_controller.beginRecordingCallback);
-    pentimento.timeController.addUpdateRecordingTimeCallback(pentimento.time_slider_controller.updateRecordingTimeCallback);
     pentimento.timeController.addEndRecordingCallback(pentimento.time_slider_controller.endRecordingCallback);
 });

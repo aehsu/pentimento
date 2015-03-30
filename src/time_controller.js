@@ -1,31 +1,45 @@
 // Manages the lecture time
-// Allows objects to register time update and recording status callbacks.
-// Allows objects to change the current time and begin/end recording.
+// Allows objects to register time update and recording/playback status callbacks.
+// Allows objects to change the current time and begin/end recording/playback.
 pentimento.timeController = new function() {
+
+    ////////////////////////////////////////////////////////
+    // Private member variables
+    ////////////////////////////////////////////////////////
+
     var self = this;
 
     // Keeps track of the current lecture time
     var currentTime = 0;
 
-    // When the recording began (lecture time)
-    var recordingBeginTime = -1;  // Set at the beginning of every recording
+    // When the last timer began (lecture time)
+    var lastBeginTime = -1;  // Set at the beginning of every recording or playback
 
-    // Keeps track of the last UTC global time to calculate time passed during recording
-    // -1 indicates that we are not recording
+    // Keeps track of the last UTC global time to calculate time passed when the timer is progressing
+    // -1 indicates that the timer is not moving
     var lastGlobalTime = -1;
 
-    // Keep track of the interval timer for recording time updates
-    var recordingUpdateInterval = null;
+    // Indicates a recording is happening when the timer is progressing (lastGlobalTime != -1)
+    // If false during a timer progression, then a playback is occuring instead.
+    var isRecording = false;
 
-    // Interval after which to notify listeners of a recording time update
-    var RECORDING_UPDATE_INTERVAL = 50;  // milliseconds
+    // Keep track of the interval timer for time updates
+    var updateInterval = null;
+
+    // Interval after which to notify listeners of a time update during timer progression
+    var UPDATE_INTERVAL = 50;  // milliseconds
 
     // Callback functions to notify listeners.
     // Function arguments are listed in the comments. All times are in milliseconds
     var updateTimeCallbacks = [];  // When the current time changes (currentTime)
     var beginRecordingCallbacks = [];  // When a recording begins (currentTime)
-    var updateRecordingTimeCallbacks = [];  // When the current time changes during a recording (currentTime)
     var endRecordingCallbacks = [];  // When a recording ends (beginTime, endTime)
+    var beginPlaybackCallbacks = [];  // When a playback begins (currentTime)
+    var endPlaybackCallbacks = [];  // When a playback ends (beginTime, endTime)
+
+    ////////////////////////////////////////////////////////
+    // Public methods
+    ////////////////////////////////////////////////////////
 
     // Register callbacks
     this.addUpdateTimeCallback = function(callback) {
@@ -34,11 +48,14 @@ pentimento.timeController = new function() {
     this.addBeginRecordingCallback = function(callback) {
         beginRecordingCallbacks.push(callback);
     };
-    this.addUpdateRecordingTimeCallback = function(callback) {
-        updateRecordingTimeCallbacks.push(callback);
-    };
     this.addEndRecordingCallback = function(callback) {
         endRecordingCallbacks.push(callback);
+    };
+    this.addBeginPlaybackCallback = function(callback) {
+        beginPlaybackCallbacks.push(callback);
+    };
+    this.addEndPlaybackCallback = function(callback) {
+        endPlaybackCallbacks.push(callback);
     };
 
     // Get the current time (ms)
@@ -46,25 +63,24 @@ pentimento.timeController = new function() {
         return currentTime;
     };
 
-    // Get the time (ms) when the last recording began
-    // Returns -1 if there was no previous recording
-    this.getRecordingBeginTime = function() {
-        return recordingBeginTime;
-    };
-
     // Returns true if a recording is in progress
     this.isRecording = function() {
-        return lastGlobalTime !== -1;
+        return (isTiming() && isRecording);
+    };
+
+    // Returns true if a playback is in progress
+    this.isPlaying = function() {
+        return (isTiming() && !isRecording);
+    };
+
+    // Get the time (ms) when the last recording/playback began
+    // Returns -1 if there was no previous event
+    this.getBeginTime = function() {
+        return lastBeginTime;
     };
 
     // Update the current time and notify any callbacks
-    // Time cannot be updated during a recording
     this.updateTime = function(time) {
-
-        // If a recording is in progress, the time cannot be changed
-        if (self.isRecording()) {
-            return;
-        };
 
         currentTime = time;
 
@@ -74,80 +90,114 @@ pentimento.timeController = new function() {
         };
     };
 
-    // Start recording and notify any callbacks
-    // Recording cannot be started if there is a recording in progress
+    // Start recording and notify callbacks
     this.startRecording = function() {
-        console.log("Begin recording");
+        // Start the timing
+        // If it suceeds, set the recording variable and notify listeners
+        if (startTiming()) {
+            isRecording = true;
+            for (var i = 0; i < beginRecordingCallbacks.length; i++) {
+                beginRecordingCallbacks[i](currentTime);
+            };
+        };
+    };
 
-        // If a recording is in progress, a recording cannot be started
-        if (self.isRecording()) {
-            return;
+    // Stop recording and notify callbacks
+    this.stopRecording = function() {
+        // Stop the timing
+        // If it suceeds, notify listeners
+        if (stopTiming()) {
+            for (var i = 0; i < endRecordingCallbacks.length; i++) {
+                endRecordingCallbacks[i](lastBeginTime, currentTime);
+            };
+        };
+    };
+
+    // Start playback and notify callbacks
+    this.startPlayback = function() {
+        // Start the timing
+        // If it suceeds, set the recording variable to indicate playback and notify listeners
+        if (startTiming()) {
+            isRecording = false;
+            for (var i = 0; i < beginPlaybackCallbacks.length; i++) {
+                beginPlaybackCallbacks[i](currentTime);
+            };
+        };
+    };
+
+    // Stop playback and notify callbacks
+    this.stopPlayback = function() {
+        // Stop the timing
+        // If it suceeds, notify listeners
+        if (stopTiming()) {
+            for (var i = 0; i < endPlaybackCallbacks.length; i++) {
+                endPlaybackCallbacks[i](lastBeginTime, currentTime);
+            };
+        };
+    };
+
+    ////////////////////////////////////////////////////////
+    // Private methods
+    ////////////////////////////////////////////////////////
+
+    // Returns true if a playback or recording is in progress
+    var isTiming = function() {
+        return (lastGlobalTime !== -1);
+    };
+
+    // Start progressing the time
+    // Used by startRecording and startPlayback
+    // Returns true if succeeds
+    var startTiming = function() {
+
+        // If a timing is in progress, a timing cannot be started
+        if (self.isTiming()) {
+            return false;
         };
 
         // Keep track of the global time to know how much time has elapsed
         lastGlobalTime = globalTime();
 
-        // Keep track of the lecture time when recording began
-        recordingBeginTime = currentTime;
+        // Keep track of the time when timing began
+        lastBeginTime = currentTime;
 
-        // After a set interval, update the current time and notify any listeners of the recording time update
-        recordingUpdateInterval = setInterval(function() {
+        // After a set interval, update the current time and notify any listeners of the time update
+        updateInterval = setInterval(function() {
 
             // Calculate the elapsed time since the last update
             var gt = globalTime();
             var timeElapsed = gt - lastGlobalTime;
             lastGlobalTime = gt;
 
-            // Update the time
-            updateRecordingTime(currentTime + timeElapsed);
+            // Update the time.
+            // This also notifies callbacks
+            self.updateTime(currentTime + timeElapsed);
 
-        }, RECORDING_UPDATE_INTERVAL);
+        }, UPDATE_INTERVAL);
 
-        // Notify listeners
-        for (var i = 0; i < beginRecordingCallbacks.length; i++) {
-            beginRecordingCallbacks[i](currentTime);
-        };
+        return true;
     }
-
-    // Update the current time.
-    // This is the same as updateTime(), except that it is used during recording.
-    var updateRecordingTime = function(time) {
-
-        // If a recording is not in progress, this method cannot be used
-        if (!self.isRecording()) {
-            return;
-        };
-
-        currentTime = time;
-
-        // Notify listeners
-        for (var i = 0; i < updateRecordingTimeCallbacks.length; i++) {
-            updateRecordingTimeCallbacks[i](currentTime);
-        };
-    };
     
-    // End the recording and notify any callbacks
-    this.stopRecording = function() {
-        console.log("End recording");
+    // Stop progressing the time
+    // Used by stopRecording and stopPlayback
+    // Returns true if succeeds
+    var stopTiming = function() {
 
-        // If a recording is not in progress, the recording cannot be stopped
-        if (!self.isRecording()) {
-            return;
+        // If a timing is not in progress, the timing cannot be stopped
+        if (!self.isTiming()) {
+            return false;
         };
 
-        // Clear the interval used for recording time updates
-        clearInterval(recordingUpdateInterval);
-        recordingUpdateInterval = null;
+        // Clear the interval used for timing updates
+        clearInterval(updateInterval);
+        updateInterval = null;
 
         // Calculate the new current time
         currentTime += (globalTime() - lastGlobalTime);
 
-        // Reset the global time to indicate that the recording has stopped
+        // Reset the global time to indicate that the timing has stopped
         lastGlobalTime = -1;
 
-        // Notify listeners
-        for (var i = 0; i < endRecordingCallbacks.length; i++) {
-            endRecordingCallbacks[i](recordingBeginTime, currentTime);
-        };
+        return true;
     };
 };
