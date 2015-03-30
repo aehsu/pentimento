@@ -89,7 +89,7 @@ function LectureController(lec) {
             if(slideIter.index==index) { break; }
             duration += sl.getDuration();
         }
-        pentimento.timeController.updateVideoTime(duration + time);
+        pentimento.timeController.updateTime(duration + time);
         //shift constraints
 
         um.add(function() {
@@ -115,7 +115,7 @@ function LectureController(lec) {
             duration += sl.getDuration();
         }
         var slideTime = state.videoCursor - duration;
-        pentimento.timeController.updateVideoTime(duration); //self.setStateSlide() implicit
+        pentimento.timeController.updateTime(duration); //self.setStateSlide() implicit
         //shift constraints
 
         um.add(function() {

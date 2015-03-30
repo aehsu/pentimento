@@ -100,7 +100,7 @@ function editToolHandler(tool, event) {
             if (pentimento.state.isRecording) {return ;}
             playInterval = setInterval(function() {
                 if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
-                    pentimento.timeController.updateVideoTime(pentimento.state.videoCursor+INTERVAL_TIMING);
+                    pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
                     updateVisuals(false);
                     
                 } else {
@@ -149,7 +149,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
-            pentimento.timeController.updateVideoTime(t);
+            pentimento.timeController.updateTime(t);
             // pentimento.state.selection = []; //Richard says no!
             updateVisuals(false);
             
@@ -158,7 +158,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
-            pentimento.timeController.updateVideoTime(t);
+            pentimento.timeController.updateTime(t);
             $('.recording-tool:visible').click()
             break;
         case 'width':
@@ -176,7 +176,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.deleteSlide(pentimento.state.currentSlide);
             um.endHierarchy(ActionGroups.EditGroup);
-            // pentimento.timeController.updateVideoTime(t);
+            // pentimento.timeController.updateTime(t);
             updateVisuals(false);
             
         case 'rewind':

@@ -301,7 +301,7 @@ var AudioController = function() {
         console.log("AudioController: Stop playback");
 
         // Don't stop playback if not already in progress
-        if (isPlayingBack == false) {
+        if (isPlayingBack === false) {
             console.error("Cannot stop playback");
             return;
         };
@@ -597,6 +597,7 @@ var AudioController = function() {
     // Removes all parts of the existing view if it has already been drawn.
     this.draw = function(display_window) {
 
+        // TODO: use separate callback to notify retimer
         if(display_window == "retimer"){
             // Clear the existing audio timeline
             window.retimer_window.$('#audio_div').html("");
