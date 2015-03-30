@@ -357,10 +357,15 @@ var AudioController = function() {
     // Used during recording and playback
     var disableEditUI = function() {
         // Disable all jQuery draggable elements in the audio timeline
-        $('#audio_timeline .ui-draggable').draggable('disable');
+        $('#'+timelineID+' .ui-draggable').draggable('disable');
 
         // Disable all jQuery resizable elements in the audio timeline
-        $('#audio_timeline .ui-resizable').resizable('disable');
+        $('#'+timelineID+' .ui-resizable').resizable('disable');
+
+        // Disable certain buttons
+        $('#'+deleteSegmentButtonID).prop('disabled', true);
+        $('#'+insertTrackButtonID).prop('disabled', true);
+        $('#'+deleteTrackButtonID).prop('disabled', true);
     };
 
     // Enable all UI functionality for editing audio
@@ -371,6 +376,11 @@ var AudioController = function() {
 
         // Enable all jQuery resizable elements in the audio timeline
         $('#audio_timeline .ui-resizable').resizable('enable');
+
+        // Enable certain buttons
+        $('#'+deleteSegmentButtonID).prop('disabled', false);
+        $('#'+insertTrackButtonID).prop('disabled', false);
+        $('#'+deleteTrackButtonID).prop('disabled', false);
     };
 
     // Refresh the size of the tracks container
