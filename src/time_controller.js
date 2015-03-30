@@ -151,7 +151,7 @@ pentimento.timeController = new function() {
     var startTiming = function() {
 
         // If a timing is in progress, a timing cannot be started
-        if (self.isTiming()) {
+        if (isTiming()) {
             return false;
         };
 
@@ -184,7 +184,7 @@ pentimento.timeController = new function() {
     var stopTiming = function() {
 
         // If a timing is not in progress, the timing cannot be stopped
-        if (!self.isTiming()) {
+        if (!isTiming()) {
             return false;
         };
 

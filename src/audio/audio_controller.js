@@ -247,10 +247,6 @@ var AudioController = function() {
         });
 
         // Refresh the audio display
-        this.refreshView();
-
-        // Reset the begin_record_time, which is used to indicate the recording status
-        begin_record_time = -1;
         self.refreshView();
     };
 
