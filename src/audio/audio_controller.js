@@ -26,16 +26,13 @@ var AudioController = function() {
     var mouseX = null;
     var mouseY = null;
 
-    // global_begin_record_time_utc is the global UTC time when the recording was started
-    // The time is in milliseconds UTC
-    // -1 indicates that there is no recording in progress
-    var global_begin_record_time_utc = -1;
-
-    // Track time when the recording began in milliseconds
-    var beginRecordTime = 0;
-
-      // The current location of the playhead in track time (milliseconds)
+    // The current location of the playhead in track time (milliseconds)
     var playheadTime = 0;
+
+    // Keep track of internal recording status. 
+    // This is meant to be separate from the time controller recording status in case
+    // the time controller is recording but the audio is not recording.
+    var isAudioRecording = false;
 
     // Keep track of the playback status
     var isPlayingBack = false;
@@ -166,11 +163,42 @@ var AudioController = function() {
         self.refreshView();
     };
 
-    // Start recording the audio at the current time (playhead location)
-    this.begin_recording = function() {
+    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
+    // Callback method
+    this.updatePlayheadTime = function(timeMilli) {
+        // Check the time for valid bounds
+        if (timeMilli < 0) {
+            console.error("Invalid playhead time: " + timeMilli);
+            return;
+        };
+
+        // Update the value of the playhead
+        playheadTime = timeMilli;
+
+        // Refresh the playhead position
+        refreshPlayhead();
+    };
+
+    // Start recording the audio at the given track time (ms)
+    // Callback method registered to the time controller
+    this.beginRecording = function(time) {
+        console.log("Begin audio recording: " + time);
+
+        // This method can only be called if the time controller is recording and a recording is not currently in progress
+        if ( !pentimento.timeController.isRecording() || isAudioRecording ) {
+            console.error("Cannot begin recording");
+            return;
+        };
+
+        isAudioRecording = true;
+
+        // Disable editing
+        disableEditUI();
 
         // Stop playback if it is in progress
-        self.stopPlayback();
+        if (isPlayingBack) {
+            self.stopPlayback();
+        };
 
         // Insert an audio track controller if there isn't one yet. 
         // This also makes it the recording track controller
@@ -179,34 +207,39 @@ var AudioController = function() {
             createTrackController();
         };
 
-        global_begin_record_time_utc = globalTime();
-        console.log("begin audio recording at (global utc time) " + global_begin_record_time_utc);
+        // Use recordRTC to start the actual audio recording
         recordRTC.startRecording();
 
         // TODO: Add an indicator in the selected track to show the duration of the recording
     };
 
     // End the recording (only applies if there is an ongoing recording)
-    this.end_recording = function() {
-        var global_end_record_time_utc = globalTime();
-        console.log("end audio recording at (global utc time) " + global_end_record_time_utc);
+    // Callback method registered to the time controller
+    this.endRecording = function(beginTime, endTime) {
+        console.log("End audio recording (" + beginTime + ", " + endTime + ")");
+
+        // This method can only be called if the time controller is not recording and a recording is currently in progress
+        if ( pentimento.timeController.isRecording() || !isAudioRecording ) {
+            console.error("Cannot end recording");
+            return;
+        };
+
+        isAudioRecording = false;
+
+        // Reenable editing
+        enableEditUI();
 
         // Stop the recordRTC instance and use the callback to save the track
         recordRTC.stopRecording(function(audioURL) {
             console.log(audioURL);            
-            var audio_duration = global_end_record_time_utc - global_begin_record_time_utc;
+            var audio_duration = endTime - beginTime;
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL, audio_duration, beginRecordTime,
-                                                    beginRecordTime+audio_duration);
+            var segment = new pentimento.audio_segment(audioURL, audio_duration, beginTime, endTime);
             console.log("new audio segment:");
             console.log(segment);
             activeTrackController.insertSegment(segment);
-
-            // Increment the lecture time by the length of the audio recording
-            // TODO remove this, this should be set by the playhead instead
-            beginRecordTime += audio_duration;
 
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
@@ -215,24 +248,21 @@ var AudioController = function() {
 
         // Refresh the audio display
         self.refreshView();
-
-        // Update the retimer view
-        // console.log("updating retimer");
-        // window.retimer_window.displayAudio();
-
-        // Reset the global_begin_record_time_utc, which is used to indicate the recording status
-        global_begin_record_time_utc = -1;
     };
 
     // Start the playback at the current playhead location
     this.startPlayback = function() {
-        // Don't start playback if already in progress
-        if (isPlayingBack == true) {
+        console.log("AudioController: Start playback");
+
+        // Don't start playback if already in progress or if recording
+        if (isPlayingBack || isAudioRecording) {
+            console.error("Cannot start playback");
             return;
         };
         isPlayingBack = true;
 
-        console.log("AudioController: Start playback");
+        // Disable editing
+        disableEditUI();
 
         // Update the button display
         $('#'+playPauseButtonID).html('Stop Audio');
@@ -248,12 +278,15 @@ var AudioController = function() {
         var playbackDuration = playbackEndTime-playheadTime;
         var playbackEndPixel = self.millisecondsToPixels(playbackEndTime);
 
-        // Start the playhead animation and update the playhead time at each interval
+        // Start the playhead animation and update the time controller's time at each interval
         // Call the stopPlayback method when finished
         $('#'+playheadID).animate({left: playbackEndPixel+'px'}, 
                                 {duration: playbackDuration,
                                 easing:'linear',
-                                progress:updatePlayheadTime,
+                                progress:function() {
+                                    var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
+                                    pentimento.timeController.updateTime(newTrackTime);
+                                },
                                 always:self.stopPlayback});
 
         // Start the track playback for each track controller
@@ -265,13 +298,17 @@ var AudioController = function() {
 
     // Stop all playback activity
     this.stopPlayback = function() {
+        console.log("AudioController: Stop playback");
+
         // Don't stop playback if not already in progress
         if (isPlayingBack == false) {
+            console.error("Cannot stop playback");
             return;
         };
         isPlayingBack = false;
 
-        console.log("AudioController: Stop playback");
+        // Reenable editing
+        enableEditUI();
 
         // Update the button text
         $('#'+playPauseButtonID).html('Play Audio');
@@ -284,21 +321,6 @@ var AudioController = function() {
             var trackController = trackControllers[i];
             trackController.stopPlayback();
         };
-    };
-
-    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
-    // Callback method
-    this.updatePlayheadTime = function(timeMilli) {
-        // Check the time for valid bounds
-        if (timeMilli < 0) {
-            return;
-        };
-
-        // Update the value of the playhead
-        playheadTime = timeMilli;
-
-        // Refresh the playhead position
-        refreshPlayhead();
     };
 
 
@@ -329,6 +351,26 @@ var AudioController = function() {
         if (seconds < 10) {seconds = "0"+seconds;}
         var time    = hours+':'+minutes+':'+seconds;
         return time;
+    };
+
+    // Disable all UI functionality for editing audio
+    // Used during recording and playback
+    var disableEditUI = function() {
+        // Disable all jQuery draggable elements in the audio timeline
+        $('#audio_timeline .ui-draggable').draggable('disable');
+
+        // Disable all jQuery resizable elements in the audio timeline
+        $('#audio_timeline .ui-resizable').resizable('disable');
+    };
+
+    // Enable all UI functionality for editing audio
+    // Used when recording or playback ends
+    var enableEditUI = function() {
+        // Enable all jQuery draggable elements in the audio timeline
+        $('#audio_timeline .ui-draggable').draggable('enable');
+
+        // Enable all jQuery resizable elements in the audio timeline
+        $('#audio_timeline .ui-resizable').resizable('enable');
     };
 
     // Refresh the size of the tracks container
@@ -438,7 +480,6 @@ var AudioController = function() {
     // Refresh the playhead position
     var refreshPlayhead = function() {
         var jqPlayhead = $('#'+playheadID);
-        console.log("playheadTime: " + playheadTime);
         jqPlayhead.css('left', self.millisecondsToPixels(playheadTime));
     };
 
@@ -452,9 +493,14 @@ var AudioController = function() {
         playhead.draggable({ axis: "x",
                             containment: '#'+tracksContainerID,
                             drag: function() {
-                                self.updatePlayheadTime(self.pixelsToMilliseconds($('#'+playheadID).position().left));
+                                // Update the time controller during dragging
+                                var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
+                                pentimento.timeController.updateTime(newTrackTime);
                             }
                         });      
+
+        // Make sure the playhead is always on top
+        playhead.css('z-index', '1000');
 
         // Refreshe the playhead to update the position
         refreshPlayhead();
@@ -598,10 +644,19 @@ var AudioController = function() {
         }
     );
 
+    // Register callbacks with the time controller
+    pentimento.timeController.addUpdateTimeCallback(self.updatePlayheadTime);
+    pentimento.timeController.addBeginRecordingCallback(self.beginRecording);
+    pentimento.timeController.addUpdateRecordingTimeCallback(self.updatePlayheadTime);
+    pentimento.timeController.addEndRecordingCallback(self.endRecording);
+
     // Button listener to start playing the audio
     var play_pause_button = $('#'+playPauseButtonID);
     play_pause_button.html('Play Audio');
     play_pause_button.click(function() { 
+        if (pentimento.timeController.isRecording()) {
+            return;
+        };
         if (isPlayingBack) {
             self.stopPlayback();
         } else {
@@ -612,17 +667,16 @@ var AudioController = function() {
     // Button listener to record or stop the current recording
     var record_audio_button = $('#'+recordAudioButtonID);
     record_audio_button.click(function() {
-        var isRecording = global_begin_record_time_utc > 0;
 
         // Change the button text depending on the record status
-        record_audio_button.html(isRecording ? 'Record': 'Stop');
+        record_audio_button.html(pentimento.timeController.isRecording() ? 'Record': 'Stop');
             console.log(self);
 
         // Start or stop recording
-        if (!isRecording) {
-            self.begin_recording();
+        if (!pentimento.timeController.isRecording()) {
+            pentimento.timeController.startRecording();
         } else{
-            self.end_recording();
+            pentimento.timeController.stopRecording();
         };
     });
 
