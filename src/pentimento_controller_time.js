@@ -18,7 +18,7 @@ pentimento.timeController = new function() {
         if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
             self.updateVideoTime(state.videoCursor + (endTime - lastTimeUpdate));
             updateVisuals(false);
-            drawThumbnails();
+            drawThumbnails(1000,1);
         }
         if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) { self.updateAudioTime(state.videoCursor + (endTime - lastTimeUpdate)); }
         lastTimeUpdate = null;
@@ -27,7 +27,7 @@ pentimento.timeController = new function() {
         console.log('tickerTimeEnd: ' + tickerTime);
         var tickerSplit = tickerTime.split(/[.|:]/g);
         var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
-        window.retimer_window.$('#thumbnails_div').data('endrecord', tickerTimeMS);
+        $('#thumbnails_div').data('endrecord', tickerTimeMS);
 
     }
 
@@ -63,7 +63,7 @@ pentimento.timeController = new function() {
         var tickerTime = $('#ticker').val();
         var tickerSplit = tickerTime.split(/[.|:]/g);
         var tickerTimeMS = parseInt(tickerSplit[0])*60000 + parseInt(tickerSplit[1])*1000 + parseInt(tickerSplit[2]);
-        window.retimer_window.$('#thumbnails_div').data('beginrecord', tickerTimeMS);
+        $('#thumbnails_div').data('beginrecord', tickerTimeMS);
 
         $('#slider').slider("option", {
             disabled: true
@@ -76,7 +76,7 @@ pentimento.timeController = new function() {
             if (type==RecordingTypes.VideoOnly || type==RecordingTypes.AudioVideo) {
                 self.updateVideoTime(state.videoCursor + (gt - lastTimeUpdate));
                 updateVisuals(false);
-                drawThumbnails();
+                drawThumbnails(1000,1);
             }
             if (type==RecordingTypes.AudioOnly || type==RecordingTypes.AudioVideo) {
                 self.updateAudioTime(state.audioCursor + (gt - lastTimeUpdate));
@@ -110,12 +110,12 @@ $(document).ready(function() {
             pentimento.state.selection = [];
             pentimento.timeController.updateVideoTime(ui.value);
             updateVisuals(false);
-            drawThumbnails();
+            drawThumbnails(1000,1);
         },
         stop: function(event, ui) {
             pentimento.timeController.updateVideoTime(ui.value);
             updateVisuals(false);
-            drawThumbnails();
+            drawThumbnails(1000,1);
             // console.log("autoConstraint");
             // drawAutomaticConstraint(0, 0);
             // console.log("drawing?")

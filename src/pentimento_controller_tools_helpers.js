@@ -281,7 +281,7 @@ function editSelectMouseMove(event) {
     }
 
     updateVisuals(false);
-    drawThumbnails();
+    drawThumbnails(1000,1);
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
     ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());

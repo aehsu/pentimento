@@ -6,6 +6,10 @@ button {
     padding: 10px;
 }
 
+.container{
+    overflow: hidden;
+}
+
 #slider{
     width:300px;
     float:left;
