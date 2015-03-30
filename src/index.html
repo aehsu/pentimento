@@ -25,10 +25,10 @@
     <script type='text/javascript' src='pentimento_model_lecture.js'></script>
     <script type='text/javascript' src='pentimento_model_state.js'></script>
     <script type='text/javascript' src='time_controller.js'></script>
-    <script type='text/javascript' src='audio/jquery.flot.js'></script>
-    <script type='text/javascript' src='audio/jquery.flot.time.js'></script>
-    <script type='text/javascript' src="audio/wavesurfer.min.js"></script>
-    <script type='text/javascript' src="audio/RecordRTC.js"></script>
+    <script type='text/javascript' src='audio/external/jquery.flot.js'></script>
+    <script type='text/javascript' src='audio/external/jquery.flot.time.js'></script>
+    <script type='text/javascript' src="audio/external/wavesurfer.min.js"></script>
+    <script type='text/javascript' src="audio/external/RecordRTC.js"></script>
     <script type='text/javascript' src='audio/audio_model.js'></script>
     <script type='text/javascript' src='audio/segment_controller.js'></script>
     <script type='text/javascript' src='audio/track_controller.js'></script>
@@ -253,11 +253,7 @@
     <div id="audio_div_container">
 
         <button id="play_pause_button" class="btn btn-primary">
-            <i class="glyphicon glyphicon-play"></i>
-            Audio Play
-            /
-            <i class="glyphicon glyphicon-pause"></i>
-            Audio Pause
+            Play
         </button>
         <button id="record_audio_button" class="btn btn-primary">
             Record
