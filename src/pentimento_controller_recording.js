@@ -167,7 +167,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         um.add(function() {}, ActionTitles.Dummy);
         um.startHierarchy(ActionGroups.SubSlideGroup);
         um.add(function() {}, ActionTitles.Dummy);
-        pentimento.timeController.beginRecording(lastTimeUpdate);
+        pentimento.timeController.startRecording(lastTimeUpdate);
         pentimento.state.isRecording = true;
     };
 
@@ -176,7 +176,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         pentimento.lectureController.retimingController.shiftConstraints(tmpConst, 1.0*totalDiff);
         pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, 1.0*diff);
 
-        pentimento.timeController.updateVideoTime(0);
+        pentimento.timeController.updateTime(0);
         um.add(function() {
             undoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
         }, ActionTitles.Recording);
@@ -187,7 +187,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         pentimento.lectureController.retimingController.shiftConstraints(tmpConst, -1.0*totalDiff);
         pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
 
-        pentimento.timeController.updateVideoTime(0);
+        pentimento.timeController.updateTime(0);
         um.add(function() {
             redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff)
         }, ActionTitles.Recording);
@@ -215,14 +215,14 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
 
             //might not really do what you want with...pentimento.state.videoCursor - offset
-            pentimento.timeController.updateVideoTime(0);
+            pentimento.timeController.updateTime(0);
 
             um.add(function() {
                 redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
             }, ActionTitles.Recording);
         });
         pentimento.state.isRecording = false;
-        pentimento.timeController.stopRecording(gt);
+        pentimento.timeController.stopRecording();
         try {
             um.endHierarchy(ActionGroups.RecordingGroup);
         } catch(e) {
@@ -238,8 +238,5 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         dirtyConstraints = [];
 
         drawThumbnails(1000,1);
-
-        // window.retimer_window.drawThumbnails(1000, 1);
-        // window.retimer_window.extendRetimingConstraintsCanvas();
 	}
 };

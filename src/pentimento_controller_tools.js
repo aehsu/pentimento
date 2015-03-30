@@ -100,7 +100,7 @@ function editToolHandler(tool, event) {
             if (pentimento.state.isRecording) {return ;}
             playInterval = setInterval(function() {
                 if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
-                    pentimento.timeController.updateVideoTime(pentimento.state.videoCursor+INTERVAL_TIMING);
+                    pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
                     updateVisuals(false);
                     drawThumbnails(1000,1);
                 } else {
@@ -149,7 +149,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
-            pentimento.timeController.updateVideoTime(t);
+            pentimento.timeController.updateTime(t);
             // pentimento.state.selection = []; //Richard says no!
             updateVisuals(false);
             drawThumbnails(1000,1);
@@ -158,7 +158,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
-            pentimento.timeController.updateVideoTime(t);
+            pentimento.timeController.updateTime(t);
             $('.recording-tool:visible').click()
             break;
         case 'width':
@@ -176,7 +176,7 @@ function editToolHandler(tool, event) {
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.deleteSlide(pentimento.state.currentSlide);
             um.endHierarchy(ActionGroups.EditGroup);
-            // pentimento.timeController.updateVideoTime(t);
+            // pentimento.timeController.updateTime(t);
             updateVisuals(false);
             drawThumbnails(1000,1);
         case 'rewind':
@@ -197,7 +197,6 @@ function recordingToolHandler(event) {
     var elt = $(event.target);
     pentimento.state.selection  = [];
     updateVisuals(false); //clear any selection when switching modes
-    drawThumbnails(1000,1);
     if (elt.attr('data-toolname')==='begin') {
         pentimento.state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz when audio comes into play
         pentimento.recordingController.beginRecording();
@@ -231,7 +230,6 @@ function umToolHandler(event) {
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals(false);
-        drawThumbnails(1000,1);
     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
         if(!pentimento.state.isRecording) { return; }
         var group = $(this).attr('data-group');

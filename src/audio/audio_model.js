@@ -13,7 +13,15 @@ pentimento.audio_model = function() {
 
     // Remove the specified audio track
     this.removeTrack = function(track) {
+        // Find the index of the track to be removed
+        var index = this.audio_tracks.indexOf(track);
 
+        // Remove the track from the tracks array if it exists
+        if (index > -1) {
+            this.audio_tracks.splice(index, 1);
+        };
+
+        return (index > -1);
     };
 };
 
@@ -22,82 +30,85 @@ pentimento.audio_track = function() {
 
 	this.audio_segments = [];
 
-    // Insert the provided segment and return an array of new segments created
-    // due to the insertion (can happen if the insert splits a segment).
-    // Returns null if there are no new segments.
+    // Insert the provided segment.
+    // Other segments in the track may be shifted as a result.
     this.insertSegment = function(newSegment) {
 
         // Iterate over all segments for the track
         for (var i = 0; i < this.audio_segments.length; i++) {
             var shift_segment = this.audio_segments[i];
 
-            // If the segment is fully to the right of the inserted segment, then shift
-            if ( newSegment.end_time <= shift_segment.start_time ) {
-                this.shift_segment( shift_segment , newSegment.getLength());
+            // If the segment is to the right of the inserted segment's begin time, then shift
+            if ( newSegment.start_time <= shift_segment.start_time ) {
+                this.shiftSegment( shift_segment , newSegment.lengthInTrack());
             };
         };
 
         // Insert the segment
         this.audio_segments.push(newSegment);
-
-        // TODO: handle if the insertion splits an existing segment
-        return null;
     };
 
-    // Remove the specified segment
-    this.removeSegment = function() {
-        // TODO
-    };
+    // Remove the specified segment. 
+    // Returns true if the segment was removed.
+    this.removeSegment = function(segment) {
+        // Find the index of the segment to be removed
+        var index = this.audio_segments.indexOf(segment);
 
+        // Remove the segment from the segments array if it exists
+        if (index > -1) {
+            this.audio_segments.splice(index, 1);
+        };
+
+        return (index > -1);
+    };
 
     // Returns whether the specified segment can be shifted to the left or right
     // If a negative number is given for shift_millisec, then the shift will be left.
     // The final value of the segment starting time cannot be negative.
     // The segment cannot overlap existing segments in the track.
-    // If the shift will cause either of these conditions to be true,
-    // then the shift cannot occur.
+    // If the shift will cause either of these conditions to be true, then the shift cannot occur.
     // Returns true if the shift is valid.
-    this.canShiftSegment = function(segment_idx, shift_millisec) {
+    // Otherwise, return the shift value of the greatest magnitude that would have produced a valid shift
+    this.canShiftSegment = function(segment, shift_millisec) {
 
-        // Get the segment and check that it exists
-        var shiftSegment = this.audio_segments[segment_idx];
-        if (shiftSegment === undefined) {
-            return false;
+        // Check that the segment exists in the track
+        if (this.audio_segments.indexOf(segment) < 0) {
+            return "segment does not exist";
         };
 
-        // Get the new start/end times and check for non-negative start time
-        var newStartTime = shiftSegment.start_time + shift_millisec;
-        var newEndTime = shiftSegment.end_time + shift_millisec;
+        // Get the new start/end times and check for non-negative start time.
+        // Reture the start time as the greatest valid shift value.
+        var newStartTime = segment.start_time + shift_millisec;
+        var newEndTime = segment.end_time + shift_millisec;
         if (newStartTime < 0) {
-            return false;
+            return segment.start_time;
         };
 
         // Check for overlap with existing segments
         for (var i = 0; i < this.audio_segments.length; i++) {
             var currentSegment = this.audio_segments[i];
 
+            // Don't check against itself
+            if (currentSegment === segment) {
+                continue;
+            };
+
             // The newStartTime must be greater than currentSegment.end_time
             // or the newEndTime must be less than currentSegment.start_time
             // Check for the inverse of this
             if (newStartTime < currentSegment.end_time &&
                 newEndTime > currentSegment.start_time) {
-                return false;
+                
+                // Check if the segment moved left or right into the obstacle segment.
+                if (segment.start_time > currentSegment.end_time && newStartTime > currentSegment.start_time) {  // left
+                    // Greatest shift value for shifting to the left
+                    return currentSegment.end_time - segment.start_time;
+                }
+                else { // right
+                    // Greatest shift value for shifting to the right
+                    return currentSegment.start_time - segment.end_time;
+                };
             };
-
-            // Overlaps if newStart/EndTime is inside the range of
-            // (currentSegment.start_time, currentSegment.end_time)
-            // if ( (newStartTime > currentSegment.start_time &&
-            //     newStartTime < currentSegment.end_time) || 
-            //     (newEndTime > currentSegment.start_time &&
-            //     newEndTime < currentSegment.end_time) ) {
-            //     return false;
-            // };
-
-            // Overlaps if any segment's start or end time is inside the range
-            // of (newStartTime, newEndTime)
-            // if ( () || () ) {
-            //     return false;
-            // };
         };
 
         return true;
@@ -105,67 +116,131 @@ pentimento.audio_track = function() {
 
 	// Shifts the specified segment left or right by a certain number of milliseconds.
 	// If a negative number is given for shift_millisec, then the shift will be left.
-    // checkValid specifies whether to if the shift is valid and defaults to true.
-    // The segments will be rearranged so that they are still in order
-    // Return the new index of the segment after the shift
-    // Return -1 if the shift fails
-	this.shift_segment = function(segment_idx, shift_millisec, checkValid) {
-        if(typeof(checkValid)==='undefined') checkValid = true;
+    // Return true if the shift succeeds
+    // Otherwise, return the shift value of the greatest magnitude that would have produced a valid shift
+	this.shiftSegment = function(segment, shift_millisec) {
 
-        // Get the segment and check that it exists
-        var shiftSegment = this.audio_segments[segment_idx];
-        if (shiftSegment === undefined) {
-            return -1;
-        };
-
-        // Check for validity if specified
-        if (checkValid) {
-            var canShift = this.canShiftSegment(segment_idx, shift_millisec);
-            if (!canShift) {
-                return -1;
-            };
+        // Check for validity of the shift
+        var shiftResult = this.canShiftSegment(segment, shift_millisec);
+        if (shiftResult !== true) {
+            return shiftResult;
         };
 
         // Get the new times for the segment
-        var newStartTime = shiftSegment.start_time + shift_millisec;
-        var newEndTime = shiftSegment.end_time + shift_millisec;
+        segment.start_time += shift_millisec;
+        segment.end_time += shift_millisec;
 
-        // Remove the segment from the array
-        this.audio_segments.splice(segment_idx, 1);
-
-        // Figure out the index to reinsert the segment at by looping through the 
-        // segments and stopping once the shifted segment is greater than a segment.
-        // A starting insertIndex of 0 is used in case the shifted segment is less than
-        // all of the current segments.
-        var insertIndex = 0;
-        for (var i = 0; i < this.audio_segments.length; i++) {
-            // Once the begin time of the shifted segment is greater than the end time
-            // of the current segment, then break at the current index plus one
-            if (newStartTime >= this.audio_segments[i].end_time) {
-                insertIndex = i+1;
-                break;
-            };
-        };
-
-        // Splice the array of segments to insert the shifted segment
-        this.audio_segments.splice(insertIndex, 0, shiftSegment);
-
-        return insertIndex;
+        return true;
 	};
 
-	// Crop the specified segment by the specified number of milliseconds
-	// crop_left is a boolean indicating whether the left or right side will be cropped
-	// Other segments will be shifted as a result.
-	this.crop_segment = function(segment_idx, crop_millisec, crop_left) {
+    // Returns whether the specified segment can be cropped on the left or right
+    // If a negative number is given for crop_millisec, then the crop will shrink the segment.
+    // If a positive number is given for crop_millisec, then the crop will extend the segment.
+    // The segment cannot overlap existing segments in the track.
+    // The segment cannot extend past the audio length and cannot shrink below a length of 0.
+    // left_side is a bool indicating whether the left side is being cropped.
+    // Returns true if the crop is valid.
+    // Otherwise, return a crop millisecond of the greatest magnitude that would have produced a valid crop.
+    this.canCropSegment = function(segment, crop_millisec, left_side) {
 
+        // Check that the segment exists in the track
+        if (this.audio_segments.indexOf(segment) < 0) {
+            return "segment does not exist";
+        };
+
+        // Get the old and new side for the segment. This is calculated differently depending on whether the
+        // left or right side is being cropped.
+        var oldSide;
+        var newSide;
+        var newLength;
+        if (left_side === true) {  // left side
+            // On the left side, a positive crop reduces the time of the side to expand the segment
+            oldSide = segment.start_time;
+            newSide = oldSide - crop_millisec;
+            newLength = segment.end_time - newSide;
+        } else {  // right side
+            // On the right side, a positive crop increases the time of the side to expand the segment
+            oldSide = segment.end_time;
+            newSide = oldSide + crop_millisec;
+            newLength = newSide - segment.start_time;
+        };
+
+        // Check to make sure the segment does not drop below 0.
+        // If invalid, return the value of maximum magnitude that can be cropped
+        if (newLength < 0) {
+            return -segment.lengthInTrack();
+        }; 
+
+        // Check to make sure that the segment will not be expanded to exceed the bounds of the audio resource.
+        if (left_side === true && newSide < segment.audioToTrackTime(0)) {  // left side
+            console.log("left side exceed: newSide: " + newSide);
+            return crop_millisec - (segment.audioToTrackTime(0) - newSide);
+        } else if (newSide > segment.audioToTrackTime(segment.totalAudioLength()) ) { // right side
+            console.log("right side exceed: newSide: " + newSide);
+            return crop_millisec - (newSide - segment.audioToTrackTime(segment.totalAudioLength()) );
+        };
+
+        // Check for overlap with existing segments
+        var minDiff = Number.MAX_VALUE;  // Always positive, distance between new side and end of last valid crop point
+        for (var i = 0; i < this.audio_segments.length; i++) {
+            var currentSegment = this.audio_segments[i];
+
+            // Don't check against itself
+            if (currentSegment === segment) {
+                continue;
+            };
+
+            // Check that the current segment is not inside the area between the old and new side
+            if (left_side === true && newSide < currentSegment.end_time && segment.end_time > currentSegment.end_time) {  // left side
+                minDiff = Math.min(currentSegment.end_time - newSide, minDiff);
+
+            } else if (newSide > currentSegment.start_time && segment.start_time < currentSegment.start_time) {  // right side
+                minDiff = Math.min(newSide - currentSegment.start_time, minDiff);
+            };
+        }
+
+        // If there was an overlap, then return the largest valid crop (positive number always)
+        if (minDiff !== Number.MAX_VALUE) {
+            return minDiff;
+        };
+
+        return true;
+    };
+
+	// Crop the specified segment by the specified number of milliseconds
+	// If a negative number is given for crop_millisec, then the crop will shrink the segment side
+    // left_side is a bool indicating whether the left side is being cropped.
+    // Returns true if the crop is valid.
+    // Otherwise, return a crop millisecond of the greatest magnitude that would have produced a valid crop.
+	this.cropSegment = function(segment, crop_millisec, left_side) {
+
+        // Check for validity of the crop
+        var cropResult = this.canCropSegment(segment, crop_millisec, left_side);
+        if (cropResult !== true) {
+            return cropResult;
+        };
+
+        // Get the new times for the segment
+        if (left_side === true) {  // left side
+            // On the left side, a positive crop reduces the time of the side to expand the segment
+            segment.start_time -= crop_millisec;
+            segment.audio_start_time -= crop_millisec;
+
+        } else {  // right side
+            // On the right side, a positive crop increases the time of the side to expand the segment
+            segment.end_time += crop_millisec;
+            segment.audio_end_time += crop_millisec;
+        }
+        console.log('segment after crop: ' + segment.start_time + " " + segment.end_time);
+        return true;
 	};
 
 	// Scales the audio segment by the specified factor.
 	// A factor from 0 to 1 shrinks, and a factor above 1 expands.
 	// The anchor point is the left hand side.
 	// Other segments to the right will be shifted as a result.
-	this.scale_segment = function(segment_idx, scale_factor) {
-
+	this.scale_segment = function(segment, scale_factor) {
+        // TODO
 	};
 
     // Get the end time of the track in milliseconds
@@ -181,46 +256,78 @@ pentimento.audio_track = function() {
     };
 };
 
-// Given the location where the segment is dropped, this function figures out where to place the audio
-// segment and returns the new location in the track
-pentimento.audio_track.place_segment =  function ( segment_idx, mouse_event ) {
+// Audio segments contain an audio clip and a location within the track
+pentimento.audio_segment = function(audio_resource, audio_length, track_start_time) {
 
-    // Iterate over audio tracks in DOM
-    $(".audio_segment").each(function(index, segment) {
-    	// Don't check itself
-    	if (index != segment_idx) {
-    		// Check to see if it overlaps with segment on the left half
-    		if ( mouse_event.pageX >= $(segment).offset().left && 
-                mouse_event.pageX <= $(segment).offset().left + $(segment).width()/2 ) {
-    		    console.log('move to left');
-    		    // Move segment to the left of conflicting segment
-    		   
-    		}
-    		// Check to see if it over laps with segment on the right half
-    		else if ( mouse_event.pageX > $(segment).offset().left + $(segment).width()/2 && 
-                mouse_event.pageX <= $(segment).offset().left + $(segment).width() ) {
-    		    // Move segment to the left of conflicting segment
-    		    console.log('move to right');
-    		}
-    	};
-    });
-};
+    // Audio clip data
+	var audio_resource = audio_resource;
+    var total_audio_length = audio_length;
 
-// Audio segments contain an audio clip (audio_resource, audio_start_time, audio_end_time)
-// and a location within the lecture (start_time, end_time)
-pentimento.audio_segment = function(audio_resource, audio_start_time, audio_end_time, start_time, end_time) {
+    // Specifies what part of the audio clip should be played back
+	this.audio_start_time = 0;
+	this.audio_end_time = audio_length;
 
-	this.audio_resource = audio_resource;
-	this.audio_start_time = audio_start_time;
-	this.audio_end_time = audio_end_time;
-	this.start_time = start_time;
-	this.end_time = end_time;
+    // Location of the segment within the track
+	this.start_time = track_start_time;
+	this.end_time = track_start_time + audio_length;
 
-    this.getLength = function() {
+    // Get the audio resource needed for playback
+    this.audioResource = function() {
+        return audio_resource;
+    };
+
+    // Get the total length of the audio resource
+    this.totalAudioLength = function() {
+        return total_audio_length;
+    };
+
+    // Get the length of the segment in the track
+    this.lengthInTrack = function() {
         return this.end_time - this.start_time;
-    }
+    };
 
-    this.getAudioLength = function() {
+    // Get the length of the audio that should be played back
+    this.audioLength = function() {
         return this.audio_end_time - this.audio_start_time;
-    }
+    };
+
+    // Convert a track time to the corresponding time in the audio resource at the current scale.
+    // Returns false if the trackTime is invalid.
+    this.trackToAudioTime = function(trackTime) {
+
+        // Track time should not be less than 0
+        if (trackTime < 0) {
+            return false;
+        };
+
+        // Convert the track time by using the current start_time as the offset
+        var audioTime = this.audio_start_time + (trackTime - this.start_time);
+
+        // Time should not exceed the bounds of the total audio length
+        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+            return false;
+        };
+
+        return audioTime;
+    };
+
+    // Convert a time in the audio resource to the corresponding time in the track at the current scale.
+    // Returns false if the audioTime is invalid.
+    this.audioToTrackTime = function(audioTime) {
+
+        // Time should not exceed the bounds of the total audio length
+        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+            return false;
+        };
+
+        // Convert the track time by using the current start_time as the offset
+        var trackTime = this.start_time + (audioTime - this.audio_start_time);
+
+        // Track time should not be less than 0
+        if (trackTime < 0) {
+            return false;
+        };
+
+        return trackTime;
+    };
 };

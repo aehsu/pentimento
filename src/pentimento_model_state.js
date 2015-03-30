@@ -2,11 +2,7 @@
 					MODEL
 *************************************************/
 pentimento.state = new function() {
-	this.isRecording = false;
     this.recordingType = null;
-    // The wisdom of the internet says we will not get interleaving Javascript
-    // this.isShifting = false;
-    // this.isDrawing = false; 
     
 	this.color = '#777';
 	this.width = 2;
@@ -31,7 +27,6 @@ pentimento.state = new function() {
     this.selection = [];
     
     this.currentSlide = null;
-    this.audioCursor = 0.0;
     this.videoCursor = 0.0;
 };
 

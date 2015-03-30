@@ -19,7 +19,10 @@
     <script type='text/javascript' src='audio/segment_controller.js'></script>
     <script type='text/javascript' src='audio/track_controller.js'></script>
     <script type='text/javascript' src='audio/audio_controller.js'></script>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script src='jcanvas.min.js'></script>
+    <link href="jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet" type="text/css">
     <script type='text/javascript' src='undo/errors.js'></script>
     <script type='text/javascript' src='undo/compatibility.js'></script>
     <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
@@ -29,13 +32,20 @@
     <script type='text/javascript' src='pentimento_model_visuals.js'></script>
     <script type='text/javascript' src='pentimento_model_lecture.js'></script>
     <script type='text/javascript' src='pentimento_model_state.js'></script>
+    <script type='text/javascript' src='time_controller.js'></script>
+    <script type='text/javascript' src="audio/wavesurfer.min.js"></script>
+    <script type='text/javascript' src="audio/RecordRTC.js"></script>
+    <script type='text/javascript' src='audio/jquery.flot.js'></script>
+    <script type='text/javascript' src='audio/jquery.flot.time.js'></script>
     <script type='text/javascript' src='audio/audio_model.js'></script>
     <script type='text/javascript' src='pentimento_controller_inputs.js'></script>
     <script type='text/javascript' src='pentimento_controller_recording.js'></script>
     <script type='text/javascript' src='pentimento_controller_visuals.js'></script>
     <script type='text/javascript' src='pentimento_controller_retiming.js'></script>
+    <script type='text/javascript' src='retimer_view_audio_handler.js'></script>
+    <script type='text/javascript' src='retimer_view_visuals_handler.js'></script>
+    <script type='text/javascript' src='retimer_view_constraints_handler.js'></script>
     <script type='text/javascript' src='pentimento_controller_lecture.js'></script>
-    <script type='text/javascript' src='pentimento_controller_time.js'></script>
     <script type='text/javascript' src='pentimento_controller_tools_helpers.js'></script>
     <script type='text/javascript' src='pentimento_controller_tools.js'></script>
     <script type='text/javascript' src='pentimento_renderer.js'></script>
@@ -43,11 +53,14 @@
     <script type='text/javascript' src='retimer_view_audio_handler.js'></script>
     <script type='text/javascript' src='retimer_view_constraints_handler.js'></script>
     <script type='text/javascript' src='retimer_view_visuals_handler.js'></script>
+
+    <script type='text/javascript' src='time_slider.js'></script>
+
     <script src='spectrum.js'></script>
 </head>
 
 <body>
-       
+
         <div>
             <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
             <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
@@ -243,23 +256,36 @@
 
     <!--AUDIO-->
     <div id="audio_div_container">
+
         <button id="play_pause_button" class="btn btn-primary">
-                <i class="glyphicon glyphicon-play"></i>
-                Audio Play
-                /
-                <i class="glyphicon glyphicon-pause"></i>
-                Audio Pause
-            </button>
-            <button id="record_audio_button" class="btn btn-primary">
-                Record
-            </button>
-            <button id="zoom_in_button" class="btn btn-primary">
-                Zoom In
-            </button>
-            <button id="zoom_out_button" class="btn btn-primary">
-                Zoom Out
-            </button>
-            <div id="audio_timeline"></div>
+            <i class="glyphicon glyphicon-play"></i>
+            Audio Play
+            /
+            <i class="glyphicon glyphicon-pause"></i>
+            Audio Pause
+        </button>
+        <button id="record_audio_button" class="btn btn-primary">
+            Record
+        </button>
+        <button id="zoom_in_button" class="btn btn-primary">
+            Zoom In
+        </button>
+        <button id="zoom_out_button" class="btn btn-primary">
+            Zoom Out
+        </button>
+        <button id="delete_segment_button" class="btn btn-primary">
+            Delete segment
+        </button>
+        <button id="insert_track_button" class="btn btn-primary">
+            Insert track
+        </button>
+        <button id="delete_track_button" class="btn btn-primary">
+            Delete track
+        </button>
+        <label>Current track:</track>
+        <select id="track_select">
+        </select>
+        <div id="audio_timeline"></div>
     </div>
 
     <div id="controls_div">

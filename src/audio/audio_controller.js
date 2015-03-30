@@ -8,13 +8,13 @@ var AudioController = function() {
     var self = this;
 
     // Audio model containig the audio data
-    var audioModel = null;
+    audioModel = null;
 
     // Controllers for each of the audio tracks. Each controller handles all the MVC
-    // responsibilities for that particular track. The recording controller is the
-    // active controller for recording new segments into.
+    // responsibilities for that particular track. The active controller is the
+    // track controller for recording new segments into.
     var trackControllers = [];
-    var recordingTrackController = null;
+    var activeTrackController = null;
 
     // RecordRTC is used to record the audio stream
     var recordRTC = null;
@@ -26,16 +26,13 @@ var AudioController = function() {
     var mouseX = null;
     var mouseY = null;
 
-    // begin_record_time is the global time when the recording was started
-    // The time is in milliseconds UTC
-    // -1 indicates that there is no recording in progress
-    var begin_record_time = -1;
+    // The current location of the playhead in track time (milliseconds)
+    var playheadTime = 0;
 
-    // lecture time when the recording began in milliseconds
-    var lectureBeginRecordTime = 0;
-
-    // Playhead values (the thing which indicates the current location in playback)
-    var playheadLectureTime = 0;  // The current location of the playhead in lecture time
+    // Keep track of internal recording status. 
+    // This is meant to be separate from the time controller recording status in case
+    // the time controller is recording but the audio is not recording.
+    var isAudioRecording = false;
 
     // Keep track of the playback status
     var isPlayingBack = false;
@@ -54,9 +51,18 @@ var AudioController = function() {
     // The scale factor when zooming on the timeline
     var timeline_zoom_factor = 1.5;
 
+    // The minumum timeline display length in seconds
+    var minumum_timeline_seconds = 100;
+
     // Interval durations for events and animations in milliseconds
     var playheadAnimationIntervalDuration = 10;
 
+    // Size and layout values used for calculations (pixels)
+    // These should match with any identical defined values in audio.css
+    var audio_track_height = 140;  // div.audio_track{height} div.audio
+    var audio_track_spacing = 20;  // Spacing between audio tracks
+    var flotGraphMargin = 20;
+    var flotGraphBorder = 1;
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM object IDs and classes
@@ -66,7 +72,7 @@ var AudioController = function() {
     // Allows scrolling to accomodate changing timeline scales.
     var timelineID = 'audio_timeline';  
 
-    // TODO
+    // Cursor indicating mouse position
     var timelineCursorID = 'audio_timeline_cursor';
 
     // audio tracks display, contained by audio_timeline
@@ -86,75 +92,154 @@ var AudioController = function() {
     var recordAudioButtonID = 'record_audio_button';
     var zoomInButtonID = 'zoom_in_button';
     var zoomOutButtonID = 'zoom_out_button';
+    var deleteSegmentButtonID = 'delete_segment_button';
+    var insertTrackButtonID = 'insert_track_button';
+    var deleteTrackButtonID = 'delete_track_button';
+    var trackSelectID = 'track_select';
 
 
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
 
-    // Insert a new track controller with an empty track and return the new controller
+    // Insert a new track controller with an empty track and refresh the view
     var createTrackController = function() {
         var newTrack = audioModel.createTrack();
-        var newController = new AudioTrackController(newTrack);
-        if (recordingTrackController === null) {
-            recordingTrackController = newController;
+        var newController = new AudioTrackController(newTrack, self);
+        if (activeTrackController === null) {
+            activeTrackController = newController;
         };
         trackControllers.push(newController);
         // Draw the new controller
         newController.draw($('#'+tracksContainerID));
-        return newController;
+        
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
     };
 
-    // Remove a track controller and its track
+    // Remove a track controller and its track and refresh the view
     var removeTrackController = function(trackController) {
-        // If the current controller is the recording controller,
-        // set another controller to be recording.
-        // TODO
+        // Check that the controller exists in the array of track controllers
+        var index = trackControllers.indexOf(trackController);
+        if (index < 0) {
+            return;
+        };
+
+        // If the current controller is the active controller, set a new active
+        if (trackController === activeTrackController) {
+            for (var i = 0; i < trackControllers.length; i++) {
+                // Set a controller to active if it is not the controller being deleted
+                if (trackControllers[i] !== trackController) {
+                    activeTrackController = trackControllers[i];
+                    break;
+                };
+                
+            };
+        };
+
+        // Delete the track from the model
+        audioModel.removeTrack(trackController.getAudioTrack());
+
+        // Remove the track controller fro the array of controllers
+        trackControllers.splice(index, 1);
+
+        // Remove the element from the DOM
+        $('#'+trackController.getID()).remove();
+
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
     };
 
-    // Start recording the audio at the lecture time
-    this.begin_recording = function() {
+    var changeActiveTrackController = function(trackController) {
+        // Make sure the track controller is in the list of track controllers
+        if (trackControllers.indexOf(trackController) < 0) {
+            console.log('new active track controller not in list of track controllers');
+            return;
+        };
+
+        activeTrackController = trackController;
+
+        // Refresh the view to show any new changes in the UI
+        self.refreshView();
+    };
+
+    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
+    // Callback method
+    this.updatePlayheadTime = function(timeMilli) {
+        // Check the time for valid bounds
+        if (timeMilli < 0) {
+            console.error("Invalid playhead time: " + timeMilli);
+            return;
+        };
+
+        // Update the value of the playhead
+        playheadTime = timeMilli;
+
+        // Refresh the playhead position
+        refreshPlayhead();
+    };
+
+    // Start recording the audio at the given track time (ms)
+    // Callback method registered to the time controller
+    this.beginRecording = function(time) {
+        console.log("Begin audio recording: " + time);
+
+        // This method can only be called if the time controller is recording and a recording is not currently in progress
+        if ( !pentimento.timeController.isRecording() || isAudioRecording ) {
+            console.error("Cannot begin recording");
+            return;
+        };
+
+        isAudioRecording = true;
+
+        // Disable editing
+        disableEditUI();
 
         // Stop playback if it is in progress
-        this.stopPlayback();
+        if (isPlayingBack) {
+            self.stopPlayback();
+        };
 
         // Insert an audio track controller if there isn't one yet. 
         // This also makes it the recording track controller
-        if (recordingTrackController === null) {
+        if (activeTrackController === null) {
             console.log('creating new recording track controller');
             createTrackController();
         };
 
-        begin_record_time = globalTime();
-        console.log("begin audio recording at " + begin_record_time);
+        // Use recordRTC to start the actual audio recording
         recordRTC.startRecording();
 
         // TODO: Add an indicator in the selected track to show the duration of the recording
     };
 
     // End the recording (only applies if there is an ongoing recording)
-    this.end_recording = function() {
-        var end_record_time = globalTime();
-        console.log("end audio recording at " + end_record_time);
+    // Callback method registered to the time controller
+    this.endRecording = function(beginTime, endTime) {
+        console.log("End audio recording (" + beginTime + ", " + endTime + ")");
+
+        // This method can only be called if the time controller is not recording and a recording is currently in progress
+        if ( pentimento.timeController.isRecording() || !isAudioRecording ) {
+            console.error("Cannot end recording");
+            return;
+        };
+
+        isAudioRecording = false;
+
+        // Reenable editing
+        enableEditUI();
 
         // Stop the recordRTC instance and use the callback to save the track
         recordRTC.stopRecording(function(audioURL) {
-           console.log(audioURL);
-            
-            // Get information about the recording audio track from looking at the lecture state
-            var audio_duration = end_record_time - begin_record_time;
+            console.log(audioURL);            
+            var audio_duration = endTime - beginTime;
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL,0,audio_duration,lectureBeginRecordTime,
-                                                    lectureBeginRecordTime+audio_duration);
+            var segment = new pentimento.audio_segment(audioURL, audio_duration, beginTime, endTime);
             console.log("new audio segment:");
             console.log(segment);
-            recordingTrackController.insertSegmentController(segment);
-
-            // Increment the lecture time by the length of the audio recording
-            // TODO remove this, this should be set by the playhead instead
-            lectureBeginRecordTime += audio_duration;
+            activeTrackController.insertSegment(segment);
 
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
@@ -164,62 +249,70 @@ var AudioController = function() {
         // Refresh the audio display
         this.refreshView();
 
-        // // Update the retimer view
-        // console.log("updating retimer");
-        // window.retimer_window.displayAudio();
-
         // Reset the begin_record_time, which is used to indicate the recording status
         begin_record_time = -1;
+        self.refreshView();
     };
 
     // Start the playback at the current playhead location
     this.startPlayback = function() {
-        // Don't start playback if already in progress
-        if (isPlayingBack == true) {
+        console.log("AudioController: Start playback");
+
+        // Don't start playback if already in progress or if recording
+        if (isPlayingBack || isAudioRecording) {
+            console.error("Cannot start playback");
             return;
         };
         isPlayingBack = true;
 
-        console.log("AudioController: Start playback");
+        // Disable editing
+        disableEditUI();
 
         // Update the button display
         $('#'+playPauseButtonID).html('Stop Audio');
 
-        // Find the lecture time when the playback should end
+        // Find the track time when the playback should end
         // Get the greatest end time in all of the tracks
-        var playbackLectureEndTime = -1;
+        var playbackEndTime = -1;
         for (var i = 0; i < trackControllers.length; i++) {
-            playbackLectureEndTime = Math.max(playbackLectureEndTime, trackControllers[i].getLength());
+            playbackEndTime = Math.max(playbackEndTime, trackControllers[i].getLength());
         };
 
         // Calculate the duration of the playback and the end location in pixels
-        var playbackDuration = playbackLectureEndTime-playheadLectureTime;
-        var playbackEndPixel = this.millisecondsToPixels(playbackLectureEndTime);
+        var playbackDuration = playbackEndTime-playheadTime;
+        var playbackEndPixel = self.millisecondsToPixels(playbackEndTime);
 
-        // Start the playhead animation and update the playhead time at each interval
+        // Start the playhead animation and update the time controller's time at each interval
         // Call the stopPlayback method when finished
         $('#'+playheadID).animate({left: playbackEndPixel+'px'}, 
                                 {duration: playbackDuration,
                                 easing:'linear',
-                                progress:updatePlayheadTime,
+                                progress:function() {
+                                    var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
+                                    pentimento.timeController.updateTime(newTrackTime);
+                                },
                                 always:self.stopPlayback});
 
         // Start the track playback for each track controller
         for (var i = 0; i < trackControllers.length; i++) {
             var trackController = trackControllers[i];
-            trackController.startPlayback(playheadLectureTime, playbackLectureEndTime);
+            trackController.startPlayback(playheadTime, playbackEndTime);
         };
     };
 
     // Stop all playback activity
     this.stopPlayback = function() {
+        console.log("AudioController: Stop playback");
+
         // Don't stop playback if not already in progress
-        if (isPlayingBack == false) {
+        if (isPlayingBack === false) {
+            console.error("Cannot stop playback");
             return;
         };
         isPlayingBack = false;
 
-        console.log("AudioController: Stop playback");
+        // Reenable editing
+        enableEditUI();
 
         // Update the button text
         $('#'+playPauseButtonID).html('Play Audio');
@@ -246,7 +339,7 @@ var AudioController = function() {
 
     // Convert pixels to milliseconds according to the current scale
     this.pixelsToMilliseconds = function(pixels) {
-        return 1000*(pixels/timeline_pixels_per_sec);
+        return Math.round((1000*pixels)/timeline_pixels_per_sec);
     };
 
     // Changes tickpoints into time display (ex: 00:30:00)
@@ -262,6 +355,36 @@ var AudioController = function() {
         if (seconds < 10) {seconds = "0"+seconds;}
         var time    = hours+':'+minutes+':'+seconds;
         return time;
+    };
+
+    // Disable all UI functionality for editing audio
+    // Used during recording and playback
+    var disableEditUI = function() {
+        // Disable all jQuery draggable elements in the audio timeline
+        $('#'+timelineID+' .ui-draggable').draggable('disable');
+
+        // Disable all jQuery resizable elements in the audio timeline
+        $('#'+timelineID+' .ui-resizable').resizable('disable');
+
+        // Disable certain buttons
+        $('#'+deleteSegmentButtonID).prop('disabled', true);
+        $('#'+insertTrackButtonID).prop('disabled', true);
+        $('#'+deleteTrackButtonID).prop('disabled', true);
+    };
+
+    // Enable all UI functionality for editing audio
+    // Used when recording or playback ends
+    var enableEditUI = function() {
+        // Enable all jQuery draggable elements in the audio timeline
+        $('#audio_timeline .ui-draggable').draggable('enable');
+
+        // Enable all jQuery resizable elements in the audio timeline
+        $('#audio_timeline .ui-resizable').resizable('enable');
+
+        // Enable certain buttons
+        $('#'+deleteSegmentButtonID).prop('disabled', false);
+        $('#'+insertTrackButtonID).prop('disabled', false);
+        $('#'+deleteTrackButtonID).prop('disabled', false);
     };
 
     // Refresh the size of the tracks container
@@ -294,24 +417,28 @@ var AudioController = function() {
 
     // Refresh the gradation container to account for changes in the zoom scale.
     var refreshGradations = function() {
-        // TODO: incorporate the changes from zoom into this function, which should be called from refresh and draw
-        flotPlot.resize();
-        flotPlot.setupGrid();
-        flotPlot.draw();
-    };
+        var gradation_container = $('#'+gradationContainerID);
 
-    // Draw the graduation marks on the timeline
-    var drawGradations = function() { 
-        var timeline = $('#' + timelineID);
-        var gradation_scroll_parent = $('<div></div>');
-        var gradation_container = $('<div></div>');
+        // Figure out how many seconds to display in the timeline.
+        // This should be twice as long as the longest track, or at least 100 seconds.
+        var longestTrackLength = 0;
+        for (var i = 0; i < trackControllers.length; i++) {
+            longestTrackLength = Math.max(trackControllers[i].getLength(), longestTrackLength);
+        };
+        var timelineLengthSeconds = Math.max(2*longestTrackLength/1000, minumum_timeline_seconds);
+        console.log("timelineLengthSeconds: " + timelineLengthSeconds);
 
-        gradation_container.attr('id', gradationContainerID)
-            .css('width', timeline.width())
-            .css('height', timeline.height())
-            .css('position', "absolute");
-        timeline.append(gradation_container);
+        // Set the width of the gradations container so that it can fit the entire range of timelineLengthSeconds.
+        // Set the height of the gradations container so that it can fit all the current tracks, with a minimum height of two tracks.
+        // Plus the margin and border widths (2 each).
+        var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
+        var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
+        var heightPixels = (Math.max(audioModel.audio_tracks.length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
+        gradation_container.css('width', widthPixels);
+        gradation_container.css('height', heightPixels);
 
+        // Options for initializing flot
+        // The range of the plot is set to timelineLengthSeconds
         var options = {
             series: {
                 lines: { show: false },
@@ -322,39 +449,52 @@ var AudioController = function() {
             },
             xaxis: {
                 min: 0, // Min and Max refer to the range
-                max: 100,
+                max: timelineLengthSeconds,
                 tickFormatter: tickFormatter,
                 labelHeight: 10,
             },
             grid: {
                 // hoverable: true
                 margin: {
-                top: 20,
-                left: 20,
-                bottom: 20,
-                right: 20
+                top: flotGraphMargin,
+                left: flotGraphMargin,
+                bottom: flotGraphMargin,
+                right: flotGraphMargin
                 },
                 minBorderMargin: 0,
-                borderWidth: 1,
+                borderWidth: flotGraphBorder,
                 labelMargin: 10,
             }
         };
 
-        // Dummy data
-        var plot_data = [ [0, 0], [0, 10] ];
+        // Dummy data just for initiating the flot.
+        var plot_data = [ [0, 0], [0, timelineLengthSeconds] ];
 
         // Use flot to draw the graduations
         flotPlot = $.plot(gradation_container, plot_data, options);
+
+        // Resize flot to fit the parent container
+        flotPlot.resize();
+        flotPlot.setupGrid();
+        flotPlot.draw();
+    };
+
+    // Draw the graduation marks on the timeline
+    var drawGradations = function() { 
+        var timeline = $('#' + timelineID);
+        var gradation_scroll_parent = $('<div></div>');
+        var gradation_container = $('<div></div>');
+        gradation_container.attr('id', gradationContainerID);
+        timeline.append(gradation_container);
 
         // Refresh parameters
         refreshGradations();
     };
 
-    // Function to update the playhead lecture time during dragging or play
-    // Callback method
-    var updatePlayheadTime = function() {
-        var playhead = $('#'+playheadID);
-        playheadLectureTime = self.pixelsToMilliseconds(playhead.position().left);
+    // Refresh the playhead position
+    var refreshPlayhead = function() {
+        var jqPlayhead = $('#'+playheadID);
+        jqPlayhead.css('left', self.millisecondsToPixels(playheadTime));
     };
 
     // draw the playhead for showing playback location
@@ -366,9 +506,18 @@ var AudioController = function() {
         // Set the playhead to be draggable in the x-axis within the tracksContainer
         playhead.draggable({ axis: "x",
                             containment: '#'+tracksContainerID,
-                            drag: updatePlayheadTime,
-                            start: updatePlayheadTime,
-                            stop: updatePlayheadTime});      
+                            drag: function() {
+                                // Update the time controller during dragging
+                                var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
+                                pentimento.timeController.updateTime(newTrackTime);
+                            }
+                        });      
+
+        // Make sure the playhead is always on top
+        playhead.css('z-index', '1000');
+
+        // Refreshe the playhead to update the position
+        refreshPlayhead();
     };
 
     // create cursor object for tracking mouse location
@@ -406,17 +555,12 @@ var AudioController = function() {
             return;
         };
 
-        // Update the size of the gradations container and tracks container
-        // TODO: should be moved to refresh view with another parameter to set the size
-        var gradation_container = $('#'+gradationContainerID);
-        gradation_container.width(gradation_container.width() / zoomFactor);
-
         // Update the measurement for pixels per second
         timeline_pixels_per_sec = newPixelsPerSec;       
 
         // Refreshing will update the size of the segments and wavesurfers
         // as well as the gradations.
-        this.refreshView();
+        self.refreshView();
     };
 
     // Refreshes the view to reflect changes in the audio model.
@@ -427,23 +571,38 @@ var AudioController = function() {
         // Refresh each of the tracks
         for (var i = 0; i < trackControllers.length; i++) {
             trackControllers[i].refreshView();
+            // Offset the top of the track by the size of the other tracks before it
+            $('#'+trackControllers[i].getID()).css('top', i * (audio_track_height + audio_track_spacing));
         };
 
         // Refresh the gradations
         refreshGradations();
 
+        // Refresh the playhead
+        refreshPlayhead();
+
         // Refresh the tracks container
         refreshTracksContainer();
+
+        // Update the number of tracks in the track selector by appending the options
+        var trackSelect = $('#'+trackSelectID);
+        trackSelect.html('');
+        for (var i = 0; i < trackControllers.length; i++) {
+            var option = $('<option value="'+(i+1)+'">'+(i+1)+'</option>');
+            trackSelect.append(option);
+            // If the current track option is active, select it to be selected.
+            if (trackControllers[i] === activeTrackController) {
+                trackSelect.val(i+1);
+            };
+        };
     };
 
     // Draws all parts of the timeline into the page.
     // Removes all parts of the existing view if it has already been drawn.
     this.draw = function(display_window) {
 
-
         // Clear the existing audio timeline
         $('#'+timelineID).html("");
-
 
         // Draw gradations into the timeline
         drawGradations();
@@ -462,7 +621,7 @@ var AudioController = function() {
         drawPlayhead();
 
         // Refresh the view
-        this.refreshView();
+        self.refreshView();
     };
 
 
@@ -493,10 +652,19 @@ var AudioController = function() {
         }
     );
 
+    // Register callbacks with the time controller
+    pentimento.timeController.addUpdateTimeCallback(self.updatePlayheadTime);
+    pentimento.timeController.addBeginRecordingCallback(self.beginRecording);
+    pentimento.timeController.addUpdateRecordingTimeCallback(self.updatePlayheadTime);
+    pentimento.timeController.addEndRecordingCallback(self.endRecording);
+
     // Button listener to start playing the audio
     var play_pause_button = $('#'+playPauseButtonID);
     play_pause_button.html('Play Audio');
     play_pause_button.click(function() { 
+        if (pentimento.timeController.isRecording()) {
+            return;
+        };
         if (isPlayingBack) {
             self.stopPlayback();
         } else {
@@ -507,17 +675,16 @@ var AudioController = function() {
     // Button listener to record or stop the current recording
     var record_audio_button = $('#'+recordAudioButtonID);
     record_audio_button.click(function() {
-        var isRecording = begin_record_time > 0;
 
         // Change the button text depending on the record status
-        record_audio_button.html(isRecording ? 'Record': 'Stop');
+        record_audio_button.html(pentimento.timeController.isRecording() ? 'Record': 'Stop');
             console.log(self);
 
         // Start or stop recording
-        if (!isRecording) {
-            self.begin_recording();
+        if (!pentimento.timeController.isRecording()) {
+            pentimento.timeController.startRecording();
         } else{
-            self.end_recording();
+            pentimento.timeController.stopRecording();
         };
     });
 
@@ -531,9 +698,35 @@ var AudioController = function() {
         self.zoom(true);  // true indicates zoom out
     });
 
-    // Draw the view
-    this.draw();
+    // Button listeners for deleting an audio segment
+    var deleteSegmentButton = $('#'+deleteSegmentButtonID);
+    deleteSegmentButton.click(function() {
+        // For each track, remove the segments that have focus
+        for (var i = 0; i < trackControllers.length; i++) {
+            trackControllers[i].removeFocusedSegments(); 
+        };
+    });
 
+    // Listeners for inserting and deleting a track
+    var insertTrackButton = $('#'+insertTrackButtonID);
+    insertTrackButton.click(function() {
+        createTrackController();
+    });
+    var deleteTrackButton = $('#'+deleteTrackButtonID);
+    deleteTrackButton.click(function() {
+        removeTrackController(activeTrackController);
+    });
+
+    // Selected the active track
+    var trackSelect = $('#'+trackSelectID);
+    trackSelect.change(function() {
+        var newActiveTrackIndex = (parseInt(trackSelect.val()) - 1);
+        console.log("new active track index: " + newActiveTrackIndex );
+        changeActiveTrackController(trackControllers[newActiveTrackIndex]);
+    });
+
+    // Draw the view
+    self.draw();
 };
 
 
