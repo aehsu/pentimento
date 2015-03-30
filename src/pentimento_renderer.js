@@ -1,8 +1,3 @@
-// retimer.constraintsHandler = function(){
-
-// }
-
-
 function drawVisual(visual, tVisual, isThumbnail, thumbParams) {
     tVisual = tVisual || pentimento.state.videoCursor;
     //TODO SUPPORT FOR TRANSFORMS
@@ -42,8 +37,8 @@ function renderCalligraphicStroke(visual, tVisual, isThumbnail, thumbParams) {
     // If the stroke is being drawn as a thumbnail
     if(isThumbnail){
         // Get the size of the main visuals canvas where the visuals were drawn
-        original_width = window.opener.pentimento.state.context.canvas.width;
-        original_height = window.opener.pentimento.state.context.canvas.height;
+        original_width = pentimento.state.context.canvas.width;
+        original_height = pentimento.state.context.canvas.height;
 
         // Calculate the scale of the size of the thumbnail relative to the main canvas size
         // (height of the thumbnails display is set, so use that for calculation, but thumbnails can be any width)

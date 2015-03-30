@@ -64,7 +64,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         // um.add(function() {}, ActionTitles.Dummy);
         state.currentSlide = newSlide;
         updateVisuals(false);
-        drawThumbnails();
+        drawThumbnails(1000,1);
         visualsInsertionTime = 0;
 
         um.add(function() {
@@ -237,7 +237,6 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         dirtyVisuals = [];
         dirtyConstraints = [];
 
-        // window.retimer_window.drawThumbnails(1000, 1);
-        // window.retimer_window.extendRetimingConstraintsCanvas();
+        drawThumbnails(1000,1);
 	}
 };

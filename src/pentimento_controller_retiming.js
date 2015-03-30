@@ -168,7 +168,7 @@ $(document).ready(function() {
     $('#sync').click(function(){
     	console.log("clicked!");
 		// updateRetimerView();
-		var constraint_num = window.opener.pentimento.lecture.getConstraints().length;
+		var constraint_num = pentimento.lecture.getConstraints().length;
 		drawConstraint(constraint_num);
 		// constraint_num += 1;
 	});

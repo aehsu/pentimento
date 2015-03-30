@@ -247,6 +247,10 @@ var AudioController = function() {
         });
 
         // Refresh the audio display
+        this.refreshView();
+
+        // Reset the begin_record_time, which is used to indicate the recording status
+        begin_record_time = -1;
         self.refreshView();
     };
 
@@ -597,15 +601,8 @@ var AudioController = function() {
     // Removes all parts of the existing view if it has already been drawn.
     this.draw = function(display_window) {
 
-        // TODO: use separate callback to notify retimer
-        if(display_window == "retimer"){
-            // Clear the existing audio timeline
-            window.retimer_window.$('#audio_div').html("");
-        }
-        else{
-            // Clear the existing audio timeline
-            $('#'+timelineID).html("");
-        }
+        // Clear the existing audio timeline
+        $('#'+timelineID).html("");
 
         // Draw gradations into the timeline
         drawGradations();

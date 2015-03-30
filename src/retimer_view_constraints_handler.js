@@ -5,7 +5,7 @@
 
 */
 
-retimer.constraintsHandler = function(){
+// function constraintsHandler(){
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
@@ -157,89 +157,85 @@ retimer.constraintsHandler = function(){
     // Extend the retiming constraints canvas to match the width of the thumbnails so that users can draw constraints at any time
     // TODO: extend retiming constraints for audio as well
     function extendRetimingConstraintsCanvas(){
-        if(window.opener != null){
-            // Calculate the scale of the width of each thumbnil
-            var original_width = window.opener.pentimento.state.context.canvas.width;
-            var original_height = window.opener.pentimento.state.context.canvas.height;
+        // Calculate the scale of the width of each thumbnil
+        var original_width = pentimento.state.context.canvas.width;
+        var original_height = pentimento.state.context.canvas.height;
 
-            var scale = $('#thumbnails_div').height()/original_height;
-            var thumbnail_width = Math.round(scale * original_width);
+        var scale = $('#thumbnails_div').height()/original_height;
+        var thumbnail_width = Math.round(scale * original_width);
 
-            // Get the number of thumbnails
-            var numThumbs = $('#thumbnails_div').children().length;
-            // Calculate the new width of the constraints drawing canvas
-            var new_width = numThumbs*(thumbnail_width) + 2*(numThumbs-1) + 2;
+        // Get the number of thumbnails
+        var numThumbs = $('#thumbnails_div').children().length;
+        // Calculate the new width of the constraints drawing canvas
+        var new_width = numThumbs*(thumbnail_width) + 2*(numThumbs-1) + 2;
 
-            console.log("new: " + new_width);
-            // var curr_width = $('#retimer_constraints').width();
+        console.log("new: " + new_width);
+        // var curr_width = $('#retimer_constraints').width();
 
-            // var canvas_scale = new_width/curr_width;
-            // console.log("scale: " + canvas_scale);
+        // var canvas_scale = new_width/curr_width;
+        // console.log("scale: " + canvas_scale);
 
-            // Clear the canvas of restraints
-            $('#retimer_constraints').clearCanvas();
+        // Clear the canvas of restraints
+        $('#retimer_constraints').clearCanvas();
 
-            // Create and draw the new canvas 
-            var newCanvas = "<canvas id='retimer_constraints' height='200px' width='" + new_width + "px'></canvas>"
-            $('#constraints_div').html(newCanvas);
+        // Create and draw the new canvas 
+        var newCanvas = "<canvas id='retimer_constraints' height='200px' width='" + new_width + "px'></canvas>"
+        $('#constraints_div').html(newCanvas);
 
-            // $('#retimer_constraints').width(new_width);
+        // $('#retimer_constraints').width(new_width);
 
-            console.log("reset width? :" +  $('#retimer_constraints').width());
+        console.log("reset width? :" +  $('#retimer_constraints').width());
 
-            // $('#constraints_div').css({
-            //      'width' : new_width,
-            //      'height' : "200px"
-            // });
-            // $('#retimer_constraints').css({
-            //      'width' : new_width,
-            //      'height' : "200px"
-            // });
-            // $('#retimer_constraints').scaleCanvas({
-            //   x: 0, y: 0,
-            //   scaleX: canvas_scale, scaleY: 1
-            // })
-            // .restoreCanvas();
+        // $('#constraints_div').css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#retimer_constraints').css({
+        //      'width' : new_width,
+        //      'height' : "200px"
+        // });
+        // $('#retimer_constraints').scaleCanvas({
+        //   x: 0, y: 0,
+        //   scaleX: canvas_scale, scaleY: 1
+        // })
+        // .restoreCanvas();
 
-            // Redraw the constraints
-            redrawConstraints();
-        }
+        // Redraw the constraints
+        redrawConstraints();
     }
 
     // Redraw the constriants when the canvas has been resized
     function redrawConstraints(){
-        if(window.opener != null){
-            // Get the audio scale of the new canvas using the lecture duration (global time)
-            var audio_scale = $('#retimer_constraints').width()/window.opener.pentimento.lectureController.getLectureDuration();
+        // Get the audio scale of the new canvas using the lecture duration (global time)
+        var audio_scale = $('#retimer_constraints').width()/pentimento.lectureController.getLectureDuration();
 
-            // Get all of the constraints currently added to the lecture
-            var constraints = window.opener.pentimento.lecture.getConstraintsIterator();
+        // Get all of the constraints currently added to the lecture
+        var constraints = pentimento.lecture.getConstraintsIterator();
 
-            // Reset the ID of constraints to 0
-            var constraint_num = 0;
+        // Reset the ID of constraints to 0
+        var constraint_num = 0;
 
-            // Iterate through the constraints and redraw each one
-            while(constraints.hasNext()){
-                var constraint = constraints.next();
+        // Iterate through the constraints and redraw each one
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
 
-                // Get the audio time of the constraints and convert it to the position where to draw the constraint
-                var tAud = constraint.getTAudio();
-                var xVal = tAud * audio_scale;
+            // Get the audio time of the constraints and convert it to the position where to draw the constraint
+            var tAud = constraint.getTAudio();
+            var xVal = tAud * audio_scale;
 
-                // If the constraint was manually drawn it should be black, if it was automatic it should be gray
-                var type = constraint.getType();
-                var color = '#000';
-                if(type == 'Automatic'){
-                    color = '#BDBDBD';
-                }
-
-                // Redraw the constraint
-                redrawConstraint(constraint_num, xVal, color);
-
-                // Increment the ID number
-                constraint_num += 1;
+            // If the constraint was manually drawn it should be black, if it was automatic it should be gray
+            var type = constraint.getType();
+            var color = '#000';
+            if(type == 'Automatic'){
+                color = '#BDBDBD';
             }
-        }   
+
+            // Redraw the constraint
+            redrawConstraint(constraint_num, xVal, color);
+
+            // Increment the ID number
+            constraint_num += 1;
+        } 
 
     }
 
@@ -307,11 +303,11 @@ retimer.constraintsHandler = function(){
         // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
 
         // Make sure to convert this from the lecture duration to audio duration
-        var audio_scale = window.opener.pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
         console.log("scale: " + audio_scale);
         var tAud = xVal * audio_scale;
         console.log("taud: " + tAud);
-        var tVis = window.opener.pentimento.lectureController.retimingController.getVisualTime(tAud);
+        var tVis = pentimento.lectureController.retimingController.getVisualTime(tAud);
         console.log("tvis: " + tVis);
         // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(curr_audio_time, "Audio");
         // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(curr_audio_time, "Audio");
@@ -326,7 +322,7 @@ retimer.constraintsHandler = function(){
         // var tVis = interp*xVal;
         // var tAud = interp*xVal;
         var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
-        window.opener.pentimento.lectureController.retimingController.addConstraint(constraint);
+        pentimento.lectureController.retimingController.addConstraint(constraint);
     }
 
     // When a user drags the visuals end of a constraint the constraint will need to be updated
@@ -337,7 +333,7 @@ retimer.constraintsHandler = function(){
         console.log("anchor at: " + $('#retimer_constraints').getLayer(audio_name).x);
 
         // Figure out what the scale is in terms of the lecture position 
-        var audio_scale = window.opener.pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
 
         // Get the audio time from the position of the audio end of the constraint times the audio scales
         var tAud = $('#retimer_constraints').getLayer(audio_name).x * audio_scale;
@@ -358,11 +354,11 @@ retimer.constraintsHandler = function(){
         // Calculate the time of the new visual position in the global (audio) scale
         var draggedTAud = newVisXVal * audio_scale;
         // Get the new visul time (in terms of the new audio time)
-        var newTVis = window.opener.pentimento.lectureController.retimingController.getVisualTime(draggedTAud);
+        var newTVis = pentimento.lectureController.retimingController.getVisualTime(draggedTAud);
         console.log("newTVis: " + newTVis);
         
         // Get the constraints to iterate over
-        var constraints = window.opener.pentimento.lecture.getConstraintsIterator();
+        var constraints = pentimento.lecture.getConstraintsIterator();
 
         // TODO: why do I have the oldTVis??
         var oldTVis;
@@ -401,14 +397,14 @@ retimer.constraintsHandler = function(){
     // audio_name: the ID of the audio end of the constraint
     function updateAudioConstraint(audio_name, visual_name){
         // Calculate the scale to convert from position of the audio end of the constraint to audio time
-        var audio_scale = window.opener.pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
         // Get the visual time of the constraint in audio time
         var tVis = $('#retimer_constraints').getLayer(visual_name).x * audio_scale;
         // Get the new audio time where the user stopped dragging the audio constraint
         var newTAud = $('#retimer_constraints').getLayer(audio_name).x * audio_scale;
 
         // Get the constraints to iterate over
-        var constraints = window.opener.pentimento.lecture.getConstraintsIterator();
+        var constraints = pentimento.lecture.getConstraintsIterator();
 
         // Itereate over the constraints until the constraint with the visual time matching the visual time of the
         // dragged constraint is located and update audio time to match the new audio time
@@ -428,7 +424,7 @@ retimer.constraintsHandler = function(){
         }
     }
 
-}
+// }
 
 
 
@@ -442,7 +438,7 @@ retimer.constraintsHandler = function(){
 function getPreviousConstraint(time, type) {
     if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
 
-    var constraints = window.opener.pentimento.lecture.getConstraints();
+    var constraints = pentimento.lecture.getConstraints();
     var best;
     if(type=="Audio") {
         for(var i in constraints) {
@@ -464,7 +460,7 @@ function getPreviousConstraint(time, type) {
 function getNextConstraint(time, type) {
     if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
 
-    var constraints = window.opener.pentimento.lecture.getConstraints();
+    var constraints = pentimento.lecture.getConstraints();
     constraints.reverse();
     var best;
     if(type=="Audio") {
