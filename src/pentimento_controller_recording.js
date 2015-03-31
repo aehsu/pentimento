@@ -167,7 +167,6 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         um.startHierarchy(ActionGroups.SubSlideGroup);
         um.add(function() {}, ActionTitles.Dummy);
         pentimento.timeController.startRecording(lastTimeUpdate);
-        pentimento.state.isRecording = true;
     };
 
     function redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff) {
@@ -220,7 +219,6 @@ pentimento.recordingController = new function() {//records little mini-lectures,
                 redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
             }, ActionTitles.Recording);
         });
-        pentimento.state.isRecording = false;
         pentimento.timeController.stopRecording();
         try {
             um.endHierarchy(ActionGroups.RecordingGroup);

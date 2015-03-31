@@ -8,17 +8,17 @@ function lectureToolHandler(tool, event) {
     switch(tool) {
     	case 'pen':
             pentimento.state.canvas.on('mousedown', function(event) {
-                if (!pentimento.state.isRecording){ return; }
+                if (!pentimento.timeController.isRecording()){ return; }
                 event.preventDefault();
                 penMouseDown(event);
             });
             pentimento.state.canvas.on('mousemove', function(event){
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.timeController.isRecording()){return;}
                 event.preventDefault();
                 penMouseMove(event);
             });
             $(window).on('mouseup', function(event) {
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.timeController.isRecording()){return;}
                 event.preventDefault();
                 penMouseUp(event);
             });
@@ -26,24 +26,24 @@ function lectureToolHandler(tool, event) {
             break;
         case 'highlight':
             pentimento.state.canvas.on('mousedown', function(event) {
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.timeController.isRecording()){return;}
                 event.preventDefault();
                 highlightMouseDown(event);
             });
             pentimento.state.canvas.on('mousemove', function(event) {
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.timeController.isRecording()){return;}
                 event.preventDefault();
                 highlightMouseMove(event);
             });
             $(window).on('mouseup', function(event) {
-                if (!pentimento.state.isRecording){return;}
+                if (!pentimento.timeController.isRecording()){return;}
                 event.preventDefault();
                 highlightMouseUp(event);
             });
             pentimento.state.tool = tool;
             break;
         case 'add-slide':
-            if(pentimento.state.isRecording) {
+            if(pentimento.timeController.isRecording()) {
                 pentimento.recordingController.addSlide();
             }
             $(window).click();
@@ -57,17 +57,17 @@ function lectureToolHandler(tool, event) {
     		break;
         case 'select':
             pentimento.state.canvas.mousedown(function(event) {
-                if (!pentimento.state.isRecording) {return ;}
+                if (!pentimento.timeController.isRecording()) {return ;}
                 event.preventDefault();
                 lectureSelectMouseDown(event);
             });
             pentimento.state.canvas.mousemove(function(event) {
-                if (!pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
+                if (!pentimento.timeController.isRecording()||!pentimento.state.lmb) {return ;}
                 event.preventDefault();
                 lectureSelectMouseMove(event);
             });
             $(window).mouseup(function(event) {
-                if (!pentimento.state.isRecording) {return ;}
+                if (!pentimento.timeController.isRecording()) {return ;}
                 event.preventDefault();
                 lectureSelectMouseUp(event);
             });
@@ -97,7 +97,7 @@ function lectureToolHandler(tool, event) {
 function editToolHandler(tool, event) {
     switch(tool) {
     	case 'play': //also includes pause
-            if (pentimento.state.isRecording) {return ;}
+            if (pentimento.timeController.isRecording()) {return ;}
             playInterval = setInterval(function() {
                 if(pentimento.timeController.getTime() + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
                     pentimento.timeController.updateTime(pentimento.timeController.getTime()+INTERVAL_TIMING);
@@ -123,21 +123,21 @@ function editToolHandler(tool, event) {
     		break;
         case 'select':
             pentimento.state.canvas.mousedown(function(event) {
-                if (pentimento.state.isRecording) {return ;}
+                if (pentimento.timeController.isRecording()) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
                 drawThumbnails(1000,1);
                 editSelectMouseDown(event);
             });
             pentimento.state.canvas.mousemove(function(event) {
-                if (pentimento.state.isRecording||!pentimento.state.lmb) {return ;}
+                if (pentimento.timeController.isRecording()||!pentimento.state.lmb) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
                 drawThumbnails(1000,1);
                 editSelectMouseMove(event);
             });
             $(window).mouseup(function(event) {
-                if (pentimento.state.isRecording) {return ;}
+                if (pentimento.timeController.isRecording()) {return ;}
                 event.preventDefault();
                 updateVisuals(false);
                 drawThumbnails(1000,1);
@@ -145,7 +145,7 @@ function editToolHandler(tool, event) {
             });
             break;
     	case 'delete':
-            if (pentimento.state.isRecording || pentimento.state.selection.length==0) { return; }
+            if (pentimento.timeController.isRecording() || pentimento.state.selection.length==0) { return; }
             um.startHierarchy(ActionGroups.EditGroup);
             var t = pentimento.lectureController.visualsController.deleteVisuals(pentimento.state.currentSlide, pentimento.state.selection);
             um.endHierarchy(ActionGroups.EditGroup);
@@ -162,7 +162,7 @@ function editToolHandler(tool, event) {
             $('.recording-tool:visible').click()
             break;
         case 'width':
-            if(event.target.value=="" || pentimento.state.isRecording || pentimento.state.selection.length==0) { return; }
+            if(event.target.value=="" || pentimento.timeController.isRecording() || pentimento.state.selection.length==0) { return; }
             var newWidth = parseInt(event.target.value);
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.visualsController.editWidth(pentimento.state.selection, newWidth);
@@ -172,7 +172,7 @@ function editToolHandler(tool, event) {
             $('.edit-tool[data-toolname="width"]').val('');
             break;
         case 'delete-slide':
-            if(pentimento.state.isRecording) { return; }
+            if(pentimento.timeController.isRecording()) { return; }
             um.startHierarchy(ActionGroups.EditGroup);
             pentimento.lectureController.deleteSlide(pentimento.state.currentSlide);
             um.endHierarchy(ActionGroups.EditGroup);
@@ -214,24 +214,24 @@ function umToolHandler(event) {
     if(elt.prop('disabled')=='disabled') {
         return;
     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
-        if(pentimento.state.isRecording) { return; }
+        if(pentimento.timeController.isRecording()) { return; }
         var group = $(this).attr('data-group');
         um.undoHierarchy(group);
         updateVisuals(false);
         drawThumbnails(1000,1);
     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
-        if(!pentimento.state.isRecording) { return; }
+        if(!pentimento.timeController.isRecording()) { return; }
         var group = $(this).attr('data-group');
         um.undoHierarchy(group);
         updateVisuals(false);
         drawThumbnails(1000,1);
     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
-        if(pentimento.state.isRecording) { return; }
+        if(pentimento.timeController.isRecording()) { return; }
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals(false);
     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
-        if(!pentimento.state.isRecording) { return; }
+        if(!pentimento.timeController.isRecording()) { return; }
         var group = $(this).attr('data-group');
         um.redoHierarchy(group);
         updateVisuals(false);
