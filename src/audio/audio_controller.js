@@ -162,7 +162,7 @@ var AudioController = function() {
 
     // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
     // Callback method
-    this.updatePlayheadTime = function(timeMilli) {
+    var updatePlayheadTime = function(timeMilli) {
         // Check the time for valid bounds
         if (timeMilli < 0) {
             console.error("Invalid playhead time: " + timeMilli);
@@ -178,7 +178,7 @@ var AudioController = function() {
 
     // Start recording the audio at the given track time (ms)
     // Callback method registered to the time controller
-    this.startRecording = function(time) {
+    var startRecording = function(time) {
         console.log("Begin audio recording: " + time);
 
         // This method can only be called if the time controller is recording and a recording is not currently in progress
@@ -208,7 +208,7 @@ var AudioController = function() {
 
     // End the recording (only applies if there is an ongoing recording)
     // Callback method registered to the time controller
-    this.stopRecording = function(beginTime, endTime) {
+    var stopRecording = function(beginTime, endTime) {
         console.log("End audio recording (" + beginTime + ", " + endTime + ")");
 
         // This method can only be called if the time controller is not recording and a recording is currently in progress
@@ -246,7 +246,7 @@ var AudioController = function() {
 
     // Begin playback the audio at the given track time (ms)
     // Callback method registered to the time controller
-    this.startPlayback = function(time) {
+    var startPlayback = function(time) {
         console.log("AudioController: Start playback");
 
         // This method can only be called if the time controller is playing and a recording is not currently in progress
@@ -268,7 +268,7 @@ var AudioController = function() {
     };
 
     // Stop all playback activity
-    this.stopPlayback = function() {
+    var stopPlayback = function() {
         console.log("AudioController: Stop playback");
 
         // This method can only be called if the time controller is not playing and a recording is not currently in progress
@@ -615,11 +615,11 @@ var AudioController = function() {
     );
 
     // Register callbacks with the time controller
-    pentimento.timeController.addUpdateTimeCallback(self.updatePlayheadTime);
-    pentimento.timeController.addBeginRecordingCallback(self.startRecording);
-    pentimento.timeController.addEndRecordingCallback(self.stopRecording);
-    pentimento.timeController.addBeginPlaybackCallback(self.startPlayback);
-    pentimento.timeController.addEndPlaybackCallback(self.stopPlayback);
+    pentimento.timeController.addUpdateTimeCallback(updatePlayheadTime);
+    pentimento.timeController.addBeginRecordingCallback(startRecording);
+    pentimento.timeController.addEndRecordingCallback(stopRecording);
+    pentimento.timeController.addBeginPlaybackCallback(startPlayback);
+    pentimento.timeController.addEndPlaybackCallback(stopPlayback);
 
     // Button listener to start playing the audio
     var play_pause_button = $('#'+playPauseButtonID);
@@ -631,7 +631,7 @@ var AudioController = function() {
 
         // Start or stop playback and change the button text
         if (pentimento.timeController.isPlaying()) {
-            pentimento.timeController.stopPlayback(pen);  // Stop playback at the end of the audio
+            pentimento.timeController.stopPlayback();  // Stop playback at the end of the audio
         } else{
             // TODO: replace this with some method for getting the lecture duration
             // Find the track time when the playback should end
