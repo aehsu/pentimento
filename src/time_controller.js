@@ -1,4 +1,5 @@
 // Manages the lecture time
+// Time is kept to whole millisecond units.
 // Allows objects to register time update and recording/playback status callbacks.
 // Allows objects to change the current time and begin/end recording/playback.
 pentimento.timeController = new function() {
@@ -54,7 +55,7 @@ pentimento.timeController = new function() {
     // Update the current time and notify any callbacks
     this.updateTime = function(time) {
 
-        currentTime = time;
+        currentTime = Math.round(time);
 
         // Notify callbacks
         for (var i = 0; i < updateTimeCallbacks.length; i++) {
@@ -88,15 +89,15 @@ pentimento.timeController = new function() {
     // Playback ends at the specified time
     this.startPlayback = function(endTime) {
         // Check the validity of the end time
-        if (endTime < currentTime) {
+        if (typeof endTime !== "number" || endTime < currentTime) {
             console.error("startPlayback: invalid end time: " + endTime);
         };
 
         // Start the timing
         // If it suceeds, set the playback end timer and notify listeners
         if (startTiming()) {
-            playbackEndTime = endTime;
-            playbackEndTimer = setTimeout(self.stopPlayback, endTime - lastBeginTime);
+            playbackEndTime = Math.round(endTime);
+            playbackEndTimer = setTimeout(self.stopPlayback, playbackEndTime - lastBeginTime);
             for (var i = 0; i < beginPlaybackCallbacks.length; i++) {
                 beginPlaybackCallbacks[i](currentTime);
             };

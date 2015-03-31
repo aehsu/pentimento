@@ -10,7 +10,7 @@
     // Draw the thumbnails whenever the visuals in the main window are updated or changed
     // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
     // zoomFactor: how much to scale the curret zoom by.
-    function drawThumbnails(currZoom, zoomFactor){
+    var drawThumbnails = function(currZoom, zoomFactor){
 
         var numThumbs;
         console.log("drawingThumb Zoom: " + currZoom);
@@ -110,7 +110,7 @@
     // thumbOffset: the number of the thumbnail in the sequence of all of the thumbnails
     // currMin: the minimum time to be displayed by the current thumbnail
     // currMax: the maximumm time to be displayed by the current thumbnail
-    function generateThumbnail(currZoom, thumbOffset, curr_min, curr_max){
+    var generateThumbnail = function(currZoom, thumbOffset, curr_min, curr_max){
 
         // Draw the thumbnail image in the middle of the time interval represented by the thumbnail
         var thumbTime = Math.round((curr_min + curr_max)/2);
@@ -160,7 +160,7 @@
 
 
 
-function redrawThumbnails(numThumbs, thumbLength){
+var redrawThumbnails = function(numThumbs, thumbLength){
     // thumbLength = audio ms
     $('#thumbnails_div').empty();
     var max_time = pentimento.lectureController.getLectureDuration();
@@ -178,7 +178,7 @@ function redrawThumbnails(numThumbs, thumbLength){
 }
 
 // TODO: just redraw all constraints instead of doing this
-function insertThumbnails(currZoom, thumbOffset, curr_min, curr_max){
+var insertThumbnails = function(currZoom, thumbOffset, curr_min, curr_max){
     var last_thumb = $("#thumbnails_div :last-child").attr('id');
     var last_thumb_split = last_thumb.split('_');
     var last_thumb_num = last_thumb_split[last_thumb_split.length-1];
@@ -270,7 +270,7 @@ function insertThumbnails(currZoom, thumbOffset, curr_min, curr_max){
     }
 }
 
-function scaleThumbs(tVisOld, tVisPrev, tVisNew, tVisNext){
+var scaleThumbs = function(tVisOld, tVisPrev, tVisNew, tVisNext){
 
     // function scaleThumbs(zoomFactor, tMin, tMax)
     // console.log("ZOOMING");
@@ -316,7 +316,7 @@ function scaleThumbs(tVisOld, tVisPrev, tVisNew, tVisNext){
     $('#thumbnails_div').empty();
 }
 
-function updateVisuals(isThumbnail) {
+var updateVisuals = function(isThumbnail) {
     clear();
     var slideIter = pentimento.lecture.getSlidesIterator();
     var state = pentimento.state;
@@ -347,6 +347,23 @@ function updateVisuals(isThumbnail) {
     }
 }
 
-function clear() {
+var clear = function() {
     pentimento.state.context.clearRect(0, 0, pentimento.state.canvas.width(), pentimento.state.canvas.height());
 }
+
+// Register handlers for playing and pausing the visuals
+pentimento.timeController.addUpdateTimeCallback(function() {
+    if (pentimento.timeController.isPlaying()) {
+        updateVisuals(false);
+        drawThumbnails(1000,1);
+    };
+});
+pentimento.timeController.addBeginPlaybackCallback(function() {
+    $('input[data-toolname="play"]').toggleClass('hidden');
+    $('input[data-toolname="pause"]').toggleClass('hidden');
+});
+pentimento.timeController.addEndPlaybackCallback(function() {
+    $('input[data-toolname="play"]').toggleClass('hidden');
+    $('input[data-toolname="pause"]').toggleClass('hidden');
+});
+

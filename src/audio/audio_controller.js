@@ -251,6 +251,7 @@ var AudioController = function() {
 
         // This method can only be called if the time controller is playing and a recording is not currently in progress
         if ( !pentimento.timeController.isPlaying() || isAudioRecording ) {
+            console.log(pentimento.timeController.isPlaying());
             console.error("Cannot begin playback");
             return;
         };
