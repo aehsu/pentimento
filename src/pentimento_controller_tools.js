@@ -99,8 +99,8 @@ function editToolHandler(tool, event) {
     	case 'play': //also includes pause
             if (pentimento.state.isRecording) {return ;}
             playInterval = setInterval(function() {
-                if(pentimento.state.videoCursor + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
-                    pentimento.timeController.updateTime(pentimento.state.videoCursor+INTERVAL_TIMING);
+                if(pentimento.timeController.getTime() + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
+                    pentimento.timeController.updateTime(pentimento.timeController.getTime()+INTERVAL_TIMING);
                     updateVisuals(false);
                     drawThumbnails(1000,1);
                 } else {

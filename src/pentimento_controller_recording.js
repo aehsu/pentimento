@@ -1,6 +1,5 @@
 pentimento.recordingController = new function() {//records little mini-lectures, which is all a lecture is.
     var self = this;
-    var state = pentimento.state;
     var originSlide = null;
     var originSlideDuration = null;
     var shiftInterval = null;
@@ -21,7 +20,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         prevSlide.setDuration(prevSlide.getDuration() + newSlide.getDuration());
         pentimento.lectureController.removeSlide(newSlide); //does not add onto the undo stack
         // um.add(function() {}, ActionTitles.Dummy);
-        state.currentSlide = prevSlide;
+        pentimento.state.currentSlide = prevSlide;
 
         um.add(function() {
             reAddSlide(prevSlide, newSlide, oldInsertionTime, dirtyVisuals);
@@ -39,7 +38,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         newSlide.setDuration(newSlide.getDuration() + diff);
         pentimento.lectureController.addSlide(prevSlide, newSlide);
         // um.add(function() {}, ActionTitles.Dummy);
-        state.currentSlide = newSlide;
+        pentimento.state.currentSlide = newSlide;
         visualsInsertionTime = 0;
 
         um.add(function() {
@@ -48,14 +47,14 @@ pentimento.recordingController = new function() {//records little mini-lectures,
     }
 
     this.addSlide = function() {
-        if(!state.currentSlide) { console.log('something happend in adding a slide such that the state is incoherent'); return; }
+        if(!pentimento.state.currentSlide) { console.log('something happend in adding a slide such that the state is incoherent'); return; }
         um.startHierarchy(ActionGroups.SubSlideGroup);
         var time = globalTime();
         var diff = time - lastTimeUpdate;
         lastTimeUpdate = time;
         var oldInsertionTime = visualsInsertionTime;
         var oldDirtyVisuals = dirtyVisuals;
-        var prevSlide = state.currentSlide;
+        var prevSlide = pentimento.state.currentSlide;
         var newSlide = new Slide();
         
         pentimento.lectureController.addSlide(prevSlide, newSlide); //DOES NOT add an action onto the undo stack
@@ -85,7 +84,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         if(visual.getTDeletion() != null) { visual.setTDeletion(visualsInsertionTime + visual.getTDeletion() - lastTimeUpdate); }
         um.startHierarchy(ActionGroups.VisualGroup);// NOT SUPPORTED BY UNDO MANAGER
         //adds an action onto the undo stack
-        pentimento.lectureController.visualsController.addVisual(state.currentSlide, visual);
+        pentimento.lectureController.visualsController.addVisual(pentimento.state.currentSlide, visual);
         um.endHierarchy(ActionGroups.VisualGroup);// NOT SUPPORTED BY UNDO MANAGER
     }
 
@@ -114,52 +113,52 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         var iter = pentimento.lecture.getConstraintsIterator();
         while(iter.hasNext()) {
             var constraint = iter.next();
-            if(constraint.getTVisual() > state.videoCursor) {
+            if(constraint.getTVisual() > pentimento.timeController.getTime()) {
                 dirtyConstraints.push(pentimento.lectureController.retimingController.makeConstraintDirty(constraint));
             }
         }
     }
     
     function setDirtyVisuals() {
-        var iter = state.currentSlide.getVisualsIterator();
+        var iter = pentimento.state.currentSlide.getVisualsIterator();
         while(iter.hasNext()) {
             var visual = iter.next();
-            if(visual.getTMin() > state.videoCursor) { //is dirty
+            if(visual.getTMin() > pentimento.timeController.getTime()) { //is dirty
                 dirtyVisuals.push(pentimento.lectureController.visualsController.makeVisualDirty(visual));
             }
         }
     }
 
 	this.beginRecording = function() {
-        if(!state.currentSlide) {
+        if(!pentimento.state.currentSlide) {
             console.log("this should never, ever happen");
             return;
         }
-        //FIX ONCE AUDIO INTEGRATED! RIGHT NOW USES state.videoCursor for both times
+        //FIX ONCE AUDIO INTEGRATED! RIGHT NOW USES pentimento.timeController.getTime() for both times
         um.startHierarchy(ActionGroups.EditGroup);
-        pentimento.lectureController.retimingController.addConstraint(new Constraint(state.videoCursor, state.videoCursor, ConstraintTypes.Automatic));
-        pentimento.lectureController.retimingController.addConstraint(new Constraint(state.videoCursor+1, state.videoCursor+1, ConstraintTypes.Automatic));
+        pentimento.lectureController.retimingController.addConstraint(new Constraint(pentimento.timeController.getTime(), pentimento.timeController.getTime(), ConstraintTypes.Automatic));
+        pentimento.lectureController.retimingController.addConstraint(new Constraint(pentimento.timeController.getTime()+1, pentimento.timeController.getTime()+1, ConstraintTypes.Automatic));
         um.endHierarchy(ActionGroups.EditGroup);
 
         var duration = 0;
         var iter = pentimento.lecture.getSlidesIterator();
         while(iter.hasNext()) {
             var slide = iter.next();
-            if(slide==state.currentSlide) { break; }
+            if(slide==pentimento.state.currentSlide) { break; }
 
             duration += slide.getDuration();
         }
 
-        //TODO snap state.videoCursor leftmost
+        //TODO snap pentimento.timeController.getTime() leftmost
         //visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
-        visualsInsertionTime = state.videoCursor - duration;
+        visualsInsertionTime = pentimento.timeController.getTime() - duration;
         lastTimeUpdate = globalTime();
         recordingBegin = lastTimeUpdate;
-        originSlide = state.currentSlide;
-        originSlideDuration = state.currentSlide.getDuration();
+        originSlide = pentimento.state.currentSlide;
+        originSlideDuration = pentimento.state.currentSlide.getDuration();
 
         setDirtyConstraints();
-        //setDirtySlide(); -- always state.currentSlide
+        //setDirtySlide(); -- always pentimento.state.currentSlide
         setDirtyVisuals();
 
         // console.log('beginning recording at', lastTimeUpdate);
@@ -196,7 +195,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
 	this.stopRecording = function() {
         var gt = globalTime();
         var diff = gt - lastTimeUpdate;
-        state.currentSlide.setDuration(state.currentSlide.getDuration() + diff);
+        pentimento.state.currentSlide.setDuration(pentimento.state.currentSlide.getDuration() + diff);
         var totalDiff = gt - recordingBegin;
 
         //DOES NOT add an action onto the undo stack
@@ -214,7 +213,7 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             pentimento.lectureController.retimingController.shiftConstraints(tmpConst, -1.0*totalDiff);
             pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
 
-            //might not really do what you want with...pentimento.state.videoCursor - offset
+            //might not really do what you want with...pentimento.timeController.getTime() - offset
             pentimento.timeController.updateTime(0);
 
             um.add(function() {

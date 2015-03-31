@@ -1,5 +1,5 @@
 function drawVisual(visual, tVisual, isThumbnail, thumbParams) {
-    tVisual = tVisual || pentimento.state.videoCursor;
+    tVisual = tVisual || pentimento.timeController.getTime();
     //TODO SUPPORT FOR TRANSFORMS
     switch(visual.getType()) {
         case VisualTypes.basic:

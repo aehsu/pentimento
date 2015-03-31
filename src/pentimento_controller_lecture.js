@@ -6,9 +6,8 @@
 function LectureController(lec) {
     var self = this;
     var lecture = lec;
-    var state = pentimento.state;
-    state.currentSlide = new Slide();
-    lecture.setSlides([state.currentSlide]); //every lecture object is initialized irrevocably with at least one slide
+    pentimento.state.currentSlide = new Slide();
+    lecture.setSlides([pentimento.state.currentSlide]); //every lecture object is initialized irrevocably with at least one slide
 
     this.visualsController = new VisualsController(lecture);
     // this.audioController = new AudioController(lecture);
@@ -16,14 +15,14 @@ function LectureController(lec) {
 
     //utility
     this.setStateSlide = function() {
-        var time = state.videoCursor;
-        if(time==0) { state.currentSlide = lecture.getSlides()[0]; return; }
+        var time = pentimento.timeController.getTime();
+        if(time==0) { pentimento.state.currentSlide = lecture.getSlides()[0]; return; }
         var totalDuration=0;
         var slidesIter = lecture.getSlidesIterator();
         while(slidesIter.hasNext()) {
             var slide = slidesIter.next();
             if(time > totalDuration && time <= totalDuration+slide.getDuration()) {
-                state.currentSlide = slide;
+                pentimento.state.currentSlide = slide;
                 return;
             } else {
                 totalDuration += slide.getDuration();
@@ -44,7 +43,7 @@ function LectureController(lec) {
 
     // //recording mode function. undoing logic local to recording controller
     // this.unAddSlide = function(prevSlide, newSlide, index) {
-    //     if(newSlide != state.currentSlide) { console.log('Error in unadding a slide!'); }
+    //     if(newSlide != pentimento.state.currentSlide) { console.log('Error in unadding a slide!'); }
     //     var duration = 0;
     //     while(slideIter.hasNext()) {
     //         var slide = slideIter.next();
@@ -52,7 +51,7 @@ function LectureController(lec) {
     //         duration+= slide.getDuration();
     //     }
     //     pentimento.timeController.updateTime(duration);
-    //     state.currentSlide = prevSlide;
+    //     pentimento.state.currentSlide = prevSlide;
     // }
 
     //recording mode function. undoing logic local to recording controller
@@ -114,7 +113,7 @@ function LectureController(lec) {
             if(slideIter.index == index) { break; }
             duration += sl.getDuration();
         }
-        var slideTime = state.videoCursor - duration;
+        var slideTime = pentimento.timeController.getTime() - duration;
         pentimento.timeController.updateTime(duration); //self.setStateSlide() implicit
         //shift constraints
 

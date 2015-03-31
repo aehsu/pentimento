@@ -210,11 +210,11 @@ function lectureSelection(event) {
             state.selection.push(visual);
             pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
             //TODO should be fixed to be 
-            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.state.videoCursor).width+1, gt));
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, gt));
         } else if(nVert/visual.getVertices().length < .45 && state.selection.indexOf(visual)>-1) {
             state.selection.splice(state.selection.indexOf(visual), 1);
-            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.state.videoCursor), gt));
-            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.state.videoCursor), gt));
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), gt));
+            pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), gt));
         }
     }
 }

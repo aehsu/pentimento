@@ -27,7 +27,6 @@ pentimento.state = new function() {
     this.selection = [];
     
     this.currentSlide = null;
-    this.videoCursor = 0.0;
 };
 
 // Returns true if this Internet Explorer 10 or greater, running on a device

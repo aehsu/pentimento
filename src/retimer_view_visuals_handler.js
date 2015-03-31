@@ -117,7 +117,7 @@
 
         // Get the slides for the visuals
         var slides = pentimento.lecture.getSlidesIterator();
-        var slideTime = pentimento.state.videoCursor;
+        var slideTime = pentimento.timeController.getTime();
 
         // Boolean to tell if this is the first visual of the slide (to tell if a new thumbnail is created)
         var firstVisual = true;
@@ -248,7 +248,7 @@ function insertThumbnails(currZoom, thumbOffset, curr_min, curr_max){
         console.log("thumbTime: " + thumbTime);
 
         var slides = pentimento.lecture.getSlidesIterator();
-        var slideTime = pentimento.state.videoCursor;
+        var slideTime = pentimento.timeController.getTime();
         var firstVisual = true;
         while(slides.hasNext()){
             var slide = slides.next();
