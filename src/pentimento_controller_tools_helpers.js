@@ -147,27 +147,24 @@ function clearPreviousHandlers() {
 
 /**********************************LECTURE-MODE TOOLS**********************************/
 function penMouseDown(event) {
-    var state = pentimento.state;
-    state.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(state.color, state.width));
-    state.lastPoint = getCanvasPoint(event);
-    state.currentVisual.getVertices().push(state.lastPoint);
-    pentimento.recordingController.addVisual(state.currentVisual);
+    pentimento.state.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(pentimento.state.color, pentimento.state.width));
+    pentimento.state.lastPoint = getCanvasPoint(event);
+    pentimento.state.currentVisual.getVertices().push(pentimento.state.lastPoint);
+    pentimento.recordingController.addVisual(pentimento.state.currentVisual);
 }
 
 function penMouseMove(event) {
-    var state = pentimento.state;
-    if (state.lmb) {
+    if (pentimento.state.lmb) {
         var curPoint = getCanvasPoint(event);
-        state.lastPoint = curPoint;
-        pentimento.recordingController.appendVertex(state.currentVisual, curPoint);
+        pentimento.state.lastPoint = curPoint;
+        pentimento.recordingController.appendVertex(pentimento.state.currentVisual, curPoint);
     }
 }
 
 function penMouseUp(event) {
-    var state = pentimento.state;
-    if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
-        state.currentVisual = null;
-        state.lastPoint = null;
+    if(pentimento.state.currentVisual) { //check for not null and not undefined  != null && !=undefined
+        pentimento.state.currentVisual = null;
+        pentimento.state.lastPoint = null;
     }
 }
 
@@ -180,39 +177,37 @@ function highlightMouseMove(event) {
 }
 
 function highlightMouseUp(event) {
-    var state = pentimento.state;
     var highlightTime = 750; //duration for a highlighter, in ms
-    if(state.currentVisual) { //check for not null and not undefined  != null && !=undefined
-        pentimento.recordingController.setTDeletion([state.currentVisual], globalTime() + highlightTime);
-        state.currentVisual = null;
-        state.lastPoint = null;
+    if(pentimento.state.currentVisual) { //check for not null and not undefined  != null && !=undefined
+        pentimento.recordingController.setTDeletion([pentimento.state.currentVisual], globalTime() + highlightTime);
+        pentimento.state.currentVisual = null;
+        pentimento.state.lastPoint = null;
     }
 }
 
 function lectureSelection(event) {
-    var state = pentimento.state;
     var coord = getCanvasPoint(event);
-    var ctx = state.context;
-    var visualsIter = state.currentSlide.getVisualsIterator();
+    var ctx = pentimento.state.context;
+    var visualsIter = pentimento.state.currentSlide.getVisualsIterator();
     while(visualsIter.hasNext()) {
         var visual = visualsIter.next();
-        if (!isVisualVisible(visual, state.videoCursor)) { continue; }
+        if (!isVisualVisible(visual, pentimento.timeController.getTime())) { continue; }
 
         var nVert = 0;
         var vertIter = visual.getVerticesIterator();
         while (vertIter.hasNext()) {
             var vertex = vertIter.next();
-            if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
-            if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
+            if (!isVertexVisible(vertex, pentimento.timeController.getTime())) { continue; }
+            if (isInside(pentimento.state.lastPoint, coord, vertex)) { nVert++; }
         }
-        if(nVert/visual.getVertices().length >= .45 && state.selection.indexOf(visual)==-1) {
+        if(nVert/visual.getVertices().length >= .45 && pentimento.state.selection.indexOf(visual)==-1) {
             var gt = globalTime();
-            state.selection.push(visual);
+            pentimento.state.selection.push(visual);
             pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
             //TODO should be fixed to be 
             pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, gt));
-        } else if(nVert/visual.getVertices().length < .45 && state.selection.indexOf(visual)>-1) {
-            state.selection.splice(state.selection.indexOf(visual), 1);
+        } else if(nVert/visual.getVertices().length < .45 && pentimento.state.selection.indexOf(visual)>-1) {
+            pentimento.state.selection.splice(pentimento.state.selection.indexOf(visual), 1);
             pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), gt));
             pentimento.recordingController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), gt));
         }
@@ -225,15 +220,14 @@ function lectureSelectMouseDown(event) {
 }
 
 function lectureSelectMouseMove(event) {
-    var state = pentimento.state;
-    var ctx = state.context;
+    var ctx = pentimento.state.context;
     var coord = getCanvasPoint(event);
     
     lectureSelection(event);
 
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
-    ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
+    ctx.strokeRect(pentimento.state.lastPoint.getX(), pentimento.state.lastPoint.getY(), coord.getX()-pentimento.state.lastPoint.getX(), coord.getY()-pentimento.state.lastPoint.getY());
 
     ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
     ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
@@ -244,39 +238,35 @@ function lectureSelectMouseUp(event) {
 }
 
 function lectureDelete() {
-    var state = pentimento.state;
 
 }
 /**********************************LECTURE-MODE TOOLS**********************************/
 
 /**********************************EDITING-MODE TOOLS**********************************/
 function editSelectMouseDown(event) {
-    var state = pentimento.state;
-    state.lastPoint = getCanvasPoint(event);
-    state.selection = [];
+    pentimento.state.lastPoint = getCanvasPoint(event);
+    pentimento.state.selection = [];
 }
 
 function editSelectMouseMove(event) {
-    var state = pentimento.state;
-
     var coord = getCanvasPoint(event);
-    var ctx = state.context;
-    state.selection = [];
+    var ctx = pentimento.state.context;
+    pentimento.state.selection = [];
 
-    var visualsIter = state.currentSlide.getVisualsIterator();
+    var visualsIter = pentimento.state.currentSlide.getVisualsIterator();
     while(visualsIter.hasNext()) {
         var visual = visualsIter.next();
-        if (!isVisualVisible(visual, state.videoCursor)) { continue; }
+        if (!isVisualVisible(visual, pentimento.timeController.getTime())) { continue; }
 
         var nVert = 0;
         var vertIter = visual.getVerticesIterator();
         while (vertIter.hasNext()) {
             var vertex = vertIter.next();
-            if (!isVertexVisible(vertex, state.videoCursor)) { continue; }
-            if (isInside(state.lastPoint, coord, vertex)) { nVert++; }
+            if (!isVertexVisible(vertex, pentimento.timeController.getTime())) { continue; }
+            if (isInside(pentimento.state.lastPoint, coord, vertex)) { nVert++; }
         }
         if(nVert/visual.getVertices().length >= .45) {
-            state.selection.push(visual);
+            pentimento.state.selection.push(visual);
         }
     }
 
@@ -284,16 +274,15 @@ function editSelectMouseMove(event) {
     drawThumbnails(1000,1);
     ctx.strokeStyle = "#0000FF";
     ctx.lineWidth = 2;
-    ctx.strokeRect(state.lastPoint.getX(), state.lastPoint.getY(), coord.getX()-state.lastPoint.getX(), coord.getY()-state.lastPoint.getY());
+    ctx.strokeRect(pentimento.state.lastPoint.getX(), pentimento.state.lastPoint.getY(), coord.getX()-pentimento.state.lastPoint.getX(), coord.getY()-pentimento.state.lastPoint.getY());
 
     ctx.strokeStyle = pentimento.state.color; // should be valid if you say pentimento.state.color
     ctx.lineWidth = pentimento.state.width; // should be valid if you say pentimento.state.width
 }
 
 function editSelectMouseUp(event) {
-    var state =  pentimento.state;
-    for(var i in state.selection) {
-        var visCopy = state.selection[i].getClone();
+    for(var i in pentimento.state.selection) {
+        var visCopy = pentimento.state.selection[i].getClone();
         var propsCopy = visCopy.getProperties();
         propsCopy.setWidth(propsCopy.getWidth()+1);
         propsCopy.setColor("#0000FF");

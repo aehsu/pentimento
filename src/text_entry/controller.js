@@ -6,7 +6,7 @@ $(document).ready(function() {
     };
     
     var insertChar = function(character) {
-        var abs_time = pentimento.state.videoCursor;
+        var abs_time = pentimento.timeController.getTime();
         var rel_time;
         if (getCharIndex() == 0) {
             rel_time = abs_time;

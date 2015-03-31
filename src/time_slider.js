@@ -68,7 +68,6 @@ pentimento.time_slider_controller = new function() {
     // Update the canvas to display contents at the specified time
     var updateCanvas = function(time) {
         pentimento.state.selection = [];
-        pentimento.state.videoCursor = time;
         pentimento.lectureController.setStateSlide();
 
         updateVisuals(false);

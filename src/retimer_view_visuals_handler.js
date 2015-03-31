@@ -320,7 +320,7 @@ function updateVisuals(isThumbnail) {
     clear();
     var slideIter = pentimento.lecture.getSlidesIterator();
     var state = pentimento.state;
-    var slideTime = state.videoCursor;
+    var slideTime = pentimento.timeController.getTime();
     while(slideIter.hasNext()) {
         var slide = slideIter.next();
         if(slide==state.currentSlide) {
