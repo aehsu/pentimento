@@ -129,12 +129,39 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         }
     }
 
-	this.beginRecording = function() {
+    var redoRecording = function(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff) {
+        dummyOriginSlide.setDuration(dummyOriginSlide.getDuration()+offset)
+        pentimento.lectureController.retimingController.shiftConstraints(tmpConst, 1.0*totalDiff);
+        pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, 1.0*diff);
+
+        pentimento.timeController.updateTime(0);
+        um.add(function() {
+            undoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
+        }, ActionTitles.Recording);
+    }
+
+    var undoRecording = function(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff) {
+        dummyOriginSlide.setDuration(dummyOriginSlide.getDuration()-offset);
+        pentimento.lectureController.retimingController.shiftConstraints(tmpConst, -1.0*totalDiff);
+        pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
+
+        pentimento.timeController.updateTime(0);
+        um.add(function() {
+            redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff)
+        }, ActionTitles.Recording);
+    }
+
+    var beginRecording = function() {
         if(!pentimento.state.currentSlide) {
             console.log("this should never, ever happen");
             return;
         }
-        //FIX ONCE AUDIO INTEGRATED! RIGHT NOW USES pentimento.timeController.getTime() for both times
+
+        pentimento.state.selection  = [];
+        updateVisuals(false); //clear any selection when switching modes
+        $('input[data-toolname="pen"]').click();
+        $('.recording-tool').toggleClass('hidden');
+
         um.startHierarchy(ActionGroups.EditGroup);
         pentimento.lectureController.retimingController.addConstraint(new Constraint(pentimento.timeController.getTime(), pentimento.timeController.getTime(), ConstraintTypes.Automatic));
         pentimento.lectureController.retimingController.addConstraint(new Constraint(pentimento.timeController.getTime()+1, pentimento.timeController.getTime()+1, ConstraintTypes.Automatic));
@@ -166,32 +193,15 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         um.add(function() {}, ActionTitles.Dummy);
         um.startHierarchy(ActionGroups.SubSlideGroup);
         um.add(function() {}, ActionTitles.Dummy);
-        pentimento.timeController.startRecording(lastTimeUpdate);
     };
 
-    function redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff) {
-        dummyOriginSlide.setDuration(dummyOriginSlide.getDuration()+offset)
-        pentimento.lectureController.retimingController.shiftConstraints(tmpConst, 1.0*totalDiff);
-        pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, 1.0*diff);
+	var stopRecording = function() {
 
-        pentimento.timeController.updateTime(0);
-        um.add(function() {
-            undoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
-        }, ActionTitles.Recording);
-    }
+        pentimento.state.selection  = [];
+        updateVisuals(false); //clear any selection when switching modes
+        pentimento.state.tool = null;
+        $('.recording-tool').toggleClass('hidden');
 
-    function undoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff) {
-        dummyOriginSlide.setDuration(dummyOriginSlide.getDuration()-offset);
-        pentimento.lectureController.retimingController.shiftConstraints(tmpConst, -1.0*totalDiff);
-        pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
-
-        pentimento.timeController.updateTime(0);
-        um.add(function() {
-            redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff)
-        }, ActionTitles.Recording);
-    }
-
-	this.stopRecording = function() {
         var gt = globalTime();
         var diff = gt - lastTimeUpdate;
         pentimento.state.currentSlide.setDuration(pentimento.state.currentSlide.getDuration() + diff);
@@ -212,14 +222,10 @@ pentimento.recordingController = new function() {//records little mini-lectures,
             pentimento.lectureController.retimingController.shiftConstraints(tmpConst, -1.0*totalDiff);
             pentimento.lectureController.visualsController.shiftVisuals(tmpVisuals, -1.0*diff);
 
-            //might not really do what you want with...pentimento.timeController.getTime() - offset
-            pentimento.timeController.updateTime(0);
-
             um.add(function() {
                 redoRecording(dummyOriginSlide, offset, tmpConst, tmpVisuals, totalDiff, diff);
             }, ActionTitles.Recording);
         });
-        pentimento.timeController.stopRecording();
         try {
             um.endHierarchy(ActionGroups.RecordingGroup);
         } catch(e) {
@@ -235,5 +241,11 @@ pentimento.recordingController = new function() {//records little mini-lectures,
         dirtyConstraints = [];
 
         drawThumbnails(1000,1);
-	}
+	};
+
+    // Initialization
+    pentimento.timeController.addBeginRecordingCallback(beginRecording);
+    pentimento.timeController.addEndRecordingCallback(stopRecording);
+
+
 };

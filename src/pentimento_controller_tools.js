@@ -195,18 +195,11 @@ function editToolHandler(tool, event) {
 
 function recordingToolHandler(event) {
     var elt = $(event.target);
-    pentimento.state.selection  = [];
-    updateVisuals(false); //clear any selection when switching modes
     if (elt.attr('data-toolname')==='begin') {
-        pentimento.state.recordingType = RecordingTypes.VideoOnly; //will have to change for realz when audio comes into play
-        pentimento.recordingController.beginRecording();
-        $('input[data-toolname="pen"]').click();
+        pentimento.timeController.startRecording();
     } else {
-        pentimento.recordingController.stopRecording();
-        pentimento.state.tool = null;
-        pentimento.state.recordingType = null;
+        pentimento.timeController.stopRecording();
     }
-    $('.recording-tool').toggleClass('hidden');
 }
 
 function umToolHandler(event) {

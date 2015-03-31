@@ -88,9 +88,9 @@ testSuite = {
 		pentimento.lectureController = new LectureController(pentimento.lecture);
 		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
 		var start = globalTime();
-		pentimento.recordingController.beginRecording();
+		pentimento.timeController.startRecording();
 		while(globalTime() < start + 500) {} //block
-		pentimento.recordingController.stopRecording();
+		pentimento.timeController.stopRecording();
 		if(pentimento.lectureController.getLectureDuration() == 0) {
 			return false;
 		} else {
@@ -102,14 +102,14 @@ testSuite = {
 		pentimento.lectureController = new LectureController(pentimento.lecture);
 		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
 		var start = globalTime();
-		pentimento.recordingController.beginRecording();
+		pentimento.timeController.startRecording();
 		var visuals = makeTestVisuals();
 		for(var i in visuals) {
 			var visual = visuals[i];
 			pentimento.recordingController.addVisual(visual);
 		}
 		while(globalTime() < start + 500) {} //block
-		pentimento.recordingController.stopRecording();
+		pentimento.timeController.stopRecording();
 		if(pentimento.lecture.getSlides()[0].getVisuals().length != visuals.length) {
 			return false;
 		} else {
@@ -121,13 +121,13 @@ testSuite = {
 		pentimento.lectureController = new LectureController(pentimento.lecture);
 		um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], false);
 		var start = globalTime();
-		pentimento.recordingController.beginRecording();
+		pentimento.timeController.startRecording();
 		var additions = Math.floor(1+Math.random()*10);
 		for(var i=0; i<additions; i++) {
 			pentimento.recordingController.addSlide();
 		}
 		while(globalTime() < start + 500) {} //block
-		pentimento.recordingController.stopRecording();
+		pentimento.timeController.stopRecording();
 		if(additions+1 != pentimento.lecture.getSlides().length) {
 			return false;
 		} else {
@@ -144,9 +144,9 @@ testSuite = {
 		pentimento.lectureController.retimingController.addConstraint(second);
 		var start = globalTime();
 		var initialDuration = 0;
-		pentimento.recordingController.beginRecording();
+		pentimento.timeController.startRecording();
 		while(globalTime() < start + 500) {} //block
-		pentimento.recordingController.stopRecording();
+		pentimento.timeController.stopRecording();
 		var finalDuration = pentimento.lectureController.getLectureDuration();
 		if(second.getTVisual() - finalDuration == 1 && first.getTVisual() == 0) {
 			return true;
@@ -171,9 +171,9 @@ testSuite = {
 			pentimento.lectureController.visualsController.addVisual(pentimento.state.currentSlide, visual);
 		}
 		var start = globalTime();
-		pentimento.recordingController.beginRecording();
+		pentimento.timeController.startRecording();
 		while(globalTime() < start + 500) {} //block
-		pentimento.recordingController.stopRecording();
+		pentimento.timeController.stopRecording();
 		for(var i in visuals1) {
 			if(visuals1[i].getTMin() != 0) { return false; }
 		}
