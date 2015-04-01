@@ -229,7 +229,10 @@ var insertThumbnails = function(currZoom, thumbOffset, curr_min, curr_max){
         }
     });
 
-    var numThumbs = Math.ceil((max_time-max_kept_thumb_time)/thumbZoom);
+    // Get the end time of the lecture, lecture duration. 
+    var max_time = pentimento.lectureController.getLectureDuration();
+
+    var numThumbs = Math.ceil((max_time-max_kept_thumb_time)/currZoom);
 
     console.log('numThumbs: ' + numThumbs + ", max_time: " + max_time + ", thumb_max_time: " + max_kept_thumb_time + ", max_kept_thumb: " + max_kept_thumb);
 

@@ -54,6 +54,9 @@ pentimento.timeController = new function() {
 
     // Update the current time and notify any callbacks
     this.updateTime = function(time) {
+        if (time < 0) {
+            console.error("Invalid time: " + time);
+        };
 
         currentTime = Math.round(time);
 
@@ -90,7 +93,7 @@ pentimento.timeController = new function() {
     this.startPlayback = function(endTime) {
         // Check the validity of the end time
         if (typeof endTime !== "number" || endTime < currentTime) {
-            console.error("startPlayback: invalid end time: " + endTime);
+            return;
         };
 
         // Start the timing
@@ -177,7 +180,7 @@ pentimento.timeController = new function() {
         // Calculate the new current time
         currentTime += (globalTime() - lastGlobalTime);
 
-        // Reset the global time to indicate that the timing has stopped
+        // Reset the global time
         lastGlobalTime = -1;
 
         return true;
@@ -195,8 +198,8 @@ pentimento.timeController = new function() {
     // When the last timer began (lecture time)
     var lastBeginTime = -1;  // Set at the beginning of every recording or playback
 
-    // Keeps track of the last UTC global time to calculate time passed when the timer is progressing
-    // -1 indicates that the timer is not moving
+    // Keeps track of the last UTC global time to calculate time passed when the timer is progressing.
+    // When the value is not -1, it indicates that we are currently timing.
     var lastGlobalTime = -1;
 
     // During playback, there is a timer that ends playback at the specified end time

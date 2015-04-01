@@ -97,20 +97,6 @@ function lectureToolHandler(tool, event) {
 function editToolHandler(tool, event) {
     switch(tool) {
     	case 'play': //also includes pause
-            // if (pentimento.timeController.isRecording()) {return ;}
-            // playInterval = setInterval(function() {
-            //     if(pentimento.timeController.getTime() + INTERVAL_TIMING <= pentimento.lectureController.getLectureDuration()) {
-            //         pentimento.timeController.updateTime(pentimento.timeController.getTime()+INTERVAL_TIMING);
-            //         updateVisuals(false);
-            //         drawThumbnails(1000,1);
-            //     } else {
-            //         clearInterval(playInterval);
-            //         $('input[data-toolname="play"]').toggleClass('hidden');
-            //         $('input[data-toolname="pause"]').toggleClass('hidden');
-            //     }
-            // }, INTERVAL_TIMING);
-            // $('input[data-toolname="play"]').toggleClass('hidden');
-            // $('input[data-toolname="pause"]').toggleClass('hidden');
             pentimento.timeController.startPlayback(pentimento.lectureController.getLectureDuration());
     		break;
         case 'pause':
