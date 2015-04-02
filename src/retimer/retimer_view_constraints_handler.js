@@ -48,7 +48,7 @@
                         constraintDrag(visuals_constraint, audio_constraint, 15, arrow_name)
                     },
                     dragstop: function(layer){
-                        updateVisualConstraint(visuals_constraint, audio_constraint);
+                        updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
                     }
                 })
                 .drawArc({
@@ -63,7 +63,7 @@
                         constraintDrag(audio_constraint, visuals_constraint, 185, arrow_name);
                     },
                     dragstop: function(layer){
-                        updateAudioConstraint(audio_constraint, visuals_constraint);
+                        updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
                     }
                 });
             // Draw the constraint (using jcanvas)
@@ -246,6 +246,8 @@
     // color: color of the constraint (automatic: gray, manual: black)
     function redrawConstraint(constraint_num, xVal, color){
 
+        console.log("REDRAWING??");
+
         // Set the ID for the constraint
         var arrow_name = "arrow_"+constraint_num;
         var visuals_constraint = "visuals_constraint"+constraint_num;
@@ -272,7 +274,7 @@
                     constraintDrag(visuals_constraint, audio_constraint, 15, arrow_name)
                 },
                 dragstop: function(layer){
-                    updateVisualConstraint(visuals_constraint, audio_constraint);
+                    updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
                 }
             })
             .drawArc({
@@ -286,9 +288,11 @@
                     constraintDrag(audio_constraint, visuals_constraint, 185, arrow_name);
                 },
                 dragstop: function(layer){
-                    updateAudioConstraint(audio_constraint, visuals_constraint);
+                    updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
                 }
             });
+            // Draw the constraint (using jcanvas)
+            $('#retimer_constraints').drawLayers();
     }
 
     // When a user adds a constraint, add the constraint to the lecture
@@ -328,7 +332,7 @@
     // When a user drags the visuals end of a constraint the constraint will need to be updated
     // visual_name: the ID of the visual end of the constraint
     // audio_name: the ID of the audio end of the constraint
-    function updateVisualConstraint(visual_name, audio_name){
+    function updateVisualConstraint(constraint_num, visual_name, audio_name, arrow_name){
         console.log("dragged to: " + $('#retimer_constraints').getLayer(visual_name).x);
         console.log("anchor at: " + $('#retimer_constraints').getLayer(audio_name).x);
 
@@ -373,8 +377,25 @@
             // the visual time of that specific constraint
             if(currTAud == tAud){
                 console.log("SETTING!");
-                oldTVis = constraint.getTVisual();
                 constraint.setTVisual(newTVis);
+
+                // console.log("OLD X: " + $('#retimer_constraints').getLayer(visual_name).x);
+
+                // $('#retimer_constraints').getLayer(visual_name).x = $('#retimer_constraints').getLayer(audio_name).x;
+                // $('#retimer_constraints').getLayer(arrow_name).x1 = $('#retimer_constraints').getLayer(audio_name).x;
+                // $('#retimer_constraints').drawLayers();
+
+                // console.log("NEW X: " + $('#retimer_constraints').getLayer(visual_name).x);
+
+                var type = constraint.getType();
+                var color = '#000';
+                if(type == 'Automatic'){
+                    color = '#BDBDBD';
+                }
+
+                $('#retimer_constraints').clearCanvas();
+
+                redrawConstraints();
                 break;
             }
         }
@@ -395,7 +416,7 @@
     // When a user drags the audio end of a constraint the audio time of that constraint must be updated
     // visual_name: the ID of the visual end of the constraint
     // audio_name: the ID of the audio end of the constraint
-    function updateAudioConstraint(audio_name, visual_name){
+    function updateAudioConstraint(constraint_num, audio_name, visual_name, arrow_name){
         // Calculate the scale to convert from position of the audio end of the constraint to audio time
         var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
         // Get the visual time of the constraint in audio time
@@ -419,10 +440,32 @@
             if(currTVis == tVis){
                 console.log("SETTING!");
                 constraint.setTAudio(newTAud);
+
+                // console.log("OLD X: " + $('#retimer_constraints').getLayer(visual_name).x);
+
+                // $('#retimer_constraints').getLayer(visual_name).x = $('#retimer_constraints').getLayer(audio_name).x;
+                // $('#retimer_constraints').getLayer(arrow_name).x1 = $('#retimer_constraints').getLayer(audio_name).x;
+                // $('#retimer_constraints').drawLayers();
+
+                // console.log("NEW X: " + $('#retimer_constraints').getLayer(visual_name).x);
+                
+                var type = constraint.getType();
+                var color = '#000';
+                if(type == 'Automatic'){
+                    color = '#BDBDBD';
+                }
+
+                $('#retimer_constraints').clearCanvas();
+
+                redrawConstraints();
                 break;
             }
         }
     }
+
+    // function snapConstraint(constraint_num, xPos){
+    //     reddrawConstraint(constraint_num, xPos)
+    // }
 
 // }
 
