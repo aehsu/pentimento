@@ -54,7 +54,7 @@ pentimento.timeController = new function() {
 
     // Update the current time and notify any callbacks
     this.updateTime = function(time) {
-        if (time < 0) {
+        if (typeof time !== "number" || time < 0) {
             console.error("Invalid time: " + time);
         };
 

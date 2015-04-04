@@ -2,23 +2,28 @@
 // All audio model data should be modified only through the class methods provided.
 pentimento.audio_model = function() {
 
-    this.audio_tracks = [];
+    var audio_tracks = [];
+
+    // Get the audio tracks
+    this.getAudioTracks = function() {
+        return audio_tracks;
+    };
 
     // Create a new empty audio track and return it.
     this.createTrack = function() {
         var newTrack = new pentimento.audio_track();
-        this.audio_tracks.push(newTrack);
+        audio_tracks.push(newTrack);
         return newTrack;
     };
 
     // Remove the specified audio track
     this.removeTrack = function(track) {
         // Find the index of the track to be removed
-        var index = this.audio_tracks.indexOf(track);
+        var index = audio_tracks.indexOf(track);
 
         // Remove the track from the tracks array if it exists
         if (index > -1) {
-            this.audio_tracks.splice(index, 1);
+            audio_tracks.splice(index, 1);
         };
 
         return (index > -1);
@@ -28,15 +33,20 @@ pentimento.audio_model = function() {
 // Audio track contains non-overlapping audio segments
 pentimento.audio_track = function() {
 
-	this.audio_segments = [];
+	var audio_segments = [];
+
+    // Get the audio segments
+    this.getAudioSegments = function() {
+        return audio_segments;
+    };
 
     // Insert the provided segment.
     // Other segments in the track may be shifted as a result.
     this.insertSegment = function(newSegment) {
 
         // Iterate over all segments for the track
-        for (var i = 0; i < this.audio_segments.length; i++) {
-            var shift_segment = this.audio_segments[i];
+        for (var i = 0; i < audio_segments.length; i++) {
+            var shift_segment = audio_segments[i];
 
             // If the segment is to the right of the inserted segment's begin time, then shift
             if ( newSegment.start_time <= shift_segment.start_time ) {
@@ -45,18 +55,18 @@ pentimento.audio_track = function() {
         };
 
         // Insert the segment
-        this.audio_segments.push(newSegment);
+        audio_segments.push(newSegment);
     };
 
     // Remove the specified segment. 
     // Returns true if the segment was removed.
     this.removeSegment = function(segment) {
         // Find the index of the segment to be removed
-        var index = this.audio_segments.indexOf(segment);
+        var index = audio_segments.indexOf(segment);
 
         // Remove the segment from the segments array if it exists
         if (index > -1) {
-            this.audio_segments.splice(index, 1);
+            audio_segments.splice(index, 1);
         };
 
         return (index > -1);
@@ -72,7 +82,7 @@ pentimento.audio_track = function() {
     this.canShiftSegment = function(segment, shift_millisec) {
 
         // Check that the segment exists in the track
-        if (this.audio_segments.indexOf(segment) < 0) {
+        if (audio_segments.indexOf(segment) < 0) {
             return "segment does not exist";
         };
 
@@ -85,8 +95,8 @@ pentimento.audio_track = function() {
         };
 
         // Check for overlap with existing segments
-        for (var i = 0; i < this.audio_segments.length; i++) {
-            var currentSegment = this.audio_segments[i];
+        for (var i = 0; i < audio_segments.length; i++) {
+            var currentSegment = audio_segments[i];
 
             // Don't check against itself
             if (currentSegment === segment) {
@@ -182,8 +192,8 @@ pentimento.audio_track = function() {
 
         // Check for overlap with existing segments
         var minDiff = Number.MAX_VALUE;  // Always positive, distance between new side and end of last valid crop point
-        for (var i = 0; i < this.audio_segments.length; i++) {
-            var currentSegment = this.audio_segments[i];
+        for (var i = 0; i < audio_segments.length; i++) {
+            var currentSegment = audio_segments[i];
 
             // Don't check against itself
             if (currentSegment === segment) {
@@ -249,8 +259,8 @@ pentimento.audio_track = function() {
 
         // Iterate over all the segments in the track and get the greatest time
         var timeEnd = 0;
-        for (var i = 0; i < this.audio_segments.length; i++) {
-            timeEnd = Math.max(this.audio_segments[i].end_time, timeEnd);
+        for (var i = 0; i < audio_segments.length; i++) {
+            timeEnd = Math.max(audio_segments[i].end_time, timeEnd);
         };
         return timeEnd;
     };

@@ -99,6 +99,11 @@ var AudioController = function() {
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
 
+    // Get the audio model that holds all the audio information
+    var getAudioModel = function() {
+        return audioModel;
+    };
+
     // Insert a new track controller with an empty track and refresh the view
     var createTrackController = function() {
         var newTrack = audioModel.createTrack();
@@ -396,7 +401,7 @@ var AudioController = function() {
         // Plus the margin and border widths (2 each).
         var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
         var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
-        var heightPixels = (Math.max(audioModel.audio_tracks.length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
+        var heightPixels = (Math.max(audioModel.getAudioTracks().length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
         gradation_container.css('width', widthPixels);
         gradation_container.css('height', heightPixels);
 

@@ -1,5 +1,4 @@
 /***********************CONFIGURATION***********************/
-INTERVAL_TIMING = 50; //in ms for any intervals that need to be set in the code
 SHIFT_INTERVAL = 1000;
 DEBUG = true;
 snapRecording = true;

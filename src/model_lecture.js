@@ -62,16 +62,16 @@ function Constraint(tvis, taud, mytype) {
 
 function Lecture() {
     var slides = [];
-    var audioTracks = [];
+    var audioModel = null;
     var constraints = [];
     // var transforms = [];
     
     this.getSlides = function() { return slides; }
-    this.getAudioTracks = function() { return audioTracks; }
+    this.getAudioModel = function() { return audioModel; }
     this.getConstraints = function() { return constraints; }
 
     this.setSlides = function(newSlides) { slides = newSlides; }
-    this.setAudioTracks = function(newAudioTracks) { audioTracks = newAudioTracks; }
+    this.setAudioModel = function(newAudioModel) { audioModel = newAudioModel; }
     this.setConstraints = function(newConstraints) { constraints = newConstraints; }
 
     this.getSlidesIterator = function() { return new Iterator(slides); }
