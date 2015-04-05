@@ -29,18 +29,28 @@ var VisualsModel = function() {
     
     // this.getConstraintsIterator = function() { return new Iterator(constraints); }
 
-    this.addSlide = function(prevSlide, newSlide) {
+    this.insertSlide = function(prevSlide, newSlide) {
         var index = slides.indexOf(prevSlide);
 
         slides.splice(index+1, 0, newSlide);
+
+        return true;
     };
 
     this.removeSlide = function(slide) {
-        var index = slides.indexOf(newSlide);
-        if (index < 0) {
-            return;
+        if (slides.length == 1) {
+            console.log("Only one slide left, cannot delete!");
+            return false;
+        }
+        var index = slides.indexOf(slide);
+        if (index == -1) { 
+            console.log("slide does not exist");
+            return false;
         };
+
         slides.splice(index, 1);
+
+        return true;
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -50,6 +60,27 @@ var VisualsModel = function() {
     /////////////////////////////////////////////////////////////////////////////// 
 
     slides.push(new Slide());
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Iterator
+//
+// Used to create an iterator over objects
+/////////////////////////////////////////////////////////////////////////////// 
+
+var Iterator = function(array) {
+    return {
+        index: -1,
+        hasNext: function() { return this.index < array.length-1; },
+        next: function() {
+            if(this.hasNext()) {
+                this.index = this.index + 1;
+                return array[this.index];
+            }
+            return null;
+        }        
+    };
 };
 
 
@@ -304,4 +335,3 @@ var isVertexVisible = function(vertex, tVisual) {
 
     return true;
 };
-

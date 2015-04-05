@@ -11,6 +11,12 @@ var LectureController = function() {
     var audioController = null;
     var retimingController = null;
 
+    var RecordingTypes = {
+        VideoOnly: "VideoOnly",
+        AudioOnly: "AudioOnly",
+        AudioVideo: "AudioVideo"
+    };
+
     this.recordingType = null;
     
     // State for pen parameters
@@ -100,11 +106,24 @@ var LectureController = function() {
 
 };
 
-// The single entry point for the entire application
+///////////////////////////////////////////////////////////////////////////////
+// Main: The single entry point for the entire application
+///////////////////////////////////////////////////////////////////////////////
+
+// Create the global pentimento object
+var pentimento = {};
+
+// Objects and controllers should only be created after the document is ready
 $(document).ready(function() {
+
+    pentimento.DEBUG = true;
+
 
     // Create the time controller, which is responsible for handling the current lecture time
     pentimento.timeController = new TimeController();
+
+    // Create undo manager
+    // var um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup]);
 
     // Create and initialize the lecture controller
     pentimento.lectureController = new LectureController();

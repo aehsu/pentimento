@@ -6,6 +6,31 @@
 var getUndoManager = function(groupTypes, debug) {
     'use strict';
 
+// var ActionGroups = {
+//     VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
+//     SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
+//     ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
+//     RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
+//     // CustomGroup: "CustomGroup"
+//     EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
+// };
+
+// var ActionTitles = {
+//     Recording: "Recording",
+//     AdditionOfSlide: "AdditionOfSlide",
+//     DeleteSlide: "DeleteSlide",
+//     ShiftSlide: "ShiftSlide",
+//     AdditionOfVisual: "AdditionOfVisual",
+//     DeleteVisual: "DeleteVisual",
+//     ShiftVisuals: "ShiftVisual(s)",
+//     AdditionOfConstraint: "AdditionOfConstraint",
+//     DeletionOfConstraint: "DeletionOfConstraint",
+//     ShiftConstraints: "ShiftConstraints",
+//     AdditionOfProperty: "AdditionOfProperty",
+//     Edit: "Edit",
+//     Dummy: "Dummy"
+// };
+
     if (isUndefined(debug)){
         debug = false; // keeps track of whether debug mode is on or off
     } 

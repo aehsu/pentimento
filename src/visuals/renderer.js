@@ -29,7 +29,7 @@ var Renderer = function(visuals_controller) {
             }
         }
         if (visualsController.currentVisual != null) {
-            drawVisual(visualsController.currentVisual, globalTime());
+            drawVisual(visualsController.currentVisual, time);
         };
         for(var i in visualsController.selection) {
             var visCopy = visualsController.selection[i].getClone();

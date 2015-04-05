@@ -1,7 +1,7 @@
 // handles mouse events and key events
 "use strict";
 
-function mouseDownHandler(evt) {
+var mouseDownHandler = function(evt) {
     switch(evt.which) {
         case 1:
             pentimento.lectureController.leftMouseButton = true;
@@ -18,13 +18,13 @@ function mouseDownHandler(evt) {
     }
 }
 
-function mouseUpHandler(evt) {
+var mouseUpHandler = function(evt) {
     pentimento.lectureController.leftMouseButton = false;
     pentimento.lectureController.middleMouseButton = false;
     pentimento.lectureController.rightMouseButton = false;
 }
 
-function keyDownHandler(evt) {
+var keyDownHandler = function(evt) {
     if(evt.ctrlKey) {
         pentimento.lectureController.ctrlKey = true;
     } else if(evt.shiftKey) {
@@ -34,7 +34,7 @@ function keyDownHandler(evt) {
     }
 }
 
-function keyUpHandler(evt) {
+var keyUpHandler = function(evt) {
     if(evt.which == 17) { //ctrl key
         pentimento.lectureController.ctrlKey = false;
     } else if(evt.which == 16) { //shift key
@@ -44,7 +44,7 @@ function keyUpHandler(evt) {
     }
 }
 
-// function undoListener(event) {
+// var undoListener(event) {
 //     if(um.getUndoLength() > 0) {
 //         $('.um-tool[data-toolname="undo"]').removeAttr('disabled'); //everything
 
@@ -57,12 +57,12 @@ function keyUpHandler(evt) {
 //         }
 //     } else {
 //         $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
-//         $('.um-tool[data-toolname="undo"]').each(function() { $(this).text('Undo'); });
+//         $('.um-tool[data-toolname="undo"]').each(var() { $(this).text('Undo'); });
 //         $('.um-tool[data-toolname="undo"]').removeAttr('data-group');
 //     }
 // }
 
-// function redoListener(event) {
+// var redoListener(event) {
 //     if(um.getRedoLength() > 0) {
 //         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
 //         for(var attr in ActionGroups) {
@@ -74,7 +74,7 @@ function keyUpHandler(evt) {
 //         }
 //     } else {
 //         $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
-//         $('.um-tool[data-toolname="redo"]').each(function() { $(this).text('Redo'); });
+//         $('.um-tool[data-toolname="redo"]').each(var() { $(this).text('Redo'); });
 //         $('.um-tool[data-toolname="redo"]').removeAttr('data-group');
 //     }
 // }

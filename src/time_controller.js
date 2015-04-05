@@ -162,6 +162,11 @@ var TimeController = function() {
     // Private methods
     ////////////////////////////////////////////////////////
 
+    // Use UTC time to keep track of timing when it is in progress
+    var globalTime = function() {
+        return (new Date()).getTime();
+    };
+
     // Returns true if a playback or recording is in progress
     var isTiming = function() {
         return (lastGlobalTime !== -1);

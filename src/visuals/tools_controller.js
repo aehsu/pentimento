@@ -82,7 +82,7 @@ var ToolsController = function(visuals_controller) {
                 });
                 break;
         	case 'delete':
-                visualsController.setTDeletion(visualsController.selection, globalTime());
+                visualsController.setTDeletion(visualsController.selection, visualsController.globalTime());
         		break;
         	case 'pan':
         		break;
@@ -324,7 +324,7 @@ var ToolsController = function(visuals_controller) {
     var getCanvasPoint = function(event){
         var x = event.pageX - visualsController.canvas.offset().left;
         var y = event.pageY - visualsController.canvas.offset().top;
-        var t = globalTime();
+        var t = visualsController.globalTime();
         
         if(visualsController.pressure) {
             return new Vertex(x, y, t, event.pressure);
@@ -355,7 +355,7 @@ var ToolsController = function(visuals_controller) {
 
     /**********************************LECTURE-MODE TOOLS**********************************/
     var penMouseDown = function(event) {
-        visualsController.currentVisual = new StrokeVisual(globalTime(), new VisualProperty(visualsController.color, visualsController.width));
+        visualsController.currentVisual = new StrokeVisual(visualsController.globalTime(), new VisualProperty(visualsController.color, visualsController.width));
         visualsController.lastPoint = getCanvasPoint(event);
         visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
         visualsController.addVisual(visualsController.currentVisual);
@@ -387,7 +387,7 @@ var ToolsController = function(visuals_controller) {
     var highlightMouseUp = function(event) {
         var highlightTime = 750; //duration for a highlighter, in ms
         if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsController.setTDeletion([visualsController.currentVisual], globalTime() + highlightTime);
+            visualsController.setTDeletion([visualsController.currentVisual], visualsController.globalTime() + highlightTime);
             visualsController.currentVisual = null;
             visualsController.lastPoint = null;
         }
@@ -409,7 +409,7 @@ var ToolsController = function(visuals_controller) {
                 if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
             }
             if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
-                var gt = globalTime();
+                var gt = visualsController.globalTime();
                 visualsController.selection.push(visual);
                 visualsController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
                 //TODO should be fixed to be 

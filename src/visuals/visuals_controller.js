@@ -45,6 +45,11 @@ var VisualsController = function(visuals_model) {
     // Includes helper functions for recording logic.
     ///////////////////////////////////////////////////////////////////////////////
 
+    // The time for the visuals is represented in UTC time
+    this.globalTime = function() {
+        return (new Date()).getTime();
+    };
+
     var beginRecording = function() {
         if (!self.currentSlide) {
             console.error("there is no current slide");
@@ -69,7 +74,7 @@ var VisualsController = function(visuals_model) {
         // TODO snap pentimento.timeController.getTime() leftmost
         // visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
         visualsInsertionTime = pentimento.timeController.getTime() - duration;
-        lastTimeUpdate = globalTime();
+        lastTimeUpdate = self.globalTime();
         recordingBegin = lastTimeUpdate;
         originSlide = self.currentSlide;
         originSlideDuration = self.currentSlide.getDuration();
@@ -83,7 +88,7 @@ var VisualsController = function(visuals_model) {
         self.tool = null;
         $('.recording-tool').toggleClass('hidden');
 
-        var gt = globalTime();
+        var gt = self.globalTime();
         var diff = gt - lastTimeUpdate;
         self.currentSlide.setDuration(self.currentSlide.getDuration() + diff);
         var totalDiff = gt - recordingBegin;
@@ -120,6 +125,7 @@ var VisualsController = function(visuals_model) {
     // };
 
     // Sets the current slide to be at the given time
+    // TODO: this needs to be fixed to use the retimer and time controller
     this.setCurrentSlideAtTime = function(time) {
         if (time==0) { 
             self.currentSlide = visualsModel.getSlides()[0];
@@ -185,7 +191,7 @@ var VisualsController = function(visuals_model) {
             console.error('self.currentSlide missing');
             return;
         };
-        var time = globalTime();
+        var time = self.globalTime();
         var diff = time - lastTimeUpdate;
         lastTimeUpdate = time;
         var oldInsertionTime = visualsInsertionTime;
@@ -193,7 +199,13 @@ var VisualsController = function(visuals_model) {
         var prevSlide = self.currentSlide;
         var newSlide = new Slide();
         
-        self.addSlide(prevSlide, newSlide); //DOES NOT add an action onto the undo stack
+        // Insert the slide into the model
+        var result = visualsModel.insertSlide(prevSlide, newSlide);
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
+
+        // Updatet the duration to reflect the difference
         prevSlide.setDuration(prevSlide.getDuration() + diff);
 
         self.currentSlide = newSlide;
@@ -202,19 +214,17 @@ var VisualsController = function(visuals_model) {
 
     this.shiftSlideDuration = function(slide, amount) {
         slide.setDuration(slide.getDuration() + amount);
-        self.shiftSlideDuration(slide, -1.0*amount);
-    }
+    };
     
-    //edit mode function
     this.deleteSlide = function(slide) {
-        if(visualsModel.getSlides().length==1) {
-            throw {name:"DeleteSlideError", message:"Only one slide left, cannot delete!"}
-        }
-        var index = visualsModel.getSlides().indexOf(slide);
-        if(index==-1) { console.log("Error in delete_slide for visualsModel controller"); return; }
 
-        visualsModel.getSlides().splice(index, 1);
+        // Delete the slide from the model
+        var result = visualsModel.removeSlide();
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
         
+        // Update the time cursor
         var duration = 0;
         var slideIter = visualsModel.getSlidesIterator();
         while(slideIter.hasNext()) {
@@ -223,8 +233,8 @@ var VisualsController = function(visuals_model) {
             duration += sl.getDuration();
         }
         var slideTime = pentimento.timeController.getTime() - duration;
-        pentimento.timeController.updateTime(duration); //self.setStateSlide() implicit
-    }
+        pentimento.timeController.updateTime(duration);
+    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Adding of Visuals
@@ -491,3 +501,4 @@ var VisualsController = function(visuals_model) {
     $('#'+canvasID)[0].height = 0.8 * ih;
 
 };
+
