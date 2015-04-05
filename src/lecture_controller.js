@@ -104,6 +104,69 @@ var LectureController = function() {
         return lectureModel;
     };
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Event Handlers
+    //
+    // Genereal mouse and keyboard handlers for the entire lecture controller
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Loads input handlers on the entire window
+    this.loadInputHandlers = function() {
+        $(window).on('mousedown', mouseDownHandler);
+        $(window).on('mouseup', mouseUpHandler);
+        $(window).on('keydown', keyDownHandler);
+        $(window).on('keyup', keyUpHandler);
+        // $(window).on('click', undoListener);
+        // $(window).on('click', redoListener);
+    };
+
+    var mouseDownHandler = function(evt) {
+        switch(evt.which) {
+            case 1:
+                self.leftMouseButton = true;
+                break;
+            case 2:
+                self.middleMouseButton = true;
+                break;
+            case 3:
+                self.rightMouseButton = true;
+                break;
+            default:
+                console.log("unique mouse hardware?", evt);
+                break;
+        }
+    }
+
+    var mouseUpHandler = function(evt) {
+        self.leftMouseButton = false;
+        self.middleMouseButton = false;
+        self.rightMouseButton = false;
+    }
+
+    var keyDownHandler = function(evt) {
+        if(evt.ctrlKey) {
+            self.ctrlKey = true;
+        } else if(evt.shiftKey) {
+            self.shiftKey = true;
+        } else if(evt.altKey) {
+            self.altKey = true;
+        }
+    }
+
+    var keyUpHandler = function(evt) {
+        if(evt.which == 17) { //ctrl key
+            self.ctrlKey = false;
+        } else if(evt.which == 16) { //shift key
+            self.shiftKey = false;
+        } else if(evt.which == 18) {
+            self.altKey = false;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////////
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,7 +181,6 @@ $(document).ready(function() {
 
     pentimento.DEBUG = true;
 
-
     // Create the time controller, which is responsible for handling the current lecture time
     pentimento.timeController = new TimeController();
 
@@ -128,13 +190,6 @@ $(document).ready(function() {
     // Create and initialize the lecture controller
     pentimento.lectureController = new LectureController();
     pentimento.lectureController.init();
-
-    $(window).on('mousedown', mouseDownHandler);
-    $(window).on('mouseup', mouseUpHandler);
-    $(window).on('keydown', keyDownHandler);
-    $(window).on('keyup', keyUpHandler);
-    // $(window).on('click', undoListener);
-    // $(window).on('click', redoListener);
 
     pentimento.timeSliderController = new TimeSliderController();
 
@@ -148,12 +203,12 @@ $(document).ready(function() {
         // constraint_num += 1;
     });
     // $('#thumb_zoom_in').click(function(){
-    //  var endTime = window.opener.pentimento.lectureController.getLectureDuration();
+    //  var endTime = window.opener.self.getLectureDuration();
     //  scaleThumb(2, 0, endTime);
     // })
 
     // $('#thumb_zoom_out').click(function(){
-    //  var endTime = window.opener.pentimento.lectureController.getLectureDuration();
+    //  var endTime = window.opener.self.getLectureDuration();
     //  scaleThumb(0.5, 0, endTime);
     // })
     // End retimer stuff

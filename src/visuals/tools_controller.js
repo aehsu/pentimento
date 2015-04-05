@@ -341,12 +341,7 @@ var ToolsController = function(visuals_controller) {
         $(window).off('mouseup');
         
         //re-attach the necessary ones
-        $(visualsController.canvas).on('mousedown', mouseDownHandler);
-        $(window).on('mouseup', mouseUpHandler);
-        $(window).on('keydown', keyDownHandler);
-        $(window).on('keyup', keyUpHandler);
-        // $(window).on('click', undoListener);
-        // $(window).on('click', redoListener);
+        pentimento.lectureController.loadInputHandlers();
     }
 
     /***********************************************************************/

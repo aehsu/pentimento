@@ -31,6 +31,42 @@ var getUndoManager = function(groupTypes, debug) {
 //     Dummy: "Dummy"
 // };
 
+
+    // var undoListener(event) {
+    //     if(um.getUndoLength() > 0) {
+    //         $('.um-tool[data-toolname="undo"]').removeAttr('disabled'); //everything
+
+    //         for(var attr in ActionGroups) {
+    //             if(um.canUndo(attr)) {
+    //                 $('.um-tool[data-toolname="undo"]').text('Undo-'+attr);
+    //                 $('.um-tool[data-toolname="undo"]').attr('data-group', attr)
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+    //         $('.um-tool[data-toolname="undo"]').each(var() { $(this).text('Undo'); });
+    //         $('.um-tool[data-toolname="undo"]').removeAttr('data-group');
+    //     }
+    // }
+
+    // var redoListener(event) {
+    //     if(um.getRedoLength() > 0) {
+    //         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
+    //         for(var attr in ActionGroups) {
+    //             if(um.canRedo(attr)) {
+    //                 $('.um-tool[data-toolname="redo"]').text('Redo-'+attr);
+    //                 $('.um-tool[data-toolname="redo"]').attr('data-group', attr);
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+    //         $('.um-tool[data-toolname="redo"]').each(var() { $(this).text('Redo'); });
+    //         $('.um-tool[data-toolname="redo"]').removeAttr('data-group');
+    //     }
+    // }
+
     if (isUndefined(debug)){
         debug = false; // keeps track of whether debug mode is on or off
     } 
