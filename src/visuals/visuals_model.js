@@ -27,8 +27,6 @@ var VisualsModel = function() {
         return new Iterator(slides);
     }
     
-    // this.getConstraintsIterator = function() { return new Iterator(constraints); }
-
     this.insertSlide = function(prevSlide, newSlide) {
         var index = slides.indexOf(prevSlide);
 

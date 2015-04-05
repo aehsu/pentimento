@@ -2,9 +2,10 @@
 //TODO: think about cases where methods on stack refer to things that no longer exist. Is this possible, or will the things
 // be re-created before getting to that point on the stack?
 //TODO: API/HowTo PAGE
-
+"use strict";
+    
 var getUndoManager = function(groupTypes, debug) {
-    'use strict';
+
 
 // var ActionGroups = {
 //     VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
