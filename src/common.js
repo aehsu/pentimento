@@ -1,53 +1,49 @@
-/***********************CONFIGURATION***********************/
-SHIFT_INTERVAL = 1000;
-DEBUG = true;
-snapRecording = true;
-canvasId = "sketchpad";
-sliderId = "slider";
-tickerId = "ticker";
-/***********************CONFIGURATION***********************/
+// TODO: include description
+'use strict';
 
+var pentimento = {};
 
-pentimento = {};
+pentimento.DEBUG = true;
 
-ActionGroups = {
-    VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
-    SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
-    ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
-    RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
-    // CustomGroup: "CustomGroup"
-    EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
-};
+// var ActionGroups = {
+//     VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
+//     SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
+//     ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
+//     RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
+//     // CustomGroup: "CustomGroup"
+//     EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
+// };
 
-ActionTitles = {
-    Recording: "Recording",
-    AdditionOfSlide: "AdditionOfSlide",
-    DeleteSlide: "DeleteSlide",
-    ShiftSlide: "ShiftSlide",
-    AdditionOfVisual: "AdditionOfVisual",
-    DeleteVisual: "DeleteVisual",
-    ShiftVisuals: "ShiftVisual(s)",
-    AdditionOfConstraint: "AdditionOfConstraint",
-    DeletionOfConstraint: "DeletionOfConstraint",
-    ShiftConstraints: "ShiftConstraints",
-    AdditionOfProperty: "AdditionOfProperty",
-    Edit: "Edit",
-    Dummy: "Dummy"
-};
+// var ActionTitles = {
+//     Recording: "Recording",
+//     AdditionOfSlide: "AdditionOfSlide",
+//     DeleteSlide: "DeleteSlide",
+//     ShiftSlide: "ShiftSlide",
+//     AdditionOfVisual: "AdditionOfVisual",
+//     DeleteVisual: "DeleteVisual",
+//     ShiftVisuals: "ShiftVisual(s)",
+//     AdditionOfConstraint: "AdditionOfConstraint",
+//     DeletionOfConstraint: "DeletionOfConstraint",
+//     ShiftConstraints: "ShiftConstraints",
+//     AdditionOfProperty: "AdditionOfProperty",
+//     Edit: "Edit",
+//     Dummy: "Dummy"
+// };
 
-RecordingTypes = {
+var RecordingTypes = {
     VideoOnly: "VideoOnly",
     AudioOnly: "AudioOnly",
     AudioVideo: "AudioVideo"
 };
 
-um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], DEBUG);
+// TODO: move this to undo manager
+// var um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup], pentimento.DEBUG);
 
-function globalTime() {
+var globalTime = function() {
     return (new Date()).getTime();
-}
+};
 
-function Iterator(array) {
+var Iterator = function(array) {
     return {
         index: -1,
         hasNext: function() { return this.index < array.length-1; },
@@ -59,25 +55,5 @@ function Iterator(array) {
             return null;
         }        
     };
-}
+};
 
-function Matrix() {
-    //TODO
-}
-
-Matrix.prototype.getClone = function() {
-
-}
-
-$(document).ready(function(){
-    var iw = $(window).width();
-    var ih = $(window).height();
-    $('#'+canvasId)[0].width = 0.8 * iw;
-    $('#'+canvasId)[0].height = 0.8 * ih;
-
-    $('#'+sliderId).width($('canvas').width());
-    $('#'+tickerId).css('position', 'absolute');
-    $('#'+tickerId).css('left', parseInt($('#'+sliderId).width())+20 + 'px');
-    $('#'+tickerId).css('top', parseInt($('#'+sliderId).position().top)-10 + 'px');
-
-});

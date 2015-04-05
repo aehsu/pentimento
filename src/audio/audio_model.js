@@ -1,6 +1,10 @@
+///////////////////////////////////////////////////////////////////////////////
+// Audio Model
+//
 // Audio model contains all the tracks and segments that make up all of the audio data
 // All audio model data should be modified only through the class methods provided.
-pentimento.audio_model = function() {
+"use strict";
+var AudioModel = function() {
 
     var audio_tracks = [];
 
@@ -11,7 +15,7 @@ pentimento.audio_model = function() {
 
     // Create a new empty audio track and return it.
     this.createTrack = function() {
-        var newTrack = new pentimento.audio_track();
+        var newTrack = new AudioTrack();
         audio_tracks.push(newTrack);
         return newTrack;
     };
@@ -30,8 +34,11 @@ pentimento.audio_model = function() {
     };
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Audio Track
+//
 // Audio track contains non-overlapping audio segments
-pentimento.audio_track = function() {
+var AudioTrack = function() {
 
 	var audio_segments = [];
 
@@ -266,8 +273,12 @@ pentimento.audio_track = function() {
     };
 };
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Audo Segment
+//
 // Audio segments contain an audio clip and a location within the track
-pentimento.audio_segment = function(audio_resource, audio_length, track_start_time) {
+var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 
     // Audio clip data
 	var audio_resource = audio_resource;

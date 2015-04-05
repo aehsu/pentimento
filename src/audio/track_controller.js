@@ -1,4 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////
+// Audio Track Controller
+//
 // Controller for the DOM audio track inside the DOM track container
+// Handles the user input passed on from the segments into and modifies the audio track
+// Responsible for drawing the audio track and displaying updates.
+// Controls playback through segment playback.
+"use strict";
 var AudioTrackController = function(track, audioController) {
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +53,11 @@ var AudioTrackController = function(track, audioController) {
     // Get the audio track
     this.getAudioTrack = function() {
         return audioTrack;
+    };
+
+    // Get the parent audio controller
+    this.getParentAudioController = function() {
+        return parentAudioController;
     };
 
 

@@ -1,4 +1,103 @@
-//enum for the different types of visuals
+///////////////////////////////////////////////////////////////////////////////
+// Visuals Model
+//
+// The visuals model consists of slides.
+///////////////////////////////////////////////////////////////////////////////
+"use strict";
+
+var VisualsModel = function() {
+
+    var slides = [];
+
+    this.getDuration = function() {
+        var time = 0;
+        var iter = self.getSlidesIterator();
+        while(iter.hasNext()) {
+            var slide = iter.next();
+            time += slide.getDuration();
+        }
+        return time;
+    };
+
+    this.getSlides = function() {
+        return slides;
+    };
+
+    this.getSlidesIterator = function() {
+        return new Iterator(slides);
+    }
+    
+    // this.getConstraintsIterator = function() { return new Iterator(constraints); }
+
+    this.addSlide = function(prevSlide, newSlide) {
+        var index = slides.indexOf(prevSlide);
+
+        slides.splice(index+1, 0, newSlide);
+    };
+
+    this.removeSlide = function(slide) {
+        var index = slides.indexOf(newSlide);
+        if (index < 0) {
+            return;
+        };
+        slides.splice(index, 1);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    //
+    // Setup the visuals with one slide
+    /////////////////////////////////////////////////////////////////////////////// 
+
+    slides.push(new Slide());
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Slides
+//
+// Each slide contains visual elements (one of the VisualTypes)
+// Slides can also have a transform.
+///////////////////////////////////////////////////////////////////////////////
+
+var Slide = function() {
+    var visuals = [];
+    var transforms = [];
+    var duration = 0.0;
+    
+    this.getVisuals = function() { return visuals; }
+    this.getDuration = function() { return duration; }
+    this.getTransforms = function() { return transforms; }
+
+    this.setVisuals = function(newVisuals) { visuals = newVisuals; }
+    this.setDuration = function(newDuration) { duration = newDuration; }
+    this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+
+    this.getVisualsIterator = function() { return new Iterator(visuals); }
+    this.getTransformsIterator = function() { return new Iterator(transforms); }
+};
+
+var SlideTransform = function(type, tmin, durate, mat) {
+    var self = this;
+    self.tMin = tmin;
+    self.duration = durate;
+    self.matrix = mat;
+
+    this.getTMin = function() { return self.tMin; }
+    this.getDuration = function() { return self.duration; }
+    this.getMatrix = function() { return self.matrix; }
+    this.setTMin = function(newTMin) { self.tMin = newTMin; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Visual Elements
+//
+// The different types of visual elements.
+///////////////////////////////////////////////////////////////////////////////
+
 var VisualTypes = {
     basic: "Basic",
     stroke: "Stroke",
@@ -12,111 +111,7 @@ var VisualTransformTypes = {
     Property: "Property"
 };
 
-function VisualProperty(c, w) {
-    var self = this;
-    self.color, self.width;
-    if (c==undefined)   { self.color = null; }
-    else                { self.color = c; }
-    if (w==undefined)   { self.width = null; }
-    else                { self.width = w; }
-
-    this.getColor = function() { return self.color; }
-    this.setColor = function(newColor) { self.color = newColor; }
-    this.getWidth = function() { return self.width; }
-    this.setWidth  = function(newWidth) { self.width = newWidth; }
-}
-
-VisualProperty.prototype.getClone = function() {
-    return new VisualProperty(this.getColor(), this.getWidth());
-}
-
-function VisualPropertyTransform(prop, newVal, time) {
-    var self = this;
-    self.property = prop;
-    self.value = newVal;
-    self.duration = 0;
-    self.t = time;
-
-    this.getProperty = function() { return self.property; }
-    //no setter for the property, users should instead just create a new transform for a different property
-    this.getValue = function() { return self.value; }
-    this.setValue = function(newVal) { self.value = newVal; }
-    this.getDuration = function() { return self.duration; }
-    this.setDuration = function(newDuration) { self.duration = newDuration; }
-    this.getTime = function() { return self.t; }
-    this.setTime = function(newTime) { self.t = newTime; }
-}
-
-VisualPropertyTransform.prototype.getClone = function() {
-    var copy = new VisualPropertyTransform(this.getProperty(), this.getValue());
-    copy.getDuration(this.getDuration());
-    return copy;
-}
-
-function VisualSpatialTransform(mat, time) {
-    var self = this;
-    self.matrix = mat;
-    self.duration = 0;
-    self.t = time;
-
-    this.getMatrix = function() { return self.matrix; }
-    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
-    this.getDuration = function() { return self.duration; }
-    this.setDuration = function(newDuration) { self.duration = newDuration; }
-    this.getTime = function() { return self.time; }
-    this.setTime = function(newTime) { self.t = newTime; }
-}
-
-VisualSpatialTransform.prototype.getClone = function() {
-    var copy = new VisualSpatialTransform(this.getMatrix());
-    copy.setDuration(this.getDuration());
-    return copy;
-}
-
-//could potentially migrate a vertex to have a tMin and a tDeletion
-function Vertex(myX, myY, myT, myP) {
-    var self = this;
-    self.x = myX;
-    self.y = myY;
-    self.t = myT;
-    self.p = myP;
-
-    this.getX = function() { return self.x; }
-    this.getY = function() { return self.y; }
-    this.getT = function() { return self.t; }
-    this.getP = function() { return self.p; }
-
-    this.setX = function(newX) { self.x = newX; }
-    this.setY = function(newY) { self.y = newY; }
-    this.setT = function(newT) { self.t = newT; }
-    this.setP = function(newP) { self.p = newP; }    
-}
-
-Vertex.prototype.getClone = function() {
-    return new Vertex(this.getX(), this.getY(), this.getT(), this.getP());
-}
-
-function Segment(a, b, props) {
-    var self = this;
-    self.from = a;
-    self.to = b;
-    self.properties = props;
-
-    this.getFromPoint = function() { return self.from; }
-    this.getToPoint = function() { return self.to; }
-    this.getProperties = function() { return self.properties; }
-
-    this.setFromPoint = function(newFrom) { self.from = newFrom; }
-    this.setToPoint = function(newTo) { self.to = newTo; }
-    this.setProperties = function(newProperties) { self.properties = newProperties; }
-}
-
-//unnecessary
-// Segment.prototype.getClone = function() {
-//     return new Segment(this.getFromPoint().getClone(), this.getToPoint().getClone(), this.getProperties().getClone());
-// }
-
-function BasicVisual(tmin, props) {
+var BasicVisual = function(tmin, props) {
     //could alternatively take in an object of properties    
     var self = this;
     self.type = VisualTypes.basic;
@@ -145,8 +140,7 @@ function BasicVisual(tmin, props) {
 
     this.getPropertyTransformsIterator = function() { return new Iterator(self.propertyTransforms); }
     this.getSpatialTransformsIterator = function() { return new Iterator(self.spatialTransforms); }
-}
-
+};
 BasicVisual.prototype.constructor = BasicVisual;
 BasicVisual.prototype.getClone = function() {
     var copy = new this.constructor(this.getTMin(), this.getProperties().getClone());
@@ -168,9 +162,9 @@ BasicVisual.prototype.getClone = function() {
     }
     copy.setSpatialTransforms(spatialTransformsCopy);
     return copy;
-}
+};
 
-function StrokeVisual(tmin, props) {
+var StrokeVisual = function(tmin, props) {
     BasicVisual.prototype.constructor.call(this, tmin, props);
     this.setType(VisualTypes.stroke);
     var self = this;
@@ -194,4 +188,120 @@ StrokeVisual.prototype.getClone = function() {
     return copy;
 }
 
-//more visuals declarations
+
+
+var VisualProperty = function(c, w) {
+    var self = this;
+    self.color, self.width;
+    if (c==undefined)   { self.color = null; }
+    else                { self.color = c; }
+    if (w==undefined)   { self.width = null; }
+    else                { self.width = w; }
+
+    this.getColor = function() { return self.color; }
+    this.setColor = function(newColor) { self.color = newColor; }
+    this.getWidth = function() { return self.width; }
+    this.setWidth  = function(newWidth) { self.width = newWidth; }
+};
+VisualProperty.prototype.getClone = function() {
+    return new VisualProperty(this.getColor(), this.getWidth());
+};
+
+var VisualPropertyTransform = function(prop, newVal, time) {
+    var self = this;
+    self.property = prop;
+    self.value = newVal;
+    self.duration = 0;
+    self.t = time;
+
+    this.getProperty = function() { return self.property; }
+    //no setter for the property, users should instead just create a new transform for a different property
+    this.getValue = function() { return self.value; }
+    this.setValue = function(newVal) { self.value = newVal; }
+    this.getDuration = function() { return self.duration; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.getTime = function() { return self.t; }
+    this.setTime = function(newTime) { self.t = newTime; }
+};
+VisualPropertyTransform.prototype.getClone = function() {
+    var copy = new VisualPropertyTransform(this.getProperty(), this.getValue());
+    copy.getDuration(this.getDuration());
+    return copy;
+};
+
+var VisualSpatialTransform = function(mat, time) {
+    var self = this;
+    self.matrix = mat;
+    self.duration = 0;
+    self.t = time;
+
+    this.getMatrix = function() { return self.matrix; }
+    this.setMatrix = function(newMatrix) { self.matrix = newMatrix; }
+    this.getDuration = function() { return self.duration; }
+    this.setDuration = function(newDuration) { self.duration = newDuration; }
+    this.getTime = function() { return self.time; }
+    this.setTime = function(newTime) { self.t = newTime; }
+};
+VisualSpatialTransform.prototype.getClone = function() {
+    var copy = new VisualSpatialTransform(this.getMatrix());
+    copy.setDuration(this.getDuration());
+    return copy;
+};
+
+
+//could potentially migrate a vertex to have a tMin and a tDeletion
+var Vertex = function(myX, myY, myT, myP) {
+    var self = this;
+    self.x = myX;
+    self.y = myY;
+    self.t = myT;
+    self.p = myP;
+
+    this.getX = function() { return self.x; }
+    this.getY = function() { return self.y; }
+    this.getT = function() { return self.t; }
+    this.getP = function() { return self.p; }
+
+    this.setX = function(newX) { self.x = newX; }
+    this.setY = function(newY) { self.y = newY; }
+    this.setT = function(newT) { self.t = newT; }
+    this.setP = function(newP) { self.p = newP; }    
+};
+Vertex.prototype.getClone = function() {
+    return new Vertex(this.getX(), this.getY(), this.getT(), this.getP());
+};
+
+var Segment = function(a, b, props) {
+    var self = this;
+    self.from = a;
+    self.to = b;
+    self.properties = props;
+
+    this.getFromPoint = function() { return self.from; }
+    this.getToPoint = function() { return self.to; }
+    this.getProperties = function() { return self.properties; }
+
+    this.setFromPoint = function(newFrom) { self.from = newFrom; }
+    this.setToPoint = function(newTo) { self.to = newTo; }
+    this.setProperties = function(newProperties) { self.properties = newProperties; }
+};
+
+//The semantic is that visuals are visible exactly ON their tMin, not later
+//Therefore, when time hits tMin, the visual is visible
+//Likewise, visuals are deleted ON their tDeletion, not later
+//Therefore, when time his tDeletion, the visual is no longer visible
+var isVisualVisible = function(visual, tVisual) {
+    if(visual.getTMin() > tVisual) { return false; }
+    if(visual.getTDeletion() != null && visual.getTDeletion() <= tVisual) { return false; }
+
+    return true;
+};
+
+//The semantic is the same as that for a visual, a vertex is visible ON its t value
+//This function can be modified if we decide to later support erasure
+var isVertexVisible = function(vertex, tVisual) {
+    if(vertex.getT() > tVisual) { return false; }
+
+    return true;
+};
+

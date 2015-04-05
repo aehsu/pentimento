@@ -2,7 +2,44 @@
 // Time is kept to whole millisecond units.
 // Allows objects to register time update and recording/playback status callbacks.
 // Allows objects to change the current time and begin/end recording/playback.
-pentimento.timeController = new function() {
+'use strict';
+
+var TimeController = function() {
+
+    ////////////////////////////////////////////////////////
+    // Private member variables
+    ////////////////////////////////////////////////////////
+
+    var self = this;
+
+    // Keeps track of the current lecture time
+    var currentTime = 0;
+
+    // When the last timer began (lecture time)
+    var lastBeginTime = -1;  // Set at the beginning of every recording or playback
+
+    // Keeps track of the last UTC global time to calculate time passed when the timer is progressing.
+    // When the value is not -1, it indicates that we are currently timing.
+    var lastGlobalTime = -1;
+
+    // During playback, there is a timer that ends playback at the specified end time
+    var playbackEndTime = -1;  // -1 indicates recording
+    var playbackEndTimer = null;  // null indicates recording
+
+    // Keep track of the interval timer for time updates
+    var updateInterval = null;
+
+    // Interval after which to notify listeners of a time update during timer progression
+    var UPDATE_INTERVAL = 50;  // milliseconds
+
+    // Callback functions to notify listeners.
+    // Function arguments are listed in the comments. All times are in milliseconds
+    var updateTimeCallbacks = [];  // When the current time changes (currentTime)
+    var beginRecordingCallbacks = [];  // When a recording begins (currentTime)
+    var endRecordingCallbacks = [];  // When a recording ends (beginTime, endTime)
+    var beginPlaybackCallbacks = [];  // When a playback begins (currentTime)
+    var endPlaybackCallbacks = [];  // When a playback ends (beginTime, endTime)
+    
 
     ////////////////////////////////////////////////////////
     // Public methods
@@ -185,39 +222,5 @@ pentimento.timeController = new function() {
 
         return true;
     };
-
-    ////////////////////////////////////////////////////////
-    // Private member variables
-    ////////////////////////////////////////////////////////
-
-    var self = this;
-
-    // Keeps track of the current lecture time
-    var currentTime = 0;
-
-    // When the last timer began (lecture time)
-    var lastBeginTime = -1;  // Set at the beginning of every recording or playback
-
-    // Keeps track of the last UTC global time to calculate time passed when the timer is progressing.
-    // When the value is not -1, it indicates that we are currently timing.
-    var lastGlobalTime = -1;
-
-    // During playback, there is a timer that ends playback at the specified end time
-    var playbackEndTime = -1;  // -1 indicates recording
-    var playbackEndTimer = null;  // null indicates recording
-
-    // Keep track of the interval timer for time updates
-    var updateInterval = null;
-
-    // Interval after which to notify listeners of a time update during timer progression
-    var UPDATE_INTERVAL = 50;  // milliseconds
-
-    // Callback functions to notify listeners.
-    // Function arguments are listed in the comments. All times are in milliseconds
-    var updateTimeCallbacks = [];  // When the current time changes (currentTime)
-    var beginRecordingCallbacks = [];  // When a recording begins (currentTime)
-    var endRecordingCallbacks = [];  // When a recording ends (beginTime, endTime)
-    var beginPlaybackCallbacks = [];  // When a playback begins (currentTime)
-    var endPlaybackCallbacks = [];  // When a playback ends (beginTime, endTime)
 
 };

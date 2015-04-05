@@ -1,9 +1,13 @@
-pentimento.time_slider_controller = new function() {
+'use strict';
+
+var TimeSliderController = function() {
+    var self = this;
+    var sliderID = "slider";
+    var tickerID = "ticker";
 
     this.updateTimeCallback = function(time) {
         updateTicker(time);
         updateSlider(time);
-        updateCanvas(time);
     };
 
     this.beginRecordingCallback = function(time) {
@@ -11,7 +15,7 @@ pentimento.time_slider_controller = new function() {
         updateSlider(time);
 
         // Disable the slider during recording
-        $('#slider').slider("option", {
+        $('#'+sliderID).slider("option", {
             disabled: true
         });
     };
@@ -19,10 +23,9 @@ pentimento.time_slider_controller = new function() {
     this.endRecordingCallback = function(beginTime, endTime) {
         updateTicker(endTime);
         updateSlider(endTime);
-        updateCanvas(endTime);
 
         // Reenable the slider after recording is over
-        $('#slider').slider("option", {
+        $('#'+sliderID).slider("option", {
             disabled: false,
         });
     };
@@ -52,35 +55,32 @@ pentimento.time_slider_controller = new function() {
             ms = '0'+ms;
         }
 
-        $('#ticker').val(min + ':' + sec + '.' + ms);
+        $('#'+tickerID).val(min + ':' + sec + '.' + ms);
     };
 
     // Updates the slider to dislay the position of the given time
     var updateSlider = function(time) {
-        var lectureDuration = pentimento.lectureController.getLectureDuration();
+        var lectureDuration = pentimento.lectureController.getLectureModel().getLectureDuration();
 
-        $('#slider').slider('option', {
+        $('#'+sliderID).slider('option', {
             max: lectureDuration
         });
-        $('#slider').slider('value', Math.min(lectureDuration, time));
+        $('#'+sliderID).slider('value', Math.min(lectureDuration, time));
     };
 
-    // Update the canvas to display contents at the specified time
-    var updateCanvas = function(time) {
-        pentimento.state.selection = [];
-        pentimento.lectureController.setStateSlide();
 
-        updateVisuals(false);
-        // TODO: uncomment
-        // drawThumbnails();
-    };
-};
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    /////////////////////////////////////////////////////////////////////////////// 
 
+    $('#'+sliderID).width($('canvas').width());
+    $('#'+tickerID).css('position', 'absolute');
+    $('#'+tickerID).css('left', parseInt($('#'+sliderID).width())+20 + 'px');
+    $('#'+tickerID).css('top', parseInt($('#'+sliderID).position().top)-10 + 'px');
 
-$(document).ready(function() {
     // Initialize the slider functionality
     // Updates the time controller when sliding
-    $('#slider').slider({
+    $('#'+sliderID).slider({
         disabled: true,
         step:1,
         range: 'min',
@@ -91,7 +91,7 @@ $(document).ready(function() {
     });
 
     // Register callbacks with the time controller
-    pentimento.timeController.addUpdateTimeCallback(pentimento.time_slider_controller.updateTimeCallback);
-    pentimento.timeController.addBeginRecordingCallback(pentimento.time_slider_controller.beginRecordingCallback);
-    pentimento.timeController.addEndRecordingCallback(pentimento.time_slider_controller.endRecordingCallback);
-});
+    pentimento.timeController.addUpdateTimeCallback(self.updateTimeCallback);
+    pentimento.timeController.addBeginRecordingCallback(self.beginRecordingCallback);
+    pentimento.timeController.addEndRecordingCallback(self.endRecordingCallback);
+};
