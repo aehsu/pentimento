@@ -1,4 +1,13 @@
+///////////////////////////////////////////////////////////////////////////////
+// Audio Segment Controller
+//
 // Controller for the DOM audio segment inside the DOM audio track
+// Translates user input into actions that modify the audio segment
+// Some of these actions are relayed back to the track controller, 
+// as the modification will affect the entire track.
+// Responsible for drawing the audio segment and displaying updates.
+// Controls segment playback.
+"use strict";
 var AudioSegmentController = function(segment, trackController) {
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -6,6 +15,7 @@ var AudioSegmentController = function(segment, trackController) {
     ///////////////////////////////////////////////////////////////////////////////
 
     var self = this;  // Use self to refer to this in callbacks
+    var audioController = null;
     var parentTrackController = null;
     var audioSegment = null;  // audio_segment from the model
     var segmentID = null;  // HTML ID used to identify the segment
@@ -24,6 +34,7 @@ var AudioSegmentController = function(segment, trackController) {
     
     audioSegment = segment;
     parentTrackController = trackController;
+    audioController = trackController.getParentAudioController();
 
     // Create a new segment ID of the form
     // 'segment#' where '#' is a positive integer
@@ -64,6 +75,14 @@ var AudioSegmentController = function(segment, trackController) {
         return audioSegment;
     };
 
+    // Get the parent track controller
+    this.getParentTrackController = function() {
+        return parentTrackController;
+    };
+
+    // TODO change the parent track
+    // verify that the audio controller is the same
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
@@ -82,9 +101,9 @@ var AudioSegmentController = function(segment, trackController) {
             trackEndTime = audioSegment.end_time;
         };
 
-        // Convert the start and end times from track time to audio time (seconds)
-        audioStartTime = audioSegment.trackToAudioTime(trackStartTime) / 1000.0;
-        audioEndTime = audioSegment.trackToAudioTime(trackEndTime) / 1000.0;
+        // Convert the start and end times from track time to audio time (seconds for wavesurfer)
+        var audioStartTime = audioSegment.trackToAudioTime(trackStartTime) / 1000.0;
+        var audioEndTime = audioSegment.trackToAudioTime(trackEndTime) / 1000.0;
 
         // Generate a function used for playback to be registered with a timer.
         // Times are in milliseconds
@@ -128,8 +147,8 @@ var AudioSegmentController = function(segment, trackController) {
 
         // Update the position and size of the segment
         jqSegment.css({'top': 0,
-                        'left': pentimento.audioController.millisecondsToPixels(audioSegment.start_time),
-                        'width': pentimento.audioController.millisecondsToPixels(audioSegment.lengthInTrack())
+                        'left': audioController.millisecondsToPixels(audioSegment.start_time),
+                        'width': audioController.millisecondsToPixels(audioSegment.lengthInTrack())
                         });
 
         // The position of the handle is always fixed to the top left through CSS, and doesn't require updating.
@@ -141,8 +160,8 @@ var AudioSegmentController = function(segment, trackController) {
         var offsetSegmentStartTime = audioSegment.audioToTrackTime(0) - audioSegment.start_time;  // always <= 0
         var offsetSegmentWidth = audioSegment.audioToTrackTime(audioSegment.totalAudioLength()) - audioSegment.audioToTrackTime(0);
         jqWaveContainer.css({'top': jqHandle.css('height'),
-                'left': pentimento.audioController.millisecondsToPixels(offsetSegmentStartTime),
-                'width': pentimento.audioController.millisecondsToPixels(offsetSegmentWidth), 
+                'left': audioController.millisecondsToPixels(offsetSegmentStartTime),
+                'width': audioController.millisecondsToPixels(offsetSegmentWidth), 
                 'height': jqWaveContainer.css('height')
                 });
 

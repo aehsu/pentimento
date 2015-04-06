@@ -2,9 +2,71 @@
 //TODO: think about cases where methods on stack refer to things that no longer exist. Is this possible, or will the things
 // be re-created before getting to that point on the stack?
 //TODO: API/HowTo PAGE
-
+"use strict";
+    
 var getUndoManager = function(groupTypes, debug) {
-    'use strict';
+
+
+// var ActionGroups = {
+//     VisualGroup: "VisualGroup", //encapsulates a single action/visual when recording
+//     SubSlideGroup: "SubSlideGroup", //encapsulates the portion of a slide when recording
+//     ShiftGroup: "ShiftGroup", //encapsulates a shift block, for shift as you go
+//     RecordingGroup: "RecordingGroup", //the largest group when recording, encapsulates an entire recording
+//     // CustomGroup: "CustomGroup"
+//     EditGroup: "EditGroup" //editing is basically standalone, so you only ever have one group when editing
+// };
+
+// var ActionTitles = {
+//     Recording: "Recording",
+//     AdditionOfSlide: "AdditionOfSlide",
+//     DeleteSlide: "DeleteSlide",
+//     ShiftSlide: "ShiftSlide",
+//     AdditionOfVisual: "AdditionOfVisual",
+//     DeleteVisual: "DeleteVisual",
+//     ShiftVisuals: "ShiftVisual(s)",
+//     AdditionOfConstraint: "AdditionOfConstraint",
+//     DeletionOfConstraint: "DeletionOfConstraint",
+//     ShiftConstraints: "ShiftConstraints",
+//     AdditionOfProperty: "AdditionOfProperty",
+//     Edit: "Edit",
+//     Dummy: "Dummy"
+// };
+
+
+    // var undoListener(event) {
+    //     if(um.getUndoLength() > 0) {
+    //         $('.um-tool[data-toolname="undo"]').removeAttr('disabled'); //everything
+
+    //         for(var attr in ActionGroups) {
+    //             if(um.canUndo(attr)) {
+    //                 $('.um-tool[data-toolname="undo"]').text('Undo-'+attr);
+    //                 $('.um-tool[data-toolname="undo"]').attr('data-group', attr)
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         $('.um-tool[data-toolname="undo"]').attr('disabled', 'disabled');
+    //         $('.um-tool[data-toolname="undo"]').each(var() { $(this).text('Undo'); });
+    //         $('.um-tool[data-toolname="undo"]').removeAttr('data-group');
+    //     }
+    // }
+
+    // var redoListener(event) {
+    //     if(um.getRedoLength() > 0) {
+    //         $('.um-tool[data-toolname="redo"]').removeAttr('disabled');
+    //         for(var attr in ActionGroups) {
+    //             if(um.canRedo(attr)) {
+    //                 $('.um-tool[data-toolname="redo"]').text('Redo-'+attr);
+    //                 $('.um-tool[data-toolname="redo"]').attr('data-group', attr);
+    //                 break;
+    //             }
+    //         }
+    //     } else {
+    //         $('.um-tool[data-toolname="redo"]').attr('disabled', 'disabled');
+    //         $('.um-tool[data-toolname="redo"]').each(var() { $(this).text('Redo'); });
+    //         $('.um-tool[data-toolname="redo"]').removeAttr('data-group');
+    //     }
+    // }
 
     if (isUndefined(debug)){
         debug = false; // keeps track of whether debug mode is on or off

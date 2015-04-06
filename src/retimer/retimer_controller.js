@@ -1,4 +1,6 @@
-function RetimingController(lec) {
+'use strict';
+
+var RetimingController = function(lec) {
 	var self = this;
 	var lecture = lec;
 	var state = pentimento.state;
@@ -161,25 +163,4 @@ function RetimingController(lec) {
 		if(prev==undefined || next==undefined || next.getDisabled()) { return visualTime; }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
 	}
-}
-
-$(document).ready(function() {
-	// var constraint_num = 0;
-    $('#sync').click(function(){
-    	console.log("clicked!");
-		// updateRetimerView();
-		var constraint_num = pentimento.lecture.getConstraints().length;
-		drawConstraint(constraint_num);
-		// constraint_num += 1;
-	});
-
-	// $('#thumb_zoom_in').click(function(){
-	// 	var endTime = window.opener.pentimento.lectureController.getLectureDuration();
-	// 	scaleThumb(2, 0, endTime);
-	// })
-
-	// $('#thumb_zoom_out').click(function(){
-	// 	var endTime = window.opener.pentimento.lectureController.getLectureDuration();
-	// 	scaleThumb(0.5, 0, endTime);
-	// })
-})
+};

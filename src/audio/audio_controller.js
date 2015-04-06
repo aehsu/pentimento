@@ -1,14 +1,21 @@
-var AudioController = function() {
+///////////////////////////////////////////////////////////////////////////////
+// Audio Controller
+//
+// Controller for the DOM audio timeline
+// Translates user input into actions that modify the audio model
+// Responsible for drawing the audio timeline and displaying updates
+"use strict";
+var AudioController = function(audio_model) {
 
-    ////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
     // Member vars
-    ////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
 
     // self can be used to refer to the object in different scopes (such as listeners)
     var self = this;
 
     // Audio model containig the audio data
-    audioModel = null;
+    var audioModel = null;
 
     // Controllers for each of the audio tracks. Each controller handles all the MVC
     // responsibilities for that particular track. The active controller is the
@@ -98,6 +105,11 @@ var AudioController = function() {
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     /////////////////////////////////////////////////////////////////////////////// 
+
+    // Get the audio model that holds all the audio information
+    var getAudioModel = function() {
+        return audioModel;
+    };
 
     // Insert a new track controller with an empty track and refresh the view
     var createTrackController = function() {
@@ -230,7 +242,7 @@ var AudioController = function() {
             console.log("Recorded audio of length: " + String(audio_duration));
 
             // Create a new audio segment and use the track controller to insert it
-            var segment = new pentimento.audio_segment(audioURL, audio_duration, beginTime, endTime);
+            var segment = new AudioSegment(audioURL, audio_duration, beginTime, endTime);
             console.log("new audio segment:");
             console.log(segment);
             activeTrackController.insertSegment(segment);
@@ -396,7 +408,7 @@ var AudioController = function() {
         // Plus the margin and border widths (2 each).
         var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
         var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
-        var heightPixels = (Math.max(audioModel.audio_tracks.length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
+        var heightPixels = (Math.max(audioModel.getAudioTracks().length, 2) * (audio_track_height + audio_track_spacing)) + marginAndBorderSize;
         gradation_container.css('width', widthPixels);
         gradation_container.css('height', heightPixels);
 
@@ -595,8 +607,8 @@ var AudioController = function() {
     // Initializes the audio controller
     // Should only be called after the document is ready
 
-    // Create a new audio model
-    audioModel = new pentimento.audio_model();
+    // Set the audio model
+    audioModel = audio_model;
 
     // RecordRTC setup
     navigator.getUserMedia(
@@ -630,7 +642,7 @@ var AudioController = function() {
             return;
         };
 
-        // Start or stop playback and change the button text
+        // Start or stop playback
         if (pentimento.timeController.isPlaying()) {
             pentimento.timeController.stopPlayback();  // Stop playback at the end of the audio
         } else{
@@ -652,7 +664,7 @@ var AudioController = function() {
             return;
         };
 
-        // Start or stop recording and change the button text
+        // Start or stop recording
         if (pentimento.timeController.isRecording()) {
             pentimento.timeController.stopRecording();
         } else{
@@ -700,9 +712,3 @@ var AudioController = function() {
     // Draw the view
     self.draw();
 };
-
-
-$(document).ready(function() {
-    pentimento.audioController = new AudioController();
-});
-

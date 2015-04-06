@@ -17,37 +17,36 @@
     <script type='text/javascript' src="external/RecordRTC.js"></script>
     <script type='text/javascript' src='external/spectrum.js'></script>
 
+    <!--The entry point for the application is in lecture_controller.js-->
+
+    <script type='text/javascript' src='lecture_controller.js'></script>
+    <script type='text/javascript' src='lecture_model.js'></script>
+
     <script type='text/javascript' src='undo/errors.js'></script>
     <script type='text/javascript' src='undo/compatibility.js'></script>
     <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
     <script type='text/javascript' src='undo/undo.js'></script>
 
-    <script type='text/javascript' src='common.js'></script>
-    <script type='text/javascript' src='visuals/visuals_model.js'></script>
-    <script type='text/javascript' src='model_lecture.js'></script>
-    <script type='text/javascript' src='model_state.js'></script>
     <script type='text/javascript' src='time_controller.js'></script>
+
+    <script type='text/javascript' src='visuals/visuals_model.js'></script>
+    <script type='text/javascript' src='visuals/visuals_controller.js'></script>
+    <script type='text/javascript' src='visuals/tools_controller.js'></script>
+    <script type='text/javascript' src='visuals/renderer.js'></script>
 
     <script type='text/javascript' src='audio/audio_model.js'></script>
     <script type='text/javascript' src='audio/segment_controller.js'></script>
     <script type='text/javascript' src='audio/track_controller.js'></script>
     <script type='text/javascript' src='audio/audio_controller.js'></script>
 
-    <script type='text/javascript' src='controller_inputs.js'></script>
-    <script type='text/javascript' src='controller_recording.js'></script>
-    <script type='text/javascript' src='visuals/visuals_controller.js'></script>
     <script type='text/javascript' src='retimer/retimer_controller.js'></script>
-    <script type='text/javascript' src='controller_lecture.js'></script>
-    <script type='text/javascript' src='visuals/tools_helpers_controller.js'></script>
-    <script type='text/javascript' src='visuals/tools_controller.js'></script>
-    <script type='text/javascript' src='renderer.js'></script>
 
-
-    <script type='text/javascript' src='retimer/retimer_view_audio_handler.js'></script>
     <script type='text/javascript' src='retimer/retimer_view_constraints_handler.js'></script>
     <script type='text/javascript' src='retimer/retimer_view_visuals_handler.js'></script>
 
     <script type='text/javascript' src='time_slider.js'></script>
+
+    <!--The entry point for the application is in lecture_controller.js-->
 
 </head>
 
@@ -208,24 +207,24 @@
                 <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button>
 
                 <!-- <input type="image" src="icons/emphasize.png" height="40px">
-<input type="image" src="icons/revertEmphasis.png" height="40px"><br>
+                <input type="image" src="icons/revertEmphasis.png" height="40px"><br>
 
-<input type="image" src="icons/copylasso.png" height="40px">
-<input type="image" src="icons/eraser.png" height="40px"><br>
+                <input type="image" src="icons/copylasso.png" height="40px">
+                <input type="image" src="icons/eraser.png" height="40px"><br>
 
-<input type="image" src="icons/delete.png" height="40px">
-<input type="image" src="icons/duplicate.png" height="40px"><br>
+                <input type="image" src="icons/delete.png" height="40px">
+                <input type="image" src="icons/duplicate.png" height="40px"><br>
 
-<input type="image" src="icons/handScrolling.png" height="40px">
-<input type="image" src="icons/pageRecenter.png" height="40px"><br>
+                <input type="image" src="icons/handScrolling.png" height="40px">
+                <input type="image" src="icons/pageRecenter.png" height="40px"><br>
 
-<input type="image" src="icons/zoomIn.png" height="40px">
-<input type="image" src="icons/zoomOut.png" height="40px"><br>
+                <input type="image" src="icons/zoomIn.png" height="40px">
+                <input type="image" src="icons/zoomOut.png" height="40px"><br>
 
-<input type="image" src="icons/pageUp.png" height="40px">
-<input type="image" src="icons/pageDown.png" height="40px"><br> -->
-<!-- <label>Emphasis Lasso</label>
-<label>In-lecture revert last epmhasis</label> -->
+                <input type="image" src="icons/pageUp.png" height="40px">
+                <input type="image" src="icons/pageDown.png" height="40px"><br> -->
+                <!-- <label>Emphasis Lasso</label>
+                <label>In-lecture revert last epmhasis</label> -->
 
             </div>
             <div style="float:right">
@@ -248,7 +247,6 @@
 
     <!--AUDIO-->
     <div id="audio_div_container">
-
         <button id="play_pause_button" class="btn btn-primary">
             Play
         </button>

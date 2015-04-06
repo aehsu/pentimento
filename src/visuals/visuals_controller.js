@@ -1,13 +1,160 @@
 //Because of integration with the undo manager, the undo actions should call updateVisuals()
 //appropriately. Only the undo actions, though, not the forward actions! Therefore, any time
 //um.add is called, it should have an updateVisuals inside of the function if necessary
+"use strict";
 
-function VisualsController(lec) {
+var VisualsController = function(visuals_model) {
     var self = this;
-    var lecture = lec;
-    var state = pentimento.state;
+    var visualsModel = null;
+    var toolsController = null;
+    var renderer = null;
 
-    this.makeVisualDirty = function(visual) {
+    // Variables used for recording
+    var originSlide = null;
+    var originSlideDuration = null;
+    var shiftInterval = null;
+    var dirtyVisuals = [];
+    var recordingBegin = NaN;
+    var lastTimeUpdate = NaN;
+    var visualsInsertionTime = NaN;
+
+    // DOM elements
+    var canvasID = "sketchpad";
+
+    this.canvas = null;
+    this.context = null;
+
+    this.tool = null; //whichever tool is active for a recording
+    this.lastPoint = null;
+    this.currentVisual = null;
+    this.selection = [];
+    this.currentSlide = null;
+
+    this.color = '#777';
+    this.width = 2;
+
+    this.getVisualsModel = function() {
+        return visualsModel;
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Recording of Visuals
+    //
+    // Handlers for when recording begins and ends.
+    // Includes helper functions for recording logic.
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // The time for the visuals is represented in UTC time
+    this.globalTime = function() {
+        return (new Date()).getTime();
+    };
+
+    var beginRecording = function() {
+        if (!self.currentSlide) {
+            console.error("there is no current slide");
+            return;
+        }
+
+        self.selection  = [];
+        $('input[data-toolname="pen"]').click();
+        $('.recording-tool').toggleClass('hidden');
+
+        var duration = 0;
+        var iter = self.getVisualsModel().getSlidesIterator();
+        while(iter.hasNext()) {
+            var slide = iter.next();
+            if(slide==self.currentSlide) {
+                break; 
+            };
+
+            duration += slide.getDuration();
+        }
+
+        // TODO snap pentimento.timeController.getTime() leftmost
+        // visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
+        visualsInsertionTime = pentimento.timeController.getTime() - duration;
+        lastTimeUpdate = self.globalTime();
+        recordingBegin = lastTimeUpdate;
+        originSlide = self.currentSlide;
+        originSlideDuration = self.currentSlide.getDuration();
+
+        setDirtyVisuals();
+    };
+
+    var stopRecording = function() {
+
+        self.selection  = [];
+        self.tool = null;
+        $('.recording-tool').toggleClass('hidden');
+
+        var gt = self.globalTime();
+        var diff = gt - lastTimeUpdate;
+        self.currentSlide.setDuration(self.currentSlide.getDuration() + diff);
+        var totalDiff = gt - recordingBegin;
+
+        //DOES NOT add an action onto the undo stack
+        cleanVisuals(dirtyVisuals, originSlide.getDuration() - originSlideDuration);
+
+        var dummyOriginSlide = originSlide;
+        var dummyOriginSlideDuration = originSlideDuration;
+        var tmpVisuals = []; 
+        for(var i in dirtyVisuals) { 
+            tmpVisuals.push(dirtyVisuals[i].visual); 
+        }
+        
+        // Reset recording variables
+        recordingBegin = NaN;
+        lastTimeUpdate = NaN;
+        visualsInsertionTime = NaN
+        originSlide = null;
+        originSlideDuration = null;
+        dirtyVisuals = [];
+    };
+
+    // this.setCurrentSlide = function(slide) {
+    //     var index = slides.indexOf(slide);
+    //     if (index < 0) {
+    //         return;
+    //     };
+    //     self.currentSlide = slide;
+    // };
+
+    // this.getCurrentSlide = function() {
+    //     return self.currentSlide;
+    // };
+
+    // Sets the current slide to be at the given time
+    // TODO: this needs to be fixed to use the retimer and time controller
+    this.setCurrentSlideAtTime = function(time) {
+        if (time==0) { 
+            self.currentSlide = visualsModel.getSlides()[0];
+            return;
+        };
+        var totalDuration=0;
+        var slidesIter = visualsModel.getSlidesIterator();
+        while(slidesIter.hasNext()) {
+            var slide = slidesIter.next();
+            if(time > totalDuration && time <= totalDuration+slide.getDuration()) {
+                self.currentSlide = slide;
+                return;
+            } else {
+                totalDuration += slide.getDuration();
+            }
+        }
+    };
+
+    var setDirtyVisuals = function() {
+        var iter = self.currentSlide.getVisualsIterator();
+        while(iter.hasNext()) {
+            var visual = iter.next();
+            if(visual.getTMin() > pentimento.timeController.getTime()) { //is dirty
+                dirtyVisuals.push(self.makeVisualDirty(visual));
+            };
+        };
+    };
+
+    var makeVisualDirty = function(visual) {
         var wrapper = {};
         wrapper.visual = visual;
         wrapper.tMin = visual.getTMin();
@@ -17,12 +164,12 @@ function VisualsController(lec) {
         for(var i in vertices) {
             wrapper.times.push(vertices[i].getT());
             vertices[i].setT(Number.POSITIVE_INFINITY);
-        }
+        };
         //would have to disable transforms
         return wrapper;
-    }
+    };
 
-    this.cleanVisuals = function(dirtyWrappers, amount) {
+    var cleanVisuals = function(dirtyWrappers, amount) {
         for(var i in dirtyWrappers) {
             var dirtyWrapper = dirtyWrappers[i];
             var visual = dirtyWrapper.visual;
@@ -30,76 +177,119 @@ function VisualsController(lec) {
             var vertices = visual.getVertices();
             for(var j in vertices) {
                 vertices[j].setT(dirtyWrapper.times[j] + amount);
-            }
+            };
             //would have to re-enable transforms
-        }
-    }
+        };
+    };
 
-    /**********************************ADDING OF VISUALS**********************************/
-    function unaddVisual(slide, visual) {
-        var idx = lecture.getSlides().indexOf(slide);
-        if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return; }
-        idx = slide.getVisuals().indexOf(visual);
-        if(idx==-1) { console.log("Error in delete visual for the visuals controller"); return;}
+    ///////////////////////////////////////////////////////////////////////////////
+    // Adding of Slides
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.addSlide = function() {
+        if (!self.currentSlide) { 
+            console.error('self.currentSlide missing');
+            return;
+        };
+        var time = self.globalTime();
+        var diff = time - lastTimeUpdate;
+        lastTimeUpdate = time;
+        var oldInsertionTime = visualsInsertionTime;
+        var oldDirtyVisuals = dirtyVisuals;
+        var prevSlide = self.currentSlide;
+        var newSlide = new Slide();
         
-        slide.getVisuals().splice(idx, 1);
-        um.add(function() {
-            self.addVisual(slide, visual);
-        }, ActionTitles.AdditionOfVisual);
-        return visual;
-    }
+        // Insert the slide into the model
+        var result = visualsModel.insertSlide(prevSlide, newSlide);
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
+
+        // Updatet the duration to reflect the difference
+        prevSlide.setDuration(prevSlide.getDuration() + diff);
+
+        self.currentSlide = newSlide;
+        visualsInsertionTime = 0;
+    };
+
+    this.shiftSlideDuration = function(slide, amount) {
+        slide.setDuration(slide.getDuration() + amount);
+    };
     
-    this.addVisual = function(slide, visual) {
-        var idx = lecture.getSlides().indexOf(slide);
-        if(idx==-1) { console.log("Error in add visual for the visuals controller"); return; }
+    this.deleteSlide = function(slide) {
+
+        // Delete the slide from the model
+        var result = visualsModel.removeSlide();
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
         
-        // slide.getVisuals().splice(state.visualsInsertionIndex, 0, visual);
-        slide.getVisuals().push(visual);
-        um.add(function() {
-            unaddVisual(slide, visual);
-        }, ActionTitles.AdditionOfVisual);
-        return visual;
+        // Update the time cursor
+        var duration = 0;
+        var slideIter = visualsModel.getSlidesIterator();
+        while(slideIter.hasNext()) {
+            var sl = slideIter.next();
+            if(slideIter.index == index) { break; }
+            duration += sl.getDuration();
+        }
+        var slideTime = pentimento.timeController.getTime() - duration;
+        pentimento.timeController.updateTime(duration);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Adding of Visuals
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.addVisual = function(visual) {
+        //puts a visual into a coherent state given the context of the recording before passing it 
+        //over to the visualsController to actually add it
+        var verts = visual.getVertices();
+        for(var i in verts) {
+            var vert = verts[i];
+            vert.setT(visualsInsertionTime + vert.getT() - lastTimeUpdate);
+        }
+        visual.setTMin(visualsInsertionTime + visual.getTMin() - lastTimeUpdate);
+        
+        if(visual.getTDeletion() != null) { 
+            visual.setTDeletion(visualsInsertionTime + visual.getTDeletion() - lastTimeUpdate); 
+        };
+        self.currentSlide.getVisuals().push(visual);
     }
 
     this.appendVertex = function(visual, vertex) {
-        visual.getVertices().push(vertex);
-    }
+        vertex.setT(visualsInsertionTime + vertex.getT() - lastTimeUpdate);
+                visual.getVertices().push(vertex);
 
-    function unaddProperty(visual, property) {
-        var idx = visual.getPropertyTransforms().indexOf(property);
-        visual.getPropertyTransforms().splice(idx, 1);
-
-        um.add(function() {
-            self.addProperty(visual, property);
-        }, ActionTitles.AdditionOfProperty);
-    }
+    };
 
     this.addProperty = function(visual, property) {
+        property.setTime(visualsInsertionTime + property.getTime() - lastTimeUpdate);
         visual.getPropertyTransforms().push(property);
+    };
 
-        um.add(function() {
-            unaddProperty(visual, property);
-        }, ActionTitles.AdditionOfProperty);
-    }
+    this.setTDeletion = function(visuals, time) {
+        for(var i in visuals) {
+            var visual = visuals[i];
+            var tdel = visual.getTDeletion();
+            visual.setTDeletion(visualsInsertionTime + time - lastTimeUpdate);
+        };
+    };
 
-    this.setTDeletion = function(visual, time) {
-        var tdel = visual.getTDeletion()
-        visual.setTDeletion(time);
-
-        um.add(function() {
-            self.setTDeletion(visual, tdel);
-        }, ActionTitles.DeleteVisual)
-    }
-    /**********************************ADDING OF VISUALS**********************************/
-    /*******************************TRANSFORMING OF VISUALS********************************/
-    //Typically during a recording, these are the handlers for transforms to be applied to visuals
-    //Resizing or such actions are transformations which may happen during editing
+    ///////////////////////////////////////////////////////////////////////////////
+    // Transforming of Visuals
+    //
+    // Typically during a recording, these are the handlers for transforms to be applied to visuals
+    // Resizing or such actions are transformations which may happen during editing
+    ///////////////////////////////////////////////////////////////////////////////
 
 
-    /*******************************TRANSFORMING OF VISUALS********************************/
-    /**********************************EDITING OF VISUALS**********************************/
-    //This section is primarily concerned with the direct editing of the properties of
-    //a visual. Recording edits to a visual are transforms, which is in a later section
+    ///////////////////////////////////////////////////////////////////////////////
+    // Editing of Visuals
+    //
+    // This section is primarily concerned with the direct editing of the properties of
+    // a visual. Recording edits to a visual are transforms, which is in a later section
+    ///////////////////////////////////////////////////////////////////////////////
+
     this.editWidth = function(visuals, newWidth) {
         var widthObjs = [];
         for(var i in visuals) {
@@ -121,37 +311,12 @@ function VisualsController(lec) {
             }
             widthObjs.push(widthObj);
         }
-
-        um.add(function() {
-            unEditWidths(visuals, widthObjs, newWidth);
-        }, ActionTitles.Edit)
-    }
-
-    function unEditWidths(visuals, widthObjs, newWidth) {
-        for(var i in visuals) {
-            var visual = visuals[i];
-            var widthObj = widthObjs[i];
-            visual.getProperties().setWidth(widthObjs[i].width);
-            widthObj.indices.reverse();
-            widthObj.widthTrans.reverse();
-            var propTrans = visual.getPropertyTransforms();
-            for(var j in widthObj.indices) {
-                propTrans.splice(widthObj.indices[j], 0, widthObj.widthTrans[j]);
-            }
-        }
-
-        um.add(function() {
-            self.editWidth(visuals, newWidth);
-        }, ActionTitles.Edit);
     }
 
     this.editColor = function(visuals, newColor) {
         //TODO FILL
     }
 
-    function unEditColors(visuals, colors) {
-        //TODO FILL
-    }
 
     function doShiftVisual(visual, amount) {
         visual.setTMin(visual.getTMin() + amount);
@@ -174,67 +339,38 @@ function VisualsController(lec) {
     }
     
     this.shiftVisuals = function(visuals, amount) {
-        if(visuals.length==0) { return; }
-        for(var vis in visuals) { doShiftVisual(visuals[vis], amount); }
+        if(visuals.length==0) { 
+            return; 
+        };
+        for(var vis in visuals) { 
+            doShiftVisual(visuals[vis], amount);
+        };
         
-        var shift = um.add(function() {
-            for(var vis in visuals) { doShiftVisual(visuals[vis], -1.0*amount); }
-        }, ActionTitles.ShiftVisuals);
-        
-        if(DEBUG) { console.log(shift); }
+        if(pentimento.DEBUG) { console.log(shift); }
     }
     
-    function undeleteVisuals(slide, visuals, indices, shifts) {
-        //need to handle shifting correctly
-        shifts.reverse();
-        visuals.reverse();
-        indices.reverse(); //necessary to preserve correct ordering
-        
-        for(var sh in shifts) {
-            var shift = shifts[sh];
-            var visualIter = slide.getVisualsIterator();
-            while(visualIter.hasNext()) {
-                var visual = visualIter.next();
-                if(visual.getTMin() >= shift.tMin) { doShiftVisual(visual, shift.duration); }
-            }
-        }
-        
-        for(var i in indices) {
-            var index = indices[i];
-            var visual = visuals[i];
-            slide.getVisuals().splice(index, 0, visual);
-        }
-        
-        // visuals.reverse(); //this is not necessary
-        //no need to reverse indices here cause it will just get garbagecollected
-        //shifts will likewise just get garbagecollected
-
-        um.add(function() {
-            self.deleteVisuals(slide, visuals);
-        }, ActionTitles.DeleteVisual);
-    }
     
-    this.deleteVisuals = function(slide, visuals) {
+    this.deleteVisuals = function(visuals) {
         var indices = [];
         var segments = segmentVisuals(visuals);
         var shifts = getSegmentsShifts(segments);
         shifts.reverse();
         
-        console.log("pre-DELETION visuals"); console.log(state.currentSlide.visuals);
+        console.log("pre-DELETION visuals"); console.log(self.currentSlide.visuals);
         console.log("DELETION shifts"); console.log(shifts);
         
         for(var vis in visuals) { //remove the visuals from the slide
-            var index = state.currentSlide.getVisuals().indexOf(visuals[vis]);
-            state.currentSlide.getVisuals().splice(index, 1);
+            var index = self.currentSlide.getVisuals().indexOf(visuals[vis]);
+            self.currentSlide.getVisuals().splice(index, 1);
             indices.push(index);
             if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
         }
         
-        console.log("post-DELETION visuals"); console.log(state.currentSlide.getVisuals());
+        console.log("post-DELETION visuals"); console.log(self.currentSlide.getVisuals());
         
         for(var sh in shifts) {
             var shift = shifts[sh];
-            var visualIter = state.currentSlide.getVisualsIterator();
+            var visualIter = self.currentSlide.getVisualsIterator();
             while(visualIter.hasNext()) {
                 var visual = visualIter.next();
                 if(visual.getTMin() >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
@@ -242,19 +378,20 @@ function VisualsController(lec) {
         }
         shifts.reverse();
         //should we change the duration of the slide?!?
-        um.add(function() {
-            undeleteVisuals(slide, visuals, indices, shifts);
-        }, ActionTitles.DeleteVisual);
+
         return shifts[0].tMin;
     }
-    /**********************************EDITING OF VISUALS**********************************/
-    /**********************************HELPER FUNCTIONS***********************************/
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Helper functions
+    ///////////////////////////////////////////////////////////////////////////////
+
     function prevNeighbor(visual) {
         var prev;
-        for(vis in state.currentSlide.visuals) {
-            var tMin = state.currentSlide.visuals[vis].tMin;
+        for(vis in self.currentSlide.visuals) {
+            var tMin = self.currentSlide.visuals[vis].tMin;
             if(tMin < visual.tMin && (prev==undefined || tMin > prev.tMin)) {
-                prev = state.currentSlide.visuals[vis];
+                prev = self.currentSlide.visuals[vis];
             }
         }
         return prev;
@@ -262,18 +399,18 @@ function VisualsController(lec) {
 
     function nextNeighbor(visual) {
         var next;
-        for(vis in state.currentSlide.visuals) {
-            var tMin = state.currentSlide.visuals[vis].tMin;
+        for(vis in self.currentSlide.visuals) {
+            var tMin = self.currentSlide.visuals[vis].tMin;
             if(tMin > visual.tMin && (next==undefined || tMin < next.tMin)) {
-                next = state.currentSlide.visuals[vis];
+                next = self.currentSlide.visuals[vis];
             }
         }
         return next;
     }
     
-    function segmentVisuals(visuals) {
+    var segmentVisuals = function(visuals) {
         //returns an array of segments, where each segment consists of a set of contiguous visuals
-        function cmpVisuals(a, b) {
+        var cmpVisuals = function(a, b) {
             if(a.tMin < b.tMin) {
                 return -1;
             }
@@ -282,7 +419,7 @@ function VisualsController(lec) {
             }
             return 0;
         }
-        function cmpSegments(a, b) {
+        var cmpSegments = function(a, b) {
             //only to be used if each segment is sorted!
             if (a[0].tMin < b[0].tMin) {
                 return -1;
@@ -319,7 +456,7 @@ function VisualsController(lec) {
         return segments;
     }
 
-    function getSegmentsShifts(segments) {
+    var getSegmentsShifts = function(segments) {
         var shifts = [];
         for(seg in segments) {
             var duration = 0;
@@ -335,6 +472,33 @@ function VisualsController(lec) {
             shifts.push({'tMin':first.tMin, 'duration':duration});
         }
         return shifts;
-    }
-    /**********************************HELPER FUNCTIONS***********************************/
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Setup model and other controllers
+    visualsModel = visuals_model;
+    toolsController = new ToolsController(self);
+    renderer = new Renderer(self);
+
+    // Register callbacks for the time controller
+    pentimento.timeController.addUpdateTimeCallback(renderer.drawCanvas);
+    pentimento.timeController.addBeginRecordingCallback(beginRecording);
+    pentimento.timeController.addEndRecordingCallback(stopRecording);
+
+    // Set the starting state of the controller
+    self.currentSlide = visualsModel.getSlides()[0];
+
+    // Setup the canvas and context
+    self.canvas = $('#'+canvasID);
+    self.context = self.canvas[0].getContext('2d');
+    var iw = $(window).width();
+    var ih = $(window).height();
+    $('#'+canvasID)[0].width = 0.8 * iw;
+    $('#'+canvasID)[0].height = 0.8 * ih;
+
 };
+
