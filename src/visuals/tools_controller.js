@@ -140,21 +140,21 @@ var ToolsController = function(visuals_controller) {
                 break;
         	case 'delete':
                 if (pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
-                var t = pentimento.lectureController.visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                var t = visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 pentimento.timeController.updateTime(t);
                 // visualsController.selection = []; //Richard says no!
                 updateVisuals(false);
                 drawThumbnails(1000,1);
         		break;
             case 'redraw':
-                var t = pentimento.lectureController.visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                var t = visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 pentimento.timeController.updateTime(t);
                 $('.recording-tool:visible').click()
                 break;
             case 'width':
                 if(event.target.value=="" || pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
                 var newWidth = parseInt(event.target.value);
-                pentimento.lectureController.visualsController.editWidth(visualsController.selection, newWidth);
+                visualsController.editWidth(visualsController.selection, newWidth);
                 updateVisuals(false);
                 drawThumbnails(1000,1);
                 $('.edit-tool[data-toolname="width"]').val('');

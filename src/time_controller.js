@@ -63,7 +63,20 @@ var TimeController = function() {
     };
 
     // Get the current time (ms)
+    // During playback or recording, it pulls the current time forward rather
+    // than just relying on the time that was updated during the update interval.
     this.getTime = function() {
+        // During a timing, use and update the last global time to get the new current time
+        if (isTiming()) {
+            // Calculate the elapsed time since the last update
+            var gt = globalTime();
+            var timeElapsed = gt - lastGlobalTime;
+            lastGlobalTime = gt;
+
+            // Update the time without notifying callbacks
+            currentTime += timeElapsed;
+        };
+
         return currentTime;
     };
 
