@@ -9,8 +9,8 @@ var VisualsModel = function() {
 
     var self = this;
     var slides = [];
-    var canvasWidth = 916;
-    var canvasHeight = 364;
+    var canvasWidth = 900;
+    var canvasHeight = 500;
 
     this.getCanvasSize = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };

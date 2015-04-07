@@ -19,7 +19,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // calculate number of thumbnails to draw
     // setup all the canvases
     // iterate over and call generate thumbnail
-    this.drawThumbnails = function(){
+    this.drawThumbnails = function() {
 
         console.log("THUMBNAILS?!");
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
