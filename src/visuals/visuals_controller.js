@@ -21,9 +21,6 @@ var VisualsController = function(visuals_model) {
     // DOM elements
     var canvasID = "sketchpad";
 
-    this.canvas = null;
-    this.context = null;
-
     this.tool = null; //whichever tool is active for a recording
     this.lastPoint = null;
     this.currentVisual = null;
@@ -37,6 +34,16 @@ var VisualsController = function(visuals_model) {
         return visualsModel;
     };
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Drawing of Visuals
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Callback function of updateTime.
+    // Draws to the canvas through the renderer
+    var drawVisuals = function(time) {
+        // TODO: time needs to be converted by the retimer to visual time
+        renderer.drawCanvas(canvasID, time);
+    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Recording of Visuals
@@ -485,7 +492,7 @@ var VisualsController = function(visuals_model) {
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    pentimento.timeController.addUpdateTimeCallback(renderer.drawCanvas(canvasID));
+    pentimento.timeController.addUpdateTimeCallback(drawVisuals);
     pentimento.timeController.addBeginRecordingCallback(beginRecording);
     pentimento.timeController.addEndRecordingCallback(stopRecording);
 
