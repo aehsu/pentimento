@@ -388,7 +388,7 @@ var RetimerController = function(retimer_model, visuals_controller) {
         redrawThumbnails(numThumbs, audioThumbTime);
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
-        extendRetimingConstraintsCanvas();
+        redrawConstraintsCanvas();
 
     }
 
@@ -431,7 +431,7 @@ var RetimerController = function(retimer_model, visuals_controller) {
         redrawThumbnails(numThumbs, audioThumbTime);
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
-        extendRetimingConstraintsCanvas();
+        redrawConstraintsCanvas();
     }
 
 };
