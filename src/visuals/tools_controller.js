@@ -26,7 +26,7 @@ var ToolsController = function(visuals_controller) {
                     event.preventDefault();
                     penMouseMove(event);
                 });
-                $(window).on('mouseup', function(event) {
+                visualsController.canvas.on('mouseup', function(event) {
                     if (!pentimento.timeController.isRecording()){return;}
                     event.preventDefault();
                     penMouseUp(event);
@@ -44,7 +44,7 @@ var ToolsController = function(visuals_controller) {
                     event.preventDefault();
                     highlightMouseMove(event);
                 });
-                $(window).on('mouseup', function(event) {
+                visualsController.canvas.on('mouseup', function(event) {
                     if (!pentimento.timeController.isRecording()){return;}
                     event.preventDefault();
                     highlightMouseUp(event);
@@ -55,7 +55,6 @@ var ToolsController = function(visuals_controller) {
                 if(pentimento.timeController.isRecording()) {
                     visualsController.addSlide();
                 }
-                $(window).click();
                 lectureToolHandler(visualsController.tool); //restore the previous tool
                 break;
         	case 'color':
@@ -75,7 +74,7 @@ var ToolsController = function(visuals_controller) {
                     event.preventDefault();
                     lectureSelectMouseMove(event);
                 });
-                $(window).mouseup(function(event) {
+                visualsController.canvas.mouseup(function(event) {
                     if (!pentimento.timeController.isRecording()) {return ;}
                     event.preventDefault();
                     lectureSelectMouseUp(event);
@@ -130,7 +129,7 @@ var ToolsController = function(visuals_controller) {
                     drawThumbnails(1000,1);
                     editSelectMouseMove(event);
                 });
-                $(window).mouseup(function(event) {
+                visualsController.canvas.mouseup(function(event) {
                     if (pentimento.timeController.isRecording()) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
@@ -216,7 +215,6 @@ var ToolsController = function(visuals_controller) {
     //         updateVisuals(false);
     //         drawThumbnails(1000,1);
     //     }
-    //     $(window).click(); //updates the state of the undo and redo buttons correctly
     // };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -338,7 +336,7 @@ var ToolsController = function(visuals_controller) {
     var clearPreviousHandlers = function() {
         visualsController.canvas.off('mousedown');
         visualsController.canvas.off('mousemove');
-        $(window).off('mouseup');
+        visualsController.canvas.off('mouseup');
         
         //re-attach the necessary ones
         pentimento.lectureController.loadInputHandlers();
@@ -517,7 +515,6 @@ var ToolsController = function(visuals_controller) {
         clearPreviousHandlers();
         editToolHandler(tool, event);
     });
-    // $('.um-tool').click(umToolHandler);
     $('.recording-tool').click(recordingToolHandler);
 
 };
