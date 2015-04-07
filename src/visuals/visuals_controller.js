@@ -156,7 +156,7 @@ var VisualsController = function(visuals_model) {
         while(iter.hasNext()) {
             var visual = iter.next();
             if(visual.getTMin() > pentimento.timeController.getTime()) { //is dirty
-                dirtyVisuals.push(self.makeVisualDirty(visual));
+                dirtyVisuals.push(makeVisualDirty(visual));
             };
         };
     };

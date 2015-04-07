@@ -9,7 +9,6 @@ var Renderer = function(visuals_controller) {
 
         var canvasName = '#' + String(canvasID);
         var canvas = $(canvasName);
-
         var context = canvas[0].getContext('2d');
 
         // Clear the context
@@ -24,7 +23,7 @@ var Renderer = function(visuals_controller) {
                     var visual = visualsIter.next();
                     //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
                     if (isVisualVisible(visual, time)) {
-                        drawVisual(visual, time);
+                        drawVisual(context, visual, time);
                     }
                 }
             } else {
@@ -32,25 +31,25 @@ var Renderer = function(visuals_controller) {
             }
         }
         if (visualsController.currentVisual != null) {
-            drawVisual(visualsController.currentVisual, time);
+            drawVisual(context, visualsController.currentVisual, time);
         };
         for(var i in visualsController.selection) {
             var visCopy = visualsController.selection[i].getClone();
             var propsCopy = visCopy.getProperties();
             propsCopy.setWidth(propsCopy.getWidth()+1);
             propsCopy.setColor("#0000FF");
-            drawVisual(visCopy, time,{});
+            drawVisual(context, visCopy, time,{});
         };
     };
 
-    var drawVisual = function(visual, tVisual) {
+    var drawVisual = function(context, visual, tVisual) {
         //TODO SUPPORT FOR TRANSFORMS
         switch(visual.getType()) {
             case VisualTypes.basic:
                 console.log("someone actually made a basic type?!",visual);
                 break;
             case VisualTypes.stroke:
-                renderCalligraphicStroke(visual, tVisual);
+                renderCalligraphicStroke(context, visual, tVisual);
                 break;
             case VisualTypes.dot:
                 break;
@@ -59,7 +58,7 @@ var Renderer = function(visuals_controller) {
         };
     };
 
-    var renderCalligraphicStroke = function(visual, tVisual) {
+    var renderCalligraphicStroke = function(context, visual, tVisual) {
         var calligraphic_path = [];
         var vertsIter = visual.getVerticesIterator();
         var prev, curr;
