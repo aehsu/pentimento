@@ -1,8 +1,9 @@
 "use strict";
 
-var Renderer = function(visuals_controller) {
+var Renderer = function(visuals_controller, aContext) {
     var self = this;
     var visualsController = null;
+    var context = aContext;
 
     // Update the canvas to display contents at the specified time
     this.drawCanvas = function(time) {
@@ -10,7 +11,7 @@ var Renderer = function(visuals_controller) {
         // visuals_controller.setStateSlide();
 
         // Clear the context
-        visualsController.context.clearRect(0, 0, visualsController.canvas.width(), visualsController.canvas.height());
+        context.clearRect(0, 0, visualsController.canvas.width(), visualsController.canvas.height());
 
         var slideIter = visualsController.getVisualsModel().getSlidesIterator();
         while(slideIter.hasNext()) {
@@ -85,7 +86,7 @@ var Renderer = function(visuals_controller) {
         if (curr && tVisual >= curr.getT())
             calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
         if (calligraphic_path.length > 0) { // draw calligraphic path
-            var ctx = visualsController.context;
+            var ctx = context;
             ctx.globalAlpha = 1.0;
             ctx.strokeStyle = visual.getProperties().getColor();
             ctx.fillStyle = visual.getProperties().getColor();
@@ -159,8 +160,8 @@ var Renderer = function(visuals_controller) {
         // // If the stroke is being drawn as a thumbnail
         // if(isThumbnail){
         //     // Get the size of the main visuals canvas where the visuals were drawn
-        //     original_width = visualsController.context.canvas.width;
-        //     original_height = visualsController.context.canvas.height;
+        //     original_width = context.canvas.width;
+        //     original_height = context.canvas.height;
 
         //     // Calculate the scale of the size of the thumbnail relative to the main canvas size
         //     // (height of the thumbnails display is set, so use that for calculation, but thumbnails can be any width)

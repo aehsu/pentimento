@@ -11,7 +11,7 @@ var LectureModel = function() {
     this.init = function() {
         visualsModel = new VisualsModel();
         audioModel = new AudioModel();
-        // retimerModel = new;
+        retimerModel = new RetimerModel();
     };
 
     this.getVisualsModel = function() { return visualsModel; }
