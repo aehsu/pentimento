@@ -119,21 +119,18 @@ var ToolsController = function(visuals_controller) {
                     if (pentimento.timeController.isRecording()) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
-                    drawThumbnails(1000,1);
                     editSelectMouseDown(event);
                 });
                 visualsController.canvas.mousemove(function(event) {
                     if (pentimento.timeController.isRecording()||!pentimento.lectureController.leftMouseButton) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
-                    drawThumbnails(1000,1);
                     editSelectMouseMove(event);
                 });
                 visualsController.canvas.mouseup(function(event) {
                     if (pentimento.timeController.isRecording()) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
-                    drawThumbnails(1000,1);
                     editSelectMouseUp(event);
                 });
                 break;
@@ -143,7 +140,6 @@ var ToolsController = function(visuals_controller) {
                 pentimento.timeController.updateTime(t);
                 // visualsController.selection = []; //Richard says no!
                 updateVisuals(false);
-                drawThumbnails(1000,1);
         		break;
             case 'redraw':
                 var t = visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
@@ -155,7 +151,6 @@ var ToolsController = function(visuals_controller) {
                 var newWidth = parseInt(event.target.value);
                 visualsController.editWidth(visualsController.selection, newWidth);
                 updateVisuals(false);
-                drawThumbnails(1000,1);
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
             case 'delete-slide':
@@ -163,7 +158,6 @@ var ToolsController = function(visuals_controller) {
                 pentimento.lectureController.deleteSlide(visualsController.currentSlide);
                 // pentimento.timeController.updateTime(t);
                 updateVisuals(false);
-                drawThumbnails(1000,1);
             case 'rewind':
                 break;
         	case 'pan':
@@ -472,7 +466,6 @@ var ToolsController = function(visuals_controller) {
         }
 
         updateVisuals(false);
-        drawThumbnails(1000,1);
         ctx.strokeStyle = "#0000FF";
         ctx.lineWidth = 2;
         ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
