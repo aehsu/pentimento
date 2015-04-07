@@ -79,11 +79,13 @@ var ThumbnailsController = function(visuals_controller) {
     };
 
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////////
+
     // Register handlers for playing and pausing the visuals
-    pentimento.timeController.addUpdateTimeCallback(function(currentTime) {
-        if (pentimento.timeController.isPlaying()) {
+    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
             drawThumbnails();
-        };
     });
     pentimento.timeController.addBeginPlaybackCallback(function(currentTime) {
         $('input[data-toolname="play"]').toggleClass('hidden');
