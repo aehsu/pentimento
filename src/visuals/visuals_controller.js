@@ -501,11 +501,10 @@ var VisualsController = function(visuals_model) {
 
     // Setup the canvas and context
     self.canvas = $('#'+canvasID);
+    self.canvas[0].width = visualsModel.getCanvasSize().width;
+    self.canvas[0].height = visualsModel.getCanvasSize().height;
     self.context = self.canvas[0].getContext('2d');
-    var iw = $(window).width();
-    var ih = $(window).height();
-    $('#'+canvasID)[0].width = 0.8 * iw;
-    $('#'+canvasID)[0].height = 0.8 * ih;
+
 
 };
 

@@ -18,7 +18,7 @@ var ThumbnailsController = function(visuals_controller) {
     // calculate number of thumbnails to draw
     // setup all the canvases
     // iterate over and call generate thumbnail
-    this.drawThumbnails = function(){
+    this.drawThumbnails = function() {
 
         console.log("THUMBNAILS?!");
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
@@ -50,12 +50,9 @@ var ThumbnailsController = function(visuals_controller) {
 
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max);
-        }
-<<<<<<< HEAD
+        };
     };
-=======
-    }
->>>>>>> f7ec52e07c6fc9bf489eed908fe00d1855b79b20
+
 
     // Generate the thumbnails by getting the visuals from the slides.
     // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
