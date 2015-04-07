@@ -46,7 +46,7 @@ var AudioController = function(audio_model) {
     var segmentPlaybackTimeoutIDs = [];
 
     // The scale of the timeline in pixels per second
-    var timeline_pixels_per_sec = 10;
+    var timeline_pixels_per_sec = 40;
 
     // Limits for the timeline scale
     var timeline_min_mixels_per_sec = 4
