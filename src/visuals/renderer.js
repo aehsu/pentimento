@@ -10,7 +10,7 @@ var Renderer = function(visuals_controller) {
         var canvasName = '#' + String(canvasID);
         var canvas = $(canvasName);
 
-        var context = canvas.getContext('2d');
+        var context = canvas[0].getContext('2d');
 
         // Clear the context
         context.clearRect(0, 0, canvas.width(), canvas.height());

@@ -80,16 +80,16 @@ var ThumbnailsController = function(visuals_controller) {
 
 
     // Register handlers for playing and pausing the visuals
-    pentimento.timeController.addUpdateTimeCallback(function() {
+    pentimento.timeController.addUpdateTimeCallback(function(currentTime) {
         if (pentimento.timeController.isPlaying()) {
             drawThumbnails();
         };
     });
-    pentimento.timeController.addBeginPlaybackCallback(function() {
+    pentimento.timeController.addBeginPlaybackCallback(function(currentTime) {
         $('input[data-toolname="play"]').toggleClass('hidden');
         $('input[data-toolname="pause"]').toggleClass('hidden');
     });
-    pentimento.timeController.addEndPlaybackCallback(function() {
+    pentimento.timeController.addEndPlaybackCallback(function(currentTime) {
         $('input[data-toolname="play"]').toggleClass('hidden');
         $('input[data-toolname="pause"]').toggleClass('hidden');
     });
