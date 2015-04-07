@@ -7,6 +7,7 @@
 
 var VisualsModel = function() {
 
+    var self = this;
     var slides = [];
     var canvasWidth = 916;
     var canvasHeight = 364;
