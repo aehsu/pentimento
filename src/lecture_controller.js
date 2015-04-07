@@ -47,7 +47,7 @@ var LectureController = function() {
         // Initialize the controllers with their respective models
         visualsController = new VisualsController(lectureModel.getVisualsModel());
         audioController = new AudioController(lectureModel.getAudioModel());
-        retimingController = new RetimerController(lectureModel.getRetimerModel());
+        retimingController = new RetimerController(lectureModel.getRetimerModel(), visualsController);
 
         // Setup UI elements and state
         setupUI();

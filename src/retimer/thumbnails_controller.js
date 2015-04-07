@@ -5,6 +5,7 @@
 */
 var ThumbnailsController = function(visuals_controller) {
 
+    var self = this;
     var visualsController = visuals_controller;
     var renderer = new Renderer(visualsController);
     var pixelSecondRatio = -1;
@@ -19,7 +20,8 @@ var ThumbnailsController = function(visuals_controller) {
     // iterate over and call generate thumbnail
     this.drawThumbnails = function(){
 
-        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration()
+        console.log("THUMBNAILS?!");
+        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
 
         // Calculate number of thumbnails to generate.
         var total_width = pentimento.lectureController.getLectureModel().getLectureDuration() * pixelSecondRatio;
@@ -49,9 +51,6 @@ var ThumbnailsController = function(visuals_controller) {
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max);
         }
-
-        // Redraw the canvas containing the constraints to match the length of the string of thumbnails.
-        redrawConstraintsCanvas();
     }
 
     // Generate the thumbnails by getting the visuals from the slides.
@@ -85,7 +84,7 @@ var ThumbnailsController = function(visuals_controller) {
 
     // Register handlers for playing and pausing the visuals
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-            drawThumbnails();
+        self.drawThumbnails();
     });
     pentimento.timeController.addBeginPlaybackCallback(function(currentTime) {
         $('input[data-toolname="play"]').toggleClass('hidden');
