@@ -485,7 +485,7 @@ var VisualsController = function(visuals_model) {
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    pentimento.timeController.addUpdateTimeCallback(renderer.drawCanvas);
+    pentimento.timeController.addUpdateTimeCallback(renderer.drawCanvas(canvasID));
     pentimento.timeController.addBeginRecordingCallback(beginRecording);
     pentimento.timeController.addEndRecordingCallback(stopRecording);
 

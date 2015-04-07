@@ -1,6 +1,6 @@
 'use strict';
 
-var RetimingModel = function(lec) {
+var RetimerModel = function(lec) {
 	var self = this;
 	var lecture = lec;
 
