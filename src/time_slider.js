@@ -5,14 +5,14 @@ var TimeSliderController = function() {
     var sliderID = "slider";
     var tickerID = "ticker";
 
-    this.updateTimeCallback = function(time) {
-        updateTicker(time);
-        updateSlider(time);
+    this.updateTimeCallback = function(currentTime) {
+        updateTicker(currentTime);
+        updateSlider(currentTime);
     };
 
-    this.beginRecordingCallback = function(time) {
-        updateTicker(time);
-        updateSlider(time);
+    this.beginRecordingCallback = function(currentTime) {
+        updateTicker(currentTime);
+        updateSlider(currentTime);
 
         // Disable the slider during recording
         $('#'+sliderID).slider("option", {
@@ -20,9 +20,9 @@ var TimeSliderController = function() {
         });
     };
 
-    this.endRecordingCallback = function(beginTime, endTime) {
-        updateTicker(endTime);
-        updateSlider(endTime);
+    this.endRecordingCallback = function(currentTime) {
+        updateTicker(currentTime);
+        updateSlider(currentTime);
 
         // Reenable the slider after recording is over
         $('#'+sliderID).slider("option", {

@@ -192,6 +192,7 @@ var AudioSegmentController = function(segment, trackController) {
 
         // add hover method to audio segment divs
         // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
+        var mouseHover = null;
         new_segment.hover( function(event) {
             var this_segment = $(this);
 
