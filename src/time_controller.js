@@ -237,7 +237,8 @@ var TimeController = function() {
 
         // Calculate the new current time
         // This also notifies updateTime callbacks
-        self.updateTime(globalTime() - lastGlobalTime);
+        var timeDiff = globalTime() - lastGlobalTime;
+        self.updateTime(currentTime + timeDiff);
 
         // Reset the global time
         lastGlobalTime = -1;        
