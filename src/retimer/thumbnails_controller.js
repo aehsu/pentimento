@@ -55,7 +55,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
             }
 
             // Generate the thumbnail drawing
-            generateThumbnail(thumbOffset, curr_min, curr_max);
+            generateThumbnail(thumbOffset, curr_min, curr_max, thumbnail_width);
         }
     }; 
 
@@ -66,10 +66,10 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // currMax: the maximumm time to be displayed by the current thumbnail
 
     // param: time, duration, thumbnailIndex
-    var generateThumbnail = function(thumbOffset, curr_min, curr_max){
+    var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width){
 
         // Context
-        var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "'> </canvas>";
+        var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "' width='" + String(thumbnail_width) + "'> </canvas>";
         $('#thumbnails_div').append(canvasHTML);
         var canvasID = 'thumbnail_' + thumbOffset;
 
