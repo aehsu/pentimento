@@ -649,14 +649,7 @@ var AudioController = function(audio_model) {
         if (pentimento.timeController.isPlaying()) {
             pentimento.timeController.stopPlayback();  // Stop playback at the end of the audio
         } else{
-            // TODO: replace this with some method for getting the lecture duration
-            // Find the track time when the playback should end
-            // Get the greatest end time in all of the tracks
-            var playbackEndTime = -1;
-            for (var i = 0; i < trackControllers.length; i++) {
-                playbackEndTime = Math.max(playbackEndTime, trackControllers[i].getLength());
-            };
-            pentimento.timeController.startPlayback(playbackEndTime);
+            pentimento.timeController.startPlayback(pentimento.lectureController.getLectureModel().getDuration());
         };
     });
 

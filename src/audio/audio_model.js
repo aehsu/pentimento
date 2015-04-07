@@ -32,6 +32,16 @@ var AudioModel = function() {
 
         return (index > -1);
     };
+
+    // Get the total duration of the audio, which is the max of the all audio track lengths
+    // Returns the duration in milliseconds (0 if there are no tracks)
+    this.getDuration = function() {
+        var duration = 0;
+        for (var i = 0; i < audio_tracks.length; i++) {
+            duration = Math.max(duration, audio_tracks[i].endTime());
+        };
+        return duration;
+    };
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -260,7 +270,7 @@ var AudioTrack = function() {
         // TODO
 	};
 
-    // Get the end time of the track in milliseconds
+    // Get the end time of the track in milliseconds, which is the greatest segment end time.
     // Returns 0 if the track is empty
     this.endTime = function() {
 

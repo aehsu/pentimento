@@ -22,9 +22,8 @@ var LectureModel = function() {
     this.setAudioModel = function(newAudioModel) { audioModel = newAudioModel; }
     this.setRetimerModel = function(newRetimerModel) { retimerModel = newRetimerModel; }
 
+    // Get the duration of the lecture in milliseconds, which is the max duration of the audio and visuals
     this.getLectureDuration = function() {
-        // TODO
-        // get the max times of all of the models
-        return 140000;
+        return Math.max(audioModel.getDuration(), visualsModel.getDuration());
     };
 };
