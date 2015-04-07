@@ -5,6 +5,7 @@
 */
 var ThumbnailsController = function(visuals_controller) {
 
+    var self = this;
     var visualsController = visuals_controller;
     var renderer = new Renderer(visualsController);
     var pixelSecondRatio = -1;
@@ -49,10 +50,7 @@ var ThumbnailsController = function(visuals_controller) {
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max);
         }
-
-        // Redraw the canvas containing the constraints to match the length of the string of thumbnails.
-        redrawConstraintsCanvas();
-    }
+    };
 
     // Generate the thumbnails by getting the visuals from the slides.
     // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
@@ -85,7 +83,7 @@ var ThumbnailsController = function(visuals_controller) {
 
     // Register handlers for playing and pausing the visuals
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-            drawThumbnails();
+            self.drawThumbnails();
     });
     pentimento.timeController.addBeginPlaybackCallback(function(currentTime) {
         $('input[data-toolname="play"]').toggleClass('hidden');

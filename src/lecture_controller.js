@@ -47,7 +47,7 @@ var LectureController = function() {
         // Initialize the controllers with their respective models
         visualsController = new VisualsController(lectureModel.getVisualsModel());
         audioController = new AudioController(lectureModel.getAudioModel());
-        retimingController = new RetimerController(lectureModel.getRetimerModel());
+        retimingController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
 
         // Setup UI elements and state
         setupUI();
@@ -193,26 +193,4 @@ $(document).ready(function() {
     pentimento.lectureController.init();
 
     pentimento.timeSliderController = new TimeSliderController();
-
-    // Retimer stuff that needs to be moved into the retimer controller
-    // var constraint_num = 0;
-    $('#sync').click(function(){
-        console.log("clicked!");
-        // updateRetimerView();
-        var constraint_num = pentimento.lecture.getConstraints().length;
-        drawConstraint(constraint_num);
-        // constraint_num += 1;
-    });
-    // $('#thumb_zoom_in').click(function(){
-    //  var endTime = window.opener.self.getLectureDuration();
-    //  scaleThumb(2, 0, endTime);
-    // })
-
-    // $('#thumb_zoom_out').click(function(){
-    //  var endTime = window.opener.self.getLectureDuration();
-    //  scaleThumb(0.5, 0, endTime);
-    // })
-    // End retimer stuff
 });
-
-

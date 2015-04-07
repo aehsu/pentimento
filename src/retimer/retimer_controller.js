@@ -3,7 +3,7 @@
         1a) figure out where it is appropriate to use visual time (i.e. if there is no audio recording)
     2) Make this into a controller...
 */
-var RetimerController = function(retimer_model, visuals_controller) {
+var RetimerController = function(retimer_model, visuals_controller, audio_controller) {
 
     var retimerModel = retimer_model;
     var thumbnailsController = new ThumbnailsController(visuals_controller);
