@@ -8,6 +8,12 @@
 var VisualsModel = function() {
 
     var slides = [];
+    var canvasWidth = 916;
+    var canvasHeight = 364;
+
+    this.getCanvasSize = function() {
+        return { 'width':canvasWidth, 'height':canvasHeight };
+    };
 
     this.getDuration = function() {
         var time = 0;
