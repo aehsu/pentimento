@@ -50,7 +50,7 @@ var VisualsController = function(visuals_model) {
         return (new Date()).getTime();
     };
 
-    var beginRecording = function() {
+    var beginRecording = function(currentTime) {
         if (!self.currentSlide) {
             console.error("there is no current slide");
             return;
@@ -82,7 +82,7 @@ var VisualsController = function(visuals_model) {
         setDirtyVisuals();
     };
 
-    var stopRecording = function() {
+    var stopRecording = function(currentTime) {
 
         self.selection  = [];
         self.tool = null;

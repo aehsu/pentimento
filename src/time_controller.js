@@ -33,12 +33,12 @@ var TimeController = function() {
     var UPDATE_INTERVAL = 50;  // milliseconds
 
     // Callback functions to notify listeners.
-    // Function arguments are listed in the comments. All times are in milliseconds
-    var updateTimeCallbacks = [];  // When the current time changes (currentTime)
-    var beginRecordingCallbacks = [];  // When a recording begins (currentTime)
-    var endRecordingCallbacks = [];  // When a recording ends (beginTime, endTime)
-    var beginPlaybackCallbacks = [];  // When a playback begins (currentTime)
-    var endPlaybackCallbacks = [];  // When a playback ends (beginTime, endTime)
+    // Functions should have one argument: currentTime (milliseconds)
+    var updateTimeCallbacks = [];  // When the current time changes, including when recording/playback ends
+    var beginRecordingCallbacks = [];  // When a recording begins
+    var endRecordingCallbacks = [];  // When a recording ends
+    var beginPlaybackCallbacks = [];  // When a playback begins
+    var endPlaybackCallbacks = [];  // When a playback ends
     
 
     ////////////////////////////////////////////////////////
@@ -74,6 +74,9 @@ var TimeController = function() {
             lastGlobalTime = gt;
 
             // Update the time without notifying callbacks
+            // This is the only time current time is set without using the updateTime method
+            // The reasoning is that if there are too many calls to getTime, we could be 
+            // overloaded with too many callbacks to updateTime listeners.
             currentTime += timeElapsed;
         };
 
@@ -133,7 +136,7 @@ var TimeController = function() {
         // If it suceeds, notify listeners
         if (stopTiming()) {
             for (var i = 0; i < endRecordingCallbacks.length; i++) {
-                endRecordingCallbacks[i](lastBeginTime, currentTime);
+                endRecordingCallbacks[i](currentTime);
             };
         };
     };
@@ -166,7 +169,7 @@ var TimeController = function() {
         playbackEndTimer = null;
         if (stopTiming()) {
             for (var i = 0; i < endPlaybackCallbacks.length; i++) {
-                endPlaybackCallbacks[i](lastBeginTime, currentTime);
+                endPlaybackCallbacks[i](currentTime);
             };
         };
     };
@@ -210,7 +213,7 @@ var TimeController = function() {
             lastGlobalTime = gt;
 
             // Update the time.
-            // This also notifies callbacks
+            // This also notifies updateTime callbacks
             self.updateTime(currentTime + timeElapsed);
 
         }, UPDATE_INTERVAL);
@@ -233,10 +236,11 @@ var TimeController = function() {
         updateInterval = null;
 
         // Calculate the new current time
-        currentTime += (globalTime() - lastGlobalTime);
+        // This also notifies updateTime callbacks
+        self.updateTime(globalTime() - lastGlobalTime);
 
         // Reset the global time
-        lastGlobalTime = -1;
+        lastGlobalTime = -1;        
 
         return true;
     };

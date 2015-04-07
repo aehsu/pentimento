@@ -174,15 +174,15 @@ var AudioController = function(audio_model) {
 
     // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
     // Callback method
-    var updatePlayheadTime = function(timeMilli) {
+    var updatePlayheadTime = function(currentTime) {
         // Check the time for valid bounds
-        if (timeMilli < 0) {
-            console.error("Invalid playhead time: " + timeMilli);
+        if (currentTime < 0) {
+            console.error("Invalid playhead time: " + currentTime);
             return;
         };
 
         // Update the value of the playhead
-        playheadTime = timeMilli;
+        playheadTime = currentTime;
 
         // Refresh the playhead position
         refreshPlayhead();
@@ -190,8 +190,8 @@ var AudioController = function(audio_model) {
 
     // Start recording the audio at the given track time (ms)
     // Callback method registered to the time controller
-    var startRecording = function(time) {
-        console.log("Begin audio recording: " + time);
+    var startRecording = function(currentTime) {
+        console.log("Begin audio recording: " + currentTime);
 
         // This method can only be called if the time controller is recording and a recording is not currently in progress
         if ( !pentimento.timeController.isRecording() || isAudioRecording ) {
@@ -220,7 +220,9 @@ var AudioController = function(audio_model) {
 
     // End the recording (only applies if there is an ongoing recording)
     // Callback method registered to the time controller
-    var stopRecording = function(beginTime, endTime) {
+    var stopRecording = function(currentTime) {
+        var beginTime = pentimento.timeController.getBeginTime();
+        var endTime = currentTime;
         console.log("End audio recording (" + beginTime + ", " + endTime + ")");
 
         // This method can only be called if the time controller is not recording and a recording is currently in progress
@@ -258,7 +260,7 @@ var AudioController = function(audio_model) {
 
     // Begin playback the audio at the given track time (ms)
     // Callback method registered to the time controller
-    var startPlayback = function(time) {
+    var startPlayback = function(currentTime) {
         console.log("AudioController: Start playback");
 
         // This method can only be called if the time controller is playing and a recording is not currently in progress
@@ -281,7 +283,7 @@ var AudioController = function(audio_model) {
     };
 
     // Stop all playback activity
-    var stopPlayback = function() {
+    var stopPlayback = function(currentTime) {
         console.log("AudioController: Stop playback");
 
         // This method can only be called if the time controller is not playing and a recording is not currently in progress
@@ -517,6 +519,7 @@ var AudioController = function(audio_model) {
 
     // Zoom in or out.
     // Input true to indicate zoom out (default)
+    // Sends updates to zoom listeners
     this.zoom = function(zoomOut) {
         if(typeof(zoomOut)!=='boolean') zoomOut = true;
 
