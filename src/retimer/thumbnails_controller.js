@@ -3,10 +3,11 @@
     1) redraw all of the thumbnails each time the visuals are redrawn/edited
     2) refactor to take into account audio times/"global times"/retimer times when drawing thumbnails
 */
-var ThumbnailsController = function(visuals_controller) {
+var ThumbnailsController = function(visuals_controller, audio_controller) {
 
     var self = this;
     var visualsController = visuals_controller;
+    var audioController = audio_controller;
     var renderer = new Renderer(visualsController);
     var pixelSecondRatio = -1;
     // TODO need setter
@@ -24,15 +25,20 @@ var ThumbnailsController = function(visuals_controller) {
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
 
         // Calculate number of thumbnails to generate.
-        var total_width = pentimento.lectureController.getLectureModel().getLectureDuration() * pixelSecondRatio;
+        var total_width = audioController.millisecondsToPixels(max_time);
+
+        console.log("totalWidth: " + total_width);
 
         var original_height = visualsController.getVisualsModel().getCanvasSize().height;
         var original_width = visualsController.getVisualsModel().getCanvasSize().width;
         var scale = $('#thumbnails_div').height()/original_height;
         var thumbnail_width = Math.round(scale * original_width);
 
+        console.log("thumbnailWidth: " + thumbnail_width);
+
         var numThumbs = total_width/thumbnail_width;
 
+        console.log("numThumbs: " + numThumbs);
         // Generate the thumbnail for each thumbnail in the sequence
         for(var i=0; i<numThumbs; i++){
 
@@ -42,8 +48,8 @@ var ThumbnailsController = function(visuals_controller) {
             // Calculate the minimum ad maximum times associated with visuals to display for the thumbnail
             // If it is the last thumbnail then set the maximum time to the duration of the lecture 
             // TODO: convert to audio time?? or from audio time??
-            var curr_min = (i*thumbnail_width)/pixelSecondRatio;
-            var curr_max = ((i+1)*thumbnail_width)/pixelSecondRatio;
+            var curr_min = audioController.pixelsToMilliseconds(i*thumbnail_width);
+            var curr_max = audioController.pixelsToMilliseconds((i+1)*thumbnail_width);
             if((i+1) == numThumbs){
                 curr_max = max_time;
             }
@@ -51,11 +57,7 @@ var ThumbnailsController = function(visuals_controller) {
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max);
         }
-<<<<<<< HEAD
-    };
-=======
-    }
->>>>>>> f7ec52e07c6fc9bf489eed908fe00d1855b79b20
+    }; 
 
     // Generate the thumbnails by getting the visuals from the slides.
     // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
@@ -67,7 +69,7 @@ var ThumbnailsController = function(visuals_controller) {
     var generateThumbnail = function(thumbOffset, curr_min, curr_max){
 
         // Context
-        var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "' </canvas>";
+        var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "'> </canvas>";
         $('#thumbnails_div').append(canvasHTML);
         var canvasID = 'thumbnail_' + thumbOffset;
 
@@ -76,9 +78,6 @@ var ThumbnailsController = function(visuals_controller) {
 
         // Render the thumbnail on the appropriate canvas
         renderer.drawCanvas(canvasID, thumbTime)
-
-        // Get the slides for the visuals
-        var slides = visualsModel.getSlidesIterator();
     };
 
 
