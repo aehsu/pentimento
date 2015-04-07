@@ -3,9 +3,10 @@
         1a) figure out where it is appropriate to use visual time (i.e. if there is no audio recording)
     2) Make this into a controller...
 */
-var RetimerController = function(retimer_model) {
+var RetimerController = function(retimer_model, visuals_controller) {
 
     var retimerModel = retimer_model;
+    var thumbnailsController = new ThumbnailsController(visuals_controller);
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
@@ -157,10 +158,7 @@ var RetimerController = function(retimer_model) {
 
     // Extend the retiming constraints canvas to match the width of the thumbnails so that users can draw constraints at any time
     // TODO: extend retiming constraints for audio as well
-    function extendRetimingConstraintsCanvas(){
-        // Calculate the scale of the width of each thumbnil
-        var original_width = pentimento.state.context.canvas.width;
-        var original_height = pentimento.state.context.canvas.height;
+    function redrawConstraintsCanvas(){
 
         var scale = $('#thumbnails_div').height()/original_height;
         var thumbnail_width = Math.round(scale * original_width);
@@ -211,7 +209,7 @@ var RetimerController = function(retimer_model) {
         var audio_scale = $('#retimer_constraints').width()/pentimento.lectureController.getLectureDuration();
 
         // Get all of the constraints currently added to the lecture
-        var constraints = pentimento.lecture.getConstraintsIterator();
+        var constraints = retimerModel.getConstraintsIterator();
 
         // Reset the ID of constraints to 0
         var constraint_num = 0;
@@ -312,10 +310,10 @@ var RetimerController = function(retimer_model) {
         console.log("scale: " + audio_scale);
         var tAud = xVal * audio_scale;
         console.log("taud: " + tAud);
-        var tVis = pentimento.lectureController.retimingController.getVisualTime(tAud);
+        var tVis = retimerModel.getVisualTime(tAud);
         console.log("tvis: " + tVis);
-        // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(curr_audio_time, "Audio");
-        // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(curr_audio_time, "Audio");
+        // var prev_const = window.opener.retimerModel.getPreviousConstraint(curr_audio_time, "Audio");
+        // var next_const = window.opener.retimerModel.getNextConstraint(curr_audio_time, "Audio");
         // var prevTime = prev_const.getTVisual();
         // var nextTime = next_const.getTVisual();
         // console.log(nextTime);
@@ -327,7 +325,7 @@ var RetimerController = function(retimer_model) {
         // var tVis = interp*xVal;
         // var tAud = interp*xVal;
         var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
-        pentimento.lectureController.retimingController.addConstraint(constraint);
+        retimerModel.addConstraint(constraint);
     }
 
     // When a user drags the visuals end of a constraint the constraint will need to be updated
@@ -342,7 +340,7 @@ var RetimerController = function(retimer_model) {
 
         // Get the audio time from the position of the audio end of the constraint times the audio scales
         var tAud = $('#retimer_constraints').getLayer(audio_name).x * audio_scale;
-        // var oldtVis = window.opener.pentimento.lectureController.retimingController.getVisualTime(tAud);
+        // var oldtVis = window.opener.retimerModel.getVisualTime(tAud);
         // console.log("oldtVis: " + oldtVis);
 
         // Get the previous constraint and the next constraint
@@ -359,11 +357,11 @@ var RetimerController = function(retimer_model) {
         // Calculate the time of the new visual position in the global (audio) scale
         var draggedTAud = newVisXVal * audio_scale;
         // Get the new visul time (in terms of the new audio time)
-        var newTVis = pentimento.lectureController.retimingController.getVisualTime(draggedTAud);
+        var newTVis = retimerModel.getVisualTime(draggedTAud);
         console.log("newTVis: " + newTVis);
         
         // Get the constraints to iterate over
-        var constraints = pentimento.lecture.getConstraintsIterator();
+        var constraints = retimerModel.getConstraintsIterator();
 
         // TODO: why do I have the oldTVis??
         var oldTVis;
@@ -407,7 +405,7 @@ var RetimerController = function(retimer_model) {
         var newTAud = $('#retimer_constraints').getLayer(audio_name).x * audio_scale;
 
         // Get the constraints to iterate over
-        var constraints = pentimento.lecture.getConstraintsIterator();
+        var constraints = retimerModel.getConstraintsIterator();
 
         // Itereate over the constraints until the constraint with the visual time matching the visual time of the
         // dragged constraint is located and update audio time to match the new audio time

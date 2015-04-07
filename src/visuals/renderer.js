@@ -1,17 +1,14 @@
 "use strict";
 
-var Renderer = function(visuals_controller, aContext) {
+var Renderer = function(visuals_controller) {
     var self = this;
     var visualsController = null;
-    var context = aContext;
 
     // Update the canvas to display contents at the specified time
-    this.drawCanvas = function(time) {
-        // visuals_controller.selection = [];
-        // visuals_controller.setStateSlide();
+    this.drawCanvas = function(context, time) {
 
         // Clear the context
-        context.clearRect(0, 0, visualsController.canvas.width(), visualsController.canvas.height());
+        context.clearRect(0, 0, canvas.width(), canvas.height());
 
         var slideIter = visualsController.getVisualsModel().getSlidesIterator();
         while(slideIter.hasNext()) {
