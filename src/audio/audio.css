@@ -65,8 +65,17 @@
     padding: 0;
 }
 
-div.audio_track{
+div.timeline_plugin {
     position: absolute;
+    left: 0;
+    background-color: aqua;
+    margin: 0;
+    padding: 0;
+}
+
+div.audio_track {
+    position: absolute;
+    left: 0;
     height: 140px;
     width: 100%;
     border-left: thick double #ff0000;

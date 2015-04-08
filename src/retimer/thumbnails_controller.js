@@ -85,6 +85,18 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // Initialization
     ///////////////////////////////////////////////////////////////////////////////
 
+    // Adds a plugin to the audio controller so that it can display a view inside the audio timeline
+    audioController.addTimelinePlugin({
+        // name  // String with the name of the plugin
+        // size()  // Function that returns the size {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
+        // setViewID(pluginDivID)  // Function that informs the plugin of the ID of its view div in the timeline
+        // draw(pixelToSecondRatio)  // Function that (re)draws the contents of the plugin view (whenever the audio controller draws or zooms)
+        name: 'Thumbnails',
+        size: {'width': 500, 'height': 140}, 
+        setViewID: function(pluginDivID) {},
+        draw: function(pixelToSecondRatio) {}
+    });
+
     // Register handlers for playing and pausing the visuals
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
         self.drawThumbnails();
@@ -97,6 +109,5 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         $('input[data-toolname="play"]').toggleClass('hidden');
         $('input[data-toolname="pause"]').toggleClass('hidden');
     });
-
 
 };

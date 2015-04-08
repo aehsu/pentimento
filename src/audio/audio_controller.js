@@ -67,7 +67,7 @@ var AudioController = function(audio_model) {
     // Size and layout values used for calculations (pixels)
     // These should match with any identical defined values in audio.css
     var audio_track_height = 140;  // div.audio_track{height} div.audio
-    var audio_track_spacing = 20;  // Spacing between audio tracks
+    var audio_track_spacing = 20;  // Spacing between audio tracks (and plugins)
     var flotGraphMargin = 20;
     var flotGraphBorder = 1;
 
@@ -103,6 +103,10 @@ var AudioController = function(audio_model) {
     var insertTrackButtonID = 'insert_track_button';
     var deleteTrackButtonID = 'delete_track_button';
     var trackSelectID = 'track_select';
+
+    // Timeline Plugins
+    var timelinePluginIDBase = 'timeline_plugin_';  // A number follows the base (e.g. timeline_plugin_0)
+    var timelinePluginClass = 'timeline_plugin';
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -377,8 +381,7 @@ var AudioController = function(audio_model) {
         tracksContainer.css('left', flotPlot.offset().left - gradationContainer.offset().left)
             .css('top', flotPlot.offset().top - gradationContainer.offset().top)                  
             .css('width', flotPlot.width())
-            .css('height', flotPlot.height())
-            .css('position', 'absolute');
+            .css('height', flotPlot.height());
     };
 
     // Draw the container that will be used to hold the tracks
@@ -537,7 +540,12 @@ var AudioController = function(audio_model) {
         };
 
         // Update the measurement for pixels per second
-        timeline_pixels_per_sec = newPixelsPerSec;       
+        timeline_pixels_per_sec = newPixelsPerSec;
+
+        // Tell the plugins to draw
+        for (var i = 0; i < timelinePlugins.length; i++) {
+            timelinePlugins[i].draw(timeline_pixels_per_sec);
+        };
 
         // Refreshing will update the size of the segments and wavesurfers
         // as well as the gradations.
@@ -549,11 +557,19 @@ var AudioController = function(audio_model) {
     // not dependent on model data.
     this.refreshView = function() {
 
-        // Refresh each of the tracks
+        // Figure out the top offset due to the plugins
+        var pluginTopOffset = 0;
+        for (var i = 0; i < timelinePlugins.length; i++) {
+            pluginTopOffset += timelinePlugins[i].size.height + audio_track_spacing;
+        };
+
+        // Refresh each of the tracks and update its position
         for (var i = 0; i < trackControllers.length; i++) {
             trackControllers[i].refreshView();
-            // Offset the top of the track by the size of the other tracks before it
-            $('#'+trackControllers[i].getID()).css('top', i * (audio_track_height + audio_track_spacing));
+
+            // Offset the top of the track by the size of the other plugins and tracks before it
+            var trackTopOffset = pluginTopOffset + ( i * (audio_track_height + audio_track_spacing) );
+            $('#'+trackControllers[i].getID()).css('top', trackTopOffset);
         };
 
         // Refresh the gradations
@@ -591,11 +607,42 @@ var AudioController = function(audio_model) {
         // Draw the container for the audio tracks
         var jqTracksContainer = drawTracksContainer();
 
+        // Iterate over the plugins and create and add their view divs to the timeline.
+        // The will also be positioned, sized and drawn.
+        var pluginTopOffset = 0;  // Keep track of the offset for the plugins from the top
+        for (var i = 0; i < timelinePlugins.length; i++) {
+            var plugin = timelinePlugins[i];
+
+            // Create the div and give it the ID and class
+            var pluginDiv = $('<div></div>');
+            pluginDiv.attr({"id": getTimelinePluginID(plugin) , "class": timelinePluginClass});
+
+            // Add the div to the tracks container
+            jqTracksContainer.append(pluginDiv);
+
+            // Setup the positioning and size of the div
+            pluginDiv.css('top', pluginTopOffset)                  
+                     .css('width', plugin.size.width)
+                     .css('height', plugin.size.height);
+
+            // Update the top offset for the next plugin
+            pluginTopOffset += plugin.size.height + audio_track_spacing;
+
+            // Inform the plugin of its view's HTML element ID
+            plugin.setViewID(getTimelinePluginID(plugin));
+
+            // Tell the plugin to draw the view
+            plugin.draw(timeline_pixels_per_sec);
+        };
+
         // Iterate over all audio tracks and draw them
         for (var i = 0; i < trackControllers.length; i++) {
+
             // Draw the track and get the jquery object for that track
             console.log("Drawing track  " + i);
             var jqTrack = trackControllers[i].draw(jqTracksContainer);
+
+            // The positioning is set inside refreshView()
         };
 
         // Show the playhead that is used to display the current position in the timeline
@@ -617,13 +664,13 @@ var AudioController = function(audio_model) {
     // A plugin is a javascript object that has the following attributes:
     //
     // name  // String with the name of the plugin
-    // size()  // Function that returns the size {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
+    // size  // Size object {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
     // setViewID(pluginDivID)  // Function that informs the plugin of the ID of its view div in the timeline
     // draw(pixelToSecondRatio)  // Function that (re)draws the contents of the plugin view (whenever the audio controller draws or zooms)
     //
     // The audio controller, not the plugin, is responsible for adding the view div to the page
     // and for setting the position and size of the plugin view. The size will be set according to
-    // the size returned by the plugin's size() function. The plugin is informed of the HTML element ID of
+    // the size returned by the plugin's size. The plugin is informed of the HTML element ID of
     // its view div through the setViewID() function.  The plugin draw its view so that it will have
     // the pixel-to-second ratio that is passed in as an argument in the view() and zoom() functions.
     ///////////////////////////////////////////////////////////////////////////////
@@ -632,17 +679,22 @@ var AudioController = function(audio_model) {
         // Put the plugin in the list of plugins
         timelinePlugins.push(plugin);
 
-        // TODO: Inform the plugin of its view's HTML element ID
-        // maybe this just needs to go in the draw method.
-        // maybe an ID should be set here, and then the setViewID() method should be called every draw
-        // plugin.setViewID()
+        // Redraw the view
+        // This will setup the plugin's view, inform the plugin of the view's ID, and tell the plugin to draw.
+        self.draw();
 
-        // TODO: redraw the view
-        // self.draw();
+        // TODO: inside zoom, add code to call the draw method of the plugin
+    };
 
-        // TODO: inside draw (and maybe refresh), add code to handle plugins (add to view and )
+    // The plugin ID is the base plus the index of the plugin in the array
+    var getTimelinePluginID = function(plugin) {
 
-        // TODO: inside zoom, add code to call the zoom method of the plugin
+        var index = timelinePlugins.indexOf(plugin);
+        if (index < 0) {
+            console.error("plugin has not been added to audio controller");
+        };
+
+        return timelinePluginIDBase + plugin;
     };
 
 
