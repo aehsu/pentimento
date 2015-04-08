@@ -161,15 +161,18 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // TODO: extend retiming constraints for audio as well
     function redrawConstraintsCanvas(){
 
-        var scale = $('#thumbnails_div').height()/original_height;
-        var thumbnail_width = Math.round(scale * original_width);
+        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var new_width = audioController.millisecondsToPixels(max_time);
 
-        // Get the number of thumbnails
-        var numThumbs = $('#thumbnails_div').children().length;
-        // Calculate the new width of the constraints drawing canvas
-        var new_width = numThumbs*(thumbnail_width) + 2*(numThumbs-1) + 2;
+        // var scale = $('#thumbnails_div').height()/original_height;
+        // var thumbnail_width = Math.round(scale * original_width);
 
-        console.log("new: " + new_width);
+        // // Get the number of thumbnails
+        // var numThumbs = $('#thumbnails_div').children().length;
+        // // Calculate the new width of the constraints drawing canvas
+        // var new_width = numThumbs*(thumbnail_width) + 2*(numThumbs-1) + 2;
+
+        // console.log("new: " + new_width);
         // var curr_width = $('#retimer_constraints').width();
 
         // var canvas_scale = new_width/curr_width;
@@ -207,7 +210,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Redraw the constriants when the canvas has been resized
     function redrawConstraints(){
         // Get the audio scale of the new canvas using the lecture duration (global time)
-        var audio_scale = $('#retimer_constraints').width()/pentimento.lectureController.getLectureDuration();
+        var audio_scale = $('#retimer_constraints').width()/pentimento.lectureController.getLectureModel().getLectureDuration();
 
         // Get all of the constraints currently added to the lecture
         var constraints = retimerModel.getConstraintsIterator();
@@ -307,7 +310,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
 
         // Make sure to convert this from the lecture duration to audio duration
-        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#retimer_constraints').width();
         console.log("scale: " + audio_scale);
         var tAud = xVal * audio_scale;
         console.log("taud: " + tAud);
@@ -337,7 +340,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         console.log("anchor at: " + $('#retimer_constraints').getLayer(audio_name).x);
 
         // Figure out what the scale is in terms of the lecture position 
-        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#retimer_constraints').width();
 
         // Get the audio time from the position of the audio end of the constraint times the audio scales
         var tAud = $('#retimer_constraints').getLayer(audio_name).x * audio_scale;
@@ -399,7 +402,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // audio_name: the ID of the audio end of the constraint
     function updateAudioConstraint(constraint_num, audio_name, visual_name, arrow_name){
         // Calculate the scale to convert from position of the audio end of the constraint to audio time
-        var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#retimer_constraints').width();
         // Get the visual time of the constraint in audio time
         var tVis = $('#retimer_constraints').getLayer(visual_name).x * audio_scale;
         // Get the new audio time where the user stopped dragging the audio constraint
@@ -434,5 +437,19 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraintsCanvas();
     }
+
+    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
+        redrawConstraintsCanvas();
+    });
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////////
+    constraint_index = 0;
+    $('#sync').click(function(){
+        drawConstraint(constraint_index);
+        constraint_index++;
+    });
 
 };

@@ -42,7 +42,9 @@ var VisualsController = function(visuals_model) {
     // Draws to the canvas through the renderer
     var drawVisuals = function(time) {
         // TODO: time needs to be converted by the retimer to visual time
-        renderer.drawCanvas(canvasID, time);
+        var canvas = $('#' + canvasID);
+        var context = canvas[0].getContext('2d')
+        renderer.drawCanvas(canvas, context, time);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -265,8 +267,7 @@ var VisualsController = function(visuals_model) {
 
     this.appendVertex = function(visual, vertex) {
         vertex.setT(visualsInsertionTime + vertex.getT() - lastTimeUpdate);
-                visual.getVertices().push(vertex);
-
+        visual.getVertices().push(vertex);
     };
 
     this.addProperty = function(visual, property) {
