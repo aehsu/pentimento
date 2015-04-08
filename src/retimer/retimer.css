@@ -12,11 +12,14 @@
     height: 40px;
 }
 
+#constraints {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+};
+
 .thumbnail {
     background-color: #F5F5F5;
 }
-
-/*#constraints_div{
-    position: absolute;
-}
-*/

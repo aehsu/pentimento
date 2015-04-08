@@ -10,12 +10,20 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     var audioController = audio_controller;
     var renderer = new Renderer(visualsController);
 
-    var thumbnailsDivID = null;  // Set by the audio timeline plugin function setViewID()
-    var thumbnailsHeight = 100;  // pixels
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // DOM Elements
+    ///////////////////////////////////////////////////////////////////////////////
+
+    var thumbnailsDivID = null;  // Set by the audio timeline plugin function setViewID()
+    var thumbnailsHeight = 100;  // height of the thumbnails and thumbnails div in pixels
     var thumbnailIDBase = 'thumbnail_';  // Base for the ID. The full ID has an index at the end (e.g. thumbnail_0)
     var thumbnailClass = 'thumbnail';  // Class attached to each of the thumbnails
 
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Draw Methods
+    ///////////////////////////////////////////////////////////////////////////////
 
     // Draw the thumbnails whenever the visuals in the main window are updated or changed
     // calculate number of thumbnails to draw
