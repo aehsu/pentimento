@@ -13,6 +13,9 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     var thumbnailsDivID = null;  // Set by the audio timeline plugin function setViewID()
     var thumbnailsHeight = 100;  // pixels
 
+    var thumbnailIDBase = 'thumbnail_';  // Base for the ID. The full ID has an index at the end (e.g. thumbnail_0)
+    var thumbnailClass = 'thumbnail';  // Class attached to each of the thumbnails
+
 
     // Draw the thumbnails whenever the visuals in the main window are updated or changed
     // calculate number of thumbnails to draw
@@ -20,6 +23,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // iterate over and call generate thumbnail
     this.drawThumbnails = function() {
 
+        // Clear the thumbnails div
         $('#'+thumbnailsDivID).html('');
 
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
@@ -34,46 +38,40 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         var original_width = visualsController.getVisualsModel().getCanvasSize().width;
         var scale = thumbnailsHeight / original_height;
         var thumbnail_width = Math.ceil(scale * original_width);
-
         console.log("thumbnailWidth: " + thumbnail_width);
 
         var numThumbs = Math.round(total_width / thumbnail_width);
-
         console.log("numThumbs: " + numThumbs);
-        // Generate the thumbnail for each thumbnail in the sequence
-        for(var i=0; i<numThumbs; i++){
 
-            // Establish which number the thumbnail is
-            var thumbOffset = i;
+        // Generate the thumbnail for each thumbnail in the sequence
+        for(var thumbOffset = 0; thumbOffset < numThumbs; thumbOffset++){
 
             // Calculate the minimum ad maximum times associated with visuals to display for the thumbnail
             // If it is the last thumbnail then set the maximum time to the duration of the lecture 
             // TODO: convert to audio time?? or from audio time??
-            var curr_min = audioController.pixelsToMilliseconds(i*thumbnail_width);
-            var curr_max = audioController.pixelsToMilliseconds((i+1)*thumbnail_width);
-            if((i+1) == numThumbs){
+            var curr_min = audioController.pixelsToMilliseconds(thumbOffset*thumbnail_width);
+            var curr_max = audioController.pixelsToMilliseconds((thumbOffset+1)*thumbnail_width);
+            if (thumbOffset + 1 == numThumbs) {
                 curr_max = max_time;
-            }
+            };
 
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max, thumbnail_width);
         }
     }; 
 
-    // Generate the thumbnails by getting the visuals from the slides.
-    // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
+    // Generate a thumbnail by getting the visuals from the slides.
     // thumbOffset: the number of the thumbnail in the sequence of all of the thumbnails
     // currMin: the minimum time to be displayed by the current thumbnail
     // currMax: the maximumm time to be displayed by the current thumbnail
-
-    // param: time, duration, thumbnailIndex
     var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width){
 
-        // Canvas
+        // Setup the canvas for the thumbnail
         var canvas = $('<canvas></canvas>');
-        canvas.attr('id', 'thumbnail_'+thumbOffset);
+        canvas.attr('id', thumbnailIDBase+thumbOffset);
         canvas.css('width', thumbnail_width)
             .css('height', thumbnailsHeight);
+        canvas.addClass(thumbnailClass);
         $('#'+thumbnailsDivID).append(canvas);
 
         var context = canvas[0].getContext('2d');
@@ -88,6 +86,11 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
+    //
+    // Creates the plugin to display on the audio timeline and registers callbacks
+    // to the time controller. 
+    // The thumbnails are drawn whenever the audio timeline is (re)drawn and zoomed, 
+    // and they are also drawn when a recording ends.
     ///////////////////////////////////////////////////////////////////////////////
 
     // Adds a plugin to the audio controller so that it can display a view inside the audio timeline
@@ -95,7 +98,8 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         name: 'Thumbnails',
         height: thumbnailsHeight, 
         setViewID: function(pluginDivID) { thumbnailsDivID = pluginDivID; },
-        draw: self.drawThumbnails
+        draw: self.drawThumbnails, 
+        zoom: self.drawThumbnails
     });
 
     // Register handlers for playing and pausing the visuals
