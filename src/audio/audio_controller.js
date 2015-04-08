@@ -527,26 +527,6 @@ var AudioController = function(audio_model) {
         refreshPlayhead();
     };
 
-    // create cursor object for tracking mouse location
-    var drawCursor = function() {
-        var timeline_cursor = $('#'+timelineCursorID);
-        if (timeline_cursor.length === 0) {
-             timeline_cursor = $('<div></div>').attr({'id': timelineCursorID});
-             $('#'+timelineID).append(timeline_cursor);
-        }
-
-        // Bind hover callback to get mouse location
-        $('#'+timelineID).bind("mousemove", function (event) {
-            // Set mouse position
-            mouseX = event.pageX;
-            mouseY = event.pageY;
-            // Display bar behind mouse
-            $('#'+timelineCursorID).css({
-               left:  event.pageX
-            });
-        });
-    };
-
     // Zoom in or out.
     // Input true to indicate zoom out (default)
     // Sends updates to zoom listeners

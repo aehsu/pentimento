@@ -190,48 +190,6 @@ var AudioSegmentController = function(segment, trackController) {
             new_segment.addClass(focusClass);
         });
 
-        // add hover method to audio segment divs
-        // On mouse over, if object is currently being dragged, then highlight the side to which object will go if dropped
-        var mouseHover = null;
-        new_segment.hover( function(event) {
-            var this_segment = $(this);
-
-            // Add left or right border highlight on hover
-            mouseHover = setInterval(function(){
-                if (this_segment.hasClass("obstacle")) {
-                    // Check to see if it over laps with segment on the left half
-                    if ( mouseX >= this_segment.offset().left &&
-                         mouseX <= this_segment.offset().left + this_segment.width()/2 ) {
-                        // Highlight left edge
-                        $('#right_target_div').remove();
-                        if($('#left_target_div').length == 0) {
-                            var target_div = $("<div>", {id: "left_target_div"}).
-                            offset({ top: this_segment.offset().top, left: this_segment.offset().left});
-                            target_div.height(this_segment.height());
-                            $('#'+timelineID).append(target_div);
-                        }
-                    }
-                    // Check to see if it over laps with segment on the right half
-                    else if ( mouseX > this_segment.offset().left + this_segment.width()/2 && 
-                              mouseX <= this_segment.offset().left + this_segment.width() ) {
-                        // Highlight right edge
-                        $('#left_target_div').remove();
-                        if($('#right_target_div').length == 0) {
-                            var target_div = $("<div>", {id: "right_target_div"})
-                            .offset({ top: this_segment.offset().top, left: this_segment.offset().left + this_segment.width() });
-                            target_div.height(this_segment.height());
-                            $('#'+timelineID).append(target_div);
-                        }
-                    };
-                }
-            }, 100);
-        }, function() {
-            var this_segment = $(this);
-            clearInterval(mouseHover);
-            $('#left_target_div').remove();
-            $('#right_target_div').remove();
-        });
-
         // Setup the dragging and resizing on audio segment
         new_segment.draggable({
             containment: 'parent',

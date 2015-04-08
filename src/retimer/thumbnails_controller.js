@@ -3,6 +3,8 @@
     1) redraw all of the thumbnails each time the visuals are redrawn/edited
     2) refactor to take into account audio times/"global times"/retimer times when drawing thumbnails
 */
+"use strict";
+
 var ThumbnailsController = function(visuals_controller, audio_controller) {
 
     var self = this;

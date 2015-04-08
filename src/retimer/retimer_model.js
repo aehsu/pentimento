@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 var RetimerModel = function(lec) {
 	var self = this;
