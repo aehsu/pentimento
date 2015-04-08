@@ -56,7 +56,7 @@ var RetimerModel = function(lec) {
 		constraints.splice(index, 1);
 	}
 
-	function doShiftConstraint(constraint, amount) {
+	var doShiftConstraint = function(constraint, amount) {
 		constraint.setTVisual(constraint.getTVisual()+amount);
 		constraint.setTAudio(constraint.getTAudio()+amount);
 	}
@@ -72,7 +72,7 @@ var RetimerModel = function(lec) {
         return new Iterator(constraints);
     }
 
-	function getPreviousConstraint(time, type) {
+	var getPreviousConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
 
 		// var constraints = lecture.getConstraints();
@@ -93,7 +93,7 @@ var RetimerModel = function(lec) {
 		return best;
 	}
 
-	function getNextConstraint(time, type) {
+	var getNextConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
 
 		// var constraints = lecture.getConstraints();
@@ -131,22 +131,20 @@ var RetimerModel = function(lec) {
 	}
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Iterator
-//
-// Used to create an iterator over objects
-/////////////////////////////////////////////////////////////////////////////// 
+var Constraint = function(tvis, taud, mytype) {
+    var self = this;
+    self.tVis = tvis;
+    self.tAud = taud;
+    self.type = mytype;
+    self.disabled = false;
 
-var Iterator = function(array) {
-    return {
-        index: -1,
-        hasNext: function() { return this.index < array.length-1; },
-        next: function() {
-            if(this.hasNext()) {
-                this.index = this.index + 1;
-                return array[this.index];
-            }
-            return null;
-        }        
-    };
-};
+    this.getTVisual = function() { return self.tVis; }
+    this.getTAudio = function() { return self.tAud; }
+    this.getType = function() { return self.type; }
+    this.getDisabled = function() { return self.disabled; }
+
+    this.setTVisual = function(newTVis) { self.tVis = newTVis; }
+    this.setTAudio = function(newTAud) { self.tAud = newTAud; }
+    this.setType = function(newType) { self.type = newType; }
+    this.setDisabled = function(newBool) { self.disabled = newBool; }
+}
