@@ -61,6 +61,9 @@ var AudioController = function(audio_model) {
     // Interval durations for events and animations in milliseconds
     var playheadAnimationIntervalDuration = 10;
 
+    // See the section on Timeline Plugins below
+    var timelinePlugins = [];
+
     // Size and layout values used for calculations (pixels)
     // These should match with any identical defined values in audio.css
     var audio_track_height = 140;  // div.audio_track{height} div.audio
@@ -600,6 +603,46 @@ var AudioController = function(audio_model) {
 
         // Refresh the view
         self.refreshView();
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Timeline Plugins
+    //
+    // The timeline plugin is a way to add a view that appears in the audio timeline,
+    // similar to how a track appears in the timeline. Once a plugin is registered,
+    // it will appear in the audio timeline above the tracks. Plugins appear in the 
+    // order in which they are registered.
+    //
+    // A plugin is a javascript object that has the following attributes:
+    //
+    // name  // String with the name of the plugin
+    // size()  // Function that returns the size {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
+    // setViewID(pluginDivID)  // Function that informs the plugin of the ID of its view div in the timeline
+    // draw(pixelToSecondRatio)  // Function that (re)draws the contents of the plugin view (whenever the audio controller draws or zooms)
+    //
+    // The audio controller, not the plugin, is responsible for adding the view div to the page
+    // and for setting the position and size of the plugin view. The size will be set according to
+    // the size returned by the plugin's size() function. The plugin is informed of the HTML element ID of
+    // its view div through the setViewID() function.  The plugin draw its view so that it will have
+    // the pixel-to-second ratio that is passed in as an argument in the view() and zoom() functions.
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.addTimelinePlugin = function(plugin) {
+        // Put the plugin in the list of plugins
+        timelinePlugins.push(plugin);
+
+        // TODO: Inform the plugin of its view's HTML element ID
+        // maybe this just needs to go in the draw method.
+        // maybe an ID should be set here, and then the setViewID() method should be called every draw
+        // plugin.setViewID()
+
+        // TODO: redraw the view
+        // self.draw();
+
+        // TODO: inside draw (and maybe refresh), add code to handle plugins (add to view and )
+
+        // TODO: inside zoom, add code to call the zoom method of the plugin
     };
 
 
