@@ -349,8 +349,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Get the previous constraint and the next constraint
         // TODO: do this from the retimer controller and not from here...
-        var prev_const = getPreviousConstraint(tAud, "Audio");
-        var next_const = getNextConstraint(tAud, "Audio");
+        var prev_const = retimerModel.getPreviousConstraint(tAud, "Audio");
+        var next_const = retimerModel.getNextConstraint(tAud, "Audio");
 
         // Get the visual time from the previous and next constraint
         var prevTVis = prev_const.getTVisual();
@@ -389,7 +389,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var numThumbs = $('#thumbnails_div').children().length;
         console.log("NUMBER TO DRAW: " + numThumbs);
         var audioThumbTime = 1000; // ms per thumbnail in global/audio time.
-        redrawThumbnails(numThumbs, audioThumbTime);
+        thumbnailsController.drawThumbnails();
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraintsCanvas();
@@ -432,7 +432,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var numThumbs = $('#thumbnails_div').children().length;
         console.log("NUMBER TO DRAW: " + numThumbs);
         var audioThumbTime = 1000; // ms per thumbnail in global/audio time.
-        redrawThumbnails(numThumbs, audioThumbTime);
+        thumbnailsController.drawThumbnails();
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraintsCanvas();
@@ -441,7 +441,14 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
         redrawConstraintsCanvas();
     });
-
+    pentimento.timeController.addBeginRecordingCallback(function(currentTime) {
+        var constraint = new Constraint(currentTime, currentTime, ConstraintTypes.Automatic);
+        retimerModel.addConstraint(constraint);
+    });
+    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
+        var constraint = new Constraint(currentTime, currentTime, ConstraintTypes.Automatic);
+        retimerModel.addConstraint(constraint);
+    });
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
