@@ -267,8 +267,7 @@ var VisualsController = function(visuals_model) {
 
     this.appendVertex = function(visual, vertex) {
         vertex.setT(visualsInsertionTime + vertex.getT() - lastTimeUpdate);
-                visual.getVertices().push(vertex);
-
+        visual.getVertices().push(vertex);
     };
 
     this.addProperty = function(visual, property) {
