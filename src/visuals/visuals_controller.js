@@ -42,7 +42,9 @@ var VisualsController = function(visuals_model) {
     // Draws to the canvas through the renderer
     var drawVisuals = function(time) {
         // TODO: time needs to be converted by the retimer to visual time
-        renderer.drawCanvas(canvasID, time);
+        var canvas = $('#' + canvasID);
+        var context = canvas[0].getContext('2d')
+        renderer.drawCanvas(canvas, context, time);
     };
 
     ///////////////////////////////////////////////////////////////////////////////

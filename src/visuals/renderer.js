@@ -5,11 +5,7 @@ var Renderer = function(visuals_controller) {
     var visualsController = null;
 
     // Update the canvas to display contents at the specified time
-    this.drawCanvas = function(canvasID, time) {
-
-        var canvasName = '#' + String(canvasID);
-        var canvas = $(canvasName);
-        var context = canvas[0].getContext('2d');
+    this.drawCanvas = function(canvas, context, time) {
 
         // Clear the context
         context.clearRect(0, 0, canvas.width(), canvas.height());

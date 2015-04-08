@@ -71,13 +71,14 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         // Context
         var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "' width='" + String(thumbnail_width) + "'> </canvas>";
         $('#thumbnails_div').append(canvasHTML);
-        var canvasID = 'thumbnail_' + thumbOffset;
+        var canvas = $('#thumbnail_' + thumbOffset);
+        var context = canvas[0].getContext('2d');
 
         // Draw the thumbnail image in the middle of the time interval represented by the thumbnail
         var thumbTime = Math.round((curr_min + curr_max)/2);
 
         // Render the thumbnail on the appropriate canvas
-        renderer.drawCanvas(canvasID, thumbTime)
+        renderer.drawCanvas(canvas, context, thumbTime)
     };
 
 
