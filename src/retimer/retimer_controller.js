@@ -6,7 +6,8 @@
 var RetimerController = function(retimer_model, visuals_controller, audio_controller) {
 
     var retimerModel = retimer_model;
-    var thumbnailsController = new ThumbnailsController(visuals_controller);
+    var audioController = audio_controller;
+    var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller);
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
