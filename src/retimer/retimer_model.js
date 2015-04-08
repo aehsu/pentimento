@@ -38,7 +38,7 @@ var RetimerModel = function(lec) {
 		if(!self.checkConstraint(constraint)) { return false; }
 		var index = 0;
 		// var constraints = lecture.getConstraints();
-		var constIter = getConstraintsIterator();
+		var constIter = self.getConstraintsIterator();
 		while(constIter.hasNext()) {
 			var other = constIter.next();
 			if(other.getTVisual() > constraint.getTVisual()) { break; }
@@ -72,7 +72,7 @@ var RetimerModel = function(lec) {
         return new Iterator(constraints);
     }
 
-	var getPreviousConstraint = function(time, type) {
+	this.getPreviousConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
 
 		// var constraints = lecture.getConstraints();
@@ -93,7 +93,7 @@ var RetimerModel = function(lec) {
 		return best;
 	}
 
-	var getNextConstraint = function(time, type) {
+	this.getNextConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
 
 		// var constraints = lecture.getConstraints();
@@ -117,19 +117,24 @@ var RetimerModel = function(lec) {
 	}
 
 	this.getVisualTime = function(audioTime) {
-		var prev = getPreviousConstraint(audioTime, "Audio");
-		var next = getNextConstraint(audioTime, "Audio");
+		var prev = self.getPreviousConstraint(audioTime, "Audio");
+		var next = self.getNextConstraint(audioTime, "Audio");
 		if(prev==undefined || next==undefined || next.getDisabled()) { return audioTime; }
 		return (next.getTVisual()-prev.getTVisual())/(next.getTAudio()-prev.getTAudio())*(audioTime-prev.getTAudio())+prev.getTVisual();
 	}
 
 	this.getAudioTime = function(visualTime) {
-		var prev = getPreviousConstraint(visualTime, "Video");
-		var next = getNextConstraint(visualTime, "Video");
+		var prev = self.getPreviousConstraint(visualTime, "Video");
+		var next = self.getNextConstraint(visualTime, "Video");
 		if(prev==undefined || next==undefined || next.getDisabled()) { return visualTime; }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
 	}
 };
+
+var ConstraintTypes = {
+	Manual: "Manual",
+	Automatic: "Automatic"
+}
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;
