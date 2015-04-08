@@ -9,34 +9,35 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     var visualsController = visuals_controller;
     var audioController = audio_controller;
     var renderer = new Renderer(visualsController);
-    var pixelSecondRatio = -1;
-    // TODO need setter
+
+    var thumbnailsDivID = null;  // Set by the audio timeline plugin function setViewID()
+    var thumbnailsHeight = 100;  // pixels
+
 
     // Draw the thumbnails whenever the visuals in the main window are updated or changed
-    // currZoom: current amount of time for the thumbnail measured in ms (currZoom = 1000 means one thumbnail per second)
-    // zoomFactor: how much to scale the curret zoom by.
-
     // calculate number of thumbnails to draw
     // setup all the canvases
     // iterate over and call generate thumbnail
     this.drawThumbnails = function() {
 
-        console.log("THUMBNAILS?!");
+        $('#'+thumbnailsDivID).html('');
+
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
-
-        // Calculate number of thumbnails to generate.
         var total_width = audioController.millisecondsToPixels(max_time);
-
         console.log("totalWidth: " + total_width);
+        if (total_width <= 0) {
+            console.log("no thumbnails to draw");
+            return;
+        };
 
         var original_height = visualsController.getVisualsModel().getCanvasSize().height;
         var original_width = visualsController.getVisualsModel().getCanvasSize().width;
-        var scale = $('#thumbnails_div').height()/original_height;
-        var thumbnail_width = Math.round(scale * original_width);
+        var scale = thumbnailsHeight / original_height;
+        var thumbnail_width = Math.ceil(scale * original_width);
 
         console.log("thumbnailWidth: " + thumbnail_width);
 
-        var numThumbs = total_width/thumbnail_width;
+        var numThumbs = Math.round(total_width / thumbnail_width);
 
         console.log("numThumbs: " + numThumbs);
         // Generate the thumbnail for each thumbnail in the sequence
@@ -68,10 +69,13 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // param: time, duration, thumbnailIndex
     var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width){
 
-        // Context
-        var canvasHTML = "<canvas id='thumbnail_" + thumbOffset + "' width='" + String(thumbnail_width) + "'> </canvas>";
-        $('#thumbnails_div').append(canvasHTML);
-        var canvas = $('#thumbnail_' + thumbOffset);
+        // Canvas
+        var canvas = $('<canvas></canvas>');
+        canvas.attr('id', 'thumbnail_'+thumbOffset);
+        canvas.css('width', thumbnail_width)
+            .css('height', thumbnailsHeight);
+        $('#'+thumbnailsDivID).append(canvas);
+
         var context = canvas[0].getContext('2d');
 
         // Draw the thumbnail image in the middle of the time interval represented by the thumbnail
@@ -88,14 +92,10 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
 
     // Adds a plugin to the audio controller so that it can display a view inside the audio timeline
     audioController.addTimelinePlugin({
-        // name  // String with the name of the plugin
-        // size()  // Function that returns the size {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
-        // setViewID(pluginDivID)  // Function that informs the plugin of the ID of its view div in the timeline
-        // draw(pixelToSecondRatio)  // Function that (re)draws the contents of the plugin view (whenever the audio controller draws or zooms)
         name: 'Thumbnails',
-        size: {'width': 500, 'height': 140}, 
-        setViewID: function(pluginDivID) {},
-        draw: function(pixelToSecondRatio) {}
+        height: thumbnailsHeight, 
+        setViewID: function(pluginDivID) { thumbnailsDivID = pluginDivID; },
+        draw: self.drawThumbnails
     });
 
     // Register handlers for playing and pausing the visuals

@@ -411,7 +411,7 @@ var AudioController = function(audio_model) {
 
         var topOffset = 0;
         for (var i = 0; i < pluginIndex; i++) {
-            topOffset += timelinePlugins[i].size.height + audio_track_spacing;
+            topOffset += timelinePlugins[i].height + audio_track_spacing;
         };
 
         return topOffset;
@@ -579,7 +579,20 @@ var AudioController = function(audio_model) {
     // Refreshes the view to reflect changes in the audio model.
     // This only changes the tracks and segments parts of the view because the other parts are
     // not dependent on model data.
+    // Plugins are also refreshed.
     this.refreshView = function() {
+
+        // Iterate over the plugins and draw them
+        for (var i = 0; i < timelinePlugins.length; i++) {
+            var plugin = timelinePlugins[i];
+
+            // Setup the positioning and size of the div
+            $('#'+getTimelinePluginID(plugin)).css('top', pluginTopOffset(i))                  
+                                            .css('height', plugin.height);
+
+            // Tell the plugin to draw the view
+            plugin.draw();
+        };
 
         // Refresh each of the tracks and update its position
         for (var i = 0; i < trackControllers.length; i++) {
@@ -626,7 +639,6 @@ var AudioController = function(audio_model) {
         var jqTracksContainer = drawTracksContainer();
 
         // Iterate over the plugins and create and add their view divs to the timeline.
-        // The will also be positioned, sized and drawn.
         for (var i = 0; i < timelinePlugins.length; i++) {
             var plugin = timelinePlugins[i];
 
@@ -637,16 +649,10 @@ var AudioController = function(audio_model) {
             // Add the div to the tracks container
             jqTracksContainer.append(pluginDiv);
 
-            // Setup the positioning and size of the div
-            pluginDiv.css('top', pluginTopOffset(i))                  
-                     .css('width', plugin.size.width)
-                     .css('height', plugin.size.height);
-
             // Inform the plugin of its view's HTML element ID
             plugin.setViewID(getTimelinePluginID(plugin));
 
-            // Tell the plugin to draw the view
-            plugin.draw(timeline_pixels_per_sec);
+            // The positioning and size is set inside refreshView()
         };
 
         // Iterate over all audio tracks and draw them
@@ -656,7 +662,7 @@ var AudioController = function(audio_model) {
             console.log("Drawing track  " + i);
             var jqTrack = trackControllers[i].draw(jqTracksContainer);
 
-            // The positioning is set inside refreshView()
+            // The positioning and size is set inside refreshView()
         };
 
         // Show the playhead that is used to display the current position in the timeline
@@ -678,15 +684,14 @@ var AudioController = function(audio_model) {
     // A plugin is a javascript object that has the following attributes:
     //
     // name  // String with the name of the plugin
-    // size  // Size object {width, height} of the plugin view div in pixels (recommended height: audio_track_height)
+    // height  // The height plugin view div in pixels (recommended height: audio_track_height)
     // setViewID(pluginDivID)  // Function that informs the plugin of the ID of its view div in the timeline
-    // draw(pixelToSecondRatio)  // Function that (re)draws the contents of the plugin view (when the audio controller draws or zooms)
+    // draw()  // Function that (re)draws the contents of the plugin view (when the audio controller is refreshed)
     //
     // The audio controller, not the plugin, is responsible for adding the view div to the page
-    // and for setting the position and size of the plugin view. The size will be set according to
-    // the size returned by the plugin's size. The plugin is informed of the HTML element ID of
-    // its view div through the setViewID() function.  The plugin draw its view so that it will have
-    // the pixel-to-second ratio that is passed in as an argument in the view() and zoom() functions.
+    // and for setting the position and size of the plugin view. The height will be set according to
+    // the height in the plugin object. The width is 100% of the timeline width. The plugin is informed of the HTML element ID of
+    // its view div through the setViewID() function.  The plugin draw its view whenever the audio timeline is refreshed.
     ///////////////////////////////////////////////////////////////////////////////
 
     this.addTimelinePlugin = function(plugin) {
@@ -696,8 +701,6 @@ var AudioController = function(audio_model) {
         // Redraw the view
         // This will setup the plugin's view, inform the plugin of the view's ID, and tell the plugin to draw.
         self.draw();
-
-        // TODO: inside zoom, add code to call the draw method of the plugin
     };
 
     // The plugin ID is the base plus the index of the plugin in the array
@@ -708,7 +711,7 @@ var AudioController = function(audio_model) {
             console.error("plugin has not been added to audio controller");
         };
 
-        return timelinePluginIDBase + plugin;
+        return timelinePluginIDBase + index;
     };
 
 
