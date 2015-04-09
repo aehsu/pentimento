@@ -22,6 +22,12 @@ var AudioModel = function() {
 
     // Remove the specified audio track
     this.removeTrack = function(track) {
+        // Check that there are at least two tracks, so that there will be at least
+        // one track remaining after the delete.
+        if (audio_tracks.length < 2) {
+            return false;
+        };
+
         // Find the index of the track to be removed
         var index = audio_tracks.indexOf(track);
 

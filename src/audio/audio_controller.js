@@ -143,6 +143,12 @@ var AudioController = function(audio_model) {
             return;
         };
 
+        // Try removing the track from the model
+        var result = audioModel.removeTrack(trackController.getAudioTrack());
+        if (!result) {
+            return;
+        };
+
         // If the current controller is the active controller, set a new active
         if (trackController === activeTrackController) {
             for (var i = 0; i < trackControllers.length; i++) {
@@ -154,9 +160,6 @@ var AudioController = function(audio_model) {
                 
             };
         };
-
-        // Delete the track from the model
-        audioModel.removeTrack(trackController.getAudioTrack());
 
         // Remove the track controller fro the array of controllers
         trackControllers.splice(index, 1);
