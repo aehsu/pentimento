@@ -17,7 +17,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
 
     var constraintsDivID = null;  // Set by the audio timeline plugin function setViewID()
-    var constraintsHeight = 60;  // height of the constraints div and canvas in pixels
+    var constraintsHeight = 80;  // height of the constraints div and canvas in pixels
     var constraintsCanvasID = 'constraints';
     var constraintHandleRadius = 10;  // Radius of the circular handle at both ends of the constraint
 
@@ -46,6 +46,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             var visuals_constraint = "visuals_constraint"+constraint_num;
             var audio_constraint = "audio_constraint"+constraint_num;
 
+            console.log("height?" + constraintsHeight);
+
             // Use jcanvas to draw the constraint.  Draw the constraint at the x value of where the user clicked on the canvas
             // Visuals_constraint is the end of the line attached to the visuals, audio_constraint is pointing to the audio
             // TODO: Make an arrow instead of a line with dots on the end
@@ -56,8 +58,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                     strokeStyle: '#000',
                     strokeWidth: 4,
                     rounded: true,
-                    x1: x, y1: constraintsHeight-constraintHandleRadius,
-                    x2: x, y2: constraintHandleRadius
+                    x1: x, y1: constraintsHeight-10,
+                    x2: x, y2: 10
                 })
                 .drawArc({
                     layer: true,
@@ -65,10 +67,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                     draggable: true,
                     bringToFront: true,
                     fillStyle: '#000',
-                    x: x, y: constraintHandleRadius,
+                    x: x, y: 10,
                     radius: constraintHandleRadius,
                     drag: function(layer){
-                        constraintDrag(visuals_constraint, audio_constraint, constraintHandleRadius, arrow_name)
+                        constraintDrag(visuals_constraint, audio_constraint, 10, arrow_name)
                     },
                     dragstop: function(layer){
                         updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
@@ -80,10 +82,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                     draggable: true,
                     bringToFront: true,
                     fillStyle: '#000',
-                    x: x, y: constraintsHeight-constraintHandleRadius,
+                    x: x, y: constraintsHeight-10,
                     radius: constraintHandleRadius,
                     drag: function(layer) {
-                        constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-constraintHandleRadius, arrow_name);
+                        constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-10, arrow_name);
                     },
                     dragstop: function(layer){
                         updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
@@ -92,6 +94,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
             // Draw the constraint (using jcanvas)
             canvas.drawLayers();   
+
+            // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
+            canvas.unbind('mousedown', addArrow);    
         });
     }
 
@@ -198,14 +203,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Redraw the constraints
         redrawConstraints();
-
-        // TODO register the click handler
-        var constraint_index = 0;
-        $('#'+constraintsCanvasID).click(function() {
-            console.log('hi')
-            drawConstraint(constraint_index);
-            constraint_index++;
-        });
     };
 
     // Redraw the constriants when the canvas has been resized
@@ -261,10 +258,11 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         $('#'+constraintsCanvasID).drawLine({
                 layer: true,
                 name: arrow_name,
+                bringToFront: true,
                 strokeStyle: color,
                 strokeWidth: 4,
                 rounded: true,
-                x1: xVal, y1: constraintsHeight-15,
+                x1: xVal, y1: constraintsHeight-10,
                 x2: xVal, y2: 15
             })
             .drawArc({
@@ -272,10 +270,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 name: visuals_constraint,
                 draggable: true,
                 fillStyle: color,
-                x: xVal, y: 15,
-                radius: 10,
+                x: xVal, y: 10,
+                radius: constraintHandleRadius,
                 drag: function(layer){
-                    constraintDrag(visuals_constraint, audio_constraint, 15, arrow_name)
+                    constraintDrag(visuals_constraint, audio_constraint, 10, arrow_name)
                 },
                 dragstop: function(layer){
                     updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
@@ -287,9 +285,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 draggable: true,
                 fillStyle: color,
                 x: xVal, y: constraintsHeight-15,
-                radius: 10,
+                radius: constraintHandleRadius,
                 drag: function(layer) {
-                    constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-15, arrow_name);
+                    constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-10, arrow_name);
                 },
                 dragstop: function(layer){
                     updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
@@ -338,7 +336,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // console.log("oldtVis: " + oldtVis);
 
         // Get the previous constraint and the next constraint
-        // TODO: do this from the retimer controller and not from here...
         var prev_const = retimerModel.getPreviousConstraint(tAud, "Audio");
         var next_const = retimerModel.getNextConstraint(tAud, "Audio");
 
@@ -415,6 +412,20 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraintsCanvas();
     };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Initialization
+    //
+    // Button click handlers
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // TODO register the click handler
+    var constraint_index = 0;
+    $('#sync').click(function() {
+        console.log('hi')
+        drawConstraint(constraint_index);
+        constraint_index++;
+    });
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
