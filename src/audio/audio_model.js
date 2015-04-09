@@ -5,7 +5,7 @@
 // All audio model data should be modified only through the class methods provided.
 "use strict";
 var AudioModel = function() {
-
+    var self = this;
     var audio_tracks = [];
 
     // Get the audio tracks
@@ -55,7 +55,7 @@ var AudioModel = function() {
 //
 // Audio track contains non-overlapping audio segments
 var AudioTrack = function() {
-
+    var self = this;
 	var audio_segments = [];
 
     // Get the audio segments
@@ -67,13 +67,30 @@ var AudioTrack = function() {
     // Other segments in the track may be shifted as a result.
     this.insertSegment = function(newSegment) {
 
-        // Iterate over all segments for the track
+        // Iterate over all segments for the track to see if the new segment's start time
+        // intersects any segments. If so, then the shift amount needs to be increased by the overlap.
+        var overlapShift = 0;
         for (var i = 0; i < audio_segments.length; i++) {
             var shift_segment = audio_segments[i];
 
-            // If the segment is to the right of the inserted segment's begin time, then shift
-            if ( newSegment.start_time <= shift_segment.start_time ) {
-                this.shiftSegment( shift_segment , newSegment.lengthInTrack());
+            // If the new segment's start time intersects a segment, then set the overlapShift
+            // to the amount that the new segment exceeds the start.
+            if (newSegment.start_time > shift_segment.start_time && 
+                newSegment.start_time < shift_segment.end_time ) {
+
+                overlapShift = newSegment.start_time - shift_segment.start_time;
+                break;
+            };
+        };
+
+        // Iterate over all segments for the track to shift the segment if it is after the new segment
+        var shiftAmount = newSegment.lengthInTrack() + overlapShift;
+        for (var i = 0; i < audio_segments.length; i++) {
+            var shift_segment = audio_segments[i];
+
+            // If the segment's end time is to the right of the inserted segment's begin time, then shift
+            if ( newSegment.start_time < shift_segment.end_time ) {
+                self.shiftSegment( shift_segment , shiftAmount);
             };
         };
 
@@ -154,7 +171,7 @@ var AudioTrack = function() {
 	this.shiftSegment = function(segment, shift_millisec) {
 
         // Check for validity of the shift
-        var shiftResult = this.canShiftSegment(segment, shift_millisec);
+        var shiftResult = self.canShiftSegment(segment, shift_millisec);
         if (shiftResult !== true) {
             return shiftResult;
         };
@@ -177,7 +194,7 @@ var AudioTrack = function() {
     this.canCropSegment = function(segment, crop_millisec, left_side) {
 
         // Check that the segment exists in the track
-        if (this.audio_segments.indexOf(segment) < 0) {
+        if (audio_segments.indexOf(segment) < 0) {
             return "segment does not exist";
         };
 
@@ -248,7 +265,7 @@ var AudioTrack = function() {
 	this.cropSegment = function(segment, crop_millisec, left_side) {
 
         // Check for validity of the crop
-        var cropResult = this.canCropSegment(segment, crop_millisec, left_side);
+        var cropResult = self.canCropSegment(segment, crop_millisec, left_side);
         if (cropResult !== true) {
             return cropResult;
         };
@@ -295,6 +312,7 @@ var AudioTrack = function() {
 //
 // Audio segments contain an audio clip and a location within the track
 var AudioSegment = function(audio_resource, audio_length, track_start_time) {
+    var self = this;
 
     // Audio clip data
 	var audio_resource = audio_resource;
@@ -320,12 +338,12 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 
     // Get the length of the segment in the track
     this.lengthInTrack = function() {
-        return this.end_time - this.start_time;
+        return self.end_time - self.start_time;
     };
 
     // Get the length of the audio that should be played back
     this.audioLength = function() {
-        return this.audio_end_time - this.audio_start_time;
+        return self.audio_end_time - self.audio_start_time;
     };
 
     // Convert a track time to the corresponding time in the audio resource at the current scale.
@@ -338,10 +356,10 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
         };
 
         // Convert the track time by using the current start_time as the offset
-        var audioTime = this.audio_start_time + (trackTime - this.start_time);
+        var audioTime = self.audio_start_time + (trackTime - self.start_time);
 
         // Time should not exceed the bounds of the total audio length
-        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+        if (audioTime < 0 || audioTime > self.totalAudioLength()) {
             return false;
         };
 
@@ -353,12 +371,12 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
     this.audioToTrackTime = function(audioTime) {
 
         // Time should not exceed the bounds of the total audio length
-        if (audioTime < 0 || audioTime > this.totalAudioLength()) {
+        if (audioTime < 0 || audioTime > self.totalAudioLength()) {
             return false;
         };
 
         // Convert the track time by using the current start_time as the offset
-        var trackTime = this.start_time + (audioTime - this.audio_start_time);
+        var trackTime = self.start_time + (audioTime - self.audio_start_time);
 
         // Track time should not be less than 0
         if (trackTime < 0) {

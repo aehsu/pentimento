@@ -167,7 +167,7 @@ var AudioTrackController = function(track, audioController) {
         var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
 
         // Perform the actual crop
-        cropResult = audioTrack.cropSegment(audioSegment, cropMilli, cropLeftSide);
+        var cropResult = audioTrack.cropSegment(audioSegment, cropMilli, cropLeftSide);
 
         // If the crop result is not valid, then it is an error
         if (cropResult !== true) {
@@ -207,7 +207,7 @@ var AudioTrackController = function(track, audioController) {
     this.insertSegment = function(newSegment) {
         // Insert the segment into the model and keep track of the segments
         // that might have been created from the split.
-        var newSplitSegments = audioTrack.insertSegment(newSegment);
+        audioTrack.insertSegment(newSegment);
         var newController = new AudioSegmentController(newSegment, self);
         segmentControllers.push(newController);
         // Draw the new controller
