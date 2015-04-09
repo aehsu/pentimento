@@ -5,10 +5,20 @@ var Renderer = function(visuals_controller) {
     var visualsController = null;
 
     // Update the canvas to display contents at the specified time
-    this.drawCanvas = function(canvas, context, time) {
+    this.drawCanvas = function(canvas, context, tMin, tMax) {
 
         // Clear the context
         context.clearRect(0, 0, canvas.width(), canvas.height());
+        
+        // Determine the scale
+        var xScale = visualsController.getVisualsModel().getCanvasSize().width / canvas.width();
+        var yScale = visualsController.getVisualsModel().getCanvasSize().height / canvas.height();
+        
+        // Set scale if necessary
+        if (xScale !== 1 || yScale !== 1) {
+            context.save();
+            context.scale(xScale, yScale);
+        }
 
         var slideIter = visualsController.getVisualsModel().getSlidesIterator();
         while(slideIter.hasNext()) {
@@ -18,24 +28,41 @@ var Renderer = function(visuals_controller) {
                 while(visualsIter.hasNext()) {
                     var visual = visualsIter.next();
                     //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
-                    if (isVisualVisible(visual, time)) {
-                        drawVisual(context, visual, time);
+                    if (isVisualVisible(visual, tMax)) {
+                        if (isVisualVisible(visual, tMin)) {
+                            // visible on tMax AND tMin - therefore was drawn
+                            // BEFORE tMin, so draw grayed out
+                            var visCopy = visualsController.selection[i].getClone();
+                            var propsCopy = visCopy.getProperties();
+                            propsCopy.setColor("#DDDDDD");
+                            drawVisual(context, visCopy, tMin);
+                        } else {
+                            drawVisual(context, visual, tMax);
+                        }
                     }
                 }
+                break;
             } else {
-                time -= slide.getDuration();
+                tMin -= slide.getDuration();
+                tMax -= slide.getDuration();
             }
         }
         if (visualsController.currentVisual != null) {
-            drawVisual(context, visualsController.currentVisual, time);
+            drawVisual(context, visualsController.currentVisual, tMax);
         };
         for(var i in visualsController.selection) {
             var visCopy = visualsController.selection[i].getClone();
             var propsCopy = visCopy.getProperties();
             propsCopy.setWidth(propsCopy.getWidth()+1);
             propsCopy.setColor("#0000FF");
-            drawVisual(context, visCopy, time,{});
+            drawVisual(context, visCopy, tMax);
         };
+        
+        // Restore scale if necessary
+        if (xScale !== 1 || yScale !== 1) {
+            context.restore();
+        }
+        
     };
 
     var drawVisual = function(context, visual, tVisual) {
