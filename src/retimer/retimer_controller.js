@@ -17,7 +17,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
 
     var constraintsDivID = null;  // Set by the audio timeline plugin function setViewID()
-    var constraintsHeight = 100;  // height of the constraints div and canvas in pixels
+    var constraintsHeight = 60;  // height of the constraints div and canvas in pixels
     var constraintsCanvasID = 'constraints';
     var constraintHandleRadius = 10;  // Radius of the circular handle at both ends of the constraint
 
@@ -29,12 +29,12 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
     var drawConstraint = function(constraint_num){
-        $('#'+constraintsCanvasID).on('mousedown', function addArrow(e){
+        $('#'+constraintsCanvasID).on('mousedown', function addArrow(event){
             var canvas = $('#'+constraintsCanvasID);
 
             // See where the user clicked to add the constraint
-            var x = e.pageX;
-            var y = e.pageY;
+            var x = event.pageX;
+            var y = event.pageY;
             x -= canvas.offset().left;
             y -= canvas.offset().top;
 
@@ -89,11 +89,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                         updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
                     }
                 });
-            // Draw the constraint (using jcanvas)
-            canvas.drawLayers();
 
-            // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
-            canvas.unbind('mousedown', addArrow);    
+            // Draw the constraint (using jcanvas)
+            canvas.drawLayers();   
         });
     }
 
@@ -203,7 +201,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // TODO register the click handler
         var constraint_index = 0;
-        $('#'+constraintsCanvasID).click(function(){
+        $('#'+constraintsCanvasID).click(function() {
             console.log('hi')
             drawConstraint(constraint_index);
             constraint_index++;

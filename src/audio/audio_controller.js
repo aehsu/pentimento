@@ -66,10 +66,10 @@ var AudioController = function(audio_model) {
 
     // Size and layout values used for calculations (pixels)
     // These should match with any identical defined values in audio.css
-    var audio_track_height = 140;  // div.audio_track{height} div.audio
+    var audio_track_height = 100;  // div.audio_track{height} div.audio
     var audio_track_spacing = 10;  // Spacing between audio tracks (and plugins)
     var flotGraphMargin = 20;
-    var flotGraphBorder = 1;
+    var flotGraphBorder = 2;
     var flotLabelMargin = 10;  // Margin for the time labels at the bottom
     var flotLabelHeight = 10;  // Height of the time labels at the bottom
 
@@ -435,9 +435,9 @@ var AudioController = function(audio_model) {
         var marginAndBorderSize = 2 * (flotGraphMargin + flotGraphBorder);
         var widthPixels = (timelineLengthSeconds * timeline_pixels_per_sec) + marginAndBorderSize;
 
-        // The height of the gradations container should fit all the current tracks and plugins, with min height of 2 tracks.
+        // The height of the gradations container should fit all the current tracks and plugins, with min height of 1 track.
         // Plus plugins height & spacing, margin & border heights (2 each), and label height (maybe label margin also).
-        var heightPixels = (Math.max(audioModel.getAudioTracks().length, 2) * (audio_track_height + audio_track_spacing));
+        var heightPixels = (Math.max(audioModel.getAudioTracks().length, 1) * (audio_track_height + audio_track_spacing));
         heightPixels += pluginTopOffset(timelinePlugins.length) + marginAndBorderSize + flotLabelHeight;
 
         // Update the dimensions
