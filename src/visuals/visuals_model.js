@@ -34,6 +34,28 @@ var VisualsModel = function() {
         return new Iterator(slides);
     }
     
+    this.getSlideAtTime = function(time) {
+        var slide = slides[0];
+        var tSlideStart = 0;
+        var tSlideEnd = slide.getDuration();
+        
+        if (time > tSlideStart && time <= tSlideEnd) {
+            return slide;
+        }
+        
+        for (var i = 1; i < slides.length; i++) {
+            slide = slides[i];
+            tSlideStart = tSlideEnd;
+            tSlideEnd += slide.getDuration();
+            
+            if (time > tSlideStart && time <= tSlideEnd) {
+                return slide;
+            }
+        }
+        
+        return slides[slides.length - 1];
+    }
+    
     this.insertSlide = function(prevSlide, newSlide) {
         var index = slides.indexOf(prevSlide);
 

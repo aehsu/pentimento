@@ -20,33 +20,26 @@ var Renderer = function(visuals_controller) {
             context.scale(xScale, yScale);
         }
 
-        var slideIter = visualsController.getVisualsModel().getSlidesIterator();
-        while(slideIter.hasNext()) {
-            var slide = slideIter.next();
-            if(slide==visualsController.currentSlide) {
-                var visualsIter = slide.getVisualsIterator();
-                while(visualsIter.hasNext()) {
-                    var visual = visualsIter.next();
-                    //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
-                    if (isVisualVisible(visual, tMax)) {
-                        if (isVisualVisible(visual, tMin)) {
-                            // visible on tMax AND tMin - therefore was drawn
-                            // BEFORE tMin, so draw grayed out
-                            var visCopy = visualsController.selection[i].getClone();
-                            var propsCopy = visCopy.getProperties();
-                            propsCopy.setColor("#DDDDDD");
-                            drawVisual(context, visCopy, tMin);
-                        } else {
-                            drawVisual(context, visual, tMax);
-                        }
-                    }
+        var slide = visualsController.getVisualsModel().getSlideAtTime(tMax);
+        var visualsIter = slide.getVisualsIterator();
+        
+        while(visualsIter.hasNext()) {
+            var visual = visualsIter.next();
+            //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
+            if (isVisualVisible(visual, tMax)) {
+                if (isVisualVisible(visual, tMin)) {
+                    // visible on tMax AND tMin - therefore was drawn
+                    // BEFORE tMin, so draw grayed out
+                    var visCopy = visualsController.selection[i].getClone();
+                    var propsCopy = visCopy.getProperties();
+                    propsCopy.setColor("#DDDDDD");
+                    drawVisual(context, visCopy, tMin);
+                } else {
+                    drawVisual(context, visual, tMax);
                 }
-                break;
-            } else {
-                tMin -= slide.getDuration();
-                tMax -= slide.getDuration();
             }
         }
+        
         if (visualsController.currentVisual != null) {
             drawVisual(context, visualsController.currentVisual, tMax);
         };
