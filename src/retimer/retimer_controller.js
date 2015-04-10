@@ -21,6 +21,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var constraintsCanvasID = 'constraints';
     var constraintHandleRadius = 10;  // Radius of the circular handle at both ends of the constraint
 
+    // Buttons
+    var addConstraintButtonID = 'sync';
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -39,7 +42,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         console.log(x + ", " + y);
 
         // Add the constraint to the model and refresh the view
-        addConstraint(audioController.pixelsToMilliseconds(x));
+        addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
@@ -124,9 +127,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // If the constraint was manually drawn it should be black, if it was automatic it should be gray
         var type = constraint.getType();
         var color;
-        if (type == 'Automatic') {
+        if (type === ConstraintTypes.Automatic) {
             color = '#BDBDBD';
-        } else if (type == 'Manual') {
+        } else if (type === ConstraintTypes.Manual) {
             color = '#000';
         } else {
             console.error("invalid constraint type: " + type);
@@ -195,27 +198,28 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // When a user adds a constraint, add the constraint to the lecture
     // xVal: position where the constraint was added to the canvas
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
-    var addConstraint = function(audio_time){
+    var addConstraint = function(audio_time, constraint_type){
 
         // Convert to visual time
-        console.log("taud: " + audio_time);
         var visual_time = retimerModel.getVisualTime(audio_time);
-        console.log("tvis: " + visual_time);
 
         // Add a constraint to the model
-        var constraint = new Constraint(visual_time, audio_time, ConstraintTypes.Manual);
-        retimerModel.addConstraint(constraint);
+        var constraint = new Constraint(visual_time, audio_time, constraint_type);
+        var result = retimerModel.addConstraint(constraint);
 
         // Refresh the view
-        redrawConstraints();
+        if (result) {
+            redrawConstraints();
+        } else {
+            console.error("Invalid constraint");
+            console.error(constraint);
+        };
     }
 
     // When a user drags the visuals end of a constraint the constraint will need to be updated
     // visual_name: the ID of the visual end of the constraint
     // audio_name: the ID of the audio end of the constraint
     var updateVisualConstraint = function(constraint_num, visual_name, audio_name, arrow_name){
-        console.log("dragged to: " + $('#'+constraintsCanvasID).getLayer(visual_name).x);
-        console.log("anchor at: " + $('#'+constraintsCanvasID).getLayer(audio_name).x);
 
         var visusalsXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
         var audioXVal = $('#'+constraintsCanvasID).getLayer(audio_name).x;
@@ -263,8 +267,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
 
     // TODO register the click handler
-    $('#sync').click(function() {
-        console.log('hi')
+    $('#'+addConstraintButtonID).click(function() {
         drawConstraint();
     });
 
@@ -286,15 +289,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         zoom: redrawConstraints
     });
 
-    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-        redrawConstraints();
-    });
     pentimento.timeController.addBeginRecordingCallback(function(currentTime) {
-        var constraint = new Constraint(currentTime, currentTime, ConstraintTypes.Automatic);
-        retimerModel.addConstraint(constraint);
+        addConstraint(currentTime, ConstraintTypes.Automatic);
     });
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-        var constraint = new Constraint(currentTime, currentTime, ConstraintTypes.Automatic);
-        retimerModel.addConstraint(constraint);
+        addConstraint(currentTime, ConstraintTypes.Automatic);
     });
 };
