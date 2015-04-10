@@ -157,10 +157,16 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 x: xVal, y: constraintHandleRadius,
                 radius: constraintHandleRadius,
                 drag: function(layer){
-                    constraintDrag(visuals_constraint, audio_constraint, 10, arrow_name)
+                    constraintDrag(visuals_constraint, audio_constraint, constraintHandleRadius, arrow_name)
                 },
                 dragstop: function(layer){
                     updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
+                }, 
+                dragcancel: function(layer) {
+                    // When dragging off the canvas, it should reset to its original value to cancel
+                    layer.x = xVal;  // know
+                    $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
+                    $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
                 }
             })
             .drawArc({  // bottom handle
@@ -172,10 +178,16 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 x: xVal, y: constraintsHeight - constraintHandleRadius,
                 radius: constraintHandleRadius,
                 drag: function(layer) {
-                    constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-10, arrow_name);
+                    constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-constraintHandleRadius, arrow_name);
                 },
                 dragstop: function(layer){
                     updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
+                }, 
+                dragcancel: function(layer){
+                    // When dragging off the canvas, it should reset to its original value to cancel
+                    layer.x = xVal;  // knob
+                    $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
+                    $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
                 }
             });
     };
@@ -212,28 +224,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var tAud = audioController.pixelsToMilliseconds(audioXVal);
         var draggedTAud = audioController.pixelsToMilliseconds(visusalsXVal);
 
-        // Get the new visual time (in terms of the new audio time)
-        var newTVis = retimerModel.getVisualTime(draggedTAud);
-        console.log("newTVis: " + newTVis);
-        
-        // Get the constraints to iterate over
-        var constraints = retimerModel.getConstraintsIterator();
-
-        // Iterate through the constraints until the audio time matches the audio time of a constraint
-        // (since audio was not moved that will be the constraint to update)
-        while(constraints.hasNext()){
-            var constraint = constraints.next();
-            var currTAud = constraint.getTAudio();
-            console.log("currAudio: " + currTAud);
-
-            // Once the audio time of the current constraint = the audio time of the dragged constraint reset
-            // the visual time of that specific constraint
-            if(currTAud == tAud){
-                console.log("SETTING!");
-                constraint.setTVisual(newTVis);
-                break;
-            }
-        }
+        // Update the visual part of the constraint in the model
+        retimerModel.updateConstraintVisualsTime(tAud, draggedTAud);
 
         // Redraw the thumbnails to correspond to the new visual timing
         thumbnailsController.drawThumbnails();
@@ -255,22 +247,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var tVis = audioController.pixelsToMilliseconds(visusalsXVal);
         var newTAud = audioController.pixelsToMilliseconds(audioXVal);
 
-        // Itereate over the constraints until the constraint with the visual time matching the visual time of the
-        // dragged constraint is located and update audio time to match the new audio time
-        var constraints = retimerModel.getConstraintsIterator();
-        while(constraints.hasNext()){
-            var constraint = constraints.next();
-            var currTVis = constraint.getTVisual();
-            console.log("currVis: " + currTVis);
-
-            // Once the visual time of the current constraint = the visual time of the dragged constraint reset
-            // the audio time of that specific constraint
-            if(currTVis == tVis){
-                console.log("SETTING!");
-                constraint.setTAudio(newTAud);
-                break;
-            }
-        }
+        retimerModel.updateConstraintAudioTime(tVis, newTAud);
         
         // Redraw the thumbnails to correspond to the new visual timing
         thumbnailsController.drawThumbnails();

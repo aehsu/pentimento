@@ -34,6 +34,54 @@ var RetimerModel = function(lec) {
 		return true;
     };
 
+    // Update the visuals part of the constraint located at the specified audio time (tAud)
+    this.updateConstraintVisualsTime = function(tAud, audioTimeCorrespondingToNewVisualsTime) {
+
+        // Get the new visual time (in terms of the new audio time)
+        var newTVis = self.getVisualTime(audioTimeCorrespondingToNewVisualsTime);
+        console.log("newTVis: " + newTVis);
+        
+        // Get the constraints to iterate over
+        var constraints = self.getConstraintsIterator();
+
+        // Iterate through the constraints until the audio time matches the audio time of a constraint
+        // (since audio was not moved that will be the constraint to update)
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var currTAud = constraint.getTAudio();
+            console.log("currAudio: " + currTAud);
+
+            // Once the audio time of the current constraint = the audio time of the dragged constraint reset
+            // the visual time of that specific constraint
+            if(currTAud == tAud){
+                console.log("SETTING!");
+                constraint.setTVisual(newTVis);
+                break;
+            }
+        }
+    };
+
+    // Update the audio part of the constraint located at the specified visuals time (tVid)
+    this.updateConstraintAudioTime = function(tVis, newAudioTime) {
+
+        // Itereate over the constraints until the constraint with the visual time matching the visual time of the
+        // dragged constraint is located and update audio time to match the new audio time
+        var constraints = self.getConstraintsIterator();
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var currTVis = constraint.getTVisual();
+            console.log("currVis: " + currTVis);
+
+            // Once the visual time of the current constraint = the visual time of the dragged constraint reset
+            // the audio time of that specific constraint
+            if(currTVis == tVis){
+                console.log("SETTING!");
+                constraint.setTAudio(newAudioTime);
+                break;
+            }
+        }
+    };
+
 	this.addConstraint = function(constraint) {
 		if(!self.checkConstraint(constraint)) { return false; }
 		var index = 0;
