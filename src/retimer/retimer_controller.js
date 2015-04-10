@@ -36,6 +36,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var y = event.pageY;
         x -= canvas.offset().left;
         y -= canvas.offset().top;
+        console.log(x + ", " + y);
 
         // Add the constraint to the model and refresh the view
         addConstraint(audioController.pixelsToMilliseconds(x));
@@ -83,11 +84,12 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
         var new_width = audioController.millisecondsToPixels(max_time);
 
-        // Create and add the new canvas 
-        var newCanvas = $('<canvas id="' + constraintsCanvasID + '"></canvas>');
-        // newCanvas.attr('id', constraintsCanvasID);
-        newCanvas.css('width', new_width)
-                .css('height', constraintsHeight);
+        // Create and add the new canvas
+        // The size of the jcanvas must be set using attributes, not CSS.
+        var newCanvas = $('<canvas></canvas>');
+        newCanvas.attr('id', constraintsCanvasID)
+                .attr('width', new_width)
+                .attr('height', constraintsHeight);
         $('#'+constraintsDivID).append(newCanvas);
 
         // Get all of the constraints currently added to the lecture
