@@ -47,10 +47,10 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         var original_height = visualsController.getVisualsModel().getCanvasSize().height;
         var original_width = visualsController.getVisualsModel().getCanvasSize().width;
         var scale = thumbnailsHeight / original_height;
-        var thumbnail_width = Math.ceil(scale * original_width);
+        var thumbnail_width = Math.round(scale * original_width);
         console.log("thumbnailWidth: " + thumbnail_width);
 
-        var numThumbs = Math.round(total_width / thumbnail_width);
+        var numThumbs = Math.ceil(total_width / thumbnail_width);
         console.log("numThumbs: " + numThumbs);
 
         // Generate the thumbnail for each thumbnail in the sequence
@@ -65,6 +65,12 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
                 curr_max = max_time;
             };
 
+            // On the last iteration, reduce the thumbnail width so that it does not
+            // exceed the visuals end time. 
+            if (thumbOffset == numThumbs - 1) {
+                thumbnail_width -= (numThumbs * thumbnail_width) - total_width;
+            };
+
             // Generate the thumbnail drawing
             generateThumbnail(thumbOffset, curr_min, curr_max, thumbnail_width);
         }
@@ -74,7 +80,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     // thumbOffset: the number of the thumbnail in the sequence of all of the thumbnails
     // currMin: the minimum time to be displayed by the current thumbnail
     // currMax: the maximumm time to be displayed by the current thumbnail
-    var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width){
+    var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width) {
 
         // Setup the canvas for the thumbnail
         // The size must be set using attributes, not CSS
