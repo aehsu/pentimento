@@ -26,140 +26,32 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Draw Methods
     ///////////////////////////////////////////////////////////////////////////////
 
+    // The event handler function for when a user clicks on the constraints canvas.
+    // It adds the constraint to the model, and then
+    var addArrowHandler = function(event) {
+        var canvas = $('#'+constraintsCanvasID);
+
+        // See where the user clicked to add the constraint
+        var x = event.pageX;
+        var y = event.pageY;
+        x -= canvas.offset().left;
+        y -= canvas.offset().top;
+
+        // Add the constraint tothe lecture (at the time calculated by the position on the constraints canvas)
+        addConstraint(audioController.pixelsToMilliseconds(x));
+
+        // Refresh canvas
+        redrawConstraints();
+
+        // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
+        canvas.unbind('mousedown', addArrowHandler);    
+    };
+
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
-    var drawConstraint = function(constraint_num){
-        $('#'+constraintsCanvasID).on('mousedown', function addArrow(event){
-            var canvas = $('#'+constraintsCanvasID);
-
-            // See where the user clicked to add the constraint
-            var x = event.pageX;
-            var y = event.pageY;
-            x -= canvas.offset().left;
-            y -= canvas.offset().top;
-
-            // Add the constraint tothe lecture (at the time calculated by the position on the constraints canvas)
-            addConstraintToLec(x);
-
-            // Give the constraint an id
-            var arrow_name = "arrow_"+constraint_num;
-            var visuals_constraint = "visuals_constraint"+constraint_num;
-            var audio_constraint = "audio_constraint"+constraint_num;
-
-            console.log("height?" + constraintsHeight);
-
-            // Use jcanvas to draw the constraint.  Draw the constraint at the x value of where the user clicked on the canvas
-            // Visuals_constraint is the end of the line attached to the visuals, audio_constraint is pointing to the audio
-            // TODO: Make an arrow instead of a line with dots on the end
-            canvas.drawLine({
-                    layer: true,
-                    name: arrow_name,
-                    bringToFront: true,
-                    strokeStyle: '#000',
-                    strokeWidth: 4,
-                    rounded: true,
-                    x1: x, y1: constraintsHeight-10,
-                    x2: x, y2: 10
-                })
-                .drawArc({
-                    layer: true,
-                    name: visuals_constraint,
-                    draggable: true,
-                    bringToFront: true,
-                    fillStyle: '#000',
-                    x: x, y: 10,
-                    radius: constraintHandleRadius,
-                    drag: function(layer){
-                        constraintDrag(visuals_constraint, audio_constraint, 10, arrow_name)
-                    },
-                    dragstop: function(layer){
-                        updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
-                    }
-                })
-                .drawArc({
-                    layer: true,
-                    name: audio_constraint,
-                    draggable: true,
-                    bringToFront: true,
-                    fillStyle: '#000',
-                    x: x, y: constraintsHeight-10,
-                    radius: constraintHandleRadius,
-                    drag: function(layer) {
-                        constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-10, arrow_name);
-                    },
-                    dragstop: function(layer){
-                        updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
-                    }
-                });
-
-            // Draw the constraint (using jcanvas)
-            canvas.drawLayers();   
-
-            // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
-            canvas.unbind('mousedown', addArrow);    
-        });
-    }
-
-    // Drawing automatic constraints when new visuals or audio is added
-    // tVis: visual time of auto constraint
-    // tAud: audio time of auto constraint
-    // TODO: use drag function, add dragstop, update automatic constraint
-    // var drawAutomaticConstraint = function(tVis, tAud){
-    //     // Set the name of the constraint with unique ID
-    //     var arrow_name = "auto_"+constraint_num;
-    //     var visuals_constraint = "visuals_constraint"+constraint_num;
-    //     var audio_constraint = "audio_constraint"+constraint_num;
-
-    //     // Use jcanvas to draw the automatic constraint (in a lighter gray than the manual constraints)
-    //     $('#'+constraintsCanvasID).drawLine({
-    //         layer: true,
-    //         name: arrow_name,
-    //         strokeStyle: '#BDBDBD',
-    //         strokeWidth: 4,
-    //         rounded: true,
-    //         x1: tAud, y1: constraintsHeight-constraintHandleRadius,
-    //         x2: tVis, y2: constraintHandleRadius
-    //     })
-    //     .drawArc({
-    //         layer: true,
-    //         name: visuals_constraint,
-    //         draggable: true,
-    //         fillStyle: '#BDBDBD',
-    //         x: tVis, y: constraintHandleRadius,
-    //         radius: constraintHandleRadius,
-    //         drag: function(layer) {
-    //             console.log("x: " + $('#'+constraintsCanvasID).getLayer(visuals_constraint).x);
-    //             console.log("y: " + $('#'+constraintsCanvasID).getLayer(visuals_constraint).y);
-    //             $('#'+constraintsCanvasID).setLayer(visuals_constraint,{                    
-    //                 x: $('#'+constraintsCanvasID).getLayer(visuals_constraint).x , y: constraintHandleRadius,
-    //             })
-    //             $('#'+constraintsCanvasID).setLayer(arrow_name,{                    
-    //                 x1: $('#'+constraintsCanvasID).getLayer(visuals_constraint).x , y1: constraintHandleRadius,
-    //                 x2: $('#'+constraintsCanvasID).getLayer(audio_constraint).x , y2: $('#'+constraintsCanvasID).getLayer(audio_constraint).y
-    //             })
-    //         }
-    //     })
-    //     .drawArc({
-    //         layer: true,
-    //         name: audio_constraint,
-    //         draggable: true,
-    //         fillStyle: '#BDBDBD',
-    //         x: x, y: constraintsHeight-constraintHandleRadius,
-    //         radius: 10,
-    //         drag: function(layer) {
-    //             console.log("x: " + $('#'+constraintsCanvasID).getLayer(audio_constraint).x);
-    //             console.log("y: " + $('#'+constraintsCanvasID).getLayer(audio_constraint).y);
-    //             $('#'+constraintsCanvasID).setLayer(audio_constraint,{                      
-    //                 x: $('#'+constraintsCanvasID).getLayer(audio_constraint).x , y: constraintsHeight-constraintHandleRadius,
-    //             })
-    //             $('#'+constraintsCanvasID).setLayer(arrow_name,{                    
-    //                 x1: $('#'+constraintsCanvasID).getLayer(visuals_constraint).x , y1: $('#'+constraintsCanvasID).getLayer(visuals_constraint).y,
-    //                 x2: $('#'+constraintsCanvasID).getLayer(audio_constraint).x , y2: constraintsHeight-constraintHandleRadius
-    //             })
-
-    //         }
-    //     });
-    // };
+    var drawConstraint = function(constraint_num) {
+        $('#'+constraintsCanvasID).on('mousedown', addArrowHandler);
+    };
 
     // How dragging the constraints works
     // drag_name: either audio_constraint or visuals_constraint depending on which is being dragged
@@ -179,9 +71,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         })
     }
 
-    // Extend the retiming constraints canvas to match the width of the thumbnails so that users can draw constraints at any time
-    // TODO: extend retiming constraints for audio as well
-    var redrawConstraintsCanvas = function() {
+    // Refresh the canvas and redraw the constraints
+    var redrawConstraints = function() {
+        console.log("REDRAWING??");
         if (!constraintsDivID) {
             console.log('constraints div has not been set');
         };
@@ -201,15 +93,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 .css('height', constraintsHeight);
         $('#'+constraintsDivID).append(newCanvas);
 
-        // Redraw the constraints
-        redrawConstraints();
-    };
-
-    // Redraw the constriants when the canvas has been resized
-    var redrawConstraints = function() {
-        // Get the audio scale of the new canvas using the lecture duration (global time)
-        var audio_scale = $('#'+constraintsCanvasID).width()/pentimento.lectureController.getLectureModel().getLectureDuration();
-
         // Get all of the constraints currently added to the lecture
         var constraints = retimerModel.getConstraintsIterator();
 
@@ -220,34 +103,35 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         while(constraints.hasNext()){
             var constraint = constraints.next();
 
-            // Get the audio time of the constraints and convert it to the position where to draw the constraint
-            var tAud = constraint.getTAudio();
-            var xVal = tAud * audio_scale;
-
-            // If the constraint was manually drawn it should be black, if it was automatic it should be gray
-            var type = constraint.getType();
-            var color = '#000';
-            if(type == 'Automatic'){
-                color = '#BDBDBD';
-            }
-
             // Redraw the constraint
-            redrawConstraint(constraint_num, xVal, color);
+            redrawConstraint(constraint, constraint_num);
 
             // Increment the ID number
             constraint_num += 1;
-        } 
+        };
 
+        // Draw the constraint (using jcanvas)
+        $('#'+constraintsCanvasID).drawLayers();
     };
 
     // Redraw an individual constraint
-    // TODO: make this function just to draw a constraint and use it for drawing the constraints in addition to redrawing them
     // constraint_num: unique ID for the constraint
-    // xVal: position where to draw the constraint
-    // color: color of the constraint (automatic: gray, manual: black)
-    var redrawConstraint = function(constraint_num, xVal, color){
+    var redrawConstraint = function(constraint, constraint_num) {
 
-        console.log("REDRAWING??");
+        // Get the audio time of the constraints and convert it to the position where to draw the constraint
+        var tAud = constraint.getTAudio();
+        var xVal = audioController.millisecondsToPixels(tAud);
+
+        // If the constraint was manually drawn it should be black, if it was automatic it should be gray
+        var type = constraint.getType();
+        var color;
+        if (type == 'Automatic') {
+            color = '#BDBDBD';
+        } else if (type == 'Manual') {
+            color = '#000';
+        } else {
+            console.error("invalid constraint type: " + type);
+        };
 
         // Set the ID for the constraint
         var arrow_name = "arrow_"+constraint_num;
@@ -262,15 +146,16 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 strokeStyle: color,
                 strokeWidth: 4,
                 rounded: true,
-                x1: xVal, y1: constraintsHeight-10,
-                x2: xVal, y2: 15
+                x1: xVal, y1: constraintsHeight - constraintHandleRadius,
+                x2: xVal, y2: constraintHandleRadius
             })
-            .drawArc({
+            .drawArc({  // top handle
                 layer: true,
                 name: visuals_constraint,
+                bringToFront: true,
                 draggable: true,
                 fillStyle: color,
-                x: xVal, y: 10,
+                x: xVal, y: constraintHandleRadius,
                 radius: constraintHandleRadius,
                 drag: function(layer){
                     constraintDrag(visuals_constraint, audio_constraint, 10, arrow_name)
@@ -279,12 +164,13 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                     updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
                 }
             })
-            .drawArc({
+            .drawArc({  // bottom handle
                 layer: true,
                 name: audio_constraint,
+                bringToFront: true,
                 draggable: true,
                 fillStyle: color,
-                x: xVal, y: constraintsHeight-15,
+                x: xVal, y: constraintsHeight - constraintHandleRadius,
                 radius: constraintHandleRadius,
                 drag: function(layer) {
                     constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-10, arrow_name);
@@ -293,31 +179,24 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                     updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
                 }
             });
-        // Draw the constraint (using jcanvas)
-        $('#'+constraintsCanvasID).drawLayers();
-    }
+    };
 
     // When a user adds a constraint, add the constraint to the lecture
     // xVal: position where the constraint was added to the canvas
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
-    var addConstraintToLec = function(xVal){
-        console.log("adding!");
+    var addConstraint = function(audio_time){
 
-        // FORUMULAS
-        // interp_factor = (curr_time-prev_time)/(next_time-prevX)
-        // constraint_tVis = (next_time-prev_time)*interp_factor + prev_tVis
-        // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
+        // Convert to visual time
+        console.log("taud: " + audio_time);
+        var visual_time = retimerModel.getVisualTime(audio_time);
+        console.log("tvis: " + visual_time);
 
-        // Make sure to convert this from the lecture duration to audio duration
-        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#'+constraintsCanvasID).width();
-        console.log("scale: " + audio_scale);
-        var tAud = xVal * audio_scale;
-        console.log("taud: " + tAud);
-        var tVis = retimerModel.getVisualTime(tAud);
-        console.log("tvis: " + tVis);
-
-        var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
+        // Add a constraint to the model
+        var constraint = new Constraint(visual_time, audio_time, ConstraintTypes.Manual);
         retimerModel.addConstraint(constraint);
+
+        // Refresh the view
+        // TODO
     }
 
     // When a user drags the visuals end of a constraint the constraint will need to be updated
@@ -374,7 +253,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         thumbnailsController.drawThumbnails();
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
-        redrawConstraintsCanvas();
+        redrawConstraints();
     };
 
     // TODO: actually test this with audio stuff
@@ -410,7 +289,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         thumbnailsController.drawThumbnails();
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
-        redrawConstraintsCanvas();
+        redrawConstraints();
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -441,12 +320,12 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         name: 'Constraints',
         height: constraintsHeight, 
         setViewID: function(pluginDivID) { constraintsDivID = pluginDivID; },
-        draw: redrawConstraintsCanvas, 
-        zoom: redrawConstraintsCanvas
+        draw: redrawConstraints, 
+        zoom: redrawConstraints
     });
 
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-        redrawConstraintsCanvas();
+        redrawConstraints();
     });
     pentimento.timeController.addBeginRecordingCallback(function(currentTime) {
         var constraint = new Constraint(currentTime, currentTime, ConstraintTypes.Automatic);
