@@ -37,11 +37,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
-        // Add the constraint tothe lecture (at the time calculated by the position on the constraints canvas)
+        // Add the constraint to the model and refresh the view
         addConstraint(audioController.pixelsToMilliseconds(x));
-
-        // Refresh canvas
-        redrawConstraints();
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
@@ -196,7 +193,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         retimerModel.addConstraint(constraint);
 
         // Refresh the view
-        // TODO
+        redrawConstraints();
     }
 
     // When a user drags the visuals end of a constraint the constraint will need to be updated
