@@ -87,8 +87,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var new_width = audioController.millisecondsToPixels(max_time);
 
         // Create and add the new canvas 
-        var newCanvas = $('<canvas></canvas>');
-        newCanvas.attr('id', constraintsCanvasID);
+        var newCanvas = $('<canvas id="' + constraintsCanvasID + '"></canvas>');
+        // newCanvas.attr('id', constraintsCanvasID);
         newCanvas.css('width', new_width)
                 .css('height', constraintsHeight);
         $('#'+constraintsDivID).append(newCanvas);
@@ -299,11 +299,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
 
     // TODO register the click handler
-    var constraint_index = 0;
     $('#sync').click(function() {
         console.log('hi')
-        drawConstraint(constraint_index);
-        constraint_index++;
+        drawConstraint();
     });
 
     ///////////////////////////////////////////////////////////////////////////////
