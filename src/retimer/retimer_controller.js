@@ -9,7 +9,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     var retimerModel = retimer_model;
     var audioController = audio_controller;
-    var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller);
+    var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model);
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // How dragging the constraints works
     // drag_name: either audio_constraint or visuals_constraint depending on which is being dragged
-    // anchor_name: the end ofthe constraints staying anchored (audio_constraint or visuals_constraint, whichever is not being dragged)
+    // anchor_name: the end of the constraints staying anchored (audio_constraint or visuals_constraint, whichever is not being dragged)
     // yVal: the y coordinate of the constraint being dragged (So it is dragged along a fixed line)
     // arrow_id: unique ID associated with the constraint 
     var constraintDrag = function(drag_name, anchor_name, yVal, arrow_id){
@@ -205,27 +205,14 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         console.log("dragged to: " + $('#'+constraintsCanvasID).getLayer(visual_name).x);
         console.log("anchor at: " + $('#'+constraintsCanvasID).getLayer(audio_name).x);
 
-        // Figure out what the scale is in terms of the lecture position 
-        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#'+constraintsCanvasID).width();
+        var visusalsXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
+        var audioXVal = $('#'+constraintsCanvasID).getLayer(audio_name).x;
 
-        // Get the audio time from the position of the audio end of the constraint times the audio scales
-        var tAud = $('#'+constraintsCanvasID).getLayer(audio_name).x * audio_scale;
-        // var oldtVis = window.opener.retimerModel.getVisualTime(tAud);
-        // console.log("oldtVis: " + oldtVis);
+        // Get the audio time from the position
+        var tAud = audioController.pixelsToMilliseconds(audioXVal);
+        var draggedTAud = audioController.pixelsToMilliseconds(visusalsXVal);
 
-        // Get the previous constraint and the next constraint
-        var prev_const = retimerModel.getPreviousConstraint(tAud, "Audio");
-        var next_const = retimerModel.getNextConstraint(tAud, "Audio");
-
-        // Get the visual time from the previous and next constraint
-        var prevTVis = prev_const.getTVisual();
-        var nextTVis = next_const.getTVisual();
-
-        // Get the new visual constraint position where the user stops dragging the constraint
-        var newVisXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
-        // Calculate the time of the new visual position in the global (audio) scale
-        var draggedTAud = newVisXVal * audio_scale;
-        // Get the new visul time (in terms of the new audio time)
+        // Get the new visual time (in terms of the new audio time)
         var newTVis = retimerModel.getVisualTime(draggedTAud);
         console.log("newTVis: " + newTVis);
         
@@ -260,12 +247,13 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // visual_name: the ID of the visual end of the constraint
     // audio_name: the ID of the audio end of the constraint
     var updateAudioConstraint = function(constraint_num, audio_name, visual_name, arrow_name){
-        // Calculate the scale to convert from position of the audio end of the constraint to audio time
-        var audio_scale = pentimento.lectureController.getLectureModel().getLectureDuration()/$('#'+constraintsCanvasID).width();
-        // Get the visual time of the constraint in audio time
-        var tVis = $('#'+constraintsCanvasID).getLayer(visual_name).x * audio_scale;
-        // Get the new audio time where the user stopped dragging the audio constraint
-        var newTAud = $('#'+constraintsCanvasID).getLayer(audio_name).x * audio_scale;
+
+        var visusalsXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
+        var audioXVal = $('#'+constraintsCanvasID).getLayer(audio_name).x;
+
+        // Get the audio time from the position
+        var tVis = audioController.pixelsToMilliseconds(visusalsXVal);
+        var newTAud = audioController.pixelsToMilliseconds(audioXVal);
 
         // Itereate over the constraints until the constraint with the visual time matching the visual time of the
         // dragged constraint is located and update audio time to match the new audio time

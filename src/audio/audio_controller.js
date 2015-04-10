@@ -739,7 +739,7 @@ var AudioController = function(audio_model) {
         if (pentimento.timeController.isPlaying()) {
             pentimento.timeController.stopPlayback();  // Stop playback at the end of the audio
         } else{
-            pentimento.timeController.startPlayback(pentimento.lectureController.getLectureModel().getDuration());
+            pentimento.timeController.startPlayback(pentimento.lectureController.getLectureModel().getLectureDuration());
         };
     });
 

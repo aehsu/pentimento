@@ -3,9 +3,10 @@
 //um.add is called, it should have an updateVisuals inside of the function if necessary
 "use strict";
 
-var VisualsController = function(visuals_model) {
+var VisualsController = function(visuals_model, retimer_model) {
     var self = this;
     var visualsModel = null;
+    var retimerModel = null;
     var toolsController = null;
     var renderer = null;
 
@@ -41,10 +42,13 @@ var VisualsController = function(visuals_model) {
     // Callback function of updateTime.
     // Draws to the canvas through the renderer
     var drawVisuals = function(time) {
-        // TODO: time needs to be converted by the retimer to visual time
+        // Convert the audio time to visuals time
+        var visualsTime = retimerModel.getVisualTime(time);
+
+        // Render the canvas
         var canvas = $('#' + canvasID);
         var context = canvas[0].getContext('2d')
-        renderer.drawCanvas(canvas, context, time);
+        renderer.drawCanvas(canvas, context, visualsTime);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -489,6 +493,7 @@ var VisualsController = function(visuals_model) {
 
     // Setup model and other controllers
     visualsModel = visuals_model;
+    retimerModel = retimer_model;
     toolsController = new ToolsController(self);
     renderer = new Renderer(self);
 

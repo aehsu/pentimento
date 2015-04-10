@@ -54,23 +54,19 @@ var RetimerModel = function(lec) {
 		var index = constraints.indexOf(constraint);
 		if(index==-1) { return; }
 		constraints.splice(index, 1);
-	}
-
-	var doShiftConstraint = function(constraint, amount) {
-		constraint.setTVisual(constraint.getTVisual()+amount);
-		constraint.setTAudio(constraint.getTAudio()+amount);
-	}
+	};
 
 	this.shiftConstraints = function(constraints, amount) {
 		for(var i in constraints) {
 			var constraint = constraints[i];
-			doShiftConstraint(constraint, amount);
+            constraint.setTVisual(constraint.getTVisual()+amount);
+            constraint.setTAudio(constraint.getTAudio()+amount);
 		}
-	}
+	};
 
 	this.getConstraintsIterator = function() {
         return new Iterator(constraints);
-    }
+    };
 
 	this.getPreviousConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
@@ -91,7 +87,7 @@ var RetimerModel = function(lec) {
 			}
 		}
 		return best;
-	}
+	};
 
 	this.getNextConstraint = function(time, type) {
 		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }

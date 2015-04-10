@@ -5,11 +5,12 @@
 */
 "use strict";
 
-var ThumbnailsController = function(visuals_controller, audio_controller) {
+var ThumbnailsController = function(visuals_controller, audio_controller, retimer_model) {
 
     var self = this;
     var visualsController = visuals_controller;
     var audioController = audio_controller;
+    var retimerModel = retimer_model;
     var renderer = new Renderer(visualsController);
 
 
@@ -36,8 +37,8 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         // Clear the thumbnails div
         $('#'+thumbnailsDivID).html('');
 
-        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
-        var total_width = audioController.millisecondsToPixels(max_time);
+        var audioMaxTime = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var total_width = audioController.millisecondsToPixels(audioMaxTime);
         console.log("totalWidth: " + total_width);
         if (total_width <= 0) {
             console.log("no thumbnails to draw");
@@ -57,30 +58,28 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         for(var thumbOffset = 0; thumbOffset < numThumbs; thumbOffset++){
 
             // Calculate the minimum ad maximum times associated with visuals to display for the thumbnail
-            // If it is the last thumbnail then set the maximum time to the duration of the lecture 
-            // TODO: convert to audio time?? or from audio time??
-            var curr_min = audioController.pixelsToMilliseconds(thumbOffset*thumbnail_width);
-            var curr_max = audioController.pixelsToMilliseconds((thumbOffset+1)*thumbnail_width);
-            if (thumbOffset + 1 == numThumbs) {
-                curr_max = max_time;
-            };
+            var audTMin = audioController.pixelsToMilliseconds(thumbOffset*thumbnail_width);
+            var audTMax = audioController.pixelsToMilliseconds((thumbOffset+1)*thumbnail_width);
+            var visuals_min = retimerModel.getVisualTime(audTMin);
+            var visuals_max = retimerModel.getVisualTime(audTMax);
 
             // On the last iteration, reduce the thumbnail width so that it does not
-            // exceed the visuals end time. 
+            // exceed the visuals end time, set the maximum time to the duration of the lecture.
             if (thumbOffset == numThumbs - 1) {
                 thumbnail_width -= (numThumbs * thumbnail_width) - total_width;
+                visuals_max = retimerModel.getVisualTime(audioMaxTime);
             };
 
             // Generate the thumbnail drawing
-            generateThumbnail(thumbOffset, curr_min, curr_max, thumbnail_width);
-        }
-    }; 
+            generateThumbnail(thumbOffset, visuals_min, visuals_max, thumbnail_width);
+        };
+    };
 
     // Generate a thumbnail by getting the visuals from the slides.
     // thumbOffset: the number of the thumbnail in the sequence of all of the thumbnails
-    // currMin: the minimum time to be displayed by the current thumbnail
-    // currMax: the maximumm time to be displayed by the current thumbnail
-    var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width) {
+    // visualsMin: the minimum time to be displayed by the current thumbnail
+    // visualsMax: the maximumm time to be displayed by the current thumbnail
+    var generateThumbnail = function(thumbOffset, visuals_min, visuals_max, thumbnail_width) {
 
         // Setup the canvas for the thumbnail
         // The size must be set using attributes, not CSS
@@ -94,7 +93,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
         var context = canvas[0].getContext('2d');
 
         // Draw the thumbnail image in the middle of the time interval represented by the thumbnail
-        var thumbTime = Math.round((curr_min + curr_max)/2);
+        var thumbTime = Math.round((visuals_min + visuals_max)/2);
 
         // Render the thumbnail on the appropriate canvas
         renderer.drawCanvas(canvas, context, thumbTime)
