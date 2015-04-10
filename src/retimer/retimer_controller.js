@@ -28,9 +28,11 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
-    var drawConstraint = function(constraint_num){
+    var drawConstraint = function(){
         $('#'+constraintsCanvasID).on('mousedown', function addArrow(event){
             var canvas = $('#'+constraintsCanvasID);
+            var constraint_num = retimerModel.getNumberOfConstraints();
+            console.log('constraint_num' + constraint_num);
 
             // See where the user clicked to add the constraint
             var x = event.pageX;
@@ -195,8 +197,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var new_width = audioController.millisecondsToPixels(max_time);
 
         // Create and add the new canvas 
-        var newCanvas = $('<canvas></canvas>');
-        newCanvas.attr('id', constraintsCanvasID);
+        var newCanvas = $('<canvas id="' + constraintsCanvasID + '"></canvas>');
+        // newCanvas.attr('id', constraintsCanvasID);
         newCanvas.css('width', new_width)
                 .css('height', constraintsHeight);
         $('#'+constraintsDivID).append(newCanvas);
@@ -420,11 +422,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
 
     // TODO register the click handler
-    var constraint_index = 0;
     $('#sync').click(function() {
         console.log('hi')
-        drawConstraint(constraint_index);
-        constraint_index++;
+        drawConstraint();
     });
 
     ///////////////////////////////////////////////////////////////////////////////
