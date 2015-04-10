@@ -77,10 +77,11 @@ var ThumbnailsController = function(visuals_controller, audio_controller) {
     var generateThumbnail = function(thumbOffset, curr_min, curr_max, thumbnail_width){
 
         // Setup the canvas for the thumbnail
+        // The size must be set using attributes, not CSS
         var canvas = $('<canvas></canvas>');
-        canvas.attr('id', thumbnailIDBase+thumbOffset);
-        canvas.css('width', thumbnail_width)
-            .css('height', thumbnailsHeight);
+        canvas.attr('id', thumbnailIDBase+thumbOffset)
+            .attr('width', thumbnail_width)
+            .attr('height', thumbnailsHeight);
         canvas.addClass(thumbnailClass);
         $('#'+thumbnailsDivID).append(canvas);
 

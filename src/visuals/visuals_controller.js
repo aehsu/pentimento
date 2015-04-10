@@ -501,9 +501,10 @@ var VisualsController = function(visuals_model) {
     self.currentSlide = visualsModel.getSlides()[0];
 
     // Setup the canvas and context
+    // Canvas size must be set using attributes, not CSS
     self.canvas = $('#'+canvasID);
-    self.canvas[0].width = visualsModel.getCanvasSize().width;
-    self.canvas[0].height = visualsModel.getCanvasSize().height;
+    self.canvas.attr('width', visualsModel.getCanvasSize().width)
+                .attr('height', visualsModel.getCanvasSize().height);
     self.context = self.canvas[0].getContext('2d');
 
 
