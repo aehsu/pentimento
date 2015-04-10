@@ -129,6 +129,10 @@ var RetimerModel = function(lec) {
 		if(prev==undefined || next==undefined || next.getDisabled()) { return visualTime; }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
 	}
+
+	this.getNumberOfConstraints = function(){
+		return constraints.length;
+	}
 };
 
 var ConstraintTypes = {
