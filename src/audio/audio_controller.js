@@ -261,13 +261,13 @@ var AudioController = function(audio_model) {
             console.log(segment);
             activeTrackController.insertSegment(segment);
 
+            // Refresh the audio display
+            self.refreshView();
+
             // TEMP: Try writing the audio to disk
             // saveToDisk(audioURL, "testrecord");
             // recordRTC.writeToDisk();
         });
-
-        // Refresh the audio display
-        self.refreshView();
     };
 
     // Begin playback the audio at the given track time (ms)
@@ -564,6 +564,7 @@ var AudioController = function(audio_model) {
     // not dependent on model data.
     // Plugins are also refreshed.
     this.refreshView = function() {
+        console.log("refresh view");
 
         // Refresh each of the tracks and update its position
         for (var i = 0; i < trackControllers.length; i++) {
