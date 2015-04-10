@@ -60,16 +60,62 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // yVal: the y coordinate of the constraint being dragged (So it is dragged along a fixed line)
     // arrow_id: unique ID associated with the constraint 
     var constraintDrag = function(drag_name, anchor_name, yVal, arrow_id){
-        // Use jcanvas to drag the appropriate arrow (changing the x value)
-        $('#'+constraintsCanvasID).setLayer(drag_name,{                     
-            x: $('#'+constraintsCanvasID).getLayer(drag_name).x , y: yVal,
-        })
 
-        // Reset the constraint paramaters as it is being dragged
-        $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
-            x1: $('#'+constraintsCanvasID).getLayer(anchor_name).x , y1: $('#'+constraintsCanvasID).getLayer(anchor_name).y,
-            x2: $('#'+constraintsCanvasID).getLayer(drag_name).x , y2: yVal
-        })
+        // X and Y Values of the dragged constraint and the anchor constraint
+        var dragX = $('#'+constraintsCanvasID).getLayer(drag_name).x;
+        var anchorX = $('#'+constraintsCanvasID).getLayer(anchor_name).x;
+        var anchorY = $('#'+constraintsCanvasID).getLayer(anchor_name).y;
+
+        // Don't let constraints be dragged past the previous constraint or the next constraint
+        var tAud = audioController.pixelsToMilliseconds(anchorX);
+        var prevConst = retimerModel.getPreviousConstraint(tAud, "Audio");
+        var nextConst = retimerModel.getNextConstraint(tAud, "Audio");
+
+        var prevX = audioController.millisecondsToPixels(prevConst.getTAudio());
+        var nextX = audioController.millisecondsToPixels(nextConst.getTAudio());
+
+        if (dragX <= prevX){
+            // Don't allow the constraint to be dragged past the previous constraint, if it is being dragged
+            // past the previous constraint make the limit of the x value the the x val of previous constraint.
+            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
+                x: prevX, y: yVal,
+            })
+
+            // Reset the constraint paramaters as it is being dragged
+            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
+                x1: anchorX, y1: anchorY,
+                x2: prevX , y2: yVal
+            })
+
+        }
+        else if(dragX >= nextX){
+            // Don't allow the constraint to be dragged past the next constraint, if it is being dragged
+            // past the next constraint make the limit of the x value the the x val of next constraint.
+            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
+                x: nextX, y: yVal,
+            })
+
+            // Reset the constraint paramaters as it is being dragged
+            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
+                x1: anchorX, y1: anchorY,
+                x2: nextX , y2: yVal
+            })
+        }
+        else if (prevX < dragX && dragX < nextX){
+            // Use jcanvas to drag the appropriate arrow (changing the x value)
+            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
+                x: dragX, y: yVal,
+            })
+
+            // Reset the constraint paramaters as it is being dragged
+            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
+                x1: anchorX, y1: anchorY,
+                x2: dragX , y2: yVal
+            })
+        }
+        else{
+            console.log("invalid drag");
+        }
     }
 
     // Refresh the canvas and redraw the constraints
