@@ -14,6 +14,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Constraint dragging
     var isDragTop;  // boolean indicating whether the top or bottom is being dragged
     var originalDragX;  // integer indicating the original x position of the dragged constraint
+    var lastValidDragX;  // integer indicating the last valid x position of the dragged constraint
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -175,6 +176,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var constraintDragStart = function(layer) {
         isDragTop = (layer.eventY < (constraintsHeight / 2));
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
+        lastValidDragX = originalDragX;
     };
 
     // Dragging moves one of the arrow while the other tip remains in place
@@ -182,23 +184,61 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // The x-position of the non-drag tip of the arrow shouldn't change, and the dragged tip of the arrow moves with the drag.
         // The position of the dragged end is calculated with the layer x-position as the offset from the original x-position.
-        // x1 is the visuals end (top) and x2 is the audio end (bottom).
-        var x1;
-        var x2;
-        if (isDragTop) {
-            x1 = originalDragX + layer.x;
-            x2 = originalDragX;
-        } else {
-            x1 = originalDragX;
-            x2 = originalDragX + layer.x;
+        var fixedX = originalDragX;
+        var draggedX = originalDragX + layer.x;
+
+        // Test update audio or visuals depending on top or bottom
+        var isValid;
+        if (isDragTop) {  // visuals
+
+            // Get the audio time from the position
+            var tAud = audioController.pixelsToMilliseconds(fixedX);
+            var draggedTAud = audioController.pixelsToMilliseconds(draggedX);
+
+            // Update the visual part of the constraint in the model
+            var isTest = true;
+            isValid = retimerModel.updateConstraintVisualsTime(tAud, draggedTAud, isTest);
+
+        } else {  // audio
+
+            // Get the audio time from the position
+            var tVis = retimerModel.getVisualTime(audioController.pixelsToMilliseconds(fixedX));
+            var newTAud = audioController.pixelsToMilliseconds(draggedX);
+
+            // Update the audio part of the constraint in the model
+            var isTest = true;
+            isValid = retimerModel.updateConstraintAudioTime(tVis, newTAud, isTest);
         };
 
+
+        // If the drag is valid, save the current dragged x position as the last valid x position
+        // Else the drag is invalid, and set the dragged x position to the last valid position instead.
+        console.log('isValid: ' + isValid)
+        if (isValid) {
+            lastValidDragX = draggedX;
+        } else {
+            draggedX = lastValidDragX;
+        };
+
+        // Set the x1 and x2 positions.
+        // x1 is the end that is dragged for the visuals (top) and x2 for audio end (bottom).
+        var x1;
+        var x2;
+        if (isDragTop) {  // visuals
+            x1 = draggedX;
+            x2 = fixedX;
+        } else {  // audio
+            x1 = fixedX;
+            x2 = draggedX;
+        };
+
+        // Set the y1 and y2 positions.
         // The y-position of the constraint should not change as it is dragged.
         // y1 is the visuals end (top) and y2 is the audio end (bottom).
         var y1 = constraintHandleRadius;
         var y2 = constraintsHeight - constraintHandleRadius;
 
-        // Update the layer
+        // Update the layer with the new position values
         $('#'+constraintsCanvasID).setLayer(layer, {
             x: 0, y: 0,  // x, y are the layer coordinates, which should remain fixed at the origin
             x1: x1, y1: y1,
@@ -212,6 +252,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var audioXVal = layer.x2;
 
         // Update audio or visuals depending on top or bottom
+        var isValid;
         if (isDragTop) {  // visuals
 
             // Get the audio time from the position
@@ -219,16 +260,22 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             var draggedTAud = audioController.pixelsToMilliseconds(visusalsXVal);
 
             // Update the visual part of the constraint in the model
-            retimerModel.updateConstraintVisualsTime(tAud, draggedTAud);
+            isValid = retimerModel.updateConstraintVisualsTime(tAud, draggedTAud);
 
         } else {  // audio
 
             // Get the audio time from the position
-            var tVis = audioController.pixelsToMilliseconds(visusalsXVal);
+            var tVis = retimerModel.getVisualTime(audioController.pixelsToMilliseconds(visusalsXVal));
             var newTAud = audioController.pixelsToMilliseconds(audioXVal);
 
             // Update the audio part of the constraint in the model
-            retimerModel.updateConstraintAudioTime(tVis, newTAud);
+            isValid = retimerModel.updateConstraintAudioTime(tVis, newTAud);
+        };
+
+        // If the update is not valid, then it is an error because the checking in constraintDrag()
+        // should make sure we never end up in an invalid position
+        if (!isValid) {
+            console.error('constraint update drag is not valid');
         };
 
         // Redraw the thumbnails to correspond to the new visual timing
