@@ -11,6 +11,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var audioController = audio_controller;
     var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model);
 
+    // Constraint dragging
+    var isDragTop;  // boolean indicating whether the top or bottom is being dragged
+    var originalDragX;  // integer indicating the original x position of the dragged constraint
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM Elements
@@ -23,6 +27,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // Buttons
     var addConstraintButtonID = 'sync';
+
+    // Canvas IDs
+    var constraintIDBase = 'constraint_';
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -117,219 +124,29 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             console.error("invalid constraint type: " + type);
         };
 
-        // Set the ID for the constraint
-        var arrow_name = "arrow_"+constraint_num;
-        var visuals_constraint = "visuals_constraint"+constraint_num;
-        var audio_constraint = "audio_constraint"+constraint_num;
-
         // Use jcanvas to draw the constraint
-
-        $('#'+constraintsCanvasID).drawLine({
-                layer: true,
-                name: arrow_name,
-                bringToFront: true,
-                strokeStyle: color,
-                strokeWidth: 4,
-                rounded: true,
-                x1: xVal, y1: constraintsHeight/2,
-                x2: xVal, y2: constraintsHeight/2
-            })
+        // The constraint consists of a top and bottom arrow for the visuals and audio constraints, respectively.
+        $('#'+constraintsCanvasID)
             .drawLine({  // top handle
                 layer: true,
-                name: visuals_constraint,
+                name: constraintIDBase + constraint_num,
                 bringToFront: true,
                 draggable: true,
                 strokeStyle: color,
                 strokeWidth: 4,
                 rounded: true,
+                startArrow: true,
                 endArrow: true,
-                arrowRadius: 15,
+                arrowRadius: constraintHandleRadius,
                 arrowAngle: 90,
-                x1: xVal, y1: constraintsHeight/2,
-                x2: xVal, y2: constraintHandleRadius,
-                drag: function(layer){
-                    constraintDrag(visuals_constraint, audio_constraint, constraintHandleRadius, arrow_name)
-                },
-                dragstop: function(layer){
-                    updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
-                }, 
-                dragcancel: function(layer) {
-                    // When dragging off the canvas, it should reset to its original value to cancel
-                    layer.x = xVal;  // know
-                    $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
-                    $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
-                }
-            })
-            .drawLine({  // bottom handle
-                layer: true,
-                name: audio_constraint,
-                bringToFront: true,
-                draggable: true,
-                strokeStyle: color,
-                strokeWidth: 4,
-                rounded: true,
-                endArrow: true,
-                arrowRadius: 15,
-                arrowAngle: 90,
-                x1: xVal, y1: constraintsHeight/2,
+                x1: xVal, y1: constraintHandleRadius,
                 x2: xVal, y2: constraintsHeight - constraintHandleRadius,
-                drag: function(layer) {
-                    constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-constraintHandleRadius, arrow_name);
-                },
-                dragstop: function(layer){
-                    updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
-                }, 
-                dragcancel: function(layer){
-                    // When dragging off the canvas, it should reset to its original value to cancel
-                    layer.x = xVal;  // knob
-                    $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
-                    $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
-                }
+                dragstart: constraintDragStart,
+                drag: constraintDrag,
+                dragstop: constraintDragStop,
+                dragcancel: constraintDragCancel
             });
-
-
-        // $('#'+constraintsCanvasID).drawLine({
-        //         layer: true,
-        //         name: arrow_name,
-        //         bringToFront: true,
-        //         strokeStyle: color,
-        //         strokeWidth: 4,
-        //         rounded: true,
-        //         x1: xVal, y1: constraintsHeight - constraintHandleRadius,
-        //         x2: xVal, y2: constraintHandleRadius
-        //     })
-        //     .drawArc({  // top handle
-        //         layer: true,
-        //         name: visuals_constraint,
-        //         bringToFront: true,
-        //         draggable: true,
-        //         fillStyle: color,
-        //         x: xVal, y: constraintHandleRadius,
-        //         radius: constraintHandleRadius,
-        //         drag: function(layer){
-        //             constraintDrag(visuals_constraint, audio_constraint, constraintHandleRadius, arrow_name)
-        //         },
-        //         dragstop: function(layer){
-        //             updateVisualConstraint(constraint_num, visuals_constraint, audio_constraint, arrow_name);
-        //         }, 
-        //         dragcancel: function(layer) {
-        //             // When dragging off the canvas, it should reset to its original value to cancel
-        //             layer.x = xVal;  // know
-        //             $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
-        //             $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
-        //         }
-        //     })
-        //     .drawArc({  // bottom handle
-        //         layer: true,
-        //         name: audio_constraint,
-        //         bringToFront: true,
-        //         draggable: true,
-        //         fillStyle: color,
-        //         x: xVal, y: constraintsHeight - constraintHandleRadius,
-        //         radius: constraintHandleRadius,
-        //         drag: function(layer) {
-        //             constraintDrag(audio_constraint, visuals_constraint, constraintsHeight-constraintHandleRadius, arrow_name);
-        //         },
-        //         dragstop: function(layer){
-        //             updateAudioConstraint(constraint_num, audio_constraint, visuals_constraint, arrow_name);
-        //         }, 
-        //         dragcancel: function(layer){
-        //             // When dragging off the canvas, it should reset to its original value to cancel
-        //             layer.x = xVal;  // knob
-        //             $('#'+constraintsCanvasID).getLayer(arrow_name).x1 = xVal; // arrow
-        //             $('#'+constraintsCanvasID).getLayer(arrow_name).x2 = xVal; // arrow
-        //         }
-        //     });
     };
-
-    // How dragging the constraints works
-    // drag_name: either audio_constraint or visuals_constraint depending on which is being dragged
-    // anchor_name: the end of the constraints staying anchored (audio_constraint or visuals_constraint, whichever is not being dragged)
-    // yVal: the y coordinate of the constraint being dragged (So it is dragged along a fixed line)
-    // arrow_id: unique ID associated with the constraint 
-    var constraintDrag = function(drag_name, anchor_name, yVal, arrow_id){
-
-        // X and Y Values of the dragged constraint and the anchor constraint
-        var dragX = $('#'+constraintsCanvasID).getLayer(drag_name).x;
-        console.log("dragX: " + dragX);
-        var anchorX = $('#'+constraintsCanvasID).getLayer(anchor_name).x1;
-        var anchorY = $('#'+constraintsCanvasID).getLayer(anchor_name).y2;
-
-        // Don't let constraints be dragged past the previous constraint or the next constraint
-        var tAud = audioController.pixelsToMilliseconds(anchorX);
-        var prevConst = retimerModel.getPreviousConstraint(tAud, "Audio");
-        var nextConst = retimerModel.getNextConstraint(tAud, "Audio");
-
-        var prevX = audioController.millisecondsToPixels(prevConst.getTAudio());
-        var nextX = audioController.millisecondsToPixels(nextConst.getTAudio());
-
-        if (dragX <= prevX){
-            // Don't allow the constraint to be dragged past the previous constraint, if it is being dragged
-            // past the previous constraint make the limit of the x value the the x val of previous constraint.
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
-                x: prevX, y: yVal,
-            })
-
-            // Reset the constraint paramaters as it is being dragged
-            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: prevX , y2: constraintsHeight/2
-            })
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                   
-                x1: dragX, y1: constraintsHeight/2,
-                x2: prevX , y2: yVal
-            })
-            $('#'+constraintsCanvasID).setLayer(anchor_name,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: anchorX , y2: anchorY
-            })
-
-        }
-        else if(dragX >= nextX){
-            // Don't allow the constraint to be dragged past the next constraint, if it is being dragged
-            // past the next constraint make the limit of the x value the the x val of next constraint.
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
-                x: nextX, y: yVal,
-            })
-
-            // Reset the constraint paramaters as it is being dragged
-            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: nextX , y2: constraintsHeight/2
-            })
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                   
-                x1: nextX, y1: constraintsHeight/2,
-                x2: nextX , y2: yVal
-            })
-            $('#'+constraintsCanvasID).setLayer(anchor_name,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: anchorX , y2: anchorY
-            })
-        }
-        else if (prevX < dragX && dragX < nextX){
-            // Use jcanvas to drag the appropriate arrow (changing the x value)
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                     
-                x: dragX, y: yVal,
-            })
-
-            // Reset the constraint paramaters as it is being dragged
-            $('#'+constraintsCanvasID).setLayer(arrow_id,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: dragX , y2: constraintsHeight/2
-            })
-            $('#'+constraintsCanvasID).setLayer(drag_name,{                   
-                x1: dragX, y1: constraintsHeight/2,
-                x2: dragX , y2: yVal
-            })
-            $('#'+constraintsCanvasID).setLayer(anchor_name,{                   
-                x1: anchorX, y1: constraintsHeight/2,
-                x2: anchorX , y2: anchorY
-            })
-        }
-        else{
-            console.log("invalid drag");
-        }
-    }
 
     // When a user adds a constraint, add the constraint to the lecture
     // xVal: position where the constraint was added to the canvas
@@ -352,20 +169,70 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         };
     }
 
-    // When a user drags the visuals end of a constraint the constraint will need to be updated
-    // visual_name: the ID of the visual end of the constraint
-    // audio_name: the ID of the audio end of the constraint
-    var updateVisualConstraint = function(constraint_num, visual_name, audio_name, arrow_name){
+    ///////////////////////////////////////////////////////////////////////////////
+    // Constraint Drag Handling
+    ///////////////////////////////////////////////////////////////////////////////
 
-        var visusalsXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
-        var audioXVal = $('#'+constraintsCanvasID).getLayer(audio_name).x;
+    // When dragging starts, record whether the drag is for the top or bottom arrow
+    // and record the original x position of the arrow
+    var constraintDragStart = function(layer) {
+        isDragTop = (layer.eventY < (constraintsHeight / 2));
+        originalDragX = layer.x1;  // use the arrow's x1, not layer.x
+    };
 
-        // Get the audio time from the position
-        var tAud = audioController.pixelsToMilliseconds(audioXVal);
-        var draggedTAud = audioController.pixelsToMilliseconds(visusalsXVal);
+    // Dragging moves one of the arrow while the other tip remains in place
+    var constraintDrag = function(layer) {
 
-        // Update the visual part of the constraint in the model
-        retimerModel.updateConstraintVisualsTime(tAud, draggedTAud);
+        // The x-position of the non-drag tip of the arrow shouldn't change, and the dragged tip of the arrow moves with the drag.
+        // The position of the dragged end is calculated with the layer x-position as the offset from the original x-position.
+        // x1 is the visuals end (top) and x2 is the audio end (bottom).
+        var x1;
+        var x2;
+        if (isDragTop) {
+            x1 = originalDragX + layer.x;
+            x2 = originalDragX;
+        } else {
+            x1 = originalDragX;
+            x2 = originalDragX + layer.x;
+        };
+
+        // The y-position of the constraint should not change as it is dragged.
+        // y1 is the visuals end (top) and y2 is the audio end (bottom).
+        var y1 = constraintHandleRadius;
+        var y2 = constraintsHeight - constraintHandleRadius;
+
+        // Update the layer
+        $('#'+constraintsCanvasID).setLayer(layer, {
+            x: 0, y: 0,  // x, y are the layer coordinates, which should remain fixed at the origin
+            x1: x1, y1: y1,
+            x2: x2, y2: y2
+        });
+    };
+
+    // When dragging stops, update the visuals or audio depending on whether the drag is top or bottom
+    var constraintDragStop = function(layer) {
+        var visusalsXVal = layer.x1;
+        var audioXVal = layer.x2;
+
+        // Update audio or visuals depending on top or bottom
+        if (isDragTop) {  // visuals
+
+            // Get the audio time from the position
+            var tAud = audioController.pixelsToMilliseconds(audioXVal);
+            var draggedTAud = audioController.pixelsToMilliseconds(visusalsXVal);
+
+            // Update the visual part of the constraint in the model
+            retimerModel.updateConstraintVisualsTime(tAud, draggedTAud);
+
+        } else {  // audio
+
+            // Get the audio time from the position
+            var tVis = audioController.pixelsToMilliseconds(visusalsXVal);
+            var newTAud = audioController.pixelsToMilliseconds(audioXVal);
+
+            // Update the audio part of the constraint in the model
+            retimerModel.updateConstraintAudioTime(tVis, newTAud);
+        };
 
         // Redraw the thumbnails to correspond to the new visual timing
         thumbnailsController.drawThumbnails();
@@ -374,26 +241,11 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         redrawConstraints();
     };
 
-    // TODO: actually test this with audio stuff
-    // When a user drags the audio end of a constraint the audio time of that constraint must be updated
-    // visual_name: the ID of the visual end of the constraint
-    // audio_name: the ID of the audio end of the constraint
-    var updateAudioConstraint = function(constraint_num, audio_name, visual_name, arrow_name){
-
-        var visusalsXVal = $('#'+constraintsCanvasID).getLayer(visual_name).x;
-        var audioXVal = $('#'+constraintsCanvasID).getLayer(audio_name).x;
-
-        // Get the audio time from the position
-        var tVis = audioController.pixelsToMilliseconds(visusalsXVal);
-        var newTAud = audioController.pixelsToMilliseconds(audioXVal);
-
-        retimerModel.updateConstraintAudioTime(tVis, newTAud);
-        
-        // Redraw the thumbnails to correspond to the new visual timing
-        thumbnailsController.drawThumbnails();
-
-        // Redraw the constraints to snap into place (redraw the whole canvas)
-        redrawConstraints();
+    // When dragging cancels (drag off the canvas), it should reset to its original value
+    var constraintDragCancel = function(layer) {
+        layer.x = 0;
+        layer.x1 = originalDragX;
+        layer.x2 = originalDragX;
     };
 
     ///////////////////////////////////////////////////////////////////////////////
