@@ -160,12 +160,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var constraint = new Constraint(visual_time, audio_time, constraint_type);
         var result = retimerModel.addConstraint(constraint);
 
-        // Refresh the view
+        // Refresh the view if the adding succeeded
         if (result) {
             redrawConstraints();
-        } else {
-            console.error("Invalid constraint");
-            console.error(constraint);
         };
     }
 

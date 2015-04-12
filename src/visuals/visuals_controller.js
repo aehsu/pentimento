@@ -86,8 +86,9 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         // TODO snap pentimento.timeController.getTime() leftmost
         // visualsInsertionTime is the time WITHIN the current slide at which you begin a recording
-        var gt = self.globalTime();
-        visualsInsertionTime = gt - duration;
+        visualsInsertionTime = pentimento.timeController.getTime() - duration;  // TODO
+        // var gt = self.globalTime();
+        // visualsInsertionTime = gt - duration;
         lastTimeUpdate = self.globalTime();
         recordingBegin = lastTimeUpdate;
         originSlide = self.currentSlide;
@@ -162,7 +163,8 @@ var VisualsController = function(visuals_model, retimer_model) {
         var iter = self.currentSlide.getVisualsIterator();
         while(iter.hasNext()) {
             var visual = iter.next();
-            if (visual.getTMin() > lastTimeUpdate) { //is dirty
+            if(visual.getTMin() > pentimento.timeController.getTime()) { //is dirty TODO
+            // if (visual.getTMin() > lastTimeUpdate) { //is dirty
                 dirtyVisuals.push(makeVisualDirty(visual));
             };
         };
