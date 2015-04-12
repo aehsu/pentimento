@@ -125,7 +125,7 @@ var TimeController = function() {
         // If it suceeds, notify listeners
         if (startTiming()) {
             for (var i = 0; i < beginRecordingCallbacks.length; i++) {
-                beginRecordingCallbacks[i](currentTime);
+                beginRecordingCallbacks[i](lastBeginTime);
             };
         };
     };
@@ -155,7 +155,7 @@ var TimeController = function() {
             playbackEndTime = Math.round(endTime);
             playbackEndTimer = setTimeout(self.stopPlayback, playbackEndTime - lastBeginTime);
             for (var i = 0; i < beginPlaybackCallbacks.length; i++) {
-                beginPlaybackCallbacks[i](currentTime);
+                beginPlaybackCallbacks[i](lastBeginTime);
             };
         };
     };

@@ -1,12 +1,15 @@
 "use strict";
 
-var RetimerModel = function(lec) {
+var RetimerModel = function() {
 	var self = this;
-	var lecture = lec;
 	var constraints = [];
 
     // The minimum allowed distance between constraints in milliseconds
     var TOLERANCE = 10;
+
+    this.getConstraints = function() {
+        return constraints;
+    };
 
 	this.makeConstraintDirty = function(constraint) {
 		constraint.setDisabled(true);
@@ -50,7 +53,7 @@ var RetimerModel = function(lec) {
     // Update the visuals part of the constraint located at the specified audio time (tAud)
     // test (default - false): optional boolean indicating whether to test the update without actually updating
     // Returns a boolean indicating whether the update was successful
-    this.updateConstraintVisualsTime = function(tAud, audioTimeCorrespondingToNewVisualsTime, test) {
+    this.updateConstraintVisualsTime = function(constraint, audioTimeCorrespondingToNewVisualsTime, test) {
 
         // Set test to the defualt value of false if it is not defined
         if (typeof test !== 'boolean') {
@@ -60,11 +63,8 @@ var RetimerModel = function(lec) {
         // Get the new visual time (in terms of the new audio time)
         var newTVis = self.getVisualTime(audioTimeCorrespondingToNewVisualsTime);
 
-        // Get the constraint located at the audio time
-        var constraint = self.getConstraintAtAudioTime(tAud);
-
-        // If the constraint was not found, do nothing
-        if (!constraint) {
+        // If the constraint is not in the array of constraints, do nothing
+        if (constraints.indexOf(constraint) < 0) {
             console.error('constraint not found')
             return false;
         };
@@ -88,18 +88,15 @@ var RetimerModel = function(lec) {
     // Update the audio part of the constraint located at the specified visuals time (tVid)
     // test (default - false): optional boolean indicating whether to test the update without actually updating
     // Returns a boolean indicating whether the update was successful
-    this.updateConstraintAudioTime = function(tVis, newTAudio, test) {
+    this.updateConstraintAudioTime = function(constraint, newTAudio, test) {
 
         // Set test to the defualt value of false if it is not defined
         if (typeof test !== 'boolean') {
             test = false;
         };
 
-        // Get the constraint located at the visual time
-        var constraint = self.getConstraintAtVisualTime(tVis);
-
-        // If the constraint was not found, do nothing
-        if (!constraint) {
+        // If the constraint is not in the array of constraints, do nothing
+        if (constraints.indexOf(constraint) < 0) {
             console.error('constraint not found')
             return false;
         };
@@ -214,44 +211,6 @@ var RetimerModel = function(lec) {
 		return best;
 	}
 
-    // Get the constraint located at the visual time
-    // Returns null if it doesn't exist
-    this.getConstraintAtVisualTime = function(visual_time) {
-        console.log('search for constraint at visual time: ' + visual_time)
-
-        // Itereate over the constraints until the constraint with the matching visual time is found
-        var result = null;
-        for (var i = 0; i < constraints.length; i++) {
-            var constraint = constraints[i];
-            console.log('visualtime: ' + constraint.getTVisual());
-            if (constraint.getTVisual() === visual_time) {
-                result = constraint;
-                break;
-            };
-        };
-
-        return result;
-    };
-
-    // Get the constraint located at the audio time
-    // Returns null if it doesn't exist
-    this.getConstraintAtAudioTime = function(audio_time) {
-        console.log('search for constraint at audio time: ' + audio_time)
-
-        // Itereate over the constraints until the constraint with the matching audio time is found
-        var result = null;
-        for (var i = 0; i < constraints.length; i++) {
-            var constraint = constraints[i];
-            console.log('audiotime: ' + constraint.getTAudio());
-            if (constraint.getTAudio() === audio_time) {
-                result = constraint;
-                break;
-            };
-        };
-
-        return result;
-    };
-
     // Convert audio to visual time
 	this.getVisualTime = function(audioTime) {
 		var prev = self.getPreviousConstraint(audioTime, "Audio");
@@ -270,10 +229,6 @@ var RetimerModel = function(lec) {
             return visualTime; 
         }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
-	};
-
-	this.getNumberOfConstraints = function(){
-		return constraints.length;
 	};
 };
 
