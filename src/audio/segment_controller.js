@@ -127,6 +127,9 @@ var AudioSegmentController = function(segment, trackController) {
             wavesurfer.stop();
         };
 
+        // Reset the wavesurfer progress indicator to the beginning
+        wavesurfer.seekTo(0);
+
         // Stop the pending playback if there is one
         if (playbackTimeoutID != -1) {
             clearTimeout(playbackTimeoutID);

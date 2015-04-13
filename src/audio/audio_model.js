@@ -90,14 +90,12 @@ var AudioTrack = function() {
                 left_segment = split_result.left;
                 right_segment = split_result.right;
 
-                // Remove the intersected segment and insert the left and right parts
-                var result = true;
-                result = (self.removeSegment(intersect_segment) && result);
-                result = (self.insertSegment(left_segment) && result);
-                result = (self.insertSegment(right_segment) && result);
-                if (!result) {
-                    console.error('could not remove and insert segments during split');
-                };
+                // Remove the intersected segment and push the left and right parts
+                // Do the insert manually instead of using the insert method because the insert method
+                // will also shift all the segments behind it, effictively shifting those segments multiple times.
+                self.removeSegment(intersect_segment);
+                audio_segments.push(left_segment);
+                audio_segments.push(right_segment);
 
                 // Stop searching segments after the intersection is found.
                 break;

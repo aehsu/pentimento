@@ -216,6 +216,7 @@ var AudioTrackController = function(track, audioController) {
 
         // If the insert did results in a split (returns object), remove the old controller
         // for the segment that was split and add the new left and right segment controllers.
+        console.log('insert_result: ');
         console.log(insert_result);
         if (typeof insert_result === 'object') {
 
