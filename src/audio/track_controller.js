@@ -207,11 +207,31 @@ var AudioTrackController = function(track, audioController) {
     this.insertSegment = function(newSegment) {
         // Insert the segment into the model and keep track of the segments
         // that might have been created from the split.
-        audioTrack.insertSegment(newSegment);
+        var insert_result = audioTrack.insertSegment(newSegment);
+
+        // Create, add, and draw the new controller
         var newController = new AudioSegmentController(newSegment, self);
         segmentControllers.push(newController);
-        // Draw the new controller
         newController.draw($('#'+trackID));
+
+        // If the insert did results in a split (returns object), remove the old controller
+        // for the segment that was split and add the new left and right segment controllers.
+        console.log(insert_result);
+        if (typeof insert_result === 'object') {
+
+            // Remove the segment that was split
+            self.removeSegment(insert_result.remove);
+
+            // Create, add, and draw the new controller for the left segment
+            var newLeftController = new AudioSegmentController(insert_result.left, self);
+            segmentControllers.push(newLeftController);
+            newLeftController.draw($('#'+trackID));
+
+            // Create, add, and draw the new controller for the right segment
+            var newRightController = new AudioSegmentController(insert_result.right, self);
+            segmentControllers.push(newRightController);
+            newRightController.draw($('#'+trackID));
+        };
     };
 
     // Remove a segment from the track. Also removes its segment controller.
@@ -257,15 +277,17 @@ var AudioTrackController = function(track, audioController) {
             var playbackDelay;
             var trackStartTime;
 
-            // If the segment starts after the current start time
+            // If the segment starts after the current start time, 
+            // delay by the difference in start time and start whenver the segment is supposed to start
             if (segment.start_time >= startTime) {
                 playbackDelay = segment.start_time - startTime;
                 trackStartTime = segment.start_time;
             }
-            // If the start time is in the middle of the segment 
+            // If the start time is in the middle of the segment, 
+            // start it at the given start time without delay
             else if (segment.end_time > startTime) {
                 playbackDelay = 0;
-                trackStartTime = startTime-segment.start_time;
+                trackStartTime = startTime;
             }
             // If the start time is after the entire segment
             else {
