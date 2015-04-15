@@ -32,6 +32,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Canvas IDs
     var constraintIDBase = 'constraint_';
 
+    // Insertion begin time (-1 indictes no insertion is occurring)
+    var insertionStartTime = -1;
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -125,6 +128,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             console.error("invalid constraint type: " + type);
         };
 
+        var visuals_constraint = "visuals_constraint" + constraint_num;
+        var audio_constraint= "audio_constraint" + constraint_num
+
         // Use jcanvas to draw the constraint
         // The constraint consists of a top and bottom arrow for the visuals and audio constraints, respectively.
         $('#'+constraintsCanvasID)
@@ -147,6 +153,28 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 dragstop: constraintDragStop,
                 dragcancel: constraintDragCancel
             });
+
+            // .drawBezier({  // top handle
+            //     layer: true,
+            //     name: constraintIDBase + constraint_num,
+            //     bringToFront: true,
+            //     draggable: true,
+            //     strokeStyle: color,
+            //     strokeWidth: 4,
+            //     rounded: true,
+            //     startArrow: true,
+            //     endArrow: true,
+            //     arrowRadius: constraintHandleRadius,
+            //     arrowAngle: 90,
+            //     x1: xVal, y1: constraintHandleRadius,
+            //     cx1: xVal, cy1: constraintsHeight/4,
+            //     cx2: xVal, cy2: constraintsHeight/4,
+            //     x2: xVal, y2: constraintsHeight - constraintHandleRadius,
+            //     dragstart: constraintDragStart,
+            //     drag: constraintDrag,
+            //     dragstop: constraintDragStop,
+            //     dragcancel: constraintDragCancel
+            // });
     };
 
     // When a user adds a constraint, add the constraint to the lecture
@@ -295,6 +323,29 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         layer.x2 = originalDragX;
     };
 
+    // Dealing with insertions
+    var insertionShifting = function(insertionEndTime){
+        var insertionDuration = insertionEndTime - insertionStartTime;
+
+        var constraintsToShift = [];
+
+        var constraints = retimerModel.getConstraintsIterator();
+
+        // Iterate through the constraints and shift them
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            if (constraint.getTAudio() > insertionStartTime){
+                constraintsToShift.push(constraint);
+            }
+        };
+
+        retimerModel.shiftConstraints(constraintsToShift, insertionDuration);
+
+        redrawConstraints();
+
+        insertionStartTime = -1;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     //
@@ -326,8 +377,19 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     pentimento.timeController.addBeginRecordingCallback(function(currentTime) {
         addConstraint(currentTime, ConstraintTypes.Automatic);
+
+        // If recording is an insertion
+        if (currentTime < pentimento.lectureController.getLectureModel().getLectureDuration()){
+            console.log("INSERTION");
+            insertionStartTime = currentTime
+        }
     });
     pentimento.timeController.addEndRecordingCallback(function(currentTime) {
         addConstraint(currentTime, ConstraintTypes.Automatic);
+
+        // If recording is an insertion
+        if (insertionStartTime != -1){
+            insertionShifting(currentTime);
+        }
     });
 };
