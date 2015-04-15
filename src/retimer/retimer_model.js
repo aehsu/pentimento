@@ -144,7 +144,7 @@ var RetimerModel = function() {
 	};
 
 	this.shiftConstraints = function(constraints, amount) {
-		for(var i in constraints) {
+		for(var i = 0; i < constraints.length; i++) {
 			var constraint = constraints[i];
             constraint.setTVisual(constraint.getTVisual()+amount);
             constraint.setTAudio(constraint.getTAudio()+amount);
