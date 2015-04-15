@@ -81,7 +81,7 @@ var ToolsController = function(visuals_controller) {
                 });
                 break;
         	case 'delete':
-                visualsController.setTDeletion(visualsController.selection, visualsController.globalTime());
+                visualsController.setTDeletion(visualsController.selection, currentVisualTime());
         		break;
         	case 'pan':
         		break;
@@ -215,6 +215,12 @@ var ToolsController = function(visuals_controller) {
     // Helpers
     /////////////////////////////////////////////////////////////////////////////// 
 
+
+    // Shortcut for the time controller time converted to visual time through the retimer
+    var currentVisualTime = function() {
+        return visualsController.getRetimerModel().getVisualTime(pentimento.timeController.getTime());
+    };
+
     //This helps in redering, but is fundamental to the tool handlers themselves.
     //Only "finished" visuals leave the buffer and are put into the model, so
     //something needs to draw the buffered visuals, like the handlers.
@@ -316,7 +322,7 @@ var ToolsController = function(visuals_controller) {
     var getCanvasPoint = function(event){
         var x = event.pageX - visualsController.canvas.offset().left;
         var y = event.pageY - visualsController.canvas.offset().top;
-        var t = visualsController.globalTime();
+        var t = currentVisualTime();
         
         if(visualsController.pressure) {
             return new Vertex(x, y, t, event.pressure);
@@ -342,7 +348,7 @@ var ToolsController = function(visuals_controller) {
 
     /**********************************LECTURE-MODE TOOLS**********************************/
     var penMouseDown = function(event) {
-        visualsController.currentVisual = new StrokeVisual(visualsController.globalTime(), new VisualProperty(visualsController.color, visualsController.width));
+        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
         visualsController.lastPoint = getCanvasPoint(event);
         visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
         visualsController.addVisual(visualsController.currentVisual);
@@ -374,7 +380,7 @@ var ToolsController = function(visuals_controller) {
     var highlightMouseUp = function(event) {
         var highlightTime = 750; //duration for a highlighter, in ms
         if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsController.setTDeletion([visualsController.currentVisual], visualsController.globalTime() + highlightTime);
+            visualsController.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
             visualsController.currentVisual = null;
             visualsController.lastPoint = null;
         }
@@ -396,15 +402,15 @@ var ToolsController = function(visuals_controller) {
                 if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
             }
             if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
-                var gt = visualsController.globalTime();
+                var t = currentVisualTime();
                 visualsController.selection.push(visual);
-                visualsController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", gt));
+                visualsController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
                 //TODO should be fixed to be 
-                visualsController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, gt));
+                visualsController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, t));
             } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
                 visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
-                visualsController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), gt));
-                visualsController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), gt));
+                visualsController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), t));
+                visualsController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), t));
             }
         }
     }
