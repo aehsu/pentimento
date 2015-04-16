@@ -30,7 +30,7 @@ var Renderer = function(visuals_controller) {
                 if (isVisualVisible(visual, tMin)) {
                     // visible on tMax AND tMin - therefore was drawn
                     // BEFORE tMin, so draw grayed out
-                    var visCopy = visualsController.selection[i].getClone();
+                    var visCopy = visual.getClone();
                     var propsCopy = visCopy.getProperties();
                     propsCopy.setColor("#DDDDDD");
                     drawVisual(context, visCopy, tMin);

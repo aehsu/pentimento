@@ -50,7 +50,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         // Render the canvas
         var canvas = $('#' + canvasID);
         var context = canvas[0].getContext('2d')
-        renderer.drawCanvas(canvas, context, visualsTime);
+        renderer.drawCanvas(canvas, context, 0, visualsTime);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
