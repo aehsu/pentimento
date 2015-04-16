@@ -11,8 +11,8 @@ var Renderer = function(visuals_controller) {
         context.clearRect(0, 0, canvas.width(), canvas.height());
         
         // Determine the scale
-        var xScale = visualsController.getVisualsModel().getCanvasSize().width / canvas.width();
-        var yScale = visualsController.getVisualsModel().getCanvasSize().height / canvas.height();
+        var xScale = canvas.width() / visualsController.getVisualsModel().getCanvasSize().width;
+        var yScale = canvas.height() / visualsController.getVisualsModel().getCanvasSize().height;
         
         // Set scale if necessary
         if (xScale !== 1 || yScale !== 1) {
