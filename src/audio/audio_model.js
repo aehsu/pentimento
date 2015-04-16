@@ -64,38 +64,66 @@ var AudioTrack = function() {
     };
 
     // Insert the provided segment.
-    // Other segments in the track may be shifted as a result.
+    // Another segments in the track may be split if the segment.
+    // Returns true if the insert succeeds, unless a split occured.
+    // If a split occurs, returns an object {left, right, remove} with the left and right side of the 
+    // split segment, and the segment that was removed to become the left and right parts.
     this.insertSegment = function(newSegment) {
 
         // Iterate over all segments for the track to see if the new segment's start time
-        // intersects any segments. If so, then the shift amount needs to be increased by the overlap.
-        var overlapShift = 0;
+        // intersects any segments.
+        var intersect_segment = null;
+        var left_segment = null;
+        var right_segment = null;
         for (var i = 0; i < audio_segments.length; i++) {
-            var shift_segment = audio_segments[i];
+            var other_segment = audio_segments[i];
 
-            // If the new segment's start time intersects a segment, then set the overlapShift
-            // to the amount that the new segment exceeds the start.
-            if (newSegment.start_time > shift_segment.start_time && 
-                newSegment.start_time < shift_segment.end_time ) {
+            // If the new segment's start time intersects a segment, then split the segment into left and right
+            if (newSegment.start_time > other_segment.start_time && 
+                newSegment.start_time < other_segment.end_time ) {
 
-                overlapShift = newSegment.start_time - shift_segment.start_time;
+                var split_result = other_segment.splitSegment(newSegment.start_time);
+                if (!split_result) {
+                    console.error('could not split segment');
+                };
+                intersect_segment = other_segment;
+                left_segment = split_result.left;
+                right_segment = split_result.right;
+
+                // Remove the intersected segment and push the left and right parts
+                // Do the insert manually instead of using the insert method because the insert method
+                // will also shift all the segments behind it, effictively shifting those segments multiple times.
+                self.removeSegment(intersect_segment);
+                audio_segments.push(left_segment);
+                audio_segments.push(right_segment);
+
+                // Stop searching segments after the intersection is found.
                 break;
             };
         };
 
         // Iterate over all segments for the track to shift the segment if it is after the new segment
-        var shiftAmount = newSegment.lengthInTrack() + overlapShift;
         for (var i = 0; i < audio_segments.length; i++) {
             var shift_segment = audio_segments[i];
 
             // If the segment's end time is to the right of the inserted segment's begin time, then shift
             if ( newSegment.start_time < shift_segment.end_time ) {
-                self.shiftSegment( shift_segment , shiftAmount);
+                self.shiftSegment(shift_segment, newSegment.lengthInTrack(), false);
             };
         };
 
-        // Insert the segment
+        // Insert the new segment
         audio_segments.push(newSegment);
+
+        // Return true if the insert succeeded, or return the relevant segments if an insert occured
+        var returnValue;
+        if (!intersect_segment) {
+            returnValue = true;
+        } else {
+            returnValue = { left: left_segment, right: right_segment, remove: intersect_segment };
+        };
+
+        return returnValue;
     };
 
     // Remove the specified segment. 
@@ -166,14 +194,17 @@ var AudioTrack = function() {
 
 	// Shifts the specified segment left or right by a certain number of milliseconds.
 	// If a negative number is given for shift_millisec, then the shift will be left.
+    // 'check' is optional and defaults to true. If false, it will shift without checking for validity
     // Return true if the shift succeeds
     // Otherwise, return the shift value of the greatest magnitude that would have produced a valid shift
-	this.shiftSegment = function(segment, shift_millisec) {
+	this.shiftSegment = function(segment, shift_millisec, check) {
 
-        // Check for validity of the shift
-        var shiftResult = self.canShiftSegment(segment, shift_millisec);
-        if (shiftResult !== true) {
-            return shiftResult;
+        // Check for validity of the shift unless otherwise specified
+        if (check !== false) {
+            var shiftResult = self.canShiftSegment(segment, shift_millisec);
+            if (shiftResult !== true) {
+                return shiftResult;
+            };
         };
 
         // Get the new times for the segment
@@ -315,7 +346,7 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
     var self = this;
 
     // Audio clip data
-	var audio_resource = audio_resource;
+	var audio_clip = audio_resource;
     var total_audio_length = audio_length;
 
     // Specifies what part of the audio clip should be played back
@@ -328,7 +359,7 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 
     // Get the audio resource needed for playback
     this.audioResource = function() {
-        return audio_resource;
+        return audio_clip;
     };
 
     // Get the total length of the audio resource
@@ -344,6 +375,34 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
     // Get the length of the audio that should be played back
     this.audioLength = function() {
         return self.audio_end_time - self.audio_start_time;
+    };
+
+    // Returns object {left, right} with two segments that are the result of splitting the segment
+    // at the specified track time.
+    // Returns null if the track time does not intersect the segment within (start_time, end_time)
+    this.splitSegment = function(splitTime) {
+
+        // Check that the track time is valid within (start_time, end_time)
+        if (splitTime <= self.start_time || splitTime >= self.end_time) {
+            return null;
+        };
+
+        // Create a left segment that is the same as the segment except for the end times
+        var left_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);  // start_time is not used (it's set below)
+        left_segment.audio_start_time = self.audio_start_time;
+        left_segment.audio_end_time = self.trackToAudioTime(splitTime);
+        left_segment.start_time = self.start_time;
+        left_segment.end_time = splitTime;
+
+        // Create a right segment that is the same as the segment except for the start times
+        var right_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);  // start_time is not used (it's set below)
+        right_segment.audio_start_time = self.trackToAudioTime(splitTime);
+        right_segment.audio_end_time = self.audio_end_time;
+        right_segment.start_time = splitTime;
+        right_segment.end_time = self.end_time;
+
+        // Return the two segments
+        return { left: left_segment, right: right_segment };
     };
 
     // Convert a track time to the corresponding time in the audio resource at the current scale.

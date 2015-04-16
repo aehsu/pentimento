@@ -1,9 +1,15 @@
 "use strict";
 
-var RetimerModel = function(lec) {
+var RetimerModel = function() {
 	var self = this;
-	var lecture = lec;
 	var constraints = [];
+
+    // The minimum allowed distance between constraints in milliseconds
+    var TOLERANCE = 10;
+
+    this.getConstraints = function() {
+        return constraints;
+    };
 
 	this.makeConstraintDirty = function(constraint) {
 		constraint.setDisabled(true);
@@ -16,32 +22,117 @@ var RetimerModel = function(lec) {
 			doShiftConstraint(constraint, amount);
 			constraint.setDisabled(false);
 		}
-	}
+	};
 
+    // Check to see if the constraint is in a valid position
 	this.checkConstraint = function(constraint) {
-		// var constraints = lecture.getConstraints();
+
+        // Check the constraint against all the other constraints, except for itself
 		for(var i in constraints) {
 			var other = constraints[i];
-			if(other.getTVisual() <= constraint.getTVisual() && other.getTAudio() <= constraint.getTAudio()) {
+            if (other === constraint) {
+                continue;
+            };
+
+            // Make sure the constraint is fully on the left or right of the other constraint
+            // The constraint should not overlap the other in any way.
+			if (other.getTVisual() < constraint.getTVisual() - TOLERANCE &&
+                other.getTAudio() < constraint.getTAudio() - TOLERANCE) {
 				continue;
-			} else if(other.getTVisual() >= constraint.getTVisual() && other.getTAudio() >= constraint.getTAudio()) {
+			} else if ( other.getTVisual() > constraint.getTVisual() + TOLERANCE &&
+                        other.getTAudio() > constraint.getTAudio() + TOLERANCE) {
 				continue;
 			} else {
+                console.log('overlap constraint (new, other): ')
+                console.log(constraint)
+                console.log(other)
 				return false;
 			}
-		}
+		};
 
 		return true;
     };
 
+    // Update the visuals part of the constraint located at the specified audio time (tAud)
+    // test (default - false): optional boolean indicating whether to test the update without actually updating
+    // Returns a boolean indicating whether the update was successful
+    this.updateConstraintVisualsTime = function(constraint, audioTimeCorrespondingToNewVisualsTime, test) {
+
+        // Set test to the defualt value of false if it is not defined
+        if (typeof test !== 'boolean') {
+            test = false;
+        };
+
+        // Get the new visual time (in terms of the new audio time)
+        var newTVis = self.getVisualTime(audioTimeCorrespondingToNewVisualsTime);
+
+        // If the constraint is not in the array of constraints, do nothing
+        if (constraints.indexOf(constraint) < 0) {
+            console.error('constraint not found')
+            return false;
+        };
+
+        // Keep the old time for the visual and then set it to the new value
+        var oldTVisual = constraint.getTVisual();
+        constraint.setTVisual(newTVis);
+
+        // Check the constraint to see if it is valid after the move
+        var isValid = self.checkConstraint(constraint);
+
+        // If the update was invalid or just a test, restore the constraint tVisual to the previous value
+        if (test || !isValid) {
+            constraint.setTVisual(oldTVisual);
+        };
+
+        // Return whether the update was valid
+        return isValid;
+    };
+
+    // Update the audio part of the constraint located at the specified visuals time (tVid)
+    // test (default - false): optional boolean indicating whether to test the update without actually updating
+    // Returns a boolean indicating whether the update was successful
+    this.updateConstraintAudioTime = function(constraint, newTAudio, test) {
+
+        // Set test to the defualt value of false if it is not defined
+        if (typeof test !== 'boolean') {
+            test = false;
+        };
+
+        // If the constraint is not in the array of constraints, do nothing
+        if (constraints.indexOf(constraint) < 0) {
+            console.error('constraint not found')
+            return false;
+        };
+
+        // Keep the old time for the audio and then set it to the new value
+        var oldTAudio = constraint.getTAudio();
+        constraint.setTAudio(newTAudio);
+
+        // Check the constraint to see if it is valid after the move
+        var isValid = self.checkConstraint(constraint);
+
+        // If the update was invalid or just a test, restore the constraint tVisual to the previous value
+        if (test || !isValid) {
+            constraint.setTAudio(oldTAudio);
+        };
+
+        // Return whether the update was valid
+        return isValid;
+    };
+
 	this.addConstraint = function(constraint) {
-		if(!self.checkConstraint(constraint)) { return false; }
+
+		if(!self.checkConstraint(constraint)) { 
+            return false; 
+        }
+
 		var index = 0;
-		// var constraints = lecture.getConstraints();
 		var constIter = self.getConstraintsIterator();
 		while(constIter.hasNext()) {
 			var other = constIter.next();
-			if(other.getTVisual() > constraint.getTVisual()) { break; }
+			if(other.getTVisual() > constraint.getTVisual()) {
+                break;
+            }
 			index++;
 		}
 		constraints.splice(index, 0, constraint);
@@ -50,65 +141,72 @@ var RetimerModel = function(lec) {
 	}
 
 	this.deleteConstraint = function(constraint) {
-		// var constraints = lecture.getConstraints();
 		var index = constraints.indexOf(constraint);
 		if(index==-1) { return; }
 		constraints.splice(index, 1);
-	}
-
-	var doShiftConstraint = function(constraint, amount) {
-		constraint.setTVisual(constraint.getTVisual()+amount);
-		constraint.setTAudio(constraint.getTAudio()+amount);
-	}
+	};
 
 	this.shiftConstraints = function(constraints, amount) {
-		for(var i in constraints) {
+		for(var i = 0; i < constraints.length; i++) {
 			var constraint = constraints[i];
-			doShiftConstraint(constraint, amount);
-		}
-	}
+            constraint.setTVisual(constraint.getTVisual()+amount);
+            constraint.setTAudio(constraint.getTAudio()+amount);
+		};
+	};
 
 	this.getConstraintsIterator = function() {
         return new Iterator(constraints);
-    }
+    };
 
 	this.getPreviousConstraint = function(time, type) {
-		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getPreviousConstraint'); return; }
+		if(type!="Audio" && type!="Video") {
+            console.error('passed in an invalid type to getPreviousConstraint: ' + type);
+            return; 
+        }
 
-		// var constraints = lecture.getConstraints();
 		var best;
 		if(type=="Audio") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTAudio() >= time) { break; }
+				if (constraint.getTAudio() >= time) {
+                    break;
+                }
 				best = constraint;
 			}
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVisual() >= time) { break; }
+				if(constraint.getTVisual() >= time) { 
+                    break;
+                }
 				best = constraint;
 			}
 		}
 		return best;
-	}
+	};
 
 	this.getNextConstraint = function(time, type) {
-		if(type!="Audio" && type!="Video") { console.log('passed in an invalid type to getNextConstraint'); return; }
+		if(type!="Audio" && type!="Video") { 
+            console.error('passed in an invalid type to getNextConstraint: ' + type); 
+            return;
+        }
 
-		// var constraints = lecture.getConstraints();
 		constraints.reverse();
 		var best;
 		if(type=="Audio") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTAudio() <= time) { break; }
+				if(constraint.getTAudio() <= time) {
+                    break; 
+                }
 				best = constraint;
 			}
 		} else if(type=="Video") {
 			for(var i in constraints) {
 				var constraint = constraints[i];
-				if(constraint.getTVisual() <= time) { break; }
+				if(constraint.getTVisual() <= time) { 
+                    break;
+                }
 				best = constraint;
 			}
 		}
@@ -116,19 +214,25 @@ var RetimerModel = function(lec) {
 		return best;
 	}
 
+    // Convert audio to visual time
 	this.getVisualTime = function(audioTime) {
 		var prev = self.getPreviousConstraint(audioTime, "Audio");
 		var next = self.getNextConstraint(audioTime, "Audio");
-		if(prev==undefined || next==undefined || next.getDisabled()) { return audioTime; }
+		if (prev==undefined || next==undefined || next.getDisabled()) { 
+            return audioTime; 
+        }
 		return (next.getTVisual()-prev.getTVisual())/(next.getTAudio()-prev.getTAudio())*(audioTime-prev.getTAudio())+prev.getTVisual();
-	}
+	};
 
+    // Convert visual to audio time
 	this.getAudioTime = function(visualTime) {
 		var prev = self.getPreviousConstraint(visualTime, "Video");
 		var next = self.getNextConstraint(visualTime, "Video");
-		if(prev==undefined || next==undefined || next.getDisabled()) { return visualTime; }
+		if(prev==undefined || next==undefined || next.getDisabled()) { 
+            return visualTime; 
+        }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
-	}
+	};
 };
 
 var ConstraintTypes = {
@@ -138,18 +242,24 @@ var ConstraintTypes = {
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;
-    self.tVis = tvis;
-    self.tAud = taud;
-    self.type = mytype;
-    self.disabled = false;
+    var tVis = tvis;
+    var tAud = taud;
+    var type = mytype;
+    var disabled = false;
 
-    this.getTVisual = function() { return self.tVis; }
-    this.getTAudio = function() { return self.tAud; }
-    this.getType = function() { return self.type; }
-    this.getDisabled = function() { return self.disabled; }
+    this.getTVisual = function() { return tVis; }
+    this.getTAudio = function() { return tAud; }
+    this.getType = function() { return type; }
+    this.getDisabled = function() { return disabled; }
 
-    this.setTVisual = function(newTVis) { self.tVis = newTVis; }
-    this.setTAudio = function(newTAud) { self.tAud = newTAud; }
-    this.setType = function(newType) { self.type = newType; }
-    this.setDisabled = function(newBool) { self.disabled = newBool; }
-}
+    this.setTVisual = function(newTVis) { 
+        tVis = Math.round(newTVis); 
+    };
+
+    this.setTAudio = function(newTAud) {
+        tAud = Math.round(newTAud); 
+    };
+
+    this.setType = function(newType) { type = newType; }
+    this.setDisabled = function(newBool) { disabled = newBool; }
+};

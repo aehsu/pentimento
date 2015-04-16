@@ -21,5 +21,11 @@
 };
 
 .thumbnail {
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    border:1px solid red;
     background-color: #F5F5F5;
+    margin: 0;
+    padding: 0;
 }
