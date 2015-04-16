@@ -14,7 +14,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     var originSlide = null;
     var originSlideDuration = null;
     var shiftInterval = null;
-    var dirtyVisuals = [];
     var slideBeginTime = NaN;
 
     // DOM elements
@@ -93,13 +92,12 @@ var VisualsController = function(visuals_model, retimer_model) {
             self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
 
             // Restores the dirty visuals to their former places and adds a shift.
-            visualsModel.cleanVisuals(dirtyVisuals, originSlide.getDuration() - originSlideDuration);
+            visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
             
             // Reset recording variables
             slideBeginTime = NaN;
             originSlide = null;
             originSlideDuration = null;
-            dirtyVisuals = [];
         }
     };
 

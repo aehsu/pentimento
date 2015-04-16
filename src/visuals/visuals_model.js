@@ -12,6 +12,8 @@ var VisualsModel = function() {
     var canvasWidth = 900;
     var canvasHeight = 500;
 
+    var dirtyVisuals = [];
+
     this.getCanvasSize = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };
     };
@@ -244,9 +246,9 @@ var VisualsModel = function() {
 
     // Restore to the previous time plus the amount.
     // Used at the end of a recording during insertion to shift visuals forward.
-    this.cleanVisuals = function(dirtyWrappers, amount) {
-        for(var i in dirtyWrappers) {
-            var dirtyWrapper = dirtyWrappers[i];
+    this.cleanVisuals = function(amount) {
+        for(var i in dirtyVisuals) {
+            var dirtyWrapper = dirtyVisuals[i];
             var visual = dirtyWrapper.visual;
             visual.setTMin(dirtyWrapper.tMin + amount);
             var vertices = visual.getVertices();
@@ -255,6 +257,8 @@ var VisualsModel = function() {
             };
             //would have to re-enable transforms
         };
+
+        dirtyVisuals = [];
     };
 
     function doShiftVisual(visual, amount) {
