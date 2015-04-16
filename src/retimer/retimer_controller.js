@@ -346,6 +346,25 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         insertionStartTime = -1;
     }
 
+    var beginRecording = function(currentTime) {
+        addConstraint(currentTime, ConstraintTypes.Automatic);
+
+        // If recording is an insertion
+        if (currentTime < pentimento.lectureController.getLectureModel().getLectureDuration()){
+            console.log("INSERTION");
+            insertionStartTime = currentTime;
+        }
+    }
+
+    var endRecording = function(currentTime) {
+        // If recording is an insertion
+        if (insertionStartTime != -1){
+            insertionShifting(currentTime);
+        }
+
+        addConstraint(currentTime, ConstraintTypes.Automatic);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     //
@@ -375,21 +394,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         zoom: redrawConstraints
     });
 
-    pentimento.timeController.addBeginRecordingCallback(function(currentTime) {
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // If recording is an insertion
-        if (currentTime < pentimento.lectureController.getLectureModel().getLectureDuration()){
-            console.log("INSERTION");
-            insertionStartTime = currentTime
-        }
-    });
-    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // If recording is an insertion
-        if (insertionStartTime != -1){
-            insertionShifting(currentTime);
-        }
-    });
+    pentimento.timeController.addBeginRecordingCallback(beginRecording);
+    pentimento.timeController.addEndRecordingCallback(endRecording);
 };

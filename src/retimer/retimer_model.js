@@ -121,8 +121,10 @@ var RetimerModel = function() {
     };
 
 	this.addConstraint = function(constraint) {
+        console.log("ADDING");
 
-		if(!self.checkConstraint(constraint)) { 
+		if(!self.checkConstraint(constraint)) {
+            console.log("false?");
             return false; 
         }
 
