@@ -76,7 +76,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
         originSlide = self.currentSlide;
         originSlideDuration = originSlide.getDuration();
-        setDirtyVisuals();
+        setDirtyVisuals(slideBeginTime);
     };
 
     var stopRecording = function(currentTime) {
@@ -134,14 +134,15 @@ var VisualsController = function(visuals_model, retimer_model) {
     // and the times of their vertices. Then move the visuals to positive infinity.
     // Used at the end of a recording so that the visuals will not overlap with the ones being recorded.
     // Only processes visuals in the current slide after the current time.
-    var setDirtyVisuals = function() {
+    var setDirtyVisuals = function(currentVisualTime) {
 
         // Iterate over all the visuals
-        for (var i = 0; i < self.currentSlide.getVisuals().length; i++) {
-            var visual = self.currentSlide.getVisuals()[i];
+        var visuals_iterator = self.currentSlide.getVisualsIterator();
+        while (visuals_iterator.hasNext()) {
+            var visual = visuals_iterator.next();
 
-            // Only make the visual dirty if the time is less than the current time
-            if(visual.getTMin() <= retimerModel.getVisualTime(pentimento.timeController.getTime())) {
+            // Only make the visual dirty if the time is greater than the current time
+            if(visual.getTMin() <= currentVisualTime) {
                 continue;
             };
 
@@ -244,7 +245,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     ///////////////////////////////////////////////////////////////////////////////
 
     this.addVisual = function(visual) {
-        
         self.currentSlide.getVisuals().push(visual);
     }
 
