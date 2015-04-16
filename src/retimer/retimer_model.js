@@ -233,7 +233,7 @@ var RetimerModel = function() {
 		if(prev==undefined || next==undefined || next.getDisabled()) { 
             return visualTime; 
         }
-		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(videoTime-prev.getTVisual())+prev.getTAudio();
+		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(visualTime-prev.getTVisual())+prev.getTAudio();
 	};
 };
 

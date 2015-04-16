@@ -32,6 +32,27 @@ var VisualsModel = function() {
         return time;
     };
 
+    // this.getDuration = function() {
+    //     var time = 0;
+    //     var iter = self.getSlidesIterator();
+    //     while(iter.hasNext()) {
+    //         var slide = iter.next();
+    //         var visuals = slide.getVisualsIterator();
+    //         while(visuals.hasNext()){
+    //             var visual = visuals.next();
+    //             var vertices = visual.getVerticesIterator();
+    //             while(vertices.hasNext()){
+    //                 var vertex = vertices.next();
+    //                 var vertexT = vertex.getT();
+    //                 if (vertexT > time){
+    //                     time = vertexT;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return time;
+    // }
+
     this.getSlides = function() {
         return slides;
     };
