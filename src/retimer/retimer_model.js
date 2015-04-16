@@ -43,6 +43,9 @@ var RetimerModel = function() {
                         other.getTAudio() > constraint.getTAudio() + TOLERANCE) {
 				continue;
 			} else {
+                console.log('overlap constraint (new, other): ')
+                console.log(constraint)
+                console.log(other)
 				return false;
 			}
 		};

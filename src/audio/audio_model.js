@@ -108,7 +108,7 @@ var AudioTrack = function() {
 
             // If the segment's end time is to the right of the inserted segment's begin time, then shift
             if ( newSegment.start_time < shift_segment.end_time ) {
-                self.shiftSegment(shift_segment, newSegment.lengthInTrack());
+                self.shiftSegment(shift_segment, newSegment.lengthInTrack(), false);
             };
         };
 
@@ -194,14 +194,17 @@ var AudioTrack = function() {
 
 	// Shifts the specified segment left or right by a certain number of milliseconds.
 	// If a negative number is given for shift_millisec, then the shift will be left.
+    // 'check' is optional and defaults to true. If false, it will shift without checking for validity
     // Return true if the shift succeeds
     // Otherwise, return the shift value of the greatest magnitude that would have produced a valid shift
-	this.shiftSegment = function(segment, shift_millisec) {
+	this.shiftSegment = function(segment, shift_millisec, check) {
 
-        // Check for validity of the shift
-        var shiftResult = self.canShiftSegment(segment, shift_millisec);
-        if (shiftResult !== true) {
-            return shiftResult;
+        // Check for validity of the shift unless otherwise specified
+        if (check !== false) {
+            var shiftResult = self.canShiftSegment(segment, shift_millisec);
+            if (shiftResult !== true) {
+                return shiftResult;
+            };
         };
 
         // Get the new times for the segment
@@ -385,14 +388,18 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
         };
 
         // Create a left segment that is the same as the segment except for the end times
-        var left_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);
+        var left_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);  // start_time is not used (it's set below)
+        left_segment.audio_start_time = self.audio_start_time;
         left_segment.audio_end_time = self.trackToAudioTime(splitTime);
+        left_segment.start_time = self.start_time;
         left_segment.end_time = splitTime;
 
         // Create a right segment that is the same as the segment except for the start times
-        var right_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);
+        var right_segment = new AudioSegment(audio_clip, total_audio_length, self.start_time);  // start_time is not used (it's set below)
         right_segment.audio_start_time = self.trackToAudioTime(splitTime);
+        right_segment.audio_end_time = self.audio_end_time;
         right_segment.start_time = splitTime;
+        right_segment.end_time = self.end_time;
 
         // Return the two segments
         return { left: left_segment, right: right_segment };
