@@ -5,9 +5,10 @@
 //the state of the visuals appropriately for each tool
 "use strict";
 
-var ToolsController = function(visuals_controller) {
+var ToolsController = function(visuals_controller, visuals_model) {
 
     var visualsController = null;
+    var visualsModel = null;
 
     ///////////////////////////////////////////////////////////////////////////////
     // Callbacks
@@ -81,7 +82,7 @@ var ToolsController = function(visuals_controller) {
                 });
                 break;
         	case 'delete':
-                visualsController.setTDeletion(visualsController.selection, currentVisualTime());
+                visualsModel.setTDeletion(visualsController.selection, currentVisualTime());
         		break;
         	case 'pan':
         		break;
@@ -136,13 +137,13 @@ var ToolsController = function(visuals_controller) {
                 break;
         	case 'delete':
                 if (pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
-                var t = visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 pentimento.timeController.updateTime(t);
                 // visualsController.selection = []; //Richard says no!
                 updateVisuals(false);
         		break;
             case 'redraw':
-                var t = visualsController.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 pentimento.timeController.updateTime(t);
                 $('.recording-tool:visible').click()
                 break;
@@ -351,14 +352,14 @@ var ToolsController = function(visuals_controller) {
         visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
         visualsController.lastPoint = getCanvasPoint(event);
         visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
-        visualsController.addVisual(visualsController.currentVisual);
+        visualsModel.addVisual(visualsController.currentVisual);
     }
 
     var penMouseMove = function(event) {
         if (pentimento.lectureController.leftMouseButton) {
             var curPoint = getCanvasPoint(event);
             visualsController.lastPoint = curPoint;
-            visualsController.appendVertex(visualsController.currentVisual, curPoint);
+            visualsModel.appendVertex(visualsController.currentVisual, curPoint);
         }
     }
 
@@ -380,7 +381,7 @@ var ToolsController = function(visuals_controller) {
     var highlightMouseUp = function(event) {
         var highlightTime = 750; //duration for a highlighter, in ms
         if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsController.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
+            visualsModel.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
             visualsController.currentVisual = null;
             visualsController.lastPoint = null;
         }
@@ -404,13 +405,13 @@ var ToolsController = function(visuals_controller) {
             if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
                 var t = currentVisualTime();
                 visualsController.selection.push(visual);
-                visualsController.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
                 //TODO should be fixed to be 
-                visualsController.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, t));
             } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
                 visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
-                visualsController.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), t));
-                visualsController.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), t));
             }
         }
     }
@@ -496,6 +497,7 @@ var ToolsController = function(visuals_controller) {
     /////////////////////////////////////////////////////////////////////////////// 
 
     visualsController = visuals_controller;
+    visualsModel = visuals_model;
 
     $('.lecture-tool').click(function(event) {
         event.stopPropagation(); 
