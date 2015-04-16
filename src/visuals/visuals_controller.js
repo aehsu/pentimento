@@ -61,41 +61,46 @@ var VisualsController = function(visuals_model, retimer_model) {
     ///////////////////////////////////////////////////////////////////////////////
 
     var beginRecording = function(currentTime) {
-        if (!self.currentSlide) {
-            console.error("there is no current slide");
-            return;
-        }
-
-        self.selection  = [];
-        $('input[data-toolname="pen"]').click();
         $('.recording-tool').toggleClass('hidden');
+        if($('#visuals_checkbox').prop('checked')){
+            console.log("VISUALS CHECKED");
+            if (!self.currentSlide) {
+                console.error("there is no current slide");
+                return;
+            }
 
-        // slideBeginTime starts as the visuals time that recording began
-        slideBeginTime = retimerModel.getVisualTime(currentTime);
+            self.selection  = [];
+            $('input[data-toolname="pen"]').click();
 
-        // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
-        originSlide = self.currentSlide;
-        originSlideDuration = originSlide.getDuration();
-        setDirtyVisuals(slideBeginTime);
+            // slideBeginTime starts as the visuals time that recording began
+            slideBeginTime = retimerModel.getVisualTime(currentTime);
+
+            // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
+            originSlide = self.currentSlide;
+            originSlideDuration = originSlide.getDuration();
+            setDirtyVisuals(slideBeginTime);
+        }
     };
 
     var stopRecording = function(currentTime) {
-
-        self.selection  = [];
-        self.tool = null;
         $('.recording-tool').toggleClass('hidden');
+        if($('#visuals_checkbox').prop('checked')){
+            console.log("VISUALS CHECKED");
+            self.selection  = [];
+            self.tool = null;
 
-        var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
-        self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
+            var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
+            self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
 
-        // Restores the dirty visuals to their former places and adds a shift.
-        cleanVisuals(dirtyVisuals, originSlide.getDuration() - originSlideDuration);
-        
-        // Reset recording variables
-        slideBeginTime = NaN;
-        originSlide = null;
-        originSlideDuration = null;
-        dirtyVisuals = [];
+            // Restores the dirty visuals to their former places and adds a shift.
+            cleanVisuals(dirtyVisuals, originSlide.getDuration() - originSlideDuration);
+            
+            // Reset recording variables
+            slideBeginTime = NaN;
+            originSlide = null;
+            originSlideDuration = null;
+            dirtyVisuals = [];
+        }
     };
 
     // this.setCurrentSlide = function(slide) {
