@@ -18,10 +18,6 @@ var VisualsModel = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };
     };
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Slides Model
-    ///////////////////////////////////////////////////////////////////////////////
-
     this.getDuration = function() {
         var time = 0;
         var iter = self.getSlidesIterator();
@@ -32,26 +28,9 @@ var VisualsModel = function() {
         return time;
     };
 
-    // this.getDuration = function() {
-    //     var time = 0;
-    //     var iter = self.getSlidesIterator();
-    //     while(iter.hasNext()) {
-    //         var slide = iter.next();
-    //         var visuals = slide.getVisualsIterator();
-    //         while(visuals.hasNext()){
-    //             var visual = visuals.next();
-    //             var vertices = visual.getVerticesIterator();
-    //             while(vertices.hasNext()){
-    //                 var vertex = vertices.next();
-    //                 var vertexT = vertex.getT();
-    //                 if (vertexT > time){
-    //                     time = vertexT;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return time;
-    // }
+    ///////////////////////////////////////////////////////////////////////////////
+    // Slides Model
+    ///////////////////////////////////////////////////////////////////////////////
 
     this.getSlides = function() {
         return slides;
@@ -107,105 +86,13 @@ var VisualsModel = function() {
         return true;
     };
 
-    // Sets the current slide to be at the given time
-    // TODO: this needs to be fixed to use the retimer and time controller
-    this.setCurrentSlideAtTime = function(time) {
-        var currentSlide = self.getCurrentSlide()
-        if (time==0) { 
-            currentSlide = visualsModel.getSlides()[0];
-            return;
-        };
-        var totalDuration=0;
-        var slidesIter = visualsModel.getSlidesIterator();
-        while(slidesIter.hasNext()) {
-            var slide = slidesIter.next();
-            if(time > totalDuration && time <= totalDuration+slide.getDuration()) {
-                currentSlide = slide;
-                return;
-            } else {
-                totalDuration += slide.getDuration();
-            }
-        }
-    };
-
-    // TODO: actually calculate current slide when this is working
-    this.getCurrentSlide = function(){
-        return slides[0]
-    }
-    // this.setCurrentSlide = function(slide) {
-    //     var index = slides.indexOf(slide);
-    //     if (index < 0) {
-    //         return;
-    //     };
-    //     self.currentSlide = slide;
-    // };
-
-    // this.getCurrentSlide = function() {
-    //     return self.currentSlide;
-    // };
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adding of Slides
-    ///////////////////////////////////////////////////////////////////////////////
-
-    // this.addSlide = function() {
-    //     if (!self.currentSlide) { 
-    //         console.error('self.currentSlide missing');
-    //         return;
-    //     };
-    //     var time = self.globalTime();
-    //     var diff = time - lastTimeUpdate;
-    //     slideBeginTime = time;
-    // Use slideBeginTime instead of last time update
-    //     var oldInsertionTime = visualsInsertionTime;
-    //     var oldDirtyVisuals = dirtyVisuals;
-    //     var prevSlide = self.currentSlide;
-    //     var newSlide = new Slide();
-        
-    //     // Insert the slide into the model
-    //     var result = visualsModel.insertSlide(prevSlide, newSlide);
-    //     if (!result) {
-    //         console.error("slide could not be deleted");
-    //     };
-
-    //     // Updatet the duration to reflect the difference
-    //     prevSlide.setDuration(prevSlide.getDuration() + diff);
-
-    //     self.currentSlide = newSlide;
-    //     visualsInsertionTime = 0;
-    // };
-
-    // this.shiftSlideDuration = function(slide, amount) {
-    //     slide.setDuration(slide.getDuration() + amount);
-    // };
-    
-    // this.deleteSlide = function(slide) {
-
-    //     // Delete the slide from the model
-    //     var result = visualsModel.removeSlide();
-    //     if (!result) {
-    //         console.error("slide could not be deleted");
-    //     };
-        
-    //     // Update the time cursor
-    //     var duration = 0;
-    //     var slideIter = visualsModel.getSlidesIterator();
-    //     while(slideIter.hasNext()) {
-    //         var sl = slideIter.next();
-    //         if(slideIter.index == index) { break; }
-    //         duration += sl.getDuration();
-    //     }
-    //     // TODO: use retimer for times
-    //     var slideTime = pentimento.timeController.getTime() - duration;
-    //     pentimento.timeController.updateTime(duration);
-    // };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Visuals Model
     ///////////////////////////////////////////////////////////////////////////////
 
     this.addVisual = function(visual) {
-        self.getCurrentSlide().getVisuals().push(visual);
+        self.getSlideAtTime(visual.getTMin()).getVisuals().push(visual);
     }
 
     this.appendVertex = function(visual, vertex) {
@@ -230,7 +117,7 @@ var VisualsModel = function() {
     // Only processes visuals in the current slide after the current time.
     this.setDirtyVisuals = function(currentVisualTime) {
 
-        var currentSlide = self.getCurrentSlide();
+        var currentSlide = self.getSlideAtTime(currentVisualTime);
 
         // Iterate over all the visuals
         var visuals_iterator = currentSlide.getVisualsIterator();
@@ -318,7 +205,7 @@ var VisualsModel = function() {
         var indices = [];
         var segments = segmentVisuals(visuals);
         var shifts = getSegmentsShifts(segments);
-        var currentSlide = self.getCurrentSlide();
+        var currentSlide = self.getSlideAtTime(visuals[0].getTMin());
         shifts.reverse();
         
         console.log("pre-DELETION visuals"); console.log(currentSlide.visuals);
@@ -352,7 +239,7 @@ var VisualsModel = function() {
     ///////////////////////////////////////////////////////////////////////////////
 
     function prevNeighbor(visual) {
-        var currentSlide = self.getCurrentSlide();
+        var currentSlide = self.getSlideAtTime(visual.getTMin());
         var prev;
         for(vis in currentSlide.visuals) {
             var tMin = currentSlide.visuals[vis].tMin;
@@ -364,7 +251,7 @@ var VisualsModel = function() {
     }
 
     function nextNeighbor(visual) {
-        var currentSlide = self.getCurrentSlide();
+        var currentSlide = self.getSlideAtTime(visual.getTMin());
         var next;
         for(vis in currentSlide.visuals) {
             var tMin = currentSlide.visuals[vis].tMin;
