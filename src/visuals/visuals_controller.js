@@ -59,46 +59,41 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Includes helper functions for recording logic.
     ///////////////////////////////////////////////////////////////////////////////
 
-    var beginRecording = function(currentTime) {
+    this.beginRecording = function(currentTime) {
         $('.recording-tool').toggleClass('hidden');
-        if($('#visuals_checkbox').prop('checked')){
-            console.log("VISUALS CHECKED");
-            if (!self.currentSlide) {
-                console.error("there is no current slide");
-                return;
-            }
 
-            self.selection  = [];
-            $('input[data-toolname="pen"]').click();
-
-            // slideBeginTime starts as the visuals time that recording began
-            slideBeginTime = retimerModel.getVisualTime(currentTime);
-
-            // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
-            originSlide = self.currentSlide;
-            originSlideDuration = originSlide.getDuration();
-            visualsModel.setDirtyVisuals(slideBeginTime);
+        if (!self.currentSlide) {
+            console.error("there is no current slide");
+            return;
         }
+
+        self.selection  = [];
+        $('input[data-toolname="pen"]').click();
+
+        // slideBeginTime starts as the visuals time that recording began
+        slideBeginTime = retimerModel.getVisualTime(currentTime);
+
+        // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
+        originSlide = self.currentSlide;
+        originSlideDuration = originSlide.getDuration();
+        visualsModel.setDirtyVisuals(slideBeginTime);
     };
 
-    var stopRecording = function(currentTime) {
+    this.stopRecording = function(currentTime) {
         $('.recording-tool').toggleClass('hidden');
-        if($('#visuals_checkbox').prop('checked')){
-            console.log("VISUALS CHECKED");
-            self.selection  = [];
-            self.tool = null;
+        self.selection  = [];
+        self.tool = null;
 
-            var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
-            self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
+        var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
+        self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
 
-            // Restores the dirty visuals to their former places and adds a shift.
-            visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
-            
-            // Reset recording variables
-            slideBeginTime = NaN;
-            originSlide = null;
-            originSlideDuration = null;
-        }
+        // Restores the dirty visuals to their former places and adds a shift.
+        visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
+        
+        // Reset recording variables
+        slideBeginTime = NaN;
+        originSlide = null;
+        originSlideDuration = null;
     };
 
 
@@ -155,9 +150,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    pentimento.timeController.addUpdateTimeCallback(drawVisuals);
-    pentimento.timeController.addBeginRecordingCallback(beginRecording);
-    pentimento.timeController.addEndRecordingCallback(stopRecording);
+    lectureController.getTimeController().addUpdateTimeCallback(drawVisuals);
 
     // Set the starting state of the controller
     self.currentSlide = visualsModel.getSlides()[0];

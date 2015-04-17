@@ -37,7 +37,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         // Clear the thumbnails div
         $('#'+thumbnailsDivID).html('');
 
-        var audioMaxTime = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var audioMaxTime = lectureController.getLectureModel().getLectureDuration();
         var total_width = audioController.millisecondsToPixels(audioMaxTime);
         console.log("totalWidth: " + total_width);
         if (total_width <= 0) {
@@ -114,18 +114,4 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         draw: self.drawThumbnails, 
         zoom: self.drawThumbnails
     });
-
-    // Register handlers for playing and pausing the visuals
-    pentimento.timeController.addEndRecordingCallback(function(currentTime) {
-        self.drawThumbnails();
-    });
-    pentimento.timeController.addBeginPlaybackCallback(function(currentTime) {
-        $('input[data-toolname="play"]').toggleClass('hidden');
-        $('input[data-toolname="pause"]').toggleClass('hidden');
-    });
-    pentimento.timeController.addEndPlaybackCallback(function(currentTime) {
-        $('input[data-toolname="play"]').toggleClass('hidden');
-        $('input[data-toolname="pause"]').toggleClass('hidden');
-    });
-
 };

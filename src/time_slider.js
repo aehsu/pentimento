@@ -10,7 +10,7 @@ var TimeSliderController = function() {
         updateSlider(currentTime);
     };
 
-    this.beginRecordingCallback = function(currentTime) {
+    this.beginRecording = function(currentTime) {
         updateTicker(currentTime);
         updateSlider(currentTime);
 
@@ -20,7 +20,7 @@ var TimeSliderController = function() {
         });
     };
 
-    this.endRecordingCallback = function(currentTime) {
+    this.endRecording = function(currentTime) {
         updateTicker(currentTime);
         updateSlider(currentTime);
 
@@ -60,7 +60,7 @@ var TimeSliderController = function() {
 
     // Updates the slider to dislay the position of the given time
     var updateSlider = function(time) {
-        var lectureDuration = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var lectureDuration = lectureController.getLectureModel().getLectureDuration();
 
         $('#'+sliderID).slider('option', {
             max: lectureDuration
@@ -86,12 +86,10 @@ var TimeSliderController = function() {
         range: 'min',
         slide: function(event, ui) {
             var time = ui.value;
-            pentimento.timeController.updateTime(time);
+            lectureController.getTimeController().updateTime(time);
         }
     });
 
     // Register callbacks with the time controller
-    pentimento.timeController.addUpdateTimeCallback(self.updateTimeCallback);
-    pentimento.timeController.addBeginRecordingCallback(self.beginRecordingCallback);
-    pentimento.timeController.addEndRecordingCallback(self.endRecordingCallback);
+    lectureController.getTimeController().addUpdateTimeCallback(self.updateTimeCallback);
 };

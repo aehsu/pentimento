@@ -18,17 +18,17 @@ var ToolsController = function(visuals_controller, visuals_model) {
         switch(tool) {
         	case 'pen':
                 visualsController.canvas.on('mousedown', function(event) {
-                    if (!pentimento.timeController.isRecording()){ return; }
+                    if (!lectureController.isRecording()){ return; }
                     event.preventDefault();
                     penMouseDown(event);
                 });
                 visualsController.canvas.on('mousemove', function(event){
-                    if (!pentimento.timeController.isRecording()){return;}
+                    if (!lectureController.isRecording()){return;}
                     event.preventDefault();
                     penMouseMove(event);
                 });
                 visualsController.canvas.on('mouseup', function(event) {
-                    if (!pentimento.timeController.isRecording()){return;}
+                    if (!lectureController.isRecording()){return;}
                     event.preventDefault();
                     penMouseUp(event);
                 });
@@ -36,24 +36,24 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 break;
             case 'highlight':
                 visualsController.canvas.on('mousedown', function(event) {
-                    if (!pentimento.timeController.isRecording()){return;}
+                    if (!lectureController.isRecording()){return;}
                     event.preventDefault();
                     highlightMouseDown(event);
                 });
                 visualsController.canvas.on('mousemove', function(event) {
-                    if (!pentimento.timeController.isRecording()){return;}
+                    if (!lectureController.isRecording()){return;}
                     event.preventDefault();
                     highlightMouseMove(event);
                 });
                 visualsController.canvas.on('mouseup', function(event) {
-                    if (!pentimento.timeController.isRecording()){return;}
+                    if (!lectureController.isRecording()){return;}
                     event.preventDefault();
                     highlightMouseUp(event);
                 });
                 visualsController.tool = tool;
                 break;
             case 'add-slide':
-                if(pentimento.timeController.isRecording()) {
+                if(lectureController.isRecording()) {
                     visualsController.addSlide();
                 }
                 lectureToolHandler(visualsController.tool); //restore the previous tool
@@ -66,17 +66,17 @@ var ToolsController = function(visuals_controller, visuals_model) {
         		break;
             case 'select':
                 visualsController.canvas.mousedown(function(event) {
-                    if (!pentimento.timeController.isRecording()) {return ;}
+                    if (!lectureController.isRecording()) {return ;}
                     event.preventDefault();
                     lectureSelectMouseDown(event);
                 });
                 visualsController.canvas.mousemove(function(event) {
-                    if (!pentimento.timeController.isRecording()||!pentimento.lectureController.leftMouseButton) {return ;}
+                    if (!lectureController.isRecording()||!lectureController.leftMouseButton) {return ;}
                     event.preventDefault();
                     lectureSelectMouseMove(event);
                 });
                 visualsController.canvas.mouseup(function(event) {
-                    if (!pentimento.timeController.isRecording()) {return ;}
+                    if (!lectureController.isRecording()) {return ;}
                     event.preventDefault();
                     lectureSelectMouseUp(event);
                 });
@@ -106,10 +106,10 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var editToolHandler = function(tool, event) {
         switch(tool) {
         	case 'play': //also includes pause
-                pentimento.timeController.startPlayback(pentimento.lectureController.getLectureModel().getLectureDuration());
+                lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
         		break;
             case 'pause':
-                pentimento.timeController.stopPlayback();
+                lectureController.stopPlayback();
                 break;
         	case 'hyperlink':
         		break;
@@ -117,47 +117,47 @@ var ToolsController = function(visuals_controller, visuals_model) {
         		break;
             case 'select':
                 visualsController.canvas.mousedown(function(event) {
-                    if (pentimento.timeController.isRecording()) {return ;}
+                    if (lectureController.isRecording()) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
                     editSelectMouseDown(event);
                 });
                 visualsController.canvas.mousemove(function(event) {
-                    if (pentimento.timeController.isRecording()||!pentimento.lectureController.leftMouseButton) {return ;}
+                    if (lectureController.isRecording()||!lectureController.leftMouseButton) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
                     editSelectMouseMove(event);
                 });
                 visualsController.canvas.mouseup(function(event) {
-                    if (pentimento.timeController.isRecording()) {return ;}
+                    if (lectureController.isRecording()) {return ;}
                     event.preventDefault();
                     updateVisuals(false);
                     editSelectMouseUp(event);
                 });
                 break;
         	case 'delete':
-                if (pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
+                if (lectureController.isRecording() || visualsController.selection.length==0) { return; }
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
-                pentimento.timeController.updateTime(t);
+                lectureController.getTimeController().updateTime(t);
                 // visualsController.selection = []; //Richard says no!
                 updateVisuals(false);
         		break;
             case 'redraw':
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
-                pentimento.timeController.updateTime(t);
+                lectureController.getTimeController().updateTime(t);
                 $('.recording-tool:visible').click()
                 break;
             case 'width':
-                if(event.target.value=="" || pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
+                if(event.target.value=="" || lectureController.isRecording() || visualsController.selection.length==0) { return; }
                 var newWidth = parseInt(event.target.value);
                 visualsController.editWidth(visualsController.selection, newWidth);
                 updateVisuals(false);
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
             case 'delete-slide':
-                if(pentimento.timeController.isRecording()) { return; }
-                pentimento.lectureController.deleteSlide(visualsController.currentSlide);
-                // pentimento.timeController.updateTime(t);
+                if(lectureController.isRecording()) { return; }
+                lectureController.deleteSlide(visualsController.currentSlide);
+                // lectureController.getTimeController().updateTime(t);
                 updateVisuals(false);
             case 'rewind':
                 break;
@@ -176,9 +176,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var recordingToolHandler = function(event) {
         var elt = $(event.target);
         if (elt.attr('data-toolname')==='begin') {
-            pentimento.timeController.startRecording();
+            lectureController.startRecording();
         } else {
-            pentimento.timeController.stopRecording();
+            lectureController.stopRecording();
         }
     };
 
@@ -187,24 +187,24 @@ var ToolsController = function(visuals_controller, visuals_model) {
     //     if(elt.prop('disabled')=='disabled') {
     //         return;
     //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
-    //         if(pentimento.timeController.isRecording()) { return; }
+    //         if(lectureController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.undoHierarchy(group);
     //         updateVisuals(false);
     //         drawThumbnails(1000,1);
     //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
-    //         if(!pentimento.timeController.isRecording()) { return; }
+    //         if(!lectureController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.undoHierarchy(group);
     //         updateVisuals(false);
     //         drawThumbnails(1000,1);
     //     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
-    //         if(pentimento.timeController.isRecording()) { return; }
+    //         if(lectureController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.redoHierarchy(group);
     //         updateVisuals(false);
     //     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
-    //         if(!pentimento.timeController.isRecording()) { return; }
+    //         if(!lectureController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.redoHierarchy(group);
     //         updateVisuals(false);
@@ -219,7 +219,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     // Shortcut for the time controller time converted to visual time through the retimer
     var currentVisualTime = function() {
-        return visualsController.getRetimerModel().getVisualTime(pentimento.timeController.getTime());
+        return visualsController.getRetimerModel().getVisualTime(lectureController.getTimeController().getTime());
     };
 
     //This helps in redering, but is fundamental to the tool handlers themselves.
@@ -340,7 +340,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
         visualsController.canvas.off('mouseup');
         
         //re-attach the necessary ones
-        pentimento.lectureController.loadInputHandlers();
+        lectureController.loadInputHandlers();
     }
 
     /***********************************************************************/
@@ -356,7 +356,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
     }
 
     var penMouseMove = function(event) {
-        if (pentimento.lectureController.leftMouseButton) {
+        if (lectureController.leftMouseButton) {
             var curPoint = getCanvasPoint(event);
             visualsController.lastPoint = curPoint;
             visualsModel.appendVertex(visualsController.currentVisual, curPoint);
@@ -393,13 +393,13 @@ var ToolsController = function(visuals_controller, visuals_model) {
         var visualsIter = visualsController.currentSlide.getVisualsIterator();
         while(visualsIter.hasNext()) {
             var visual = visualsIter.next();
-            if (!isVisualVisible(visual, pentimento.timeController.getTime())) { continue; }
+            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
 
             var nVert = 0;
             var vertIter = visual.getVerticesIterator();
             while (vertIter.hasNext()) {
                 var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, pentimento.timeController.getTime())) { continue; }
+                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
                 if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
             }
             if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
@@ -407,11 +407,11 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 visualsController.selection.push(visual);
                 visualsModel.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
                 //TODO should be fixed to be 
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", pentimento.timeController.getTime()).width+1, t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", lectureController.getTimeController().getTime()).width+1, t));
             } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
                 visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
-                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", pentimento.timeController.getTime()), t));
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", pentimento.timeController.getTime()), t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", lectureController.getTimeController().getTime()), t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", lectureController.getTimeController().getTime()), t));
             }
         }
     }
@@ -458,13 +458,13 @@ var ToolsController = function(visuals_controller, visuals_model) {
         var visualsIter = visualsController.currentSlide.getVisualsIterator();
         while(visualsIter.hasNext()) {
             var visual = visualsIter.next();
-            if (!isVisualVisible(visual, pentimento.timeController.getTime())) { continue; }
+            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
 
             var nVert = 0;
             var vertIter = visual.getVerticesIterator();
             while (vertIter.hasNext()) {
                 var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, pentimento.timeController.getTime())) { continue; }
+                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
                 if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
             }
             if(nVert/visual.getVertices().length >= .45) {

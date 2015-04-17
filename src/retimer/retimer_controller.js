@@ -77,7 +77,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // $('#'+constraintsCanvasID).clearCanvas();
 
         // Calculate the width of the canvas based on the total lecture duration
-        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var max_time = lectureController.getLectureModel().getLectureDuration();
         var new_width = audioController.millisecondsToPixels(max_time);
 
         // Create and add the new canvas
@@ -346,23 +346,26 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         insertionStartTime = -1;
     }
 
-    var beginRecording = function(currentTime) {
+    this.beginRecording = function(currentTime) {
         addConstraint(currentTime, ConstraintTypes.Automatic);
 
         // If recording is an insertion
-        if (currentTime < pentimento.lectureController.getLectureModel().getLectureDuration()){
+        if (currentTime < lectureController.getLectureModel().getLectureDuration()){
             console.log("INSERTION");
             insertionStartTime = currentTime;
         }
     }
 
-    var endRecording = function(currentTime) {
-        // If recording is an insertion
+    this.endRecording = function(currentTime) {
+        // If recording is an insertion, shift things back after the insertion start time
         if (insertionStartTime != -1){
             insertionShifting(currentTime);
         }
 
         addConstraint(currentTime, ConstraintTypes.Automatic);
+
+        // Redraw the thumbnails
+        thumbnailsController.drawThumbnails();
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -393,7 +396,4 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         draw: redrawConstraints, 
         zoom: redrawConstraints
     });
-
-    pentimento.timeController.addBeginRecordingCallback(beginRecording);
-    pentimento.timeController.addEndRecordingCallback(endRecording);
 };

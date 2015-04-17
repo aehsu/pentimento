@@ -202,88 +202,80 @@ var AudioController = function(audio_model) {
 
     // Start recording the audio at the given track time (ms)
     // Callback method registered to the time controller
-    var startRecording = function(currentTime) {
-        if ($('#audio_checkbox').prop("checked")){
-            console.log("AUDIO CHECKED")
-            console.log("Begin audio recording: " + currentTime);
+    this.startRecording = function(currentTime) {
 
-            // This method can only be called if the time controller is recording and a recording is not currently in progress
-            if ( !pentimento.timeController.isRecording() || isAudioRecording ) {
-                console.error("Cannot begin recording");
-                return;
-            };
+        // This method can only be called if the time controller is recording and a recording is not currently in progress
+        if ( !lectureController.isRecording() || isAudioRecording ) {
+            console.error("Cannot begin recording");
+            return;
+        };
 
-            isAudioRecording = true;
-            $('#'+recordAudioButtonID).html('Stop');
+        isAudioRecording = true;
+        $('#'+recordAudioButtonID).html('Stop');
 
-            // Disable editing
-            disableEditUI();
+        // Disable editing
+        disableEditUI();
 
-            // Insert an audio track controller if there isn't one yet. 
-            // This also makes it the recording track controller
-            if (activeTrackController === null) {
-                console.log('creating new recording track controller');
-                createTrackController();
-            };
+        // Insert an audio track controller if there isn't one yet. 
+        // This also makes it the recording track controller
+        if (activeTrackController === null) {
+            console.log('creating new recording track controller');
+            createTrackController();
+        };
 
-            // Use recordRTC to start the actual audio recording
-            recordRTC.startRecording();
+        // Use recordRTC to start the actual audio recording
+        recordRTC.startRecording();
 
-            // TODO: Add an indicator in the selected track to show the duration of the recording
-        }
+        // TODO: Add an indicator in the selected track to show the duration of the recording
     };
 
     // End the recording (only applies if there is an ongoing recording)
     // Callback method registered to the time controller
-    var stopRecording = function(currentTime) {
-        if ($('#audio_checkbox').prop("checked")){
-            console.log("AUDIO CHECKED")
-            var beginTime = pentimento.timeController.getBeginTime();
-            var endTime = currentTime;
-            console.log("End audio recording (" + beginTime + ", " + endTime + ")");
+    this.stopRecording = function(currentTime) {
+        var beginTime = lectureController.getTimeController().getBeginTime();
+        var endTime = currentTime;
+        console.log("End audio recording (" + beginTime + ", " + endTime + ")");
 
-            // This method can only be called if the time controller is not recording and a recording is currently in progress
-            if ( pentimento.timeController.isRecording() || !isAudioRecording ) {
-                console.error("Cannot end recording");
-                return;
-            };
+        // This method can only be called if the time controller is not recording and a recording is currently in progress
+        if ( lectureController.isRecording() || !isAudioRecording ) {
+            console.error("Cannot end recording");
+            return;
+        };
 
-            isAudioRecording = false;
-            $('#'+recordAudioButtonID).html('Record');
+        isAudioRecording = false;
+        $('#'+recordAudioButtonID).html('Record');
 
-            // Reenable editing
-            enableEditUI();
+        // Reenable editing
+        enableEditUI();
 
-            // Stop the recordRTC instance and use the callback to save the track
-            recordRTC.stopRecording(function(audioURL) {
-                console.log(audioURL);            
-                var audio_duration = endTime - beginTime;
-                console.log("Recorded audio of length: " + String(audio_duration));
+        // Stop the recordRTC instance and use the callback to save the track
+        recordRTC.stopRecording(function(audioURL) {
+            console.log(audioURL);            
+            var audio_duration = endTime - beginTime;
+            console.log("Recorded audio of length: " + String(audio_duration));
 
-                // Create a new audio segment and use the track controller to insert it
-                var segment = new AudioSegment(audioURL, audio_duration, beginTime, endTime);
-                console.log("new audio segment:");
-                console.log(segment);
-                activeTrackController.insertSegment(segment);
+            // Create a new audio segment and use the track controller to insert it
+            var segment = new AudioSegment(audioURL, audio_duration, beginTime, endTime);
+            console.log("new audio segment:");
+            console.log(segment);
+            activeTrackController.insertSegment(segment);
 
-                // Refresh the audio display
-                self.refreshView();
+            // Refresh the audio display
+            self.refreshView();
 
-                // TEMP: Try writing the audio to disk
-                // saveToDisk(audioURL, "testrecord");
-                // recordRTC.writeToDisk();
-            });
-        }
+            // TEMP: Try writing the audio to disk
+            // saveToDisk(audioURL, "testrecord");
+            // recordRTC.writeToDisk();
+        });
     };
 
     // Begin playback the audio at the given track time (ms)
     // Callback method registered to the time controller
-    var startPlayback = function(currentTime) {
+    this.startPlayback = function(currentTime) {
         console.log("AudioController: Start playback");
 
         // This method can only be called if the time controller is playing and a recording is not currently in progress
-        if ( !pentimento.timeController.isPlaying() || isAudioRecording ) {
-            console.log(pentimento.timeController.isPlaying());
+        if ( !lectureController.isPlaying() || isAudioRecording ) {
             console.error("Cannot begin playback");
             return;
         };
@@ -301,11 +293,11 @@ var AudioController = function(audio_model) {
     };
 
     // Stop all playback activity
-    var stopPlayback = function(currentTime) {
+    this.stopPlayback = function(currentTime) {
         console.log("AudioController: Stop playback");
 
         // This method can only be called if the time controller is not playing and a recording is not currently in progress
-        if ( pentimento.timeController.isPlaying() || isAudioRecording ) {
+        if ( lectureController.isPlaying() || isAudioRecording ) {
             console.error("Cannot end playback");
             return;
         };
@@ -525,7 +517,7 @@ var AudioController = function(audio_model) {
                             drag: function() {
                                 // Update the time controller during dragging
                                 var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
-                                pentimento.timeController.updateTime(newTrackTime);
+                                lectureController.getTimeController().updateTime(newTrackTime);
                             }
                         });      
 
@@ -727,40 +719,36 @@ var AudioController = function(audio_model) {
     );
 
     // Register callbacks with the time controller
-    pentimento.timeController.addUpdateTimeCallback(updatePlayheadTime);
-    pentimento.timeController.addBeginRecordingCallback(startRecording);
-    pentimento.timeController.addEndRecordingCallback(stopRecording);
-    pentimento.timeController.addBeginPlaybackCallback(startPlayback);
-    pentimento.timeController.addEndPlaybackCallback(stopPlayback);
+    lectureController.getTimeController().addUpdateTimeCallback(updatePlayheadTime);
 
     // Button listener to start playing the audio
     var play_pause_button = $('#'+playPauseButtonID);
     play_pause_button.click(function() { 
         // Do nothing during recording
-        if (pentimento.timeController.isRecording()) {
+        if (lectureController.isRecording()) {
             return;
         };
 
         // Start or stop playback
-        if (pentimento.timeController.isPlaying()) {
-            pentimento.timeController.stopPlayback();  // Stop playback at the end of the audio
+        if (lectureController.isPlaying()) {
+            lectureController.stopPlayback();  // Stop playback at the end of the audio
         } else{
-            pentimento.timeController.startPlayback(pentimento.lectureController.getLectureModel().getLectureDuration());
+            lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
         };
     });
 
     // Button listener to record or stop the current recording
     $('#'+recordAudioButtonID).click(function() {
         // Do nothing during playback
-        if (pentimento.timeController.isPlaying()) {
+        if (lectureController.isPlaying()) {
             return;
         };
 
         // Start or stop recording
-        if (pentimento.timeController.isRecording()) {
-            pentimento.timeController.stopRecording();
+        if (lectureController.isRecording()) {
+            lectureController.stopRecording();
         } else{
-            pentimento.timeController.startRecording();
+            lectureController.startRecording();
         };
     });
 
