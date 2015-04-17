@@ -98,6 +98,63 @@ var VisualsController = function(visuals_model, retimer_model) {
 
 
     ///////////////////////////////////////////////////////////////////////////////
+    // Adding of Slides
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.addSlide = function() {
+        if (!self.currentSlide) { 
+            console.error('self.currentSlide missing');
+            return;
+        };
+        var time = self.globalTime();
+        var diff = time - lastTimeUpdate;
+        slideBeginTime = time;
+    Use slideBeginTime instead of last time update
+        var oldInsertionTime = visualsInsertionTime;
+        var oldDirtyVisuals = dirtyVisuals;
+        var prevSlide = self.currentSlide;
+        var newSlide = new Slide();
+        
+        // Insert the slide into the model
+        var result = visualsModel.insertSlide(prevSlide, newSlide);
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
+
+        // Updatet the duration to reflect the difference
+        prevSlide.setDuration(prevSlide.getDuration() + diff);
+
+        self.currentSlide = newSlide;
+        visualsInsertionTime = 0;
+    };
+
+    this.shiftSlideDuration = function(slide, amount) {
+        slide.setDuration(slide.getDuration() + amount);
+    };
+    
+    this.deleteSlide = function(slide) {
+
+        // Delete the slide from the model
+        var result = visualsModel.removeSlide();
+        if (!result) {
+            console.error("slide could not be deleted");
+        };
+        
+        // Update the time cursor
+        var duration = 0;
+        var slideIter = visualsModel.getSlidesIterator();
+        while(slideIter.hasNext()) {
+            var sl = slideIter.next();
+            if(slideIter.index == index) { break; }
+            duration += sl.getDuration();
+        }
+        // TODO: use retimer for times
+        var slideTime = pentimento.timeController.getTime() - duration;
+        pentimento.timeController.updateTime(duration);
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
     // Transforming of Visuals
     //
     // Typically during a recording, these are the handlers for transforms to be applied to visuals
