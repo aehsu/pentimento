@@ -117,36 +117,17 @@ var ToolsController = function(visuals_controller, visuals_model) {
         		break;
             case 'select':
                 visualsController.canvas.mousedown(function(event) {
-<<<<<<< HEAD
-                    if (pentimento.timeController.isRecording()) {
-                        return;
-                    }
-=======
                     if (lectureController.isRecording()) {return ;}
->>>>>>> origin/master
                     event.preventDefault();
                     editSelectMouseDown(event);
                 });
                 visualsController.canvas.mousemove(function(event) {
-<<<<<<< HEAD
-                    if (pentimento.timeController.isRecording() ||
-                        !pentimento.lectureController.leftMouseButton){
-                        return;
-                    }
-=======
                     if (lectureController.isRecording()||!lectureController.leftMouseButton) {return ;}
->>>>>>> origin/master
                     event.preventDefault();
                     editSelectMouseMove(event);
                 });
                 visualsController.canvas.mouseup(function(event) {
-<<<<<<< HEAD
-                    if (pentimento.timeController.isRecording()){
-                        return;
-                    }
-=======
                     if (lectureController.isRecording()) {return ;}
->>>>>>> origin/master
                     event.preventDefault();
                     pentimento.lectureController.getLectureModel().getLectureDuration()
                     editSelectMouseUp(event);
@@ -172,17 +153,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
             case 'delete-slide':
-<<<<<<< HEAD
-                if(pentimento.timeController.isRecording()) { return; }
-                pentimento.lectureController.deleteSlide(visualsController.currentSlide);
-                // pentimento.timeController.updateTime(t);
-                pentimento.lectureController.getLectureModel().getLectureDuration()
-=======
                 if(lectureController.isRecording()) { return; }
                 lectureController.deleteSlide(visualsController.currentSlide);
                 // lectureController.getTimeController().updateTime(t);
-                updateVisuals(false);
->>>>>>> origin/master
             case 'rewind':
                 break;
         	case 'pan':
