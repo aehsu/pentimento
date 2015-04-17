@@ -168,15 +168,15 @@ wave canvas {
     padding: 0;
 }
 
-.ui-resizable-handle {
+.audio_segment .ui-resizable-handle {
     height: 100%;
     width: 8px;
     position: absolute;
     font-size: 0.1px;
 }
-.ui-resizable-w {
+.audio_segment .ui-resizable-w {
     cursor: w-resize;
 }
-.ui-resizable-e {
+.audio_segment .ui-resizable-e {
     cursor: e-resize;
 }

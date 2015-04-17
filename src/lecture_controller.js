@@ -280,7 +280,7 @@ var LectureController = function() {
     ///////////////////////////////////////////////////////////////////////////////
     // Event Handlers
     //
-    // Genereal mouse and keyboard handlers for the entire lecture controller
+    // Button callbacks and general mouse and keyboard handlers for the entire lecture
     ///////////////////////////////////////////////////////////////////////////////
 
     // Loads input handlers on the entire window
