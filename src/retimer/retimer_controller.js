@@ -16,7 +16,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var originalDragX;  // integer indicating the original x position of the dragged constraint
     var lastValidDragX;  // integer indicating the last valid x position of the dragged constraint
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // DOM Elements
     ///////////////////////////////////////////////////////////////////////////////
@@ -35,6 +34,23 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Insertion begin time (-1 indictes no insertion is occurring)
     var insertionStartTime = -1;
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Selection/Deletion handling
+    ///////////////////////////////////////////////////////////////////////////////
+    var selectArea = function(event){
+        var canvas = $('#'+constraintsCanvasID);
+        var x = event.pageX;
+        var y = event.pageY;
+        x -= canvas.offset().left;
+        y -= canvas.offset().top;
+
+        canvas.drawRect({
+          fillStyle: '#000',
+          x: 150, y: 100,
+          width: 200,
+          height: 100
+        });
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -77,7 +93,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // $('#'+constraintsCanvasID).clearCanvas();
 
         // Calculate the width of the canvas based on the total lecture duration
-        var max_time = pentimento.lectureController.getLectureModel().getLectureDuration();
+        var max_time = lectureController.getLectureModel().getLectureDuration();
         var new_width = audioController.millisecondsToPixels(max_time);
 
         // Create and add the new canvas
@@ -346,23 +362,26 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         insertionStartTime = -1;
     }
 
-    var beginRecording = function(currentTime) {
+    this.beginRecording = function(currentTime) {
         addConstraint(currentTime, ConstraintTypes.Automatic);
 
         // If recording is an insertion
-        if (currentTime < pentimento.lectureController.getLectureModel().getLectureDuration()){
+        if (currentTime < lectureController.getLectureModel().getLectureDuration()){
             console.log("INSERTION");
             insertionStartTime = currentTime;
         }
     }
 
-    var endRecording = function(currentTime) {
-        // If recording is an insertion
+    this.endRecording = function(currentTime) {
+        // If recording is an insertion, shift things back after the insertion start time
         if (insertionStartTime != -1){
             insertionShifting(currentTime);
         }
 
         addConstraint(currentTime, ConstraintTypes.Automatic);
+
+        // Redraw the thumbnails
+        thumbnailsController.drawThumbnails();
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -393,7 +412,4 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         draw: redrawConstraints, 
         zoom: redrawConstraints
     });
-
-    pentimento.timeController.addBeginRecordingCallback(beginRecording);
-    pentimento.timeController.addEndRecordingCallback(endRecording);
 };

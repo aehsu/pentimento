@@ -15,16 +15,13 @@ var TimeController = function() {
     // Keeps track of the current lecture time
     var currentTime = 0;
 
-    // When the last timer began (lecture time)
-    var lastBeginTime = -1;  // Set at the beginning of every recording or playback
-
     // Keeps track of the last UTC global time to calculate time passed when the timer is progressing.
     // When the value is not -1, it indicates that we are currently timing.
     var lastGlobalTime = -1;
 
-    // During playback, there is a timer that ends playback at the specified end time
-    var playbackEndTime = -1;  // -1 indicates recording
-    var playbackEndTimer = null;  // null indicates recording
+    // When the previous or current timer began/ended (lecture time)
+    var beginTime = -1;  
+    var endTime = -1;
 
     // Keep track of the interval timer for time updates
     var updateInterval = null;
@@ -34,40 +31,24 @@ var TimeController = function() {
 
     // Callback functions to notify listeners.
     // Functions should have one argument: currentTime (milliseconds)
-    var updateTimeCallbacks = [];  // When the current time changes, including when recording/playback ends
-    var beginRecordingCallbacks = [];  // When a recording begins
-    var endRecordingCallbacks = [];  // When a recording ends
-    var beginPlaybackCallbacks = [];  // When a playback begins
-    var endPlaybackCallbacks = [];  // When a playback ends
+    var updateTimeCallbacks = [];  // When the current time changes, including when timing ends
     
 
     ////////////////////////////////////////////////////////
-    // Public methods
+    // Methods
     ////////////////////////////////////////////////////////
 
-    // Register callbacks
+    // Register callback for a time update
     this.addUpdateTimeCallback = function(callback) {
         updateTimeCallbacks.push(callback);
     };
-    this.addBeginRecordingCallback = function(callback) {
-        beginRecordingCallbacks.push(callback);
-    };
-    this.addEndRecordingCallback = function(callback) {
-        endRecordingCallbacks.push(callback);
-    };
-    this.addBeginPlaybackCallback = function(callback) {
-        beginPlaybackCallbacks.push(callback);
-    };
-    this.addEndPlaybackCallback = function(callback) {
-        endPlaybackCallbacks.push(callback);
-    };
 
     // Get the current time (ms)
-    // During playback or recording, it pulls the current time forward rather
+    // When the timer is progressing, it pulls the current time forward rather
     // than just relying on the time that was updated during the update interval.
     this.getTime = function() {
         // During a timing, use and update the last global time to get the new current time
-        if (isTiming()) {
+        if (self.isTiming()) {
             // Calculate the elapsed time since the last update
             var gt = globalTime();
             var timeElapsed = gt - lastGlobalTime;
@@ -83,34 +64,19 @@ var TimeController = function() {
         return currentTime;
     };
 
-    // Returns true if a recording is in progress
-    this.isRecording = function() {
-        return (isTiming() && !self.isPlaying());
-    };
-
-    // Returns true if a playback is in progress
-    this.isPlaying = function() {
-        return (isTiming() && playbackEndTime >= 0);
-    };
-
-    // Get the time (ms) when the last recording/playback began
-    // Returns -1 if there was no previous event
-    this.getBeginTime = function() {
-        return lastBeginTime;
-    };
-
-    // Get the time when the playback is supposed to end.
-    // The value is only valid during a playback.
-    this.getPlaybackEndTime = function() {
-        return playbackEndTime;
-    };
-
-    // Update the current time and notify any callbacks
+    // Manually update the current time and notify any callbacks
+    // This cannot be done while a timing is in progress.
     this.updateTime = function(time) {
         if (typeof time !== "number" || time < 0) {
             console.error("Invalid time: " + time);
         };
 
+        // If during a timing, then exit
+        if (self.isTiming()) {
+            return;
+        };
+
+        // Updatet the current time with the new time
         currentTime = Math.round(time);
 
         // Notify callbacks
@@ -119,82 +85,22 @@ var TimeController = function() {
         };
     };
 
-    // Start recording and notify callbacks
-    this.startRecording = function() {
-        // Start the timing
-        // If it suceeds, notify listeners
-        if (startTiming()) {
-            for (var i = 0; i < beginRecordingCallbacks.length; i++) {
-                beginRecordingCallbacks[i](lastBeginTime);
-            };
-        };
-    };
-
-    // Stop recording and notify callbacks
-    this.stopRecording = function() {
-        // Stop the timing
-        // If it suceeds, notify listeners
-        if (stopTiming()) {
-            for (var i = 0; i < endRecordingCallbacks.length; i++) {
-                endRecordingCallbacks[i](currentTime);
-            };
-        };
-    };
-
-    // Start playback and notify callbacks
-    // Playback ends at the specified time
-    this.startPlayback = function(endTime) {
-        // Check the validity of the end time
-        if (typeof endTime !== "number" || endTime < currentTime) {
-            return;
-        };
-
-        // Start the timing
-        // If it suceeds, set the playback end timer and notify listeners
-        if (startTiming()) {
-            playbackEndTime = Math.round(endTime);
-            playbackEndTimer = setTimeout(self.stopPlayback, playbackEndTime - lastBeginTime);
-            for (var i = 0; i < beginPlaybackCallbacks.length; i++) {
-                beginPlaybackCallbacks[i](lastBeginTime);
-            };
-        };
-    };
-
-    // Stop playback and notify callbacks
-    this.stopPlayback = function() {
-        // Stop the timing
-        // If it suceeds, reset values and notify listeners
-        clearInterval(playbackEndTimer);
-        playbackEndTime = -1;
-        playbackEndTimer = null;
-        if (stopTiming()) {
-            for (var i = 0; i < endPlaybackCallbacks.length; i++) {
-                endPlaybackCallbacks[i](currentTime);
-            };
-        };
-    };
-
-    ////////////////////////////////////////////////////////
-    // Private methods
-    ////////////////////////////////////////////////////////
-
     // Use UTC time to keep track of timing when it is in progress
     var globalTime = function() {
         return (new Date()).getTime();
     };
 
-    // Returns true if a playback or recording is in progress
-    var isTiming = function() {
+    // Returns true if a timing is in progress
+    this.isTiming = function() {
         return (lastGlobalTime !== -1);
     };
 
     // Start progressing the time
-    // Used by startRecording and startPlayback
     // Returns true if succeeds
-    var startTiming = function() {
+    this.startTiming = function() {
 
         // If a timing is in progress, a timing cannot be started
-        if (isTiming()) {
+        if (self.isTiming()) {
             return false;
         };
 
@@ -202,19 +108,21 @@ var TimeController = function() {
         lastGlobalTime = globalTime();
 
         // Keep track of the time when timing began
-        lastBeginTime = currentTime;
+        beginTime = currentTime;
 
         // After a set interval, update the current time and notify any listeners of the time update
         updateInterval = setInterval(function() {
 
-            // Calculate the elapsed time since the last update
+            // Calculate the elapsed time since the last update and update the current time
             var gt = globalTime();
             var timeElapsed = gt - lastGlobalTime;
             lastGlobalTime = gt;
+            currentTime += timeElapsed;
 
-            // Update the time.
-            // This also notifies updateTime callbacks
-            self.updateTime(currentTime + timeElapsed);
+            // Notify callbacks for time update
+            for (var i = 0; i < updateTimeCallbacks.length; i++) {
+                updateTimeCallbacks[i](currentTime);
+            };
 
         }, UPDATE_INTERVAL);
 
@@ -222,12 +130,11 @@ var TimeController = function() {
     }
     
     // Stop progressing the time
-    // Used by stopRecording and stopPlayback
     // Returns true if succeeds
-    var stopTiming = function() {
+    this.stopTiming = function() {
 
         // If a timing is not in progress, the timing cannot be stopped
-        if (!isTiming()) {
+        if (!self.isTiming()) {
             return false;
         };
 
@@ -236,14 +143,33 @@ var TimeController = function() {
         updateInterval = null;
 
         // Calculate the new current time
-        // This also notifies updateTime callbacks
-        var timeDiff = globalTime() - lastGlobalTime;
-        self.updateTime(currentTime + timeDiff);
+        var timeElapsed = globalTime() - lastGlobalTime;
+        currentTime += timeElapsed;
+
+        // Notify callbacks for time update
+        for (var i = 0; i < updateTimeCallbacks.length; i++) {
+            updateTimeCallbacks[i](currentTime);
+        };
+
+        // Record when the timing ended
+        endTime = currentTime;
 
         // Reset the global time
         lastGlobalTime = -1;        
 
         return true;
+    };
+
+    // Get the time (ms) when the previous or current timing began
+    // Returns -1 if there was no previous or current event
+    this.getBeginTime = function() {
+        return beginTime;
+    };
+
+    // Get when the previous timing ended.
+    // Returns -1 if there was no previous event
+    this.getEndTime = function() {
+        return endTime;
     };
 
 };

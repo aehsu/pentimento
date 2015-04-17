@@ -1,23 +1,16 @@
-//The convention is to include the duration for which slide you're on.
-//For example, slides have these durations: [10, 10, 10, 10].
-//Times [1-10] are for slide 0, [11-20] are for slide 1, [21-30] are for slide 2, [31-40] are for slide 3.
-//Time 0 is treated special.
+// All times mentiond are in 'audio time' unless otherwise specified.
 "use strict";
-
 var LectureController = function() {
     var self = this;
+
+    this.DEBUG = true;
+
     var lectureModel = null;
-    var visualsController = null;;
+    var timeController = null;
+    var timeSliderController = null;
+    var visualsController = null;
     var audioController = null;
-    var retimingController = null;
-
-    var RecordingTypes = {
-        VideoOnly: "VideoOnly",
-        AudioOnly: "AudioOnly",
-        AudioVideo: "AudioVideo"
-    };
-
-    this.recordingType = null;
+    var retimerController = null;
     
     // State for pen parameters
     this.pressure = false;
@@ -33,6 +26,17 @@ var LectureController = function() {
     this.altKey = false;
     this.keyboardShortcuts = false;
 
+    // During playback, there is a timer that ends the timing at the specified end time
+    var playbackEndTimeout = null;  // null indicates that it is not playing back
+    var playbackEndTime = -1;  // the lecture time when the timer will stop the playback
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // DOM elements
+    ///////////////////////////////////////////////////////////////////////////////
+
+    var recordingAudioCheckboxID = 'audio_checkbox';
+    var recordingVisualsCheckboxID = 'visuals_checkbox';
+
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     //
@@ -44,10 +48,16 @@ var LectureController = function() {
         lectureModel = new LectureModel();
         lectureModel.init();
 
+        // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
+        timeController = new TimeController();
+
         // Initialize the controllers with their respective models
         visualsController = new VisualsController(lectureModel.getVisualsModel(), lectureModel.getRetimerModel());
         audioController = new AudioController(lectureModel.getAudioModel());
-        retimingController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
+        retimerController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
+
+        // TODO: maybe get rid of the time slider
+        timeSliderController = new TimeSliderController();
 
         // Setup UI elements and state
         setupUI();
@@ -104,6 +114,168 @@ var LectureController = function() {
     this.getLectureModel = function() {
         return lectureModel;
     };
+
+    // Note: Any other object getting the time controller should not use it to start
+    // or stop the timing.
+    this.getTimeController = function() {
+        return timeController;
+    };
+
+    // Returns boolean indicating whether recording type includes audio
+    this.recordingTypeIsAudio = function() {
+        return $('#'+recordingAudioCheckboxID).prop('checked');
+    };
+
+    // Retruns boolean indicating whether recording type includes visuals
+    this.recordingTypeIsVisuals = function() {
+        return $('#'+recordingVisualsCheckboxID).prop('checked');
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Recording and playback
+    //
+    // Uses a TimeController to manage the timing for recording and playback.
+    // When starting or stopping, these methods will call the respective start/stop
+    // methods in the visuals/retimer/audio controllers to signal the event.
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Returns true if a recording is in progress
+    this.isRecording = function() {
+        return (timeController.isTiming() && !self.isPlaying());
+    };
+
+    // Returns true if a playback is in progress
+    this.isPlaying = function() {
+        return (timeController.isTiming() && playbackEndTime >= 0 && playbackEndTimeout);
+    };
+
+    // Start recording and notify other controllers
+    // Returns true if it succeeds
+    this.startRecording = function() {
+
+        // Start the timing and exit if it fails
+        if (!timeController.startTiming()) {
+            return false;
+        };
+
+        var beginTime = timeController.getBeginTime();
+
+        // Notify controllers depending on the recording types 
+        if (self.recordingTypeIsVisuals()) {  // visuals
+            visualsController.beginRecording(beginTime);
+        };
+        if (self.recordingTypeIsAudio()) {  // audio
+            audioController.startRecording(beginTime);
+        };
+        retimerController.beginRecording(beginTime);
+        timeSliderController.beginRecording(beginTime);
+
+        return true;
+    };
+
+    // Stop recording and notify other controllers
+    // Returns true if it succeeds
+    this.stopRecording = function() {
+
+        // Only stop if we are currently recording
+        if (!self.isRecording()) {
+            return false;
+        };
+
+        // Stop the timing and exit if it fails
+        if (!timeController.stopTiming()) {
+            return false;
+        };
+
+        var endTime = timeController.getEndTime();
+
+        // Notify controllers depending on the recording types 
+        if (self.recordingTypeIsVisuals()) {  // visuals
+            visualsController.stopRecording(endTime);
+        };
+        if (self.recordingTypeIsAudio()) {  // audio
+            audioController.stopRecording(endTime);
+        };
+        retimerController.endRecording(endTime);
+        timeSliderController.endRecording(endTime);
+
+        return true;
+    };
+
+    // Start playback and and notify other controllers
+    // Optional end_time (lecture time) indicates when the playback will auto end
+    // Returns true if it succeeds
+    this.startPlayback = function(end_time) {
+
+        // Check the validity of the end time. It must be after the current time.
+        if ( typeof end_time !== "number" || Math.round(end_time) <= timeController.getTime() ) {
+            return false;
+        };
+
+        // Start the timing and exit if it fails
+        if (!timeController.startTiming()) {
+            return false;
+        };
+
+        var beginTime = timeController.getBeginTime();
+
+        // Keep track of when the playback is supposed to end
+        playbackEndTime = Math.round(end_time);
+        console.log('playback begin time: ' + beginTime);
+        console.log('playback end time: ' + playbackEndTime);
+
+        // Set the timeout to stop the recording
+        playbackEndTimeout = setTimeout(self.stopPlayback, playbackEndTime - beginTime);
+
+        // Notify controllers depending on the recording types 
+        if (self.recordingTypeIsVisuals()) {  // visuals
+            // Do nothing
+        };
+        if (self.recordingTypeIsAudio()) {  // audio
+            audioController.startPlayback(beginTime);
+        };
+
+        return true;
+    };
+
+    // Stop playback and notify other controllers
+    // Returns true if it succeeds
+    this.stopPlayback = function() {
+
+        // Only stop if we are currently playing
+        if (!self.isPlaying()) {
+            return false;
+        };
+
+        // Stop the timing and exit if it fails
+        if (!timeController.stopTiming()) {
+            return false;
+        };
+
+        // Clear the timout and reset the variables
+        clearTimeout(playbackEndTimeout);  // This is not necessary if playback was ended manually
+        playbackEndTimeout = null;
+        playbackEndTime = -1;
+
+        var endTime = timeController.getEndTime();
+
+        // Notify controllers depending on the recording types 
+        if (self.recordingTypeIsVisuals()) {  // visuals
+            // Do nothing
+        };
+        if (self.recordingTypeIsAudio()) {  // audio
+            audioController.stopPlayback(endTime);
+        };
+
+        return true;
+    };
+
+    // Get the lecture time when the playback is supposed to end
+    // Returns -1 if not currently in a playback
+    this.getPlaybackEndTime = function() {
+        return endTime;
+    };
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Event Handlers
@@ -170,27 +342,26 @@ var LectureController = function() {
 
 };
 
+// LectureController.RecordingTypes = {
+//     VideoOnly: "VideoOnly",
+//     AudioOnly: "AudioOnly",
+//     AudioVideo: "AudioVideo"
+// };
+
 ///////////////////////////////////////////////////////////////////////////////
 // Main: The single entry point for the entire application
 ///////////////////////////////////////////////////////////////////////////////
 
-// Create the global pentimento object
-var pentimento = {};
+// Define the global lecture controller object
+var lectureController;
 
 // Objects and controllers should only be created after the document is ready
 $(document).ready(function() {
-
-    pentimento.DEBUG = true;
-
-    // Create the time controller, which is responsible for handling the current lecture time
-    pentimento.timeController = new TimeController();
 
     // Create undo manager
     // var um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup]);
 
     // Create and initialize the lecture controller
-    pentimento.lectureController = new LectureController();
-    pentimento.lectureController.init();
-
-    pentimento.timeSliderController = new TimeSliderController();
+    lectureController = new LectureController();
+    lectureController.init();
 });
