@@ -117,21 +117,26 @@ var ToolsController = function(visuals_controller, visuals_model) {
         		break;
             case 'select':
                 visualsController.canvas.mousedown(function(event) {
-                    if (pentimento.timeController.isRecording()) {return ;}
+                    if (pentimento.timeController.isRecording()) {
+                        return;
+                    }
                     event.preventDefault();
-                    updateVisuals(false);
                     editSelectMouseDown(event);
                 });
                 visualsController.canvas.mousemove(function(event) {
-                    if (pentimento.timeController.isRecording()||!pentimento.lectureController.leftMouseButton) {return ;}
+                    if (pentimento.timeController.isRecording() ||
+                        !pentimento.lectureController.leftMouseButton){
+                        return;
+                    }
                     event.preventDefault();
-                    updateVisuals(false);
                     editSelectMouseMove(event);
                 });
                 visualsController.canvas.mouseup(function(event) {
-                    if (pentimento.timeController.isRecording()) {return ;}
+                    if (pentimento.timeController.isRecording()){
+                        return;
+                    }
                     event.preventDefault();
-                    updateVisuals(false);
+                    pentimento.lectureController.getLectureModel().getLectureDuration()
                     editSelectMouseUp(event);
                 });
                 break;
@@ -140,7 +145,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 pentimento.timeController.updateTime(t);
                 // visualsController.selection = []; //Richard says no!
-                updateVisuals(false);
+                pentimento.lectureController.getLectureModel().getLectureDuration()
         		break;
             case 'redraw':
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
@@ -151,14 +156,14 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 if(event.target.value=="" || pentimento.timeController.isRecording() || visualsController.selection.length==0) { return; }
                 var newWidth = parseInt(event.target.value);
                 visualsController.editWidth(visualsController.selection, newWidth);
-                updateVisuals(false);
+                pentimento.lectureController.getLectureModel().getLectureDuration()
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
             case 'delete-slide':
                 if(pentimento.timeController.isRecording()) { return; }
                 pentimento.lectureController.deleteSlide(visualsController.currentSlide);
                 // pentimento.timeController.updateTime(t);
-                updateVisuals(false);
+                pentimento.lectureController.getLectureModel().getLectureDuration()
             case 'rewind':
                 break;
         	case 'pan':
@@ -190,24 +195,24 @@ var ToolsController = function(visuals_controller, visuals_model) {
     //         if(pentimento.timeController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.undoHierarchy(group);
-    //         updateVisuals(false);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
     //         drawThumbnails(1000,1);
     //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
     //         if(!pentimento.timeController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.undoHierarchy(group);
-    //         updateVisuals(false);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
     //         drawThumbnails(1000,1);
     //     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
     //         if(pentimento.timeController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.redoHierarchy(group);
-    //         updateVisuals(false);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
     //     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
     //         if(!pentimento.timeController.isRecording()) { return; }
     //         var group = $(this).attr('data-group');
     //         um.redoHierarchy(group);
-    //         updateVisuals(false);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
     //         drawThumbnails(1000,1);
     //     }
     // };
@@ -472,7 +477,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             }
         }
 
-        updateVisuals(false);
+        pentimento.lectureController.getLectureModel().getLectureDuration()
         ctx.strokeStyle = "#0000FF";
         ctx.lineWidth = 2;
         ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
@@ -487,7 +492,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             var propsCopy = visCopy.getProperties();
             propsCopy.setWidth(propsCopy.getWidth()+1);
             propsCopy.setColor("#0000FF");
-            drawVisual(visCopy, false, 0, false, {});
+            // drawVisual(visCopy, false, 0, false, {});
         }
     }
     /**********************************EDITING-MODE TOOLS**********************************/
