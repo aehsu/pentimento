@@ -16,7 +16,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var originalDragX;  // integer indicating the original x position of the dragged constraint
     var lastValidDragX;  // integer indicating the last valid x position of the dragged constraint
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // DOM Elements
     ///////////////////////////////////////////////////////////////////////////////
@@ -35,6 +34,23 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Insertion begin time (-1 indictes no insertion is occurring)
     var insertionStartTime = -1;
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Selection/Deletion handling
+    ///////////////////////////////////////////////////////////////////////////////
+    var selectArea = function(event){
+        var canvas = $('#'+constraintsCanvasID);
+        var x = event.pageX;
+        var y = event.pageY;
+        x -= canvas.offset().left;
+        y -= canvas.offset().top;
+
+        canvas.drawRect({
+          fillStyle: '#000',
+          x: 150, y: 100,
+          width: 200,
+          height: 100
+        });
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
