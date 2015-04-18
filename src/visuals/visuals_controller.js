@@ -23,7 +23,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     this.lastPoint = null;
     this.currentVisual = null;
     this.selection = [];
-    this.currentSlide = null;
 
     this.color = '#777';
     this.width = 2;
@@ -62,7 +61,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     this.beginRecording = function(currentTime) {
         $('.recording-tool').toggleClass('hidden');
 
-        if (!self.currentSlide) {
+        if (!visualsModel.getSlideAtTime(currentTime)) {
             console.error("there is no current slide");
             return;
         }
@@ -74,7 +73,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         slideBeginTime = retimerModel.getVisualTime(currentTime);
 
         // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
-        originSlide = self.currentSlide;
+        originSlide = visualsModel.getSlideAtTime(currentTime);
         originSlideDuration = originSlide.getDuration();
         visualsModel.setDirtyVisuals(slideBeginTime);
     };
@@ -84,8 +83,10 @@ var VisualsController = function(visuals_model, retimer_model) {
         self.selection  = [];
         self.tool = null;
 
+        var currentSlide = visualsModel.getSlideAtTime(currentTime);
+
         var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
-        self.currentSlide.setDuration(self.currentSlide.getDuration() + slideRecordDuration);
+        currentSlide.setDuration(currentSlide.getDuration() + slideRecordDuration);
 
         // Restores the dirty visuals to their former places and adds a shift.
         visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
@@ -102,56 +103,53 @@ var VisualsController = function(visuals_model, retimer_model) {
     ///////////////////////////////////////////////////////////////////////////////
 
     this.addSlide = function() {
-        if (!self.currentSlide) { 
-            console.error('self.currentSlide missing');
-            return;
-        };
-        var time = self.globalTime();
-        var diff = time - lastTimeUpdate;
-        slideBeginTime = time;
-        // Use slideBeginTime instead of last time update
-        var oldInsertionTime = visualsInsertionTime;
-        var oldDirtyVisuals = dirtyVisuals;
-        var prevSlide = self.currentSlide;
+
+        // Get the difference in time for when the slide began recording to the current time
+        var time = retimerModel.getVisualTime(lectureController.getTimeController().getTime());
+        var diff = time - slideBeginTime;
+
+        // Get the current slide and create a new slide
+        var currentSlide = visualsModel.getSlideAtTime(slideBeginTime);
+
         var newSlide = new Slide();
+        if (!currentSlide) { 
+            console.error('currentSlide missing');
+        };
+
+        // Update the duration of the current slide to reflect the difference
+        currentSlide.setDuration(currentSlide.getDuration() + diff);
         
         // Insert the slide into the model
-        var result = visualsModel.insertSlide(prevSlide, newSlide);
+        var result = visualsModel.insertSlide(currentSlide, newSlide);
         if (!result) {
-            console.error("slide could not be deleted");
+            console.error("slide could not be inserted");
         };
-
-        // Updatet the duration to reflect the difference
-        prevSlide.setDuration(prevSlide.getDuration() + diff);
-
-        self.currentSlide = newSlide;
-        visualsInsertionTime = 0;
     };
 
-    this.shiftSlideDuration = function(slide, amount) {
-        slide.setDuration(slide.getDuration() + amount);
-    };
+    // this.shiftSlideDuration = function(slide, amount) {
+    //     slide.setDuration(slide.getDuration() + amount);
+    // };
     
-    this.deleteSlide = function(slide) {
+    // this.deleteSlide = function(slide) {
 
-        // Delete the slide from the model
-        var result = visualsModel.removeSlide();
-        if (!result) {
-            console.error("slide could not be deleted");
-        };
+    //     // Delete the slide from the model
+    //     var result = visualsModel.removeSlide();
+    //     if (!result) {
+    //         console.error("slide could not be deleted");
+    //     };
         
-        // Update the time cursor
-        var duration = 0;
-        var slideIter = visualsModel.getSlidesIterator();
-        while(slideIter.hasNext()) {
-            var sl = slideIter.next();
-            if(slideIter.index == index) { break; }
-            duration += sl.getDuration();
-        }
-        // TODO: use retimer for times
-        var slideTime = pentimento.timeController.getTime() - duration;
-        pentimento.timeController.updateTime(duration);
-    };
+    //     // Update the time cursor
+    //     var duration = 0;
+    //     var slideIter = visualsModel.getSlidesIterator();
+    //     while(slideIter.hasNext()) {
+    //         var sl = slideIter.next();
+    //         if(slideIter.index == index) { break; }
+    //         duration += sl.getDuration();
+    //     }
+    //     // TODO: use retimer for times
+    //     var slideTime = pentimento.timeController.getTime() - duration;
+    //     pentimento.timeController.updateTime(duration);
+    // };
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -208,9 +206,6 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Register callbacks for the time controller
     lectureController.getTimeController().addUpdateTimeCallback(drawVisuals);
-
-    // Set the starting state of the controller
-    self.currentSlide = visualsModel.getSlides()[0];
 
     // Setup the canvas and context
     // Canvas size must be set using attributes, not CSS
