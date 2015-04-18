@@ -71,8 +71,8 @@
             <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
         </table>
         
-        <button class="um-tool lecture-tool" data-toolname="undo" disabled="true">Undo</button>
-        <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button>
+        <input type="image" src="icons/undo.png" class="lecture-tool um-tool" data-toolname="undo" disabled="true">
+        <input type="image" src="icons/redo.png" class="lecture-tool um-tool" data-toolname="undo" disabled="true">
 
     </div>
 
@@ -107,8 +107,11 @@
             </select><br>
             <label class="ui-label">Stroke Width</label><br>
 
-            <button class="visuals-tool" data-toolname="delete-visual">Delete Visual</button><br>
-            <button class="visuals-tool" data-toolname="add-slide">Add Slide</button><br>
+            <input type="image" src="icons/delete-visuals.png" class="visuals-tool" data-toolname="delete"><br>
+            <label class="ui-label">Delete Visual</label><br>
+
+            <input type="image" src="icons/pageDown.png" class="visuals-tool" data-toolname="add-slide"><br>
+            <label class="ui-label">Add Slide</label><br>
         </div>
 
         <!-- visuals editing tools -->
@@ -138,7 +141,8 @@
                 <option value="20">20</option>
             </select><br>
 
-            <button class="visuals-tool" data-toolname="delete-slide">Delete Slide</button><br>
+            <input type="image" src="icons/trashPage.png" class="visuals-tool" data-toolname="delete-slide"><br>
+            <label class="ui-label">Delete Slide</label>
         </div>
 
         <!-- canvas -->

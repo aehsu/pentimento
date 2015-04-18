@@ -106,6 +106,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         // Get the current slide and create a new slide
         var currentSlide = visualsModel.getSlideAtTime(slideBeginTime);
+
         var newSlide = new Slide();
         if (!currentSlide) { 
             console.error('currentSlide missing');

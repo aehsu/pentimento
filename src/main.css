@@ -10,6 +10,10 @@ button {
     font-family: Calibri, sans-serif;
     font-size: 14px;
 }
+.right-col{
+    padding-left: 15%;
+    text-align: center;
+}
 
 .ui-button:hover {
     background: rgba(0, 0, 0, 0.1);

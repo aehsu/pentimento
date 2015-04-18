@@ -264,6 +264,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
         };
 
         event.preventDefault();
+
         var coord = getCanvasPoint(event);
         var ctx = visualsController.context;
         visualsController.selection = [];
