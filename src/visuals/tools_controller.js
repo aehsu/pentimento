@@ -1,14 +1,12 @@
-//Various tools may need to update the state of the view, so the updates are all called here
-//within this file for the editing tools. Unfortunately, the undo of an action may need to update
-//the view to propertly display a consistent state, so there are invocations of updateVisuals in those
-//undo functions as well. It's up to each switch statement to determine when to update 
-//the state of the visuals appropriately for each tool
+// Various tools are used for recording and editing visuals
 "use strict";
 
 var ToolsController = function(visuals_controller, visuals_model) {
 
     var visualsController = null;
     var visualsModel = null;
+    var recordingTool = null;
+    var editingTool = null;
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM
@@ -24,7 +22,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     // Tools are recognized by an HTML attribute and name
     // and can be used during recording, editing, or both.
-    var toolNameAttr = 'toolname';
+    var toolNameAttr = 'data-toolname';
     var selectTool = 'select';
     var penTool = 'pen';
     var highlightTool = 'highlight';
@@ -35,151 +33,278 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var redrawTool = 'redraw';
     var deleteSlideTool = 'delete-slide'; 
 
+    // this.enableRecordingTools = function() {
+
+    // };
+
+    // this.enableEditingTools = function() {
+
+    // };
+
+    var currentSlide = function() {
+        return visualsModel.getSlideAtTime(lectureController.getTimeController().getTime());
+    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Callbacks
     /////////////////////////////////////////////////////////////////////////////// 
 
-    var lectureToolHandler = function(tool, event) {
-        switch(tool) {
-        	case penToolName:
-                visualsController.canvas.on('mousedown', function(event) {
-                    if (!lectureController.isRecording()){ return; }
-                    event.preventDefault();
-                    penMouseDown(event);
-                });
-                visualsController.canvas.on('mousemove', function(event){
-                    if (!lectureController.isRecording()){return;}
-                    event.preventDefault();
-                    penMouseMove(event);
-                });
-                visualsController.canvas.on('mouseup', function(event) {
-                    if (!lectureController.isRecording()){return;}
-                    event.preventDefault();
-                    penMouseUp(event);
-                });
-                visualsController.tool = tool;
+    var recordingToolHandler = function(tool, event) {
+        clearPreviousHandlers();
+
+        switch (tool) {
+        	case penTool:
+                visualsController.canvas.on('mousedown', penMouseDown);
+                visualsController.canvas.on('mousemove', penMouseMove);
+                visualsController.canvas.on('mouseup', penMouseUp);
+                recordingTool = tool;  // save as active tool
                 break;
-            case highlightToolName:
-                visualsController.canvas.on('mousedown', function(event) {
-                    if (!lectureController.isRecording()){return;}
-                    event.preventDefault();
-                    highlightMouseDown(event);
-                });
-                visualsController.canvas.on('mousemove', function(event) {
-                    if (!lectureController.isRecording()){return;}
-                    event.preventDefault();
-                    highlightMouseMove(event);
-                });
-                visualsController.canvas.on('mouseup', function(event) {
-                    if (!lectureController.isRecording()){return;}
-                    event.preventDefault();
-                    highlightMouseUp(event);
-                });
-                visualsController.tool = tool;
+            case highlightTool:
+                visualsController.canvas.on('mousedown', highlightMouseDown);
+                visualsController.canvas.on('mousemove', highlightMouseMove);
+                visualsController.canvas.on('mouseup', highlightMouseUp);
+                recordingTool = tool;  // save as active tool
                 break;
-            case addSlide:
-                if(lectureController.isRecording()) {
-                    visualsController.addSlide();
-                }
-                lectureToolHandler(visualsController.tool); //restore the previous tool
+            case addSlideTool:
+                visualsController.addSlide();
                 break;
         	case widthTool:
                 visualsController.width = parseInt($(event.target).val());
-                lectureToolHandler(visualsController.tool); //restore the previous tool
         		break;
             case selectTool:
-                visualsController.canvas.mousedown(function(event) {
-                    if (!lectureController.isRecording()) {return ;}
-                    event.preventDefault();
-                    lectureSelectMouseDown(event);
-                });
-                visualsController.canvas.mousemove(function(event) {
-                    if (!lectureController.isRecording()||!lectureController.leftMouseButton) {return ;}
-                    event.preventDefault();
-                    lectureSelectMouseMove(event);
-                });
-                visualsController.canvas.mouseup(function(event) {
-                    if (!lectureController.isRecording()) {return ;}
-                    event.preventDefault();
-                    lectureSelectMouseUp(event);
-                });
+                visualsController.canvas.on('mousedown', lectureSelectMouseDown);
+                visualsController.canvas.on('mousemove', lectureSelectMouseMove);
+                visualsController.canvas.on('mouseup', lectureSelectMouseUp);
                 break;
         	case deleteVisualTool:
                 visualsModel.setTDeletion(visualsController.selection, currentVisualTime());
         		break;
-        	// case 'undo':
-         //        lectureToolHandler(visualsController.tool); //restore the previous tool
-         //        break;
-         //    case 'redo':
-         //        lectureToolHandler(visualsController.tool); //restore the previous tool
-         //        break;
         	default:
-    		    visualsController.tool = null;
-        		console.log('Unrecognized tool clicked, live tools');
-        		console.log(tool);
-                console.log(event);
-        }
+        		console.error('Unrecognized tool clicked, live tools');
+        		console.error(tool);
+        };
     };
 
     //Editing tools handling. These are typically direct invocations of the proper
     //controller to handle the lecture model directly. Therefore, the handling of groups for
     //the editing tools also belongs here.
     var editToolHandler = function(tool, event) {
+        clearPreviousHandlers();
+
         switch(tool) {
-        	// case 'play': //also includes pause
-         //        lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
-        	// 	break;
-         //    case 'pause':
-         //        lectureController.stopPlayback();
-         //        break;
             case selectTool:
-                visualsController.canvas.mousedown(function(event) {
-                    if (lectureController.isRecording()) {return ;}
-                    event.preventDefault();
-                    editSelectMouseDown(event);
-                });
-                visualsController.canvas.mousemove(function(event) {
-                    if (lectureController.isRecording()||!lectureController.leftMouseButton) {return ;}
-                    event.preventDefault();
-                    editSelectMouseMove(event);
-                });
-                visualsController.canvas.mouseup(function(event) {
-                    if (lectureController.isRecording()) {return ;}
-                    event.preventDefault();
-                    pentimento.lectureController.getLectureModel().getLectureDuration()
-                    editSelectMouseUp(event);
-                });
+                visualsController.canvas.on('mousedown', editSelectMouseDown);
+                visualsController.canvas.on('mousemove', editSelectMouseMove);
+                visualsController.canvas.on('mouseup', editSelectMouseUp);
+                editingTool = tool;
                 break;
         	case deleteTool:
-                if (lectureController.isRecording() || visualsController.selection.length==0) { return; }
-                var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                // visuals controller delete method needed
+                if (visualsController.selection.length==0) { 
+                    return;
+                }
+                var t = visualsModel.deleteVisuals(currentSlide(), visualsController.selection);
                 lectureController.getTimeController().updateTime(t);
-                // visualsController.selection = []; //Richard says no!
-                pentimento.lectureController.getLectureModel().getLectureDuration()
         		break;
             case redrawTool:
-                var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
+                var t = visualsModel.deleteVisuals(currentSlide(), visualsController.selection);
                 lectureController.getTimeController().updateTime(t);
                 $('.recording-tool:visible').click()
                 break;
             case widthTool:
-                if(event.target.value=="" || lectureController.isRecording() || visualsController.selection.length==0) { return; }
+                if(event.target.value=="" || visualsController.selection.length==0) { return; }
                 var newWidth = parseInt(event.target.value);
                 visualsController.editWidth(visualsController.selection, newWidth);
-                pentimento.lectureController.getLectureModel().getLectureDuration()
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
             case deleteSlideTool:
-                if(lectureController.isRecording()) { return; }
-                lectureController.deleteSlide(visualsController.currentSlide);
-                // lectureController.getTimeController().updateTime(t);
+                visualsController.deleteSlide(currentSlide());
         	default:
-        		console.log('Unrecognized tool clicked, non live tools');
-        		console.log(this);
+        		console.error('Unrecognized tool clicked, non live tools');
+        		console.error(this);
         }
     }
 
+    //Removes handlers from the previous tool, while preserving other handlers
+    //not related to the previous tool
+    var clearPreviousHandlers = function() {
+        visualsController.canvas.off('mousedown');
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
+    }
+
+
+    /**********************************RECORDING-MODE TOOLS**********************************/
+    var penMouseDown = function(event) {
+        event.preventDefault();
+        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
+        visualsController.lastPoint = getCanvasPoint(event);
+        visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
+        visualsModel.addVisual(visualsController.currentVisual);
+    }
+
+    var penMouseMove = function(event) {
+        event.preventDefault();
+        if (lectureController.leftMouseButton) {
+            var curPoint = getCanvasPoint(event);
+            visualsController.lastPoint = curPoint;
+            visualsModel.appendVertex(visualsController.currentVisual, curPoint);
+        }
+    }
+
+    var penMouseUp = function(event) {
+        event.preventDefault();
+        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
+            visualsController.currentVisual = null;
+            visualsController.lastPoint = null;
+        }
+    }
+
+    var highlightMouseDown = function(event) {
+        event.preventDefault();
+        penMouseDown(event);
+    }
+
+    var highlightMouseMove = function(event) {
+        event.preventDefault();
+        penMouseMove(event);
+    }
+
+    var highlightMouseUp = function(event) {
+        event.preventDefault();
+        var highlightTime = 750; //duration for a highlighter, in ms
+        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
+            visualsModel.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
+            visualsController.currentVisual = null;
+            visualsController.lastPoint = null;
+        }
+    }
+
+    var lectureSelection = function(event) {
+        event.preventDefault();
+        var coord = getCanvasPoint(event);
+        var ctx = visualsController.context;
+        var visualsIter = currentSlide().getVisualsIterator();
+        while(visualsIter.hasNext()) {
+            var visual = visualsIter.next();
+            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
+
+            var nVert = 0;
+            var vertIter = visual.getVerticesIterator();
+            while (vertIter.hasNext()) {
+                var vertex = vertIter.next();
+                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
+                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
+            }
+            if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
+                var t = currentVisualTime();
+                visualsController.selection.push(visual);
+                visualsModel.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
+                //TODO should be fixed to be 
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", lectureController.getTimeController().getTime()).width+1, t));
+            } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
+                visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
+                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", lectureController.getTimeController().getTime()), t));
+                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", lectureController.getTimeController().getTime()), t));
+            }
+        }
+    }
+
+    var lectureSelectMouseDown = function(event) {
+        event.preventDefault();
+        visualsController.lastPoint = getCanvasPoint(event);
+        lectureSelection(event);
+    }
+
+    var lectureSelectMouseMove = function(event) {
+        event.preventDefault();
+
+        if (!visualsController.lastPoint) {
+            return;
+        };
+        
+        if (!lectureController.leftMouseButton) {
+            return;
+        }
+
+        var ctx = visualsController.context;
+        var coord = getCanvasPoint(event);
+        
+        lectureSelection(event);
+
+        ctx.strokeStyle = "#0000FF";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
+
+        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
+        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
+    }
+
+    var lectureSelectMouseUp = function(event) {
+        event.preventDefault();
+        visualsController.lastPoint = null;
+        //do nothing
+    }
+
+    var lectureDelete = function() {
+
+    }
+    /**********************************RECORDING-MODE TOOLS**********************************/
+
+    /**********************************EDITING-MODE TOOLS**********************************/
+    var editSelectMouseDown = function(event) {
+        event.preventDefault();
+        visualsController.lastPoint = getCanvasPoint(event);
+        visualsController.selection = [];
+    }
+
+    var editSelectMouseMove = function(event) {
+        if (!visualsController.lastPoint) {
+            return;
+        };
+
+        event.preventDefault();
+        var coord = getCanvasPoint(event);
+        var ctx = visualsController.context;
+        visualsController.selection = [];
+
+        var visualsIter = currentSlide().getVisualsIterator();
+        while(visualsIter.hasNext()) {
+            var visual = visualsIter.next();
+            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
+
+            var nVert = 0;
+            var vertIter = visual.getVerticesIterator();
+            while (vertIter.hasNext()) {
+                var vertex = vertIter.next();
+                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
+                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
+            }
+            if(nVert/visual.getVertices().length >= .45) {
+                visualsController.selection.push(visual);
+            }
+        }
+
+        ctx.strokeStyle = "#0000FF";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
+
+        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
+        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
+    }
+
+    var editSelectMouseUp = function(event) {
+        event.preventDefault();
+        for(var i in visualsController.selection) {
+            var visCopy = visualsController.selection[i].getClone();
+            var propsCopy = visCopy.getProperties();
+            propsCopy.setWidth(propsCopy.getWidth()+1);
+            propsCopy.setColor("#0000FF");
+            // drawVisual(visCopy, false, 0, false, {});
+        }
+        visualsController.lastPoint = null;
+    }
+    /**********************************EDITING-MODE TOOLS**********************************/
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -300,165 +425,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
         }
     }
 
-    //Removes handlers from the previous tool, while preserving other handlers
-    //not related to the previous tool
-    var clearPreviousHandlers = function() {
-        visualsController.canvas.off('mousedown');
-        visualsController.canvas.off('mousemove');
-        visualsController.canvas.off('mouseup');
-        
-        //re-attach the necessary ones
-        lectureController.loadInputHandlers();
-    }
-
     /***********************************************************************/
     /***********************************************************************/
     /***********************************************************************/
-
-    /**********************************LECTURE-MODE TOOLS**********************************/
-    var penMouseDown = function(event) {
-        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
-        visualsController.lastPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
-        visualsModel.addVisual(visualsController.currentVisual);
-    }
-
-    var penMouseMove = function(event) {
-        if (lectureController.leftMouseButton) {
-            var curPoint = getCanvasPoint(event);
-            visualsController.lastPoint = curPoint;
-            visualsModel.appendVertex(visualsController.currentVisual, curPoint);
-        }
-    }
-
-    var penMouseUp = function(event) {
-        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsController.currentVisual = null;
-            visualsController.lastPoint = null;
-        }
-    }
-
-    var highlightMouseDown = function(event) {
-        penMouseDown(event);
-    }
-
-    var highlightMouseMove = function(event) {
-        penMouseMove(event);
-    }
-
-    var highlightMouseUp = function(event) {
-        var highlightTime = 750; //duration for a highlighter, in ms
-        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsModel.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
-            visualsController.currentVisual = null;
-            visualsController.lastPoint = null;
-        }
-    }
-
-    var lectureSelection = function(event) {
-        var coord = getCanvasPoint(event);
-        var ctx = visualsController.context;
-        var visualsIter = visualsController.currentSlide.getVisualsIterator();
-        while(visualsIter.hasNext()) {
-            var visual = visualsIter.next();
-            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
-
-            var nVert = 0;
-            var vertIter = visual.getVerticesIterator();
-            while (vertIter.hasNext()) {
-                var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
-                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
-            }
-            if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
-                var t = currentVisualTime();
-                visualsController.selection.push(visual);
-                visualsModel.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
-                //TODO should be fixed to be 
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", lectureController.getTimeController().getTime()).width+1, t));
-            } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
-                visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
-                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", lectureController.getTimeController().getTime()), t));
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", lectureController.getTimeController().getTime()), t));
-            }
-        }
-    }
-
-    var lectureSelectMouseDown = function(event) {
-        visualsController.lastPoint = getCanvasPoint(event);
-        lectureSelection(event);
-    }
-
-    var lectureSelectMouseMove = function(event) {
-        var ctx = visualsController.context;
-        var coord = getCanvasPoint(event);
-        
-        lectureSelection(event);
-
-        ctx.strokeStyle = "#0000FF";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
-
-        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
-        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
-    }
-
-    var lectureSelectMouseUp = function(event) {
-        //do nothing
-    }
-
-    var lectureDelete = function() {
-
-    }
-    /**********************************LECTURE-MODE TOOLS**********************************/
-
-    /**********************************EDITING-MODE TOOLS**********************************/
-    var editSelectMouseDown = function(event) {
-        visualsController.lastPoint = getCanvasPoint(event);
-        visualsController.selection = [];
-    }
-
-    var editSelectMouseMove = function(event) {
-        var coord = getCanvasPoint(event);
-        var ctx = visualsController.context;
-        visualsController.selection = [];
-
-        var visualsIter = visualsController.currentSlide.getVisualsIterator();
-        while(visualsIter.hasNext()) {
-            var visual = visualsIter.next();
-            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
-
-            var nVert = 0;
-            var vertIter = visual.getVerticesIterator();
-            while (vertIter.hasNext()) {
-                var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
-                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
-            }
-            if(nVert/visual.getVertices().length >= .45) {
-                visualsController.selection.push(visual);
-            }
-        }
-
-        pentimento.lectureController.getLectureModel().getLectureDuration()
-        ctx.strokeStyle = "#0000FF";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
-
-        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
-        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
-    }
-
-    var editSelectMouseUp = function(event) {
-        for(var i in visualsController.selection) {
-            var visCopy = visualsController.selection[i].getClone();
-            var propsCopy = visCopy.getProperties();
-            propsCopy.setWidth(propsCopy.getWidth()+1);
-            propsCopy.setColor("#0000FF");
-            // drawVisual(visCopy, false, 0, false, {});
-        }
-    }
-    /**********************************EDITING-MODE TOOLS**********************************/
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -467,22 +436,39 @@ var ToolsController = function(visuals_controller, visuals_model) {
     visualsController = visuals_controller;
     visualsModel = visuals_model;
 
-    $('.lecture-tool').click(function(event) {
+    // Register the handler for the recording tools
+    $('#'+recordingToolsContainerID+' .'+toolClass).click(function(event) {
+
         event.stopPropagation(); 
-        var tool = $(event.target).attr('data-toolname');
-        clearPreviousHandlers();
-        lectureToolHandler(tool, event);
-    });
-    $('.lecture-tool').change(function(event) {
-        event.stopPropagation();
-        var tool = $(event.target).attr('data-toolname');
-        clearPreviousHandlers();
-        lectureToolHandler(tool, event);
-    });
-    $('.edit-tool').click(function(event) {
-        var tool = $(event.target).attr('data-toolname');
-        clearPreviousHandlers();
-        editToolHandler(tool, event);
+
+        // Get the tool name through the attribute
+        var tool = $(event.target).attr(toolNameAttr);
+
+        recordingToolHandler(tool, event);
     });
 
+    // Register the handler for the editing tools
+    $('#'+editingToolsContainerID+' .'+toolClass).click(function(event) {
+
+        event.stopPropagation(); 
+
+        // Get the tool name through the attribute
+        var tool = $(event.target).attr(toolNameAttr);
+
+        editToolHandler(tool, event);
+    });
+    // $('.'+toolClass).change(function(event) {
+    //     console.log('tool changed');
+        
+    //     event.stopPropagation(); 
+
+    //     // Get the tool name through the attribute
+    //     var tool = $(event.target).attr(toolNameAttr);
+
+    //     toolHandler(tool, event);
+    // });
+
+    // Set the initial tools
+    recordingToolHandler(penTool);
+    // editToolHandler(selectTool);
 };

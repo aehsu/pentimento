@@ -19,7 +19,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     // DOM elements
     var canvasID = "sketchpad";
 
-    this.tool = null; //whichever tool is active for a recording
+    this.canvas = null;
     this.lastPoint = null;
     this.currentVisual = null;
     this.selection = [];
@@ -59,7 +59,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     ///////////////////////////////////////////////////////////////////////////////
 
     this.beginRecording = function(currentTime) {
-        $('.recording-tool').toggleClass('hidden');
 
         if (!visualsModel.getSlideAtTime(currentTime)) {
             console.error("there is no current slide");
@@ -67,7 +66,6 @@ var VisualsController = function(visuals_model, retimer_model) {
         }
 
         self.selection  = [];
-        $('input[data-toolname="pen"]').click();
 
         // slideBeginTime starts as the visuals time that recording began
         slideBeginTime = retimerModel.getVisualTime(currentTime);
@@ -79,9 +77,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     };
 
     this.stopRecording = function(currentTime) {
-        $('.recording-tool').toggleClass('hidden');
         self.selection  = [];
-        self.tool = null;
 
         var currentSlide = visualsModel.getSlideAtTime(currentTime);
 
@@ -197,14 +193,8 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Initialization
     ///////////////////////////////////////////////////////////////////////////////
 
-    // Setup model and other controllers
     visualsModel = visuals_model;
     retimerModel = retimer_model;
-    toolsController = new ToolsController(self, visualsModel);
-    renderer = new Renderer(self);
-
-    // Register callbacks for the time controller
-    lectureController.getTimeController().addUpdateTimeCallback(drawVisuals);
 
     // Setup the canvas and context
     // Canvas size must be set using attributes, not CSS
@@ -213,6 +203,12 @@ var VisualsController = function(visuals_model, retimer_model) {
                 .attr('height', visualsModel.getCanvasSize().height);
     self.context = self.canvas[0].getContext('2d');
 
+
+    toolsController = new ToolsController(self, visualsModel);
+    renderer = new Renderer(self);
+
+    // Register callbacks for the time controller
+    lectureController.getTimeController().addUpdateTimeCallback(drawVisuals);
 
 };
 

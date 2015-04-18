@@ -100,8 +100,6 @@ var AudioController = function(audio_model) {
     var tickerID = "ticker";
 
     // Buttons
-    var playPauseButtonID = 'play_pause_button';
-    var recordAudioButtonID = 'record_audio_button';
     var zoomInButtonID = 'zoom_in_button';
     var zoomOutButtonID = 'zoom_out_button';
     var deleteSegmentButtonID = 'delete_segment_button';
@@ -198,7 +196,6 @@ var AudioController = function(audio_model) {
         };
 
         isAudioRecording = true;
-        $('#'+recordAudioButtonID).html('Stop');
 
         // Disable editing
         disableEditUI();
@@ -230,7 +227,6 @@ var AudioController = function(audio_model) {
         };
 
         isAudioRecording = false;
-        $('#'+recordAudioButtonID).html('Record');
 
         // Reenable editing
         enableEditUI();
@@ -267,8 +263,6 @@ var AudioController = function(audio_model) {
             return;
         };
 
-        play_pause_button.html('Pause');
-
         // Disable editing
         disableEditUI();
 
@@ -288,8 +282,6 @@ var AudioController = function(audio_model) {
             console.error("Cannot end playback");
             return;
         };
-
-        play_pause_button.html('Play');
 
         // Reenable editing
         enableEditUI();
@@ -761,37 +753,6 @@ var AudioController = function(audio_model) {
 
     // Register callbacks with the time controller
     lectureController.getTimeController().addUpdateTimeCallback(updatePlayheadTime);
-
-    // Button listener to start playing the audio
-    var play_pause_button = $('#'+playPauseButtonID);
-    play_pause_button.click(function() { 
-        // Do nothing during recording
-        if (lectureController.isRecording()) {
-            return;
-        };
-
-        // Start or stop playback
-        if (lectureController.isPlaying()) {
-            lectureController.stopPlayback();  // Stop playback at the end of the audio
-        } else{
-            lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
-        };
-    });
-
-    // Button listener to record or stop the current recording
-    $('#'+recordAudioButtonID).click(function() {
-        // Do nothing during playback
-        if (lectureController.isPlaying()) {
-            return;
-        };
-
-        // Start or stop recording
-        if (lectureController.isRecording()) {
-            lectureController.stopRecording();
-        } else{
-            lectureController.startRecording();
-        };
-    });
 
     // Button listeners for zooming in and out
     var zoom_in_button = $('#'+zoomInButtonID);

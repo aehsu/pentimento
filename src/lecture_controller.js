@@ -33,6 +33,13 @@ var LectureController = function() {
     // DOM elements
     ///////////////////////////////////////////////////////////////////////////////
 
+    var hiddenClass = 'hidden';
+
+    var startRecordButtonID = 'startRecord'
+    var stopRecordButtonID = 'stopRecord';
+    var startPlaybackButtonID = 'startPlayback';
+    var stopPlaybackButtonID = 'stopPlayback';
+
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
 
@@ -68,6 +75,8 @@ var LectureController = function() {
 
     var setupUI = function() {
 
+        loadInputHandlers();
+
         if (ie10TabletPointer()) {
             console.log('Pointer Enabled Device');
             self.pressure = true;
@@ -79,6 +88,43 @@ var LectureController = function() {
             self.pressureColor = false;
             self.pressureWidth = false;
         };
+
+        // Start recording
+        $('#'+startRecordButtonID).click(self.startRecording);
+
+        // Stop recording
+        $('#'+stopRecordButtonID).click(self.stopRecording);
+
+        // Start playback
+        $('#'+startPlaybackButtonID).click(self.startPlayback);
+
+        // Stop playback
+        $('#'+stopPlaybackButtonID).click(self.stopPlayback);
+
+        // Update the state of the buttons
+        updateButtons();
+    };
+
+    // Updates the buttons to reflect the current state of recording or playback
+    var updateButtons = function() {
+
+        // Hide/unhide the record start/stop buttons
+        if (self.isRecording()) {
+            $('#'+startRecordButtonID).addClass(hiddenClass);
+            $('#'+stopRecordButtonID).removeClass(hiddenClass);
+        } else {
+            $('#'+startRecordButtonID).removeClass(hiddenClass);
+            $('#'+stopRecordButtonID).addClass(hiddenClass);
+        };
+        if (self.isPlaying()) {
+            $('#'+startPlaybackButtonID).addClass(hiddenClass);
+            $('#'+stopPlaybackButtonID).removeClass(hiddenClass);
+        } else {
+            $('#'+startPlaybackButtonID).removeClass(hiddenClass);
+            $('#'+stopPlaybackButtonID).addClass(hiddenClass);
+        };
+
+        // Hide/unhide the playback start/stop buttons
     };
 
     // Returns true if this Internet Explorer 10 or greater, running on a device
@@ -165,6 +211,9 @@ var LectureController = function() {
         };
         retimerController.beginRecording(beginTime);
 
+        // Update the UI buttons
+        updateButtons();
+
         return true;
     };
 
@@ -193,14 +242,18 @@ var LectureController = function() {
         };
         retimerController.endRecording(endTime);
 
+        // Update the UI buttons
+        updateButtons();
+
         return true;
     };
 
     // Start playback and and notify other controllers
-    // Optional end_time (lecture time) indicates when the playback will auto end
     // Returns true if it succeeds
-    this.startPlayback = function(end_time) {
+    this.startPlayback = function() {
 
+        // TODO Optional end_time (lecture time) indicates when the playback will auto end
+        var end_time = lectureModel.getLectureDuration();
         // Check the validity of the end time. It must be after the current time.
         if ( typeof end_time !== "number" || Math.round(end_time) <= timeController.getTime() ) {
             return false;
@@ -228,6 +281,9 @@ var LectureController = function() {
         if (self.recordingTypeIsAudio()) {  // audio
             audioController.startPlayback(beginTime);
         };
+
+        // Update the UI buttons
+        updateButtons();
 
         return true;
     };
@@ -261,6 +317,9 @@ var LectureController = function() {
             audioController.stopPlayback(endTime);
         };
 
+        // Update the UI buttons
+        updateButtons();
+
         return true;
     };
 
@@ -278,13 +337,11 @@ var LectureController = function() {
     ///////////////////////////////////////////////////////////////////////////////
 
     // Loads input handlers on the entire window
-    this.loadInputHandlers = function() {
+    var loadInputHandlers = function() {
         $(window).on('mousedown', mouseDownHandler);
         $(window).on('mouseup', mouseUpHandler);
         $(window).on('keydown', keyDownHandler);
         $(window).on('keyup', keyUpHandler);
-        // $(window).on('click', undoListener);
-        // $(window).on('click', redoListener);
     };
 
     var mouseDownHandler = function(evt) {
@@ -308,7 +365,7 @@ var LectureController = function() {
         self.leftMouseButton = false;
         self.middleMouseButton = false;
         self.rightMouseButton = false;
-    }
+    };
 
     var keyDownHandler = function(evt) {
         if(evt.ctrlKey) {
@@ -318,7 +375,7 @@ var LectureController = function() {
         } else if(evt.altKey) {
             self.altKey = true;
         }
-    }
+    };
 
     var keyUpHandler = function(evt) {
         if(evt.which == 17) { //ctrl key
@@ -328,62 +385,10 @@ var LectureController = function() {
         } else if(evt.which == 18) {
             self.altKey = false;
         }
-    }
-
-
-        // var umToolHandler = function(event) {
-    //     var elt = $(event.target);
-    //     if(elt.prop('disabled')=='disabled') {
-    //         return;
-    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
-    //         if(lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.undoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
-    //         if(!lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.undoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
-    //         if(lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.redoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
-    //         if(!lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.redoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     }
-    // };
-
-
-    var recordingToolHandler = function(event) {
-        var elt = $(event.target);
-        if (elt.attr('data-toolname')==='begin') {
-            lectureController.startRecording();
-        } else {
-            lectureController.stopRecording();
-        }
     };
-        $('.recording-tool').click(recordingToolHandler);
-
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////////
 
 };
 
-// LectureController.RecordingTypes = {
-//     VideoOnly: "VideoOnly",
-//     AudioOnly: "AudioOnly",
-//     AudioVideo: "AudioVideo"
-// };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Main: The single entry point for the entire application

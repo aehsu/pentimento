@@ -2,6 +2,10 @@ button {
     padding: 8px;
 }
 
+.hidden {
+    display:none;
+}
+
 .ui-label {
     font-family: Calibri, sans-serif;
     font-size: 14px;
@@ -9,10 +13,6 @@ button {
 
 .ui-button:hover {
     background: rgba(0, 0, 0, 0.1);
-}
-
-.hidden {
-    display:none;
 }
 
 #lectureToolsContainer {
