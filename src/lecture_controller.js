@@ -7,7 +7,6 @@ var LectureController = function() {
 
     var lectureModel = null;
     var timeController = null;
-    var timeSliderController = null;
     var visualsController = null;
     var audioController = null;
     var retimerController = null;
@@ -165,7 +164,6 @@ var LectureController = function() {
             audioController.startRecording(beginTime);
         };
         retimerController.beginRecording(beginTime);
-        timeSliderController.beginRecording(beginTime);
 
         return true;
     };
@@ -194,7 +192,6 @@ var LectureController = function() {
             audioController.stopRecording(endTime);
         };
         retimerController.endRecording(endTime);
-        timeSliderController.endRecording(endTime);
 
         return true;
     };
