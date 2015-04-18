@@ -448,11 +448,12 @@ var ToolsController = function(visuals_controller, visuals_model) {
     }
 
     var editSelectMouseMove = function(event) {
+        var currentSlide = visualsModel.getCurrentSlide();
         var coord = getCanvasPoint(event);
         var ctx = visualsController.context;
         visualsController.selection = [];
 
-        var visualsIter = visualsController.currentSlide.getVisualsIterator();
+        var visualsIter = currentSlide.getVisualsIterator();
         while(visualsIter.hasNext()) {
             var visual = visualsIter.next();
             if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }

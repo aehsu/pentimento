@@ -12,12 +12,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model);
 
     // Selection dragging
-    var fixedX;
-    var fixedY;
-    // var x2;
-    // var x3;
-    // var y3;
-    // var y4;
+    var selectionX;
+    var selectionY;
 
     // Constraint dragging
     var isDragTop;  // boolean indicating whether the top or bottom is being dragged
@@ -35,6 +31,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // Buttons
     var addConstraintButtonID = 'sync';
+    var deleteConstraintButtonID = 'delete_sync';
 
     // Canvas IDs
     var constraintIDBase = 'constraint_';
@@ -56,8 +53,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
-        fixedX = x;
-        fixedY = y;
+        selectionX = x;
+        selectionY = y;
 
         console.log("XY: " + x + ", " + y);
 
@@ -65,99 +62,53 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             layer: true,
             name: "selectedArea",
             bringToFront: true,
-            draggable: true,
             strokeStyle: '#000',
-            strokeWidth: 4,
+            strokeWidth: 2,
+            strokeDash: [5,3],
+            opacity: 0.25,
+            fillStyle: 'blue',
             closed: true,
             dragging: true,
             p1: {
                 type: 'line',
                 x1: x, y1: y,
-                x2: x+1, y2: y,
-                x3: x+1, y3: y+1,
-                x4: x, y4: y+1,
-            },
-            // dragstart: selectionDragStart,
-            drag: selectionDrag
+                x2: x, y2: y,
+                x3: x, y3: y,
+                x4: x, y4: y,
+            }
         });
 
-        // triggerClick(x, y);
+        canvas.on('mousemove', selectionDrag);
+        canvas.on('mouseup', endSelect);
     }
 
-    var triggerClick = function(x, y){
-        console.log("clicking");
-        var e = new jQuery.Event("");
-        e.pageX = x;
-        e.pageY = y;
-        $('#'+constraintsCanvasID).trigger(e);
-    }
-
-    var selectionDragStart = function(layer){
-        console.log("DragStart?");
-        fixedX = layer.p1.x1;
-        fixedY = layer.p1.y1;
-        // x2 = layer.p1.x2;
-        // x3 = layer.p1.x3;
-        // y3 = layer.p1.y3;
-        // y4 = layer.p1.y4;
-        console.log("FIXED: " + fixedX + ", " + fixedY);
-    }
-    var selectionDrag = function(layer){
+    var selectionDrag = function(event){
         console.log("DRAGGING");
 
-        // var x1 = fixedX;
-        // var y1 = fixedY;
-        // x2 += layer.x;
-        // var y2 = fixedY;
-        // x3 += layer.x;
-        // y2 += layer.y;
-        // var x4 = fixedX;
-        // y2 += layer.y;
+        var canvas = $('#'+constraintsCanvasID);
 
-        // layer.p1.x1 = fixedX;
-        // layer.p1.y1 = fixedY;
-        // layer.p1.x2 = fixedX + layer.x;
-        // layer.p1.y2 = fixedY;
-        // layer.p1.x3 = fixedX + layer.x;
-        // layer.p1.y3 = fixedY + layer.y;
-        // layer.p1.x4 = fixedX;
-        // layer.p1.y4 = fixedY + layer.y;
-        // layer.p1.x5 = fixedX;
-        // layer.p1.y5 = fixedY;
-
-        // layer.x1 = fixedX;
-        // layer.y1 = fixedY;
-        // layer.x2 = fixedX + layer.x;
-        // layer.y2 = fixedY;
-        // layer.x3 = fixedX + layer.x;
-        // layer.y3 = fixedY + layer.y;
-        // layer.x4 = fixedX;
-        // layer.y4 = fixedY + layer.y;
-        // layer.x5 = fixedX;
-        // layer.y5 = fixedY;
+        var x = event.pageX;
+        var y = event.pageY;
+        x -= canvas.offset().left;
+        y -= canvas.offset().top;
 
 
-        // $('#'+constraintsCanvasID).setLayer(layer, {
-        //     p1: {
-        //         x1: x1, y1: y1,
-        //         x2: x2, y2: y2,
-        //         x3: x3, y3: y3,
-        //         x4: x4, y4: y4
-        //     }
-        // });
-        // $('#'+constraintsCanvasID).drawLayers();
-        $('#'+constraintsCanvasID).setLayer(layer, {
+        canvas.setLayer("selectedArea", {
             x: 0, y: 0,  // x, y are the layer coordinates, which should remain fixed at the origin
             p1: {
                 type: 'line',
-                x1: fixedX, y1: fixedY,
-                x2: fixedX + layer.x, y2: fixedY,
-                x3: fixedX + layer.x, y3: fixedY + layer.y,
-                x4: fixedX, y4: fixedY + layer.y
+                x1: selectionX, y1: selectionY,
+                x2: x, y2: selectionY,
+                x3: x, y3: y,
+                x4: selectionX, y4: y
             }
         });
-        
     }
+
+    var endSelect = function(event){
+        var canvas = $('#' + constraintsCanvasID);
+        canvas.unbind('mousemove', selectionDrag);
+    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -180,13 +131,16 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
-        canvas.on('mousedown', selectArea);
+        canvas.unbind('mousedown', selectArea);
+        console.log("Off1");
     };
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
     var drawConstraint = function(constraint_num) {
         $('#'+constraintsCanvasID).unbind('mousedown', selectArea);
+        console.log("Off2");
+        // $('#'+constraintsCanvasID).unbind('mousemove', selectionDrag);
         $('#'+constraintsCanvasID).on('mousedown', addArrowHandler);
     };
 
@@ -320,6 +274,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Refresh the view if the adding succeeded
         if (result) {
             redrawConstraints();
+            console.log("BACK ON1");
         };
     }
 
@@ -330,6 +285,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // When dragging starts, record whether the drag is for the top or bottom arrow
     // and record the original x position of the arrow
     var constraintDragStart = function(layer) {
+        $('#' + constraintsCanvasID).unbind('mousedown', selectArea);
+        $('#' + constraintsCanvasID).unbind('mousemove', selectionDrag);
+        console.log("Off3");
         isDragTop = (layer.eventY < (constraintsHeight / 2));
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
         lastValidDragX = originalDragX;
@@ -440,6 +398,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraints();
+        console.log("BACK ON2");
+
+        // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
 
     // When dragging cancels (drag off the canvas), it should reset to its original value
@@ -447,6 +408,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         layer.x = 0;
         layer.x1 = originalDragX;
         layer.x2 = originalDragX;
+        // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
 
     // Dealing with insertions
@@ -468,6 +430,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         retimerModel.shiftConstraints(constraintsToShift, insertionDuration);
 
         redrawConstraints();
+        console.log("BACK ON3");
 
         insertionStartTime = -1;
     }
@@ -503,6 +466,31 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // TODO register the click handler
     $('#'+addConstraintButtonID).click(function() {
         drawConstraint();
+    });
+
+    $('#'+deleteConstraintButtonID).click(function() {
+        var canvas = $('#'+constraintsCanvasID);
+        var x1 = canvas.getLayer('selectedArea').p1.x1;
+        var x2 = canvas.getLayer('selectedArea').p1.x2;
+
+        var constraints = retimerModel.getConstraintsIterator();
+
+        var constraint_num = 0;
+        var constraintLayer = constraintIDBase + constraint_num;
+        // Iterate through the constraints and shift them
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var tAud = constraint.getTAudio();
+            var xAud = audioController.millisecondsToPixels(tAud);
+            if (xAud > x1 && xAud < x2){
+                constraintLayer = constraintIDBase + constraint_num
+                retimerModel.deleteConstraint(constraint);
+                canvas.removeLayer(constraintLayer);
+            }
+            constraint_num ++;
+        };
+
+        canvas.drawLayers();
     });
 
     ///////////////////////////////////////////////////////////////////////////////
