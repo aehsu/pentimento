@@ -125,9 +125,34 @@
                 <option value="18">18</option>
                 <option value="20">20</option>
             </select>
-            <button class="edit-tool" data-toolname="delete-slide">Delete Slide</button>
-            <button class="um-tool edit-tool" data-toolname="undo" disabled="true">Undo</button>
-            <button class="um-tool edit-tool" data-toolname="redo" disabled="true">Redo</button>
+
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/trashPage.png" class="edit-tool center" data-toolname="delete-slide">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Delete Slide</label></td>
+                </tr>
+            </table>
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/undo.png" class="edit-tool um-tool center" data-toolname="undo" disabled="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Undo</label></td>
+                </tr>
+            </table>
+            <table class="label-table">
+                <tr>
+                    <td><input type="image" src="icons/redo.png" class="edit-tool um-tool center" data-toolname="undo" disabled="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label class="ui-label">Redo</label></td>
+                </tr>
+            </table>
 
             <!-- <label>Move selection to current time</label> -->
 <!--
@@ -197,11 +222,30 @@
                 </select><br>
                 <label class="ui-label">Stroke Width</label><br>
 
-                <button class="lecture-too lecture-tool-button" data-toolname="delete">Delete Visual</button><br>
+                <input type="image" src="icons/delete-visuals.png" class="lecture-tool lecture-tool-image" data-toolname="delete"><br>
+                <label class="ui-label">Delete Visual</label><br>
+
+                <input type="image" src="icons/pageDown.png" class="lecture-tool lecture-tool-image" data-toolname="add-slide"><br>
+                <label class="ui-label">Add Slide</label><br>
+
+                <table class="label-table">
+                    <tr>
+                        <td><input type="image" src="icons/undo.png" class="edit-tool um-tool center lecture-tool-image" data-toolname="undo" disabled="true">
+                        </td>
+                        <td><input type="image" src="icons/redo.png" class="edit-tool um-tool center lecture-tool-image" data-toolname="undo" disabled="true">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label class="ui-label">Undo</label></td>
+                        <td><label class="ui-label">Redo</label></td>
+                    </tr>
+                </table>
+
+<!--                 <button class="lecture-too lecture-tool-button" data-toolname="delete">Delete Visual</button><br>
                 <button class="lecture-tool" data-toolname="add-slide">Add Slide</button><br>
 
                 <button class="um-tool lecture-tool" data-toolname="undo" disabled="true">Undo</button>
-                <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button>
+                <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button> -->
 
                 <!-- <input type="image" src="icons/emphasize.png" height="40px">
                 <input type="image" src="icons/revertEmphasis.png" height="40px"><br>
@@ -224,7 +268,8 @@
                 <label>In-lecture revert last epmhasis</label> -->
 
             </div>
-            <div style="float:right">
+            <!-- <div style="float:right"> -->
+            <div class="right-col">
                 <canvas id='sketchpad'></canvas>
             </div>
         </div>
