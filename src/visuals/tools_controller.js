@@ -11,12 +11,38 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var visualsModel = null;
 
     ///////////////////////////////////////////////////////////////////////////////
+    // DOM
+    /////////////////////////////////////////////////////////////////////////////// 
+
+    // Containers for the different tools
+    // Recording tools are used during a recording, and editing tools are used when not recording
+    var recordingToolsContainerID = 'visualsRecordingTools';
+    var editingToolsContainerID = 'visualsEditingTools';
+
+    // Class for all visual tools
+    var toolClass = 'visuals-tool';
+
+    // Tools are recognized by an HTML attribute and name
+    // and can be used during recording, editing, or both.
+    var toolNameAttr = 'toolname';
+    var selectTool = 'select';
+    var penTool = 'pen';
+    var highlightTool = 'highlight';
+    var widthTool = 'width';
+    var deleteVisualTool = 'delete-visual';
+    var addSlideTool = 'add-slide'; 
+    var deleteTool = 'delete';
+    var redrawTool = 'redraw';
+    var deleteSlideTool = 'delete-slide'; 
+
+
+    ///////////////////////////////////////////////////////////////////////////////
     // Callbacks
     /////////////////////////////////////////////////////////////////////////////// 
 
     var lectureToolHandler = function(tool, event) {
         switch(tool) {
-        	case 'pen':
+        	case penToolName:
                 visualsController.canvas.on('mousedown', function(event) {
                     if (!lectureController.isRecording()){ return; }
                     event.preventDefault();
@@ -34,7 +60,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 });
                 visualsController.tool = tool;
                 break;
-            case 'highlight':
+            case highlightToolName:
                 visualsController.canvas.on('mousedown', function(event) {
                     if (!lectureController.isRecording()){return;}
                     event.preventDefault();
@@ -52,19 +78,17 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 });
                 visualsController.tool = tool;
                 break;
-            case 'add-slide':
+            case addSlide:
                 if(lectureController.isRecording()) {
                     visualsController.addSlide();
                 }
                 lectureToolHandler(visualsController.tool); //restore the previous tool
                 break;
-        	case 'color':
-        		break;
-        	case 'width':
+        	case widthTool:
                 visualsController.width = parseInt($(event.target).val());
                 lectureToolHandler(visualsController.tool); //restore the previous tool
         		break;
-            case 'select':
+            case selectTool:
                 visualsController.canvas.mousedown(function(event) {
                     if (!lectureController.isRecording()) {return ;}
                     event.preventDefault();
@@ -81,17 +105,15 @@ var ToolsController = function(visuals_controller, visuals_model) {
                     lectureSelectMouseUp(event);
                 });
                 break;
-        	case 'delete':
+        	case deleteVisualTool:
                 visualsModel.setTDeletion(visualsController.selection, currentVisualTime());
         		break;
-        	case 'pan':
-        		break;
-        	case 'undo':
-                lectureToolHandler(visualsController.tool); //restore the previous tool
-                break;
-            case 'redo':
-                lectureToolHandler(visualsController.tool); //restore the previous tool
-                break;
+        	// case 'undo':
+         //        lectureToolHandler(visualsController.tool); //restore the previous tool
+         //        break;
+         //    case 'redo':
+         //        lectureToolHandler(visualsController.tool); //restore the previous tool
+         //        break;
         	default:
     		    visualsController.tool = null;
         		console.log('Unrecognized tool clicked, live tools');
@@ -105,17 +127,13 @@ var ToolsController = function(visuals_controller, visuals_model) {
     //the editing tools also belongs here.
     var editToolHandler = function(tool, event) {
         switch(tool) {
-        	case 'play': //also includes pause
-                lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
-        		break;
-            case 'pause':
-                lectureController.stopPlayback();
-                break;
-        	case 'hyperlink':
-        		break;
-        	case 'color':
-        		break;
-            case 'select':
+        	// case 'play': //also includes pause
+         //        lectureController.startPlayback(lectureController.getLectureModel().getLectureDuration());
+        	// 	break;
+         //    case 'pause':
+         //        lectureController.stopPlayback();
+         //        break;
+            case selectTool:
                 visualsController.canvas.mousedown(function(event) {
                     if (lectureController.isRecording()) {return ;}
                     event.preventDefault();
@@ -133,81 +151,36 @@ var ToolsController = function(visuals_controller, visuals_model) {
                     editSelectMouseUp(event);
                 });
                 break;
-        	case 'delete':
+        	case deleteTool:
                 if (lectureController.isRecording() || visualsController.selection.length==0) { return; }
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 lectureController.getTimeController().updateTime(t);
                 // visualsController.selection = []; //Richard says no!
                 pentimento.lectureController.getLectureModel().getLectureDuration()
         		break;
-            case 'redraw':
+            case redrawTool:
                 var t = visualsModel.deleteVisuals(visualsController.currentSlide, visualsController.selection);
                 lectureController.getTimeController().updateTime(t);
                 $('.recording-tool:visible').click()
                 break;
-            case 'width':
+            case widthTool:
                 if(event.target.value=="" || lectureController.isRecording() || visualsController.selection.length==0) { return; }
                 var newWidth = parseInt(event.target.value);
                 visualsController.editWidth(visualsController.selection, newWidth);
                 pentimento.lectureController.getLectureModel().getLectureDuration()
                 $('.edit-tool[data-toolname="width"]').val('');
                 break;
-            case 'delete-slide':
+            case deleteSlideTool:
                 if(lectureController.isRecording()) { return; }
                 lectureController.deleteSlide(visualsController.currentSlide);
                 // lectureController.getTimeController().updateTime(t);
-            case 'rewind':
-                break;
-        	case 'pan':
-        		break;
-            case 'undo':
-                break;
-            case 'redo':
-                break;
         	default:
         		console.log('Unrecognized tool clicked, non live tools');
         		console.log(this);
         }
     }
 
-    var recordingToolHandler = function(event) {
-        var elt = $(event.target);
-        if (elt.attr('data-toolname')==='begin') {
-            lectureController.startRecording();
-        } else {
-            lectureController.stopRecording();
-        }
-    };
 
-    // var umToolHandler = function(event) {
-    //     var elt = $(event.target);
-    //     if(elt.prop('disabled')=='disabled') {
-    //         return;
-    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
-    //         if(lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.undoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
-    //         if(!lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.undoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
-    //         if(lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.redoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
-    //         if(!lectureController.isRecording()) { return; }
-    //         var group = $(this).attr('data-group');
-    //         um.redoHierarchy(group);
-    //         pentimento.lectureController.getLectureModel().getLectureDuration()
-    //         drawThumbnails(1000,1);
-    //     }
-    // };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Helpers
@@ -253,8 +226,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
             ctx.stroke();
         }
     }
-
-
 
     var isInside = function(startPoint, endPoint, testPoint) {
         var xStart = startPoint.getX();
@@ -513,6 +484,5 @@ var ToolsController = function(visuals_controller, visuals_model) {
         clearPreviousHandlers();
         editToolHandler(tool, event);
     });
-    $('.recording-tool').click(recordingToolHandler);
 
 };

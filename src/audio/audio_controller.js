@@ -96,6 +96,9 @@ var AudioController = function(audio_model) {
     // contained inside audio_tracks_container
     var playheadID = 'playhead';  
 
+    // Ticker indicating the numerical time
+    var tickerID = "ticker";
+
     // Buttons
     var playPauseButtonID = 'play_pause_button';
     var recordAudioButtonID = 'record_audio_button';
@@ -182,22 +185,6 @@ var AudioController = function(audio_model) {
 
         // Refresh the view to show any new changes in the UI
         self.refreshView();
-    };
-
-    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
-    // Callback method
-    var updatePlayheadTime = function(currentTime) {
-        // Check the time for valid bounds
-        if (currentTime < 0) {
-            console.error("Invalid playhead time: " + currentTime);
-            return;
-        };
-
-        // Update the value of the playhead
-        playheadTime = currentTime;
-
-        // Refresh the playhead position
-        refreshPlayhead();
     };
 
     // Start recording the audio at the given track time (ms)
@@ -645,6 +632,60 @@ var AudioController = function(audio_model) {
 
         // Refresh the view
         self.refreshView();
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Time and timeline methods
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
+    // Callback method
+    var updatePlayheadTime = function(currentTime) {
+        // Check the time for valid bounds
+        if (currentTime < 0) {
+            console.error("Invalid playhead time: " + currentTime);
+            return;
+        };
+
+        // Update the value of the playhead
+        playheadTime = currentTime;
+
+        // Refresh the playhead position
+        refreshPlayhead();
+    };
+
+    // Updates the ticker display indicating the current time as a string
+    var updateTicker = function(time) {
+
+        // Calculate the values for minutes, seconds, and milliseconds
+        var min = Math.floor(time/60000);
+        time -= min*60000;
+        var sec = Math.floor(time/1000);
+        time -= sec*1000;
+        var ms = time % 1000; //same as subtracting.
+
+        // Get the string representations of those values
+        if(min==0) {
+            min = '00';
+        } else if(min<10){
+            min = '0'+min;
+        }
+        if(sec==0){
+            sec = '00';
+        } else if(sec<10) {
+            sec = '0'+sec;
+        }
+        if(ms==0) {
+            ms = '000';
+        } else if(ms<10) {
+            ms = '00'+ms;
+        } else if(ms<100) {
+            ms = '0'+ms;
+        }
+
+        // Update the display
+        $('#'+tickerID).val(min + ':' + sec + '.' + ms);
     };
 
 

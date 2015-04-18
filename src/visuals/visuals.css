@@ -1,0 +1,58 @@
+#visualsContainer {
+    overflow: hidden;
+    height: 510px;
+    margin: 0;
+    padding: 0;
+}
+
+#visualsRecordingTools {
+    float: left;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    width: 100px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#visualsEditingTools {
+    float: left;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    width: 100px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#sketchpad {
+    float: left;
+    display: inline-block;
+    vertical-align: top;
+    border: 1px solid black;
+    cursor: crosshair;
+    margin: 0;
+    padding: 0;
+}
+
+.visuals-tool {
+    height: 30px;
+    max-width: 100%;
+    margin-top:10px;
+}
+
+#sketchpad .ui-resizable-handle {
+    height: 100%;
+    width: 5px;
+    position: absolute;
+}
+#sketchpad .ui-resizable-w {
+    cursor: w-resize;
+}
+#sketchpad .ui-resizable-e {
+    cursor: e-resize;
+    top:0px;
+    right: -5px;
+}

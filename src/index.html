@@ -4,116 +4,128 @@
     <title>Capture Widget/Sketchpad</title>
     <link rel="stylesheet" type="text/css" href="external/ui-lightness/jquery-ui-1.10.4.min.css" >
     <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="visuals/visuals.css">
     <link rel="stylesheet" type="text/css" href="audio/audio.css">
-    <link rel='stylesheet' type="text/css" href='retimer/retimer.css' />
+    <link rel="stylesheet" type="text/css" href="retimer/retimer.css" />
 
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-    <script type='text/javascript' src='external/jcanvas.min.js'></script>
-    <script type='text/javascript' src='external/jquery.flot.min.js'></script>
-    <script type='text/javascript' src='external/jquery.flot.time.min.js'></script>
-    <script type='text/javascript' src="external/wavesurfer.min.js"></script>
-    <script type='text/javascript' src="external/RecordRTC.js"></script>
-
-    <!--The entry point for the application is in lecture_controller.js-->
-    <script type='text/javascript' src='compatibility.js'></script>
-
-    <script type='text/javascript' src='lecture_controller.js'></script>
-    <script type='text/javascript' src='lecture_model.js'></script>
-
-    <script type='text/javascript' src='undo/errors.js'></script>
-    <script type='text/javascript' src='undo/helpers_and_globals.js'></script>
-    <script type='text/javascript' src='undo/undo.js'></script>
-
-    <script type='text/javascript' src='time_controller.js'></script>
-
-    <script type='text/javascript' src='visuals/visuals_model.js'></script>
-    <script type='text/javascript' src='visuals/visuals_controller.js'></script>
-    <script type='text/javascript' src='visuals/tools_controller.js'></script>
-    <script type='text/javascript' src='visuals/renderer.js'></script>
-
-    <script type='text/javascript' src='audio/audio_model.js'></script>
-    <script type='text/javascript' src='audio/segment_controller.js'></script>
-    <script type='text/javascript' src='audio/track_controller.js'></script>
-    <script type='text/javascript' src='audio/audio_controller.js'></script>
-
-    <script type='text/javascript' src='retimer/retimer_model.js'></script>
-    <script type='text/javascript' src='retimer/retimer_controller.js'></script>
-    <script type='text/javascript' src='retimer/thumbnails_controller.js'></script>
-
-    <script type='text/javascript' src='time_slider.js'></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="external/jcanvas.min.js"></script>
+    <script type="text/javascript" src="external/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="external/jquery.flot.time.min.js"></script>
+    <script type="text/javascript" src="external/wavesurfer.min.js"></script>
+    <script type="text/javascript" src="external/RecordRTC.js"></script>
 
     <!--The entry point for the application is in lecture_controller.js-->
+    <script type="text/javascript" src="compatibility.js"></script>
 
+    <script type="text/javascript" src="lecture_controller.js"></script>
+    <script type="text/javascript" src="lecture_model.js"></script>
+    <script type="text/javascript" src="time_controller.js"></script>
+
+    <script type="text/javascript" src="undo/errors.js"></script>
+    <script type="text/javascript" src="undo/helpers_and_globals.js"></script>
+    <script type="text/javascript" src="undo/undo.js"></script>
+
+    <script type="text/javascript" src="visuals/visuals_model.js"></script>
+    <script type="text/javascript" src="visuals/visuals_controller.js"></script>
+    <script type="text/javascript" src="visuals/tools_controller.js"></script>
+    <script type="text/javascript" src="visuals/renderer.js"></script>
+
+    <script type="text/javascript" src="audio/audio_model.js"></script>
+    <script type="text/javascript" src="audio/segment_controller.js"></script>
+    <script type="text/javascript" src="audio/track_controller.js"></script>
+    <script type="text/javascript" src="audio/audio_controller.js"></script>
+
+    <script type="text/javascript" src="retimer/retimer_model.js"></script>
+    <script type="text/javascript" src="retimer/retimer_controller.js"></script>
+    <script type="text/javascript" src="retimer/thumbnails_controller.js"></script>
+    <!--The entry point for the application is in lecture_controller.js-->
 </head>
 
 <body>
 
-        <div>
-            <input type="image" src="icons/media_record.png" class="recording-tool center" data-toolname="begin">
-            <input type="image" src="icons/media_playback_stop.png" class="recording-tool hidden center" data-toolname="stop">
+    <div id="lectureToolsContainer">
+        <input type="image" src="icons/media_record.png" class="lecture-tool" data-toolname="begin">
+        <input type="image" src="icons/media_playback_stop.png" class="lecture-tool" data-toolname="stop">
 
-            <table class="menu-table">
-                <tr>
-                    <td>
-                    <input type="checkbox" id="visuals_checkbox" checked> <span class="ui-label">Visuals</span>
+        <table>
+            <tr>
+                <td>
+                    <input type="checkbox" id="visuals_checkbox" checked><span class="ui-label">Visuals</span>
                     <input type="checkbox" id="auto_record_checkbox"><span class="ui-label">Auto</span><br>
-                    </td>
-                </tr>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="checkbox" id="audio_checkbox" checked><span class="ui-label">Audio</span>
+                </td>
+            </tr>
+        </table>
 
-                <tr>
-                    <td><input type="checkbox" id="audio_checkbox" checked><span class="ui-label">Audio</span></td>
-                </tr>
-            </table>
+        <input type="image" src="icons/media_playback_start.png" class="lecture-tool" data-toolname="play">
+        <input type="image" src="icons/pause.png" class="lecture-tool" data-toolname="pause">
 
-            <input type="image" src="icons/media_playback_start.png" class="edit-tool center" data-toolname="play">
-            <input type="image" src="icons/pause.png" class="edit-tool hidden center" data-toolname="pause">
+        <table>
+            <tr><td><input type="checkbox"><span class="ui-label">No Pause</span></td></tr>
+            <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
+        </table>
+        
+        <button class="um-tool lecture-tool" data-toolname="undo" disabled="true">Undo</button>
+        <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button>
 
-            <table class="menu-table">
-                <tr>
-                    <td><input type="checkbox"><span class="ui-label">No Pause</span></td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox"><span class="ui-label">Fast Replay</span></td>
-                </tr>
-            </table>
+    </div>
 
-            <!-- <input type="image" src="icons/media_skip_backward.png" class="edit-tool center" data-toolname="rewind">
-<input type="image" src="icons/media_skip_forward.png" class="edit-tool center" data-toolname="fastforward"> -->
-            
-            <table class="label-table">
-                <tr>
-                    <td><input type="image" src="icons/selection.png" class="edit-tool center" data-toolname="select">
-                    </td>
-                </tr>
-                <tr>
-                    <td><label class="ui-label">Select</label></td>
-                </tr>
-            </table>
+    <!-- VISUALS (canvas and visuals tools) -->
+    <div id="visualsContainer">
 
-            <table class="label-table">
-                <tr>
-                    <td><input type="image" src="icons/scratch.png" class="edit-tool center" data-toolname="delete">
-                    </td>
-                </tr>
-                <tr>
-                    <td><label class="ui-label">Delete</label></td>
-                </tr>
-            </table>
+        <!-- visuals recording tools -->
+        <div id="visualsRecordingTools">
+            <label class="ui-label"><b>Recording</b></label><br>
 
+            <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
+            <label class="ui-label">Selection for editing <br> (eraser side of stylus)</label><br>
 
-            <table class="label-table">
-                <tr>
-                    <td><input type="image" src="icons/pen.png" class="edit-tool center" data-toolname="redraw">
-                    </td>
-                </tr>
-                <tr>
-                    <td><label class="ui-label">Redraw Selection</label></td>
-                </tr>
-            </table>
+            <input type="image" src="icons/feather-2.png" class="visuals-tool" data-toolname="pen"><br>
+            <label class="ui-label">Pen</label><br>
 
-            <select class="edit-tool" data-toolname="width">
-                <option value="">Change Stroke Width</option>
+            <input type="image" src="icons/highlighter.png" class="visuals-tool" data-toolname="highlight"><br>
+            <label class="ui-label">Highlighter</label><br>
+
+            <img src="icons/width.png" class="visuals-tool"><br>
+            <select data-toolname="width">
+                <option value="2">Default width</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="14">14</option>
+                <option value="16">16</option>
+                <option value="18">18</option>
+                <option value="20">20</option>
+            </select><br>
+            <label class="ui-label">Stroke Width</label><br>
+
+            <button class="visuals-tool" data-toolname="delete-visual">Delete Visual</button><br>
+            <button class="visuals-tool" data-toolname="add-slide">Add Slide</button><br>
+        </div>
+
+        <!-- visuals editing tools -->
+        <div id="visualsEditingTools">
+            <label class="ui-label"><b>Editing</b></label><br>
+
+            <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
+            <label class="ui-label">Select</label><br>
+
+            <input type="image" src="icons/scratch.png" class="visuals-tool" data-toolname="delete"><br>
+            <label class="ui-label">Delete</label><br>
+
+            <input type="image" src="icons/pen.png" class="visuals-tool" data-toolname="redraw"><br>
+            <label class="ui-label">Redraw Selection</label><br>
+
+            <select data-toolname="width">
+                <option value="">Stroke Width</option>
                 <option value="2">2</option>
                 <option value="4">4</option>
                 <option value="6">6</option>
@@ -124,113 +136,21 @@
                 <option value="16">16</option>
                 <option value="18">18</option>
                 <option value="20">20</option>
-            </select>
-            <button class="edit-tool" data-toolname="delete-slide">Delete Slide</button>
-            <button class="um-tool edit-tool" data-toolname="undo" disabled="true">Undo</button>
-            <button class="um-tool edit-tool" data-toolname="redo" disabled="true">Redo</button>
+            </select><br>
 
-            <!-- <label>Move selection to current time</label> -->
-<!--
-<input type="image" src="icons/moveInTime.png" class="edit-tool center" data-toolname="move-in-time">
-<input type="image" src="icons/delete.png" class="edit-tool center" data-toolname="redraw">
--->
-
-            <!-- <input type="checkbox" class="center">ghosts
-<input type="checkbox" class="center">grid
-<input type="checkbox" class="center">margin -->
-        </div>
-        <hr>
-        <div style="height:15px;">
-            <div id="slider"></div><input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+            <button class="visuals-tool" data-toolname="delete-slide">Delete Slide</button><br>
         </div>
 
-<!-- <div>
-<label width="150px"> Editing Tools </label>
-
-<input type='color' name='pen-color' height="10px" width="20px">
-<input type="checkbox">Calligraphy
-
-<label>| fill</label>
-<input type="checkbox" class="center">
-<input type='color' name='fill-color' height="10px" width="20px">
-
-<label>| Background</label>
-<input type='color' name='background-color' height="10px" width="20px">
-
-<label>| Output Size</label>
-<select>
-<option value="size1">640x480</option>
-<option value="size2">1024x768</option>
-<option value="size3">1920x1080</option>
-</select>
-
-<label>| Hyperlink</label>
-<input type="text">
-</div> -->
-
-        <div class="container">
-            <div class="left-col">
-                <label class="ui-label">In-Lecture Tools</label><br>
-                <hr>
-
-                <input type="image" src="icons/selection.png" class="lecture-tool lecture-tool-image" data-toolname="select"><br>
-                <label class="ui-label">Selection for editing <br> (eraser side of stylus)</label><br>
-
-                <input type="image" src="icons/feather-2.png" class="lecture-tool lecture-tool-image" data-toolname="pen"><br>
-                <label class="ui-label">Pen</label><br>
-
-                <input type="image" src="icons/highlighter.png" class="lecture-tool lecture-tool-image" data-toolname="highlight"><br>
-                <label class="ui-label">Highlighter</label><br>
-
-                <img src="icons/width.png" width="90px" class="lecture-tool-image"><br>
-                <select class="lecture-tool" data-toolname="width">
-                    <option value="2">Default width</option>
-                    <option value="4">4</option>
-                    <option value="6">6</option>
-                    <option value="8">8</option>
-                    <option value="10">10</option>
-                    <option value="12">12</option>
-                    <option value="14">14</option>
-                    <option value="16">16</option>
-                    <option value="18">18</option>
-                    <option value="20">20</option>
-                </select><br>
-                <label class="ui-label">Stroke Width</label><br>
-
-                <button class="lecture-too lecture-tool-button" data-toolname="delete">Delete Visual</button><br>
-                <button class="lecture-tool" data-toolname="add-slide">Add Slide</button><br>
-
-                <button class="um-tool lecture-tool" data-toolname="undo" disabled="true">Undo</button>
-                <button class="um-tool lecture-tool" data-toolname="redo" disabled="true">Redo</button>
-
-                <!-- <input type="image" src="icons/emphasize.png" height="40px">
-                <input type="image" src="icons/revertEmphasis.png" height="40px"><br>
-
-                <input type="image" src="icons/copylasso.png" height="40px">
-                <input type="image" src="icons/eraser.png" height="40px"><br>
-
-                <input type="image" src="icons/delete.png" height="40px">
-                <input type="image" src="icons/duplicate.png" height="40px"><br>
-
-                <input type="image" src="icons/handScrolling.png" height="40px">
-                <input type="image" src="icons/pageRecenter.png" height="40px"><br>
-
-                <input type="image" src="icons/zoomIn.png" height="40px">
-                <input type="image" src="icons/zoomOut.png" height="40px"><br>
-
-                <input type="image" src="icons/pageUp.png" height="40px">
-                <input type="image" src="icons/pageDown.png" height="40px"><br> -->
-                <!-- <label>Emphasis Lasso</label>
-                <label>In-lecture revert last epmhasis</label> -->
-
-            </div>
-            <div style="float:right">
-                <canvas id='sketchpad'></canvas>
-            </div>
-        </div>
+        <!-- canvas -->
+        <canvas id="sketchpad"></canvas>
+    </div>
 
     <!-- AUDIO (retimer views, thumbnail and constraints, are displayed as plugins in the audio timeline) -->
-    <div id="audio_div_container">
+    <div id="audio_container">
+        <input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
+        <br>
+        <div id="audio_timeline"></div>
+        <br>
         <button id="play_pause_button" class="btn btn-primary">
             Play
         </button>
@@ -253,13 +173,12 @@
             Delete track
         </button>
         <label>Current track:</track>
-        <select id="track_select">
-        </select>
-        <div id="audio_timeline"></div>
+        <select id="track_select"></select>
     </div>
+    <br>
 
     <!--RETIMER controls-->
-    <div id="controls_div">
+    <div id="retimer_controls_container">
         <div id="playback_controls" class="retimer_controls">
             <input type="image" src="icons/recordAudio.png" id="retimer_record_Audio" class="retiming_button">
             <input type="image" src="icons/scratch.png" id="retimer_scratch" class="retiming_button">
@@ -306,5 +225,6 @@
         </div>
 
     </div>
+
 </body>
 </html>

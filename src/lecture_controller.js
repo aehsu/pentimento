@@ -56,9 +56,6 @@ var LectureController = function() {
         audioController = new AudioController(lectureModel.getAudioModel());
         retimerController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
 
-        // TODO: maybe get rid of the time slider
-        timeSliderController = new TimeSliderController();
-
         // Setup UI elements and state
         setupUI();
     };
@@ -278,7 +275,7 @@ var LectureController = function() {
 
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Event Handlers
+    // Event Handlers and Tools
     //
     // Button callbacks and general mouse and keyboard handlers for the entire lecture
     ///////////////////////////////////////////////////////////////////////////////
@@ -335,6 +332,49 @@ var LectureController = function() {
             self.altKey = false;
         }
     }
+
+
+        // var umToolHandler = function(event) {
+    //     var elt = $(event.target);
+    //     if(elt.prop('disabled')=='disabled') {
+    //         return;
+    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('edit-tool')) {
+    //         if(lectureController.isRecording()) { return; }
+    //         var group = $(this).attr('data-group');
+    //         um.undoHierarchy(group);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
+    //         drawThumbnails(1000,1);
+    //     } else if(elt.attr('data-toolname')=='undo' && elt.hasClass('lecture-tool')) {
+    //         if(!lectureController.isRecording()) { return; }
+    //         var group = $(this).attr('data-group');
+    //         um.undoHierarchy(group);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
+    //         drawThumbnails(1000,1);
+    //     } else if(elt.attr('data-toolname')=='redo' && elt.hasClass('edit-tool')) {
+    //         if(lectureController.isRecording()) { return; }
+    //         var group = $(this).attr('data-group');
+    //         um.redoHierarchy(group);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
+    //     } else if (elt.attr('data-toolname')=='redo' && elt.hasClass('lecture-tool')) {
+    //         if(!lectureController.isRecording()) { return; }
+    //         var group = $(this).attr('data-group');
+    //         um.redoHierarchy(group);
+    //         pentimento.lectureController.getLectureModel().getLectureDuration()
+    //         drawThumbnails(1000,1);
+    //     }
+    // };
+
+
+    var recordingToolHandler = function(event) {
+        var elt = $(event.target);
+        if (elt.attr('data-toolname')==='begin') {
+            lectureController.startRecording();
+        } else {
+            lectureController.stopRecording();
+        }
+    };
+        $('.recording-tool').click(recordingToolHandler);
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization

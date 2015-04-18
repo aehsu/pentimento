@@ -1,9 +1,8 @@
 #audio_timeline {
     position: relative;
-    height: 440px;
+    height: 400px;
     width: 1000px;
-    display: inline-block;
-    border-style: none;
+    border: 1px solid black;
     overflow-x: scroll;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
