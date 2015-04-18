@@ -109,7 +109,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         var time = self.globalTime();
         var diff = time - lastTimeUpdate;
         slideBeginTime = time;
-    Use slideBeginTime instead of last time update
+        // Use slideBeginTime instead of last time update
         var oldInsertionTime = visualsInsertionTime;
         var oldDirtyVisuals = dirtyVisuals;
         var prevSlide = self.currentSlide;

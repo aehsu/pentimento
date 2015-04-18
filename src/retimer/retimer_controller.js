@@ -11,6 +11,14 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var audioController = audio_controller;
     var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model);
 
+    // Selection dragging
+    var fixedX;
+    var fixedY;
+    // var x2;
+    // var x3;
+    // var y3;
+    // var y4;
+
     // Constraint dragging
     var isDragTop;  // boolean indicating whether the top or bottom is being dragged
     var originalDragX;  // integer indicating the original x position of the dragged constraint
@@ -38,18 +46,117 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Selection/Deletion handling
     ///////////////////////////////////////////////////////////////////////////////
     var selectArea = function(event){
+        console.log("SELECTING");
         var canvas = $('#'+constraintsCanvasID);
+
+        canvas.removeLayer("selectedArea");
+
         var x = event.pageX;
         var y = event.pageY;
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
-        canvas.drawRect({
-          fillStyle: '#000',
-          x: 150, y: 100,
-          width: 200,
-          height: 100
+        fixedX = x;
+        fixedY = y;
+
+        console.log("XY: " + x + ", " + y);
+
+        canvas.drawPath({
+            layer: true,
+            name: "selectedArea",
+            bringToFront: true,
+            draggable: true,
+            strokeStyle: '#000',
+            strokeWidth: 4,
+            closed: true,
+            dragging: true,
+            p1: {
+                type: 'line',
+                x1: x, y1: y,
+                x2: x+1, y2: y,
+                x3: x+1, y3: y+1,
+                x4: x, y4: y+1,
+            },
+            // dragstart: selectionDragStart,
+            drag: selectionDrag
         });
+
+        // triggerClick(x, y);
+    }
+
+    var triggerClick = function(x, y){
+        console.log("clicking");
+        var e = new jQuery.Event("");
+        e.pageX = x;
+        e.pageY = y;
+        $('#'+constraintsCanvasID).trigger(e);
+    }
+
+    var selectionDragStart = function(layer){
+        console.log("DragStart?");
+        fixedX = layer.p1.x1;
+        fixedY = layer.p1.y1;
+        // x2 = layer.p1.x2;
+        // x3 = layer.p1.x3;
+        // y3 = layer.p1.y3;
+        // y4 = layer.p1.y4;
+        console.log("FIXED: " + fixedX + ", " + fixedY);
+    }
+    var selectionDrag = function(layer){
+        console.log("DRAGGING");
+
+        // var x1 = fixedX;
+        // var y1 = fixedY;
+        // x2 += layer.x;
+        // var y2 = fixedY;
+        // x3 += layer.x;
+        // y2 += layer.y;
+        // var x4 = fixedX;
+        // y2 += layer.y;
+
+        // layer.p1.x1 = fixedX;
+        // layer.p1.y1 = fixedY;
+        // layer.p1.x2 = fixedX + layer.x;
+        // layer.p1.y2 = fixedY;
+        // layer.p1.x3 = fixedX + layer.x;
+        // layer.p1.y3 = fixedY + layer.y;
+        // layer.p1.x4 = fixedX;
+        // layer.p1.y4 = fixedY + layer.y;
+        // layer.p1.x5 = fixedX;
+        // layer.p1.y5 = fixedY;
+
+        // layer.x1 = fixedX;
+        // layer.y1 = fixedY;
+        // layer.x2 = fixedX + layer.x;
+        // layer.y2 = fixedY;
+        // layer.x3 = fixedX + layer.x;
+        // layer.y3 = fixedY + layer.y;
+        // layer.x4 = fixedX;
+        // layer.y4 = fixedY + layer.y;
+        // layer.x5 = fixedX;
+        // layer.y5 = fixedY;
+
+
+        // $('#'+constraintsCanvasID).setLayer(layer, {
+        //     p1: {
+        //         x1: x1, y1: y1,
+        //         x2: x2, y2: y2,
+        //         x3: x3, y3: y3,
+        //         x4: x4, y4: y4
+        //     }
+        // });
+        // $('#'+constraintsCanvasID).drawLayers();
+        $('#'+constraintsCanvasID).setLayer(layer, {
+            x: 0, y: 0,  // x, y are the layer coordinates, which should remain fixed at the origin
+            p1: {
+                type: 'line',
+                x1: fixedX, y1: fixedY,
+                x2: fixedX + layer.x, y2: fixedY,
+                x3: fixedX + layer.x, y3: fixedY + layer.y,
+                x4: fixedX, y4: fixedY + layer.y
+            }
+        });
+        
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -73,11 +180,13 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
+        canvas.on('mousedown', selectArea);
     };
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
     var drawConstraint = function(constraint_num) {
+        $('#'+constraintsCanvasID).unbind('mousedown', selectArea);
         $('#'+constraintsCanvasID).on('mousedown', addArrowHandler);
     };
 
@@ -123,6 +232,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Draw the constraint (using jcanvas)
         $('#'+constraintsCanvasID).drawLayers();
+        $('#'+constraintsCanvasID).on('mousedown', selectArea);
     };
 
     // Redraw an individual constraint
