@@ -41,7 +41,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Callback function of updateTime.
     // Draws to the canvas through the renderer
-    var drawVisuals = function(time) {
+    this.drawVisuals = function(time) {
         // Convert the audio time to visuals time
         var visualsTime = retimerModel.getVisualTime(time);
 
@@ -167,6 +167,9 @@ var VisualsController = function(visuals_model, retimer_model) {
     //     pentimento.timeController.updateTime(duration);
     // };
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // Adding of Visuals
+    ///////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////////
     // Transforming of Visuals
@@ -234,7 +237,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    lectureController.getTimeController().addUpdateTimeCallback(drawVisuals);
+    lectureController.getTimeController().addUpdateTimeCallback(self.drawVisuals);
 
 };
 

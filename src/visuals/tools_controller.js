@@ -65,16 +65,16 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
         switch (tool) {
         	case penTool:
-                visualsController.canvas.on('mousedown', penMouseDown);
                 recordingTool = tool;  // save as active tool
+                visualsController.canvas.on('mousedown', drawMouseDown);
                 break;
             case highlightTool:
-                visualsController.canvas.on('mousedown', highlightMouseDown);
                 recordingTool = tool;  // save as active tool
+                visualsController.canvas.on('mousedown', drawMouseDown);
                 break;
             case selectTool:
-                visualsController.canvas.on('mousedown', selectMouseDown);
                 recordingTool = tool;  // save as active tool
+                visualsController.canvas.on('mousedown', selectMouseDown);
                 break;
             case addSlideTool:
                 visualsController.addSlide();
@@ -144,6 +144,38 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Tools that work in both recording and editing mode
     /////////////////////////////////////////////////////////////////////////////// 
 
+    var drawMouseDown = function(event) {
+        event.preventDefault();
+
+        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
+        selectionBeginPoint = getCanvasPoint(event);
+        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
+        visualsModel.addVisual(visualsController.currentVisual);
+
+        // Register mouse move and mouse up handlers
+        visualsController.canvas.on('mousemove', drawMouseMove);
+        visualsController.canvas.on('mouseup', drawMouseUp);
+    };
+
+    var drawMouseMove = function(event) {
+        event.preventDefault();
+        
+        var curPoint = getCanvasPoint(event);
+        selectionBeginPoint = curPoint;
+        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
+    };
+
+    var drawMouseUp = function(event) {
+        event.preventDefault();
+
+        visualsController.currentVisual = null;
+        selectionBeginPoint = null;
+
+        // Unregister the mouse move and mouse up handlers
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
+    };
+
     // Selects visuals. Used during recording and editing modes.
     // Calculates which visuals are inside the selection and sets them in the visual controller's selection.
     var visualsSelection = function(event) {
@@ -180,6 +212,11 @@ var ToolsController = function(visuals_controller, visuals_model) {
             if ( nVert >= visual.getVertices().length / 2 ) {
                 visualsController.selection.push(visual);
             };
+        };
+
+        // If it is not during a recording, then we manually need to tell the controller to redraw
+        if (!lectureController.isRecording()) {
+            visualsController.drawVisuals(currentVisualTime());
         };
     };
 
@@ -239,70 +276,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
     ///////////////////////////////////////////////////////////////////////////////
     // Recording Mode Tools
     /////////////////////////////////////////////////////////////////////////////// 
-
-    var penMouseDown = function(event) {
-        event.preventDefault();
-
-        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
-        selectionBeginPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
-        visualsModel.addVisual(visualsController.currentVisual);
-
-        // Register mouse move and mouse up handlers
-        visualsController.canvas.on('mousemove', penMouseMove);
-        visualsController.canvas.on('mouseup', penMouseUp);
-    };
-
-    var penMouseMove = function(event) {
-        event.preventDefault();
-        
-        var curPoint = getCanvasPoint(event);
-        selectionBeginPoint = curPoint;
-        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
-    };
-
-    var penMouseUp = function(event) {
-        event.preventDefault();
-
-        visualsController.currentVisual = null;
-        selectionBeginPoint = null;
-
-        // Unregister the mouse move and mouse up handlers
-        visualsController.canvas.off('mousemove');
-        visualsController.canvas.off('mouseup');
-    };
-
-    var highlightMouseDown = function(event) {
-        event.preventDefault();
-
-        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
-        selectionBeginPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
-        visualsModel.addVisual(visualsController.currentVisual);
-
-        // Register mouse move and mouse up handlers
-        visualsController.canvas.on('mousemove', highlightMouseMove);
-        visualsController.canvas.on('mouseup', highlightMouseUp);
-    };
-
-    var highlightMouseMove = function(event) {
-        event.preventDefault();
-        
-        var curPoint = getCanvasPoint(event);
-        selectionBeginPoint = curPoint;
-        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
-    };
-
-    var highlightMouseUp = function(event) {
-        event.preventDefault();
-
-        visualsController.currentVisual = null;
-        selectionBeginPoint = null;
-
-        // Unregister the mouse move and mouse up handlers
-        visualsController.canvas.off('mousemove');
-        visualsController.canvas.off('mouseup');
-    };
 
 
     ///////////////////////////////////////////////////////////////////////////////
