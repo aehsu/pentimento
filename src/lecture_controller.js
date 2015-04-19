@@ -204,7 +204,7 @@ var LectureController = function() {
 
         // Notify controllers depending on the recording types 
         if (self.recordingTypeIsVisuals()) {  // visuals
-            visualsController.beginRecording(beginTime);
+            visualsController.startRecording(beginTime);
         };
         if (self.recordingTypeIsAudio()) {  // audio
             audioController.startRecording(beginTime);
@@ -274,13 +274,9 @@ var LectureController = function() {
         // Set the timeout to stop the recording
         playbackEndTimeout = setTimeout(self.stopPlayback, playbackEndTime - beginTime);
 
-        // Notify controllers depending on the recording types 
-        if (self.recordingTypeIsVisuals()) {  // visuals
-            // Do nothing
-        };
-        if (self.recordingTypeIsAudio()) {  // audio
-            audioController.startPlayback(beginTime);
-        };
+        // Notify controllers
+        visualsController.startPlayback(beginTime);
+        audioController.startPlayback(beginTime);
 
         // Update the UI buttons
         updateButtons();
@@ -309,13 +305,9 @@ var LectureController = function() {
 
         var endTime = timeController.getEndTime();
 
-        // Notify controllers depending on the recording types 
-        if (self.recordingTypeIsVisuals()) {  // visuals
-            // Do nothing
-        };
-        if (self.recordingTypeIsAudio()) {  // audio
-            audioController.stopPlayback(endTime);
-        };
+        // Notify controllers
+        visualsController.stopPlayback(endTime);
+        audioController.stopPlayback(endTime);
 
         // Update the UI buttons
         updateButtons();

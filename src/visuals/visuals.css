@@ -27,12 +27,29 @@
     padding: 0;
 }
 
-#sketchpad {
+#sketchpadWrap {
+    position: absolute;
     float: left;
     display: inline-block;
     vertical-align: top;
     border: 1px solid black;
+    margin: 0;
+    padding: 0;
+}
+
+#sketchpad {
+    position: absolute;
+    left: 0;
+    top: 0;
     cursor: crosshair;
+    margin: 0;
+    padding: 0;
+}
+
+#sketchpadOverlay {
+    pointer-events: none;
+    left: 0;
+    top: 0;
     margin: 0;
     padding: 0;
 }
@@ -43,10 +60,15 @@
     margin-top:10px;
 }
 
+#selectionBox {
+    position: absolute;
+    border: 1px solid red;
+}
+
 #sketchpad .ui-resizable-handle {
+    position: absolute;
     height: 100%;
     width: 5px;
-    position: absolute;
 }
 #sketchpad .ui-resizable-w {
     cursor: w-resize;

@@ -10,17 +10,17 @@ var VisualsController = function(visuals_model, retimer_model) {
     var toolsController = null;
     var renderer = null;
 
-    // Variables used for recording
+    // Variables used for keeping track of recording information
     var originSlide = null;
     var originSlideDuration = null;
-    var shiftInterval = null;
     var slideBeginTime = NaN;
 
     // DOM elements
-    var canvasID = "sketchpad";
-
+    var canvasID = 'sketchpad';
+    var canvasOverlayID = 'sketchpadOverlay';  // Used for displaying HTML elements on top of the canvas
     this.canvas = null;
-    this.lastPoint = null;
+    this.canvasOverlay = null;
+
     this.currentVisual = null;
     this.selection = [];
 
@@ -46,9 +46,8 @@ var VisualsController = function(visuals_model, retimer_model) {
         var visualsTime = retimerModel.getVisualTime(time);
 
         // Render the canvas
-        var canvas = $('#' + canvasID);
-        var context = canvas[0].getContext('2d')
-        renderer.drawCanvas(canvas, context, 0, visualsTime);
+        var context = self.canvas[0].getContext('2d')
+        renderer.drawCanvas(self.canvas, context, 0, visualsTime);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -56,9 +55,10 @@ var VisualsController = function(visuals_model, retimer_model) {
     //
     // Handlers for when recording begins and ends.
     // Includes helper functions for recording logic.
+    // Informs the tools controller of changes in recording status.
     ///////////////////////////////////////////////////////////////////////////////
 
-    this.beginRecording = function(currentTime) {
+    this.startRecording = function(currentTime) {
 
         if (!visualsModel.getSlideAtTime(currentTime)) {
             console.error("there is no current slide");
@@ -74,6 +74,9 @@ var VisualsController = function(visuals_model, retimer_model) {
         originSlide = visualsModel.getSlideAtTime(currentTime);
         originSlideDuration = originSlide.getDuration();
         visualsModel.setDirtyVisuals(slideBeginTime);
+
+        // Signal the tools controller
+        toolsController.startRecording();
     };
 
     this.stopRecording = function(currentTime) {
@@ -91,6 +94,23 @@ var VisualsController = function(visuals_model, retimer_model) {
         slideBeginTime = NaN;
         originSlide = null;
         originSlideDuration = null;
+
+        // Signal the tools controller
+        toolsController.stopRecording();
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Playback of Visuals
+    //
+    // Nothing needs to be done except letting the tools controller know
+    ///////////////////////////////////////////////////////////////////////////////
+
+    this.startPlayback = function(currentTime) {
+        toolsController.startPlayback();
+    };
+
+    this.stopPlayback = function(currentTime) {
+        toolsController.stopPlayback();
     };
 
 
@@ -197,14 +217,19 @@ var VisualsController = function(visuals_model, retimer_model) {
     visualsModel = visuals_model;
     retimerModel = retimer_model;
 
-    // Setup the canvas and context
+    // Setup the canvas and overlay dimensions
     // Canvas size must be set using attributes, not CSS
     self.canvas = $('#'+canvasID);
     self.canvas.attr('width', visualsModel.getCanvasSize().width)
                 .attr('height', visualsModel.getCanvasSize().height);
+    self.canvasOverlay = $('#'+canvasOverlayID);
+    self.canvasOverlay.css('width', visualsModel.getCanvasSize().width)
+                    .css('height', visualsModel.getCanvasSize().height);
+
+    // Get the context from the canvas
     self.context = self.canvas[0].getContext('2d');
 
-
+    // Initialize other controllers
     toolsController = new ToolsController(self, visualsModel);
     renderer = new Renderer(self);
 

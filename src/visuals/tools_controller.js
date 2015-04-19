@@ -5,8 +5,13 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     var visualsController = null;
     var visualsModel = null;
+
+    // Certain tools can remain active for multiple uses
     var recordingTool = null;
     var editingTool = null;
+
+    // Point to keep track of the beginning of a selection rectangle
+    var selectionBeginPoint = null;
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM
@@ -27,60 +32,62 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var penTool = 'pen';
     var highlightTool = 'highlight';
     var widthTool = 'width';
-    var deleteVisualTool = 'delete-visual';
     var addSlideTool = 'add-slide'; 
     var deleteTool = 'delete';
     var redrawTool = 'redraw';
     var deleteSlideTool = 'delete-slide'; 
 
-    // this.enableRecordingTools = function() {
-
-    // };
-
-    // this.enableEditingTools = function() {
-
-    // };
-
-    var currentSlide = function() {
-        return visualsModel.getSlideAtTime(lectureController.getTimeController().getTime());
-    };
+    // Box used showing selection area
+    var selectionBoxID = 'selectionBox';
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Callbacks
+    // Activating and deactivating tools on recording and playback
     /////////////////////////////////////////////////////////////////////////////// 
 
-    var recordingToolHandler = function(tool, event) {
+    this.startRecording = function() {
+        recordingToolActivate(recordingTool);
+    };
+
+    this.stopRecording = function() {
+        editToolActivate(editingTool);
+    };
+
+    this.startPlayback = function() {
+
+    };
+
+    this.stopPlayback = function() {
+        editToolActivate(editingTool);
+    };
+
+    var recordingToolActivate = function(tool) {
         clearPreviousHandlers();
 
         switch (tool) {
         	case penTool:
                 visualsController.canvas.on('mousedown', penMouseDown);
-                visualsController.canvas.on('mousemove', penMouseMove);
-                visualsController.canvas.on('mouseup', penMouseUp);
                 recordingTool = tool;  // save as active tool
                 break;
             case highlightTool:
                 visualsController.canvas.on('mousedown', highlightMouseDown);
-                visualsController.canvas.on('mousemove', highlightMouseMove);
-                visualsController.canvas.on('mouseup', highlightMouseUp);
+                recordingTool = tool;  // save as active tool
+                break;
+            case selectTool:
+                visualsController.canvas.on('mousedown', selectMouseDown);
                 recordingTool = tool;  // save as active tool
                 break;
             case addSlideTool:
                 visualsController.addSlide();
                 break;
         	case widthTool:
-                visualsController.width = parseInt($(event.target).val());
+                visualsController.width = parseInt($('#'+recordingToolsContainerID+' .'+widthTool).val());
         		break;
-            case selectTool:
-                visualsController.canvas.on('mousedown', lectureSelectMouseDown);
-                visualsController.canvas.on('mousemove', lectureSelectMouseMove);
-                visualsController.canvas.on('mouseup', lectureSelectMouseUp);
-                break;
-        	case deleteVisualTool:
+        	case deleteTool:
+                // TODO: this should be a controller method because it should use the undo manager
                 visualsModel.setTDeletion(visualsController.selection, currentVisualTime());
         		break;
         	default:
-        		console.error('Unrecognized tool clicked, live tools');
+        		console.error('Unrecognized tool clicked, recording tools');
         		console.error(tool);
         };
     };
@@ -88,14 +95,12 @@ var ToolsController = function(visuals_controller, visuals_model) {
     //Editing tools handling. These are typically direct invocations of the proper
     //controller to handle the lecture model directly. Therefore, the handling of groups for
     //the editing tools also belongs here.
-    var editToolHandler = function(tool, event) {
+    var editToolActivate = function(tool) {
         clearPreviousHandlers();
 
         switch(tool) {
             case selectTool:
-                visualsController.canvas.on('mousedown', editSelectMouseDown);
-                visualsController.canvas.on('mousemove', editSelectMouseMove);
-                visualsController.canvas.on('mouseup', editSelectMouseUp);
+                visualsController.canvas.on('mousedown', selectMouseDown);
                 editingTool = tool;
                 break;
         	case deleteTool:
@@ -120,7 +125,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             case deleteSlideTool:
                 visualsController.deleteSlide(currentSlide());
         	default:
-        		console.error('Unrecognized tool clicked, non live tools');
+        		console.error('Unrecognized tool clicked, editing tools');
         		console.error(this);
         }
     }
@@ -131,187 +136,189 @@ var ToolsController = function(visuals_controller, visuals_model) {
         visualsController.canvas.off('mousedown');
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
-    }
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Recording and Editing Tools
+    //
+    // Tools that work in both recording and editing mode
+    /////////////////////////////////////////////////////////////////////////////// 
+
+    // Selects visuals. Used during recording and editing modes.
+    // Calculates which visuals are inside the selection and sets them in the visual controller's selection.
+    var visualsSelection = function(event) {
+
+        // Clear the selection every time
+        visualsController.selection = [];
+
+        var coord = getCanvasPoint(event);
+
+        // Iterate over the visuals of the slide to find ones that are within the bounding box at the current time
+        // Add those visuals to the visuals controller's selection.
+        var visualsIter = currentSlide().getVisualsIterator();
+        while(visualsIter.hasNext()) {
+            var visual = visualsIter.next();
+
+            // Ignore visuals that are not visible at the current time
+            if ( !isVisualVisible(visual, currentVisualTime()) ) { 
+                continue;
+            }
+
+            // Iterate over the vertices and count the verticies that are
+            // visible at the current time and inside the selection box
+            var nVert = 0;
+            var vertIter = visual.getVerticesIterator();
+            while (vertIter.hasNext()) {
+                var vertex = vertIter.next();
+                if (isVertexVisible(vertex, currentVisualTime) &&
+                    isInside(selectionBeginPoint, coord, vertex)) { 
+                    nVert++; 
+                };
+            };
+
+            // If more than half of the vertices are selected, then the visual should be added to the selection
+            if ( nVert >= visual.getVertices().length / 2 ) {
+                visualsController.selection.push(visual);
+            };
+        };
+    };
+
+    var selectMouseDown = function(event) {
+        event.preventDefault();
+        selectionBeginPoint = getCanvasPoint(event);
+        visualsController.selection = [];
+
+        // Create a draggable div to indicate the selection box
+        var selectionDiv = $('<div></div>').attr('id', selectionBoxID);
+        // selectionDiv.draggable({stop: function(event, ui) {
+        //     event.preventDefault();
+        //     event.stopImmediatePropagation();
+        //     // $( event.toElement ).one('click', function(e){ e.stopImmediatePropagation(); } );
+        // }});
+        selectionDiv.css('width', 0)
+                    .css('height', 0);
+        visualsController.canvasOverlay.append(selectionDiv);
+
+        // Register mouse move and mouse up handlers
+        visualsController.canvas.on('mousemove', selectMouseMove);
+        visualsController.canvas.on('mouseup', selectMouseUp);
+    };
+
+    var selectMouseMove = function(event) {
+        event.preventDefault();
+
+        // Update the dimensions of the selection box
+        var coord = getCanvasPoint(event);
+        var left = Math.min(coord.getX(), selectionBeginPoint.getX());
+        var right = Math.max(coord.getX(), selectionBeginPoint.getX());
+        var top = Math.min(coord.getY(), selectionBeginPoint.getY());
+        var bottom = Math.max(coord.getY(), selectionBeginPoint.getY());
+        $('#'+selectionBoxID).css('left', left)
+                            .css('top', top)
+                            .css('width', right - left)
+                            .css('height', bottom - top);
+
+        // Select the visuals inside the selection box
+        visualsSelection(event);
+        console.log(visualsController.selection);
+    };
+
+    var selectMouseUp = function(event) {
+        event.preventDefault();
+        selectionBeginPoint = null;
+
+        // Unregister the mouse move and mouse up handlers
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
+
+        // Remove the the selection box
+        $('#'+selectionBoxID).remove();
+    };
 
 
-    /**********************************RECORDING-MODE TOOLS**********************************/
+    ///////////////////////////////////////////////////////////////////////////////
+    // Recording Mode Tools
+    /////////////////////////////////////////////////////////////////////////////// 
+
     var penMouseDown = function(event) {
         event.preventDefault();
+
         visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
-        visualsController.lastPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(visualsController.lastPoint);
+        selectionBeginPoint = getCanvasPoint(event);
+        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
         visualsModel.addVisual(visualsController.currentVisual);
-    }
+
+        // Register mouse move and mouse up handlers
+        visualsController.canvas.on('mousemove', penMouseMove);
+        visualsController.canvas.on('mouseup', penMouseUp);
+    };
 
     var penMouseMove = function(event) {
         event.preventDefault();
-        if (lectureController.leftMouseButton) {
-            var curPoint = getCanvasPoint(event);
-            visualsController.lastPoint = curPoint;
-            visualsModel.appendVertex(visualsController.currentVisual, curPoint);
-        }
-    }
+        
+        var curPoint = getCanvasPoint(event);
+        selectionBeginPoint = curPoint;
+        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
+    };
 
     var penMouseUp = function(event) {
         event.preventDefault();
-        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsController.currentVisual = null;
-            visualsController.lastPoint = null;
-        }
-    }
+
+        visualsController.currentVisual = null;
+        selectionBeginPoint = null;
+
+        // Unregister the mouse move and mouse up handlers
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
+    };
 
     var highlightMouseDown = function(event) {
         event.preventDefault();
-        penMouseDown(event);
-    }
+
+        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
+        selectionBeginPoint = getCanvasPoint(event);
+        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
+        visualsModel.addVisual(visualsController.currentVisual);
+
+        // Register mouse move and mouse up handlers
+        visualsController.canvas.on('mousemove', highlightMouseMove);
+        visualsController.canvas.on('mouseup', highlightMouseUp);
+    };
 
     var highlightMouseMove = function(event) {
         event.preventDefault();
-        penMouseMove(event);
-    }
+        
+        var curPoint = getCanvasPoint(event);
+        selectionBeginPoint = curPoint;
+        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
+    };
 
     var highlightMouseUp = function(event) {
         event.preventDefault();
-        var highlightTime = 750; //duration for a highlighter, in ms
-        if(visualsController.currentVisual) { //check for not null and not undefined  != null && !=undefined
-            visualsModel.setTDeletion([visualsController.currentVisual], currentVisualTime() + highlightTime);
-            visualsController.currentVisual = null;
-            visualsController.lastPoint = null;
-        }
-    }
 
-    var lectureSelection = function(event) {
-        event.preventDefault();
-        var coord = getCanvasPoint(event);
-        var ctx = visualsController.context;
-        var visualsIter = currentSlide().getVisualsIterator();
-        while(visualsIter.hasNext()) {
-            var visual = visualsIter.next();
-            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
+        visualsController.currentVisual = null;
+        selectionBeginPoint = null;
 
-            var nVert = 0;
-            var vertIter = visual.getVerticesIterator();
-            while (vertIter.hasNext()) {
-                var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
-                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
-            }
-            if(nVert/visual.getVertices().length >= .45 && visualsController.selection.indexOf(visual)==-1) {
-                var t = currentVisualTime();
-                visualsController.selection.push(visual);
-                visualsModel.addProperty(visual, new VisualPropertyTransform("color", "#0000FF", t));
-                //TODO should be fixed to be 
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getLastRelevant(visual, "width", lectureController.getTimeController().getTime()).width+1, t));
-            } else if(nVert/visual.getVertices().length < .45 && visualsController.selection.indexOf(visual)>-1) {
-                visualsController.selection.splice(visualsController.selection.indexOf(visual), 1);
-                visualsModel.addProperty(visual, new VisualPropertyTransform("color", getPreviousLastRelevant(visual, "color", lectureController.getTimeController().getTime()), t));
-                visualsModel.addProperty(visual, new VisualPropertyTransform("width", getPreviousLastRelevant(visual, "width", lectureController.getTimeController().getTime()), t));
-            }
-        }
-    }
+        // Unregister the mouse move and mouse up handlers
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
+    };
 
-    var lectureSelectMouseDown = function(event) {
-        event.preventDefault();
-        visualsController.lastPoint = getCanvasPoint(event);
-        lectureSelection(event);
-    }
 
-    var lectureSelectMouseMove = function(event) {
-        event.preventDefault();
+    ///////////////////////////////////////////////////////////////////////////////
+    // Editing Mode Tools
+    /////////////////////////////////////////////////////////////////////////////// 
 
-        if (!visualsController.lastPoint) {
-            return;
-        };
-        
-        if (!lectureController.leftMouseButton) {
-            return;
-        }
-
-        var ctx = visualsController.context;
-        var coord = getCanvasPoint(event);
-        
-        lectureSelection(event);
-
-        ctx.strokeStyle = "#0000FF";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
-
-        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
-        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
-    }
-
-    var lectureSelectMouseUp = function(event) {
-        event.preventDefault();
-        visualsController.lastPoint = null;
-        //do nothing
-    }
-
-    var lectureDelete = function() {
-
-    }
-    /**********************************RECORDING-MODE TOOLS**********************************/
-
-    /**********************************EDITING-MODE TOOLS**********************************/
-    var editSelectMouseDown = function(event) {
-        event.preventDefault();
-        visualsController.lastPoint = getCanvasPoint(event);
-        visualsController.selection = [];
-    }
-
-    var editSelectMouseMove = function(event) {
-        if (!visualsController.lastPoint) {
-            return;
-        };
-
-        event.preventDefault();
-
-        var coord = getCanvasPoint(event);
-        var ctx = visualsController.context;
-        visualsController.selection = [];
-
-        var visualsIter = currentSlide().getVisualsIterator();
-        while(visualsIter.hasNext()) {
-            var visual = visualsIter.next();
-            if (!isVisualVisible(visual, lectureController.getTimeController().getTime())) { continue; }
-
-            var nVert = 0;
-            var vertIter = visual.getVerticesIterator();
-            while (vertIter.hasNext()) {
-                var vertex = vertIter.next();
-                if (!isVertexVisible(vertex, lectureController.getTimeController().getTime())) { continue; }
-                if (isInside(visualsController.lastPoint, coord, vertex)) { nVert++; }
-            }
-            if(nVert/visual.getVertices().length >= .45) {
-                visualsController.selection.push(visual);
-            }
-        }
-
-        ctx.strokeStyle = "#0000FF";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(visualsController.lastPoint.getX(), visualsController.lastPoint.getY(), coord.getX()-visualsController.lastPoint.getX(), coord.getY()-visualsController.lastPoint.getY());
-
-        ctx.strokeStyle = visualsController.color; // should be valid if you say visualsController.color
-        ctx.lineWidth = visualsController.width; // should be valid if you say visualsController.width
-    }
-
-    var editSelectMouseUp = function(event) {
-        event.preventDefault();
-        for(var i in visualsController.selection) {
-            var visCopy = visualsController.selection[i].getClone();
-            var propsCopy = visCopy.getProperties();
-            propsCopy.setWidth(propsCopy.getWidth()+1);
-            propsCopy.setColor("#0000FF");
-            // drawVisual(visCopy, false, 0, false, {});
-        }
-        visualsController.lastPoint = null;
-    }
-    /**********************************EDITING-MODE TOOLS**********************************/
 
 
     ///////////////////////////////////////////////////////////////////////////////
     // Helpers
     /////////////////////////////////////////////////////////////////////////////// 
 
+    // Get the slide at the current time
+    var currentSlide = function() {
+        return visualsModel.getSlideAtTime(lectureController.getTimeController().getTime());
+    };
 
     // Shortcut for the time controller time converted to visual time through the retimer
     var currentVisualTime = function() {
@@ -331,37 +338,22 @@ var ToolsController = function(visuals_controller, visuals_model) {
         ctx.beginPath();
         ctx.moveTo(segment.getFromPoint().getX(), segment.getFromPoint().getY());
         ctx.lineTo(segment.getToPoint().getX(), segment.getToPoint().getY());
-
-        if (visualsController.pressure) { //some fancy stuff based on pressure
-            /*var avg_pressure = 0.5 * (line.from.pressure + line.to.pressure)
-
-            if (pressure_color) {
-                var alpha = (1 - 0.5) + 0.5 * avg_pressure
-                line.color = 'rgba(32,32,32,' + alpha + ')' // todo use defaults
-            }
-            else { line.color = 'rgba(64,64,64,1)' }   // todo use defaults
-
-            if (pressure_width) { line.width = 1 + Math.round(max_extra_line_width * avg_pressure) }  // todo use defaults
-            else { line.width = 2 } // todo use defaults
-
-            canvas.drawLine(line)*/
-        } else {
-            ctx.strokeStyle = segment.getProperties().getColor();
-            ctx.lineWidth = segment.getProperties().getWidth();
-            ctx.lineCap = 'round';
-            ctx.stroke();
-        }
+        ctx.strokeStyle = segment.getProperties().getColor();
+        ctx.lineWidth = segment.getProperties().getWidth();
+        ctx.lineCap = 'round';
+        ctx.stroke();
     }
 
-    var isInside = function(startPoint, endPoint, testPoint) {
-        var xStart = startPoint.getX();
-        var yStart = startPoint.getY();
-        var xEnd = endPoint.getX();
-        var yEnd = endPoint.getY();
+    // Tests if the test vertex is inside the rectangle formed by the two verticies.
+    var isInside = function(rectPoint1, rectPoint2, testPoint) {
+        var x1 = rectPoint1.getX();
+        var x2 = rectPoint2.getX();
+        var y1 = rectPoint1.getY();
+        var y2 = rectPoint2.getY();
         var x = testPoint.getX();
         var y = testPoint.getY();
-        var xcheck = (xEnd >= xStart && xEnd >= x && x >= xStart) || (xEnd <= xStart && xEnd <= x && x <= xStart);
-        var ycheck = (yEnd >= yStart && yEnd >= y && y >= yStart) || (yEnd <= yStart && yEnd <= y && y <= yStart);
+        var xcheck = (x2 >= x1 && x2 >= x && x >= x1) || (x2 <= x1 && x2 <= x && x <= x1);
+        var ycheck = (y2 >= y1 && y2 >= y && y >= y1) || (y2 <= y1 && y2 <= y && y <= y1);
 
         return xcheck && ycheck;
     }
@@ -426,9 +418,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
         }
     }
 
-    /***********************************************************************/
-    /***********************************************************************/
-    /***********************************************************************/
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -436,6 +425,12 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     visualsController = visuals_controller;
     visualsModel = visuals_model;
+
+    // Set the initial tools
+    recordingTool = penTool;
+    editingTool = selectTool;
+    // recordingToolActivate(recordingTool);
+    editToolActivate(editingTool);
 
     // Register the handler for the recording tools
     $('#'+recordingToolsContainerID+' .'+toolClass).click(function(event) {
@@ -445,7 +440,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
         // Get the tool name through the attribute
         var tool = $(event.target).attr(toolNameAttr);
 
-        recordingToolHandler(tool, event);
+        recordingToolActivate(tool);
     });
 
     // Register the handler for the editing tools
@@ -456,20 +451,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
         // Get the tool name through the attribute
         var tool = $(event.target).attr(toolNameAttr);
 
-        editToolHandler(tool, event);
+        editToolActivate(tool);
     });
-    // $('.'+toolClass).change(function(event) {
-    //     console.log('tool changed');
-        
-    //     event.stopPropagation(); 
-
-    //     // Get the tool name through the attribute
-    //     var tool = $(event.target).attr(toolNameAttr);
-
-    //     toolHandler(tool, event);
-    // });
-
-    // Set the initial tools
-    recordingToolHandler(penTool);
-    // editToolHandler(selectTool);
 };
