@@ -16,6 +16,10 @@
     padding: 0;
 }
 
+#visualsRecordingTools.hidden {
+    display: none;
+}
+
 #visualsEditingTools {
     float: left;
     display: inline-block;
@@ -25,6 +29,10 @@
     height: 100%;
     margin: 0;
     padding: 0;
+}
+
+#visualsEditingTools.hidden {
+    display: none;
 }
 
 #sketchpadWrap {
@@ -47,11 +55,11 @@
 }
 
 #sketchpadOverlay {
-    pointer-events: none;
     left: 0;
     top: 0;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 .visuals-tool {
@@ -63,6 +71,7 @@
 #selectionBox {
     position: absolute;
     border: 1px solid red;
+    cursor: move;
 }
 
 #sketchpad .ui-resizable-handle {

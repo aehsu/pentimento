@@ -84,7 +84,7 @@
             <label class="ui-label"><b>Recording</b></label><br>
 
             <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
-            <label class="ui-label">Selection for editing <br> (eraser side of stylus)</label><br>
+            <label class="ui-label">Select</label><br>
 
             <input type="image" src="icons/feather-2.png" class="visuals-tool" data-toolname="pen"><br>
             <label class="ui-label">Pen</label><br>
@@ -125,10 +125,8 @@
             <label class="ui-label">Delete</label><br>
 
             <input type="image" src="icons/pen.png" class="visuals-tool" data-toolname="redraw"><br>
-            <label class="ui-label">Redraw Selection</label><br>
-
             <select data-toolname="width">
-                <option value="">Stroke Width</option>
+                <option value="">Default Width</option>
                 <option value="2">2</option>
                 <option value="4">4</option>
                 <option value="6">6</option>
@@ -140,6 +138,7 @@
                 <option value="18">18</option>
                 <option value="20">20</option>
             </select><br>
+            <label class="ui-label">Redraw Selection</label><br>
 
             <input type="image" src="icons/trashPage.png" class="visuals-tool" data-toolname="delete-slide"><br>
             <label class="ui-label">Delete Slide</label>
@@ -148,7 +147,9 @@
         <!-- canvas -->
         <div id="sketchpadWrap">
             <canvas id="sketchpad"></canvas>
-            <div id="sketchpadOverlay"></div>
+            <div id="sketchpadOverlay">
+                <div id="selectionBox"></div>
+            </div>
         </div>
     </div>
 

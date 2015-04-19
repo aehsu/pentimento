@@ -2,6 +2,7 @@
 "use strict";
 
 var ToolsController = function(visuals_controller, visuals_model) {
+    var self = this;
 
     var visualsController = null;
     var visualsModel = null;
@@ -21,6 +22,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Recording tools are used during a recording, and editing tools are used when not recording
     var recordingToolsContainerID = 'visualsRecordingTools';
     var editingToolsContainerID = 'visualsEditingTools';
+
+    // Class for hiding elements
+    var hiddenClass = 'hidden';
 
     // Class for all visual tools
     var toolClass = 'visuals-tool';
@@ -45,31 +49,48 @@ var ToolsController = function(visuals_controller, visuals_model) {
     /////////////////////////////////////////////////////////////////////////////// 
 
     this.startRecording = function() {
+        // Activate the current recording tool
         recordingToolActivate(recordingTool);
+
+        // Show the recording tools
+        $('#'+recordingToolsContainerID).removeClass(hiddenClass);
+
+        // Hide the editing tools
+        $('#'+editingToolsContainerID).addClass(hiddenClass);
     };
 
     this.stopRecording = function() {
+        // Activate the current editing tool
         editToolActivate(editingTool);
+
+        // Show the editing tools
+        $('#'+editingToolsContainerID).removeClass(hiddenClass);
+
+        // Hide the recording tools
+        $('#'+recordingToolsContainerID).addClass(hiddenClass);
     };
 
     this.startPlayback = function() {
-
+        // Disable the tools UI
     };
 
     this.stopPlayback = function() {
-        editToolActivate(editingTool);
+        // Enable the tools UI
+        
     };
 
     var recordingToolActivate = function(tool) {
-        clearPreviousHandlers();
+        resetToolElements();
 
         switch (tool) {
         	case penTool:
                 recordingTool = tool;  // save as active tool
+                visualsController.selection = [];  // remove selection when drawing
                 visualsController.canvas.on('mousedown', drawMouseDown);
                 break;
             case highlightTool:
                 recordingTool = tool;  // save as active tool
+                visualsController.selection = [];  // remove selection when drawing
                 visualsController.canvas.on('mousedown', drawMouseDown);
                 break;
             case selectTool:
@@ -96,7 +117,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
     //controller to handle the lecture model directly. Therefore, the handling of groups for
     //the editing tools also belongs here.
     var editToolActivate = function(tool) {
-        clearPreviousHandlers();
+        resetToolElements();
 
         switch(tool) {
             case selectTool:
@@ -130,12 +151,16 @@ var ToolsController = function(visuals_controller, visuals_model) {
         }
     }
 
-    //Removes handlers from the previous tool, while preserving other handlers
-    //not related to the previous tool
-    var clearPreviousHandlers = function() {
+    // Resets UI elements and handlers related to the tools.
+    //Removes handlers from the previous tool, and reset the dimensions of the selection box.
+    var resetToolElements = function() {
+        // Removes the handlers from the previous tools
         visualsController.canvas.off('mousedown');
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
+
+        // Reset the selection box
+        resetSelectionBox();
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -146,10 +171,11 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     var drawMouseDown = function(event) {
         event.preventDefault();
+        event.stopPropagation();
 
         visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
-        selectionBeginPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(selectionBeginPoint);
+        var canvasPoint = getCanvasPoint(event);
+        visualsController.currentVisual.getVertices().push(canvasPoint);
         visualsModel.addVisual(visualsController.currentVisual);
 
         // Register mouse move and mouse up handlers
@@ -159,31 +185,70 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
     var drawMouseMove = function(event) {
         event.preventDefault();
+        event.stopPropagation();
         
         var curPoint = getCanvasPoint(event);
-        selectionBeginPoint = curPoint;
         visualsModel.appendVertex(visualsController.currentVisual, curPoint);
     };
 
     var drawMouseUp = function(event) {
         event.preventDefault();
+        event.stopPropagation();
 
         visualsController.currentVisual = null;
-        selectionBeginPoint = null;
 
         // Unregister the mouse move and mouse up handlers
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
     };
 
-    // Selects visuals. Used during recording and editing modes.
-    // Calculates which visuals are inside the selection and sets them in the visual controller's selection.
-    var visualsSelection = function(event) {
+    // Reset the selection box so that it is not visible and that the UI is turned off
+    var resetSelectionBox = function(event) {
+
+        // Hide the selection box and reset the size to 1
+        $('#'+selectionBoxID).addClass(hiddenClass)
+                             .css('width', 1)
+                             .css('height', 1);
+
+        // Turn off events for the overlay so that the selection box creation can work properly
+        visualsController.canvasOverlay.css('pointer-events', 'none');
+    };
+
+    var selectMouseDown = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        selectionBeginPoint = getCanvasPoint(event);
+
+        visualsController.selection = [];
+
+        // The selection box is reset each time the mouse clicks down so that a new
+        // box can be drawn.
+        resetSelectionBox();
+
+        // Register mouse move and mouse up handlers
+        visualsController.canvas.on('mousemove', selectMouseMove);
+        visualsController.canvas.on('mouseup', selectMouseUp);
+    };
+
+    var selectMouseMove = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Update the dimensions of the selection box and make sure it is not hidden
+        var coord = getCanvasPoint(event);
+        var left = Math.min(coord.getX(), selectionBeginPoint.getX());
+        var right = Math.max(coord.getX(), selectionBeginPoint.getX());
+        var top = Math.min(coord.getY(), selectionBeginPoint.getY());
+        var bottom = Math.max(coord.getY(), selectionBeginPoint.getY());
+        $('#'+selectionBoxID).removeClass(hiddenClass)
+                            .css('left', left)
+                            .css('top', top)
+                            .css('width', right - left)
+                            .css('height', bottom - top);
 
         // Clear the selection every time
         visualsController.selection = [];
-
-        var coord = getCanvasPoint(event);
 
         // Iterate over the visuals of the slide to find ones that are within the bounding box at the current time
         // Add those visuals to the visuals controller's selection.
@@ -218,58 +283,22 @@ var ToolsController = function(visuals_controller, visuals_model) {
         if (!lectureController.isRecording()) {
             visualsController.drawVisuals(currentVisualTime());
         };
-    };
 
-    var selectMouseDown = function(event) {
-        event.preventDefault();
-        selectionBeginPoint = getCanvasPoint(event);
-        visualsController.selection = [];
-
-        // Create a draggable div to indicate the selection box
-        var selectionDiv = $('<div></div>').attr('id', selectionBoxID);
-        // selectionDiv.draggable({stop: function(event, ui) {
-        //     event.preventDefault();
-        //     event.stopImmediatePropagation();
-        //     // $( event.toElement ).one('click', function(e){ e.stopImmediatePropagation(); } );
-        // }});
-        selectionDiv.css('width', 0)
-                    .css('height', 0);
-        visualsController.canvasOverlay.append(selectionDiv);
-
-        // Register mouse move and mouse up handlers
-        visualsController.canvas.on('mousemove', selectMouseMove);
-        visualsController.canvas.on('mouseup', selectMouseUp);
-    };
-
-    var selectMouseMove = function(event) {
-        event.preventDefault();
-
-        // Update the dimensions of the selection box
-        var coord = getCanvasPoint(event);
-        var left = Math.min(coord.getX(), selectionBeginPoint.getX());
-        var right = Math.max(coord.getX(), selectionBeginPoint.getX());
-        var top = Math.min(coord.getY(), selectionBeginPoint.getY());
-        var bottom = Math.max(coord.getY(), selectionBeginPoint.getY());
-        $('#'+selectionBoxID).css('left', left)
-                            .css('top', top)
-                            .css('width', right - left)
-                            .css('height', bottom - top);
-
-        // Select the visuals inside the selection box
-        visualsSelection(event);
-        console.log(visualsController.selection);
+        // console.log(visualsController.selection);
     };
 
     var selectMouseUp = function(event) {
         event.preventDefault();
+        event.stopPropagation();
+
         selectionBeginPoint = null;
 
         // Unregister the mouse move and mouse up handlers
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
 
-        // Remove the the selection box
-        $('#'+selectionBoxID).remove();
+        // Turn on events for the overlay canvas to allow dragging of the div
+        visualsController.canvasOverlay.css('pointer-events', 'auto');
     };
 
 
@@ -283,39 +312,19 @@ var ToolsController = function(visuals_controller, visuals_model) {
     /////////////////////////////////////////////////////////////////////////////// 
 
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // Helpers
     /////////////////////////////////////////////////////////////////////////////// 
 
     // Get the slide at the current time
     var currentSlide = function() {
-        return visualsModel.getSlideAtTime(lectureController.getTimeController().getTime());
+        return visualsModel.getSlideAtTime(currentVisualTime());
     };
 
     // Shortcut for the time controller time converted to visual time through the retimer
     var currentVisualTime = function() {
         return visualsController.getRetimerModel().getVisualTime(lectureController.getTimeController().getTime());
     };
-
-    //This helps in redering, but is fundamental to the tool handlers themselves.
-    //Only "finished" visuals leave the buffer and are put into the model, so
-    //something needs to draw the buffered visuals, like the handlers.
-
-    //Draws a line segment based on a from point and a to point,
-    //with a set of properties. Whoever calls this is in charge of giving the
-    //segment the correct properties
-    var drawLine = function(segment) {
-        var ctx = visualsController.context;
-        ctx.globalAlpha = 1.0;
-        ctx.beginPath();
-        ctx.moveTo(segment.getFromPoint().getX(), segment.getFromPoint().getY());
-        ctx.lineTo(segment.getToPoint().getX(), segment.getToPoint().getY());
-        ctx.strokeStyle = segment.getProperties().getColor();
-        ctx.lineWidth = segment.getProperties().getWidth();
-        ctx.lineCap = 'round';
-        ctx.stroke();
-    }
 
     // Tests if the test vertex is inside the rectangle formed by the two verticies.
     var isInside = function(rectPoint1, rectPoint2, testPoint) {
@@ -329,52 +338,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
         var ycheck = (y2 >= y1 && y2 >= y && y >= y1) || (y2 <= y1 && y2 <= y && y <= y1);
 
         return xcheck && ycheck;
-    }
-
-    var getPreviousLastRelevant = function(visual, property, tVis) {
-        var last = getLastRelevant(visual, property, tVis);
-        if(property=="width") {
-            var prev = visual.getProperties().width;
-            var propTrans = visual.getPropertyTransforms();
-            for(var i in propTrans) {
-                if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < last.getTime()) {
-                    prev = propTrans[i].getValue();
-                }
-            }
-            return prev;
-        } else if(property=="color") {
-            var prev = visual.getProperties().color;
-            var propTrans = visual.getPropertyTransforms();
-            for(var i in propTrans) {
-                if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < last.getTime()) {
-                    prev = propTrans[i].getValue();
-                }
-            }
-            return prev;
-        }
-    }
-
-    //property is either width or color
-    var getLastRelevant = function(visual, property, tVis) {
-        if(property=="width") {
-            var last = visual.getProperties();
-            var propTrans = visual.getPropertyTransforms();
-            for(var i in propTrans) {
-                if(propTrans[i].getProperty()=="width" && propTrans[i].getTime() < tVis) {
-                    last = propTrans[i];
-                }
-            }
-            return last;
-        } else if(property=="color") {
-            var last = visual.getProperties();
-            var propTrans = visual.getPropertyTransforms();
-            for(var i in propTrans) {
-                if(propTrans[i].getProperty()=="color" && propTrans[i].getTime() < tVis) {
-                    last = propTrans[i];
-                }
-            }
-            return last;
-        }
     }
 
     // Gives the location of the event on the canvas, as opposed to on the page
@@ -402,8 +365,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Set the initial tools
     recordingTool = penTool;
     editingTool = selectTool;
-    // recordingToolActivate(recordingTool);
-    editToolActivate(editingTool);
+
+    // Simulate a recording end because that's what the state looks like when it is initialized
+    self.stopRecording();
 
     // Register the handler for the recording tools
     $('#'+recordingToolsContainerID+' .'+toolClass).click(function(event) {
@@ -426,4 +390,27 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
         editToolActivate(tool);
     });
+
+    // Setup the handlers for the draggable selection box
+    $('#'+selectionBoxID).draggable({
+        containment: 'parent',
+        start: function(event, ui) {
+            // event.preventDefault();
+            // event.stopImmediatePropagation();
+            console.log("drag start")
+
+        },
+        drag: function(event, ui) {
+            // event.preventDefault();
+            // event.stopImmediatePropagation();
+            console.log("dragging")
+        },
+        stop: function(event, ui) {
+            // event.preventDefault();
+            // event.stopImmediatePropagation();
+            // $( event.toElement ).one('click', function(e){ e.stopImmediatePropagation(); } );
+            console.log("drag stop")
+        }
+    });
+
 };
