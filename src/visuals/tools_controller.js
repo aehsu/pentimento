@@ -14,6 +14,10 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Point to keep track of the beginning of a selection rectangle
     var selectionBeginPoint = null;
 
+    // Pen attributes
+    var strokeColor = '#777';
+    var strokeWidth = 2;
+
     ///////////////////////////////////////////////////////////////////////////////
     // DOM
     /////////////////////////////////////////////////////////////////////////////// 
@@ -101,7 +105,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 visualsController.addSlide();
                 break;
         	case widthTool:
-                visualsController.width = parseInt($('#'+recordingToolsContainerID+' .'+widthTool).val());
+                strokeWidth = parseInt($('#'+recordingToolsContainerID+' .'+widthTool).val());
         		break;
         	case deleteTool:
                 // TODO: this should be a controller method because it should use the undo manager
@@ -173,7 +177,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
         event.preventDefault();
         event.stopPropagation();
 
-        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(visualsController.color, visualsController.width));
+        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
         var canvasPoint = getCanvasPoint(event);
         visualsController.currentVisual.getVertices().push(canvasPoint);
         visualsModel.addVisual(visualsController.currentVisual);
@@ -188,7 +192,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
         event.stopPropagation();
         
         var curPoint = getCanvasPoint(event);
-        visualsModel.appendVertex(visualsController.currentVisual, curPoint);
+        visualsController.currentVisual.appendVertex(curPoint);
     };
 
     var drawMouseUp = function(event) {
@@ -257,9 +261,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
             var visual = visualsIter.next();
 
             // Ignore visuals that are not visible at the current time
-            if ( !isVisualVisible(visual, currentVisualTime()) ) { 
+            if ( !visual.isVisible(currentVisualTime()) ) { 
                 continue;
-            }
+            };
 
             // Iterate over the vertices and count the verticies that are
             // visible at the current time and inside the selection box
@@ -267,8 +271,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             var vertIter = visual.getVerticesIterator();
             while (vertIter.hasNext()) {
                 var vertex = vertIter.next();
-                if (isVertexVisible(vertex, currentVisualTime) &&
-                    isInside(selectionBeginPoint, coord, vertex)) { 
+                if (vertex.isVisible(currentVisualTime()) && isInside(selectionBeginPoint, coord, vertex)) { 
                     nVert++; 
                 };
             };
@@ -300,17 +303,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
         // Turn on events for the overlay canvas to allow dragging of the div
         visualsController.canvasOverlay.css('pointer-events', 'auto');
     };
-
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Recording Mode Tools
-    /////////////////////////////////////////////////////////////////////////////// 
-
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Editing Mode Tools
-    /////////////////////////////////////////////////////////////////////////////// 
-
 
     ///////////////////////////////////////////////////////////////////////////////
     // Helpers
@@ -394,17 +386,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Setup the handlers for the draggable selection box
     $('#'+selectionBoxID).draggable({
         containment: 'parent',
-        start: function(event, ui) {
-            // event.preventDefault();
-            // event.stopImmediatePropagation();
-            console.log("drag start")
-
-        },
-        drag: function(event, ui) {
-            // event.preventDefault();
-            // event.stopImmediatePropagation();
-            console.log("dragging")
-        },
         stop: function(event, ui) {
             // event.preventDefault();
             // event.stopImmediatePropagation();

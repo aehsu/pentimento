@@ -102,7 +102,7 @@ div.audio_segment {
 div.focus {
     border-style: outset;
     border-width: 4px;
-    background-color: darkorange;
+    background-color: #FFBA66;
 }
 
 div.segment_handle {

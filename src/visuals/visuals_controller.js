@@ -24,9 +24,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     this.currentVisual = null;
     this.selection = [];
 
-    this.color = '#777';
-    this.width = 2;
-
     this.getVisualsModel = function() {
         return visualsModel;
     };

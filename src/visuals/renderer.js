@@ -4,6 +4,10 @@ var Renderer = function(visuals_controller) {
     var self = this;
     var visualsController = null;
 
+    // Alternate colors for displaying visuals under different circumstances
+    var selectedColor = "#0000FF";
+    var greyedOutColor = "DDDDDD";
+
     // Update the canvas to display contents at the specified time
     this.drawCanvas = function(canvas, context, tMin, tMax) {
 
@@ -26,14 +30,11 @@ var Renderer = function(visuals_controller) {
         while(visualsIter.hasNext()) {
             var visual = visualsIter.next();
             //visible ON tMin due to equality, deleted ON tDeletion due to lack of equality
-            if (isVisualVisible(visual, tMax)) {
-                if (isVisualVisible(visual, tMin)) {
+            if (visual.isVisible(tMax)) {
+                if (visual.isVisible(tMin)) {
                     // visible on tMax AND tMin - therefore was drawn
                     // BEFORE tMin, so draw grayed out
-                    var visCopy = visual.getClone();
-                    var propsCopy = visCopy.getProperties();
-                    propsCopy.setColor("#DDDDDD");
-                    drawVisual(context, visCopy, tMin);
+                    drawVisual(context, visual, tMin, greyedOutColor);
                 } else {
                     drawVisual(context, visual, tMax);
                 }
@@ -44,11 +45,8 @@ var Renderer = function(visuals_controller) {
             drawVisual(context, visualsController.currentVisual, tMax);
         };
         for(var i in visualsController.selection) {
-            var visCopy = visualsController.selection[i].getClone();
-            var propsCopy = visCopy.getProperties();
-            propsCopy.setWidth(propsCopy.getWidth()+1);
-            propsCopy.setColor("#0000FF");
-            drawVisual(context, visCopy, tMax);
+            var visual = visualsController.selection[i];
+            drawVisual(context, visual, tMax, selectedColor, visual.getProperties().getWidth()+1);
         };
         
         // Restore scale if necessary
@@ -58,23 +56,31 @@ var Renderer = function(visuals_controller) {
         
     };
 
-    var drawVisual = function(context, visual, tVisual) {
+    var drawVisual = function(context, visual, tVisual, alternateColor, alternateWidth) {
+
+        if (typeof alternateColor === 'undefined' ) {
+            alternateColor = visual.getProperties().getColor();
+        };
+
+        if (typeof alternateWidth === 'undefined' ) {
+            alternateWidth = visual.getProperties().getWidth();
+        };
+
         //TODO SUPPORT FOR TRANSFORMS
         switch(visual.getType()) {
-            case VisualTypes.basic:
-                console.log("someone actually made a basic type?!",visual);
-                break;
             case VisualTypes.stroke:
-                renderCalligraphicStroke(context, visual, tVisual);
+                renderCalligraphicStroke(context, visual, tVisual, alternateColor, alternateWidth);
                 break;
             case VisualTypes.dot:
                 break;
             case VisualTypes.img:
                 break;
+            default:
+                console.error('unrecognized visual type: ' + visual.getType())
         };
     };
 
-    var renderCalligraphicStroke = function(context, visual, tVisual) {
+    var renderCalligraphicStroke = function(context, visual, tVisual, renderColor, renderWidth) {
         var calligraphic_path = [];
         var vertsIter = visual.getVerticesIterator();
         var prev, curr;
@@ -96,17 +102,17 @@ var Renderer = function(visuals_controller) {
                 }
                 old_angle = new_angle;
                 old_direction = new_direction;
-                calligraphic_path.push([prev.getX(), prev.getY(), visual.getProperties().getWidth(), breaking]);
+                calligraphic_path.push([prev.getX(), prev.getY(), renderWidth, breaking]);
             }
             prev = curr;
         }
         if (curr && tVisual >= curr.getT())
-            calligraphic_path.push([curr.getX(), curr.getY(), visual.getProperties().getWidth(), false]);
+            calligraphic_path.push([curr.getX(), curr.getY(), renderWidth, false]);
         if (calligraphic_path.length > 0) { // draw calligraphic path
             var ctx = context;
             ctx.globalAlpha = 1.0;
-            ctx.strokeStyle = visual.getProperties().getColor();
-            ctx.fillStyle = visual.getProperties().getColor();
+            ctx.strokeStyle = renderColor;
+            ctx.fillStyle = renderColor;
             ctx.lineWidth = 1;
             ctx.lineCap = 'round';
             drawCalligraphicPath(0, calligraphic_path, false, ctx);
