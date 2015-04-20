@@ -1,11 +1,12 @@
 // Various tools are used for recording and editing visuals
+// The tools controller handles the logic for managing the UI of the tools.
+// The responsibility of actually modifying the visuals is delegated to the visuals controller.
 "use strict";
 
-var ToolsController = function(visuals_controller, visuals_model) {
+var ToolsController = function(visuals_controller) {
     var self = this;
 
     var visualsController = null;
-    var visualsModel = null;
 
     // Certain tools can remain active for multiple uses
     var recordingTool = null;
@@ -108,8 +109,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
                 strokeWidth = parseInt($('#'+recordingToolsContainerID+' .'+widthTool).val());
         		break;
         	case deleteTool:
-                // TODO: this should be a controller method because it should use the undo manager
-                visualsModel.setTDeletion(visualsController.selection, currentVisualTime());
+                visualsController.recordingDeleteSelection();
         		break;
         	default:
         		console.error('Unrecognized tool clicked, recording tools');
@@ -117,41 +117,32 @@ var ToolsController = function(visuals_controller, visuals_model) {
         };
     };
 
-    //Editing tools handling. These are typically direct invocations of the proper
-    //controller to handle the lecture model directly. Therefore, the handling of groups for
-    //the editing tools also belongs here.
     var editToolActivate = function(tool) {
         resetToolElements();
 
         switch(tool) {
             case selectTool:
-                visualsController.canvas.on('mousedown', selectMouseDown);
                 editingTool = tool;
+                visualsController.canvas.on('mousedown', selectMouseDown);
                 break;
         	case deleteTool:
-                // visuals controller delete method needed
-                if (visualsController.selection.length==0) { 
-                    return;
-                }
-                var t = visualsModel.deleteVisuals(currentSlide(), visualsController.selection);
-                lectureController.getTimeController().updateTime(t);
+                visualsController.editingDeleteSelection();
         		break;
             case redrawTool:
-                var t = visualsModel.deleteVisuals(currentSlide(), visualsController.selection);
-                lectureController.getTimeController().updateTime(t);
-                $('.recording-tool:visible').click()
+                // TODO
                 break;
             case widthTool:
-                if(event.target.value=="" || visualsController.selection.length==0) { return; }
+                if (event.target.value === "" ) {
+                    return;
+                }
                 var newWidth = parseInt(event.target.value);
-                visualsController.editWidth(visualsController.selection, newWidth);
-                $('.edit-tool[data-toolname="width"]').val('');
+                visualsController.editingWidthSelection(newWidth);
                 break;
             case deleteSlideTool:
                 visualsController.deleteSlide(currentSlide());
         	default:
         		console.error('Unrecognized tool clicked, editing tools');
-        		console.error(this);
+        		console.error(tool);
         }
     }
 
@@ -177,10 +168,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
         event.preventDefault();
         event.stopPropagation();
 
-        visualsController.currentVisual = new StrokeVisual(currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
-        var canvasPoint = getCanvasPoint(event);
-        visualsController.currentVisual.getVertices().push(canvasPoint);
-        visualsModel.addVisual(visualsController.currentVisual);
+        // Create a new stroke visual and set it to the current visual
+        visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
+        visualsController.currentVisual.getVertices().push(getCanvasPoint(event));
 
         // Register mouse move and mouse up handlers
         visualsController.canvas.on('mousemove', drawMouseMove);
@@ -190,15 +180,17 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var drawMouseMove = function(event) {
         event.preventDefault();
         event.stopPropagation();
-        
-        var curPoint = getCanvasPoint(event);
-        visualsController.currentVisual.appendVertex(curPoint);
+            
+        // Append a vertex to the current visual
+        visualsController.currentVisual.appendVertex(getCanvasPoint(event));
     };
 
     var drawMouseUp = function(event) {
         event.preventDefault();
         event.stopPropagation();
 
+        // Add the current visual to then controller and then reset it to null
+        visualsController.addVisual(visualsController.currentVisual);
         visualsController.currentVisual = null;
 
         // Unregister the mouse move and mouse up handlers
@@ -254,6 +246,9 @@ var ToolsController = function(visuals_controller, visuals_model) {
         // Clear the selection every time
         visualsController.selection = [];
 
+        // Get the current time
+        var currentTime = visualsController.currentVisualTime();
+
         // Iterate over the visuals of the slide to find ones that are within the bounding box at the current time
         // Add those visuals to the visuals controller's selection.
         var visualsIter = currentSlide().getVisualsIterator();
@@ -261,7 +256,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             var visual = visualsIter.next();
 
             // Ignore visuals that are not visible at the current time
-            if ( !visual.isVisible(currentVisualTime()) ) { 
+            if ( !visual.isVisible(currentTime) ) { 
                 continue;
             };
 
@@ -271,7 +266,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
             var vertIter = visual.getVerticesIterator();
             while (vertIter.hasNext()) {
                 var vertex = vertIter.next();
-                if (vertex.isVisible(currentVisualTime()) && isInside(selectionBeginPoint, coord, vertex)) { 
+                if (vertex.isVisible(currentTime) && isInside(selectionBeginPoint, coord, vertex)) { 
                     nVert++; 
                 };
             };
@@ -284,7 +279,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
         // If it is not during a recording, then we manually need to tell the controller to redraw
         if (!lectureController.isRecording()) {
-            visualsController.drawVisuals(currentVisualTime());
+            visualsController.drawVisuals(currentTime);
         };
 
         // console.log(visualsController.selection);
@@ -308,16 +303,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
     // Helpers
     /////////////////////////////////////////////////////////////////////////////// 
 
-    // Get the slide at the current time
-    var currentSlide = function() {
-        return visualsModel.getSlideAtTime(currentVisualTime());
-    };
-
-    // Shortcut for the time controller time converted to visual time through the retimer
-    var currentVisualTime = function() {
-        return visualsController.getRetimerModel().getVisualTime(lectureController.getTimeController().getTime());
-    };
-
     // Tests if the test vertex is inside the rectangle formed by the two verticies.
     var isInside = function(rectPoint1, rectPoint2, testPoint) {
         var x1 = rectPoint1.getX();
@@ -337,7 +322,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
     var getCanvasPoint = function(event){
         var x = event.pageX - visualsController.canvas.offset().left;
         var y = event.pageY - visualsController.canvas.offset().top;
-        var t = currentVisualTime();
+        var t = visualsController.currentVisualTime();
         
         if(visualsController.pressure) {
             return new Vertex(x, y, t, event.pressure);
@@ -352,7 +337,6 @@ var ToolsController = function(visuals_controller, visuals_model) {
     /////////////////////////////////////////////////////////////////////////////// 
 
     visualsController = visuals_controller;
-    visualsModel = visuals_model;
 
     // Set the initial tools
     recordingTool = penTool;
@@ -368,6 +352,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
         // Get the tool name through the attribute
         var tool = $(event.target).attr(toolNameAttr);
+        console.log(event);
 
         recordingToolActivate(tool);
     });
@@ -379,6 +364,7 @@ var ToolsController = function(visuals_controller, visuals_model) {
 
         // Get the tool name through the attribute
         var tool = $(event.target).attr(toolNameAttr);
+        console.log(event);
 
         editToolActivate(tool);
     });

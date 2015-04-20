@@ -112,28 +112,38 @@ var VisualsController = function(visuals_model, retimer_model) {
 
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Adding of Slides
+    // Modifying Slides
     ///////////////////////////////////////////////////////////////////////////////
+
+    // Shortcut for the time controller time converted to visual time through the retimer
+    this.currentVisualTime = function() {
+        return retimerModel.getVisualTime(lectureController.getTimeController().getTime());
+    };
+
+    // Get the slide at the current time
+    this.currentSlide = function() {
+        return visualsModel.getSlideAtTime(currentVisualTime());
+    };
 
     this.addSlide = function() {
 
         // Get the difference in time for when the slide began recording to the current time
-        var time = retimerModel.getVisualTime(lectureController.getTimeController().getTime());
+        var time = self.currentVisualTime();
         var diff = time - slideBeginTime;
 
-        // Get the current slide and create a new slide
-        var currentSlide = visualsModel.getSlideAtTime(slideBeginTime);
+        // Get the previous slide and create a new slide
+        var previousSlide = visualsModel.getSlideAtTime(slideBeginTime);
 
         var newSlide = new Slide();
-        if (!currentSlide) { 
-            console.error('currentSlide missing');
+        if (!previousSlide) { 
+            console.error('previous slide missing');
         };
 
         // Update the duration of the current slide to reflect the difference
-        currentSlide.setDuration(currentSlide.getDuration() + diff);
+        previousSlide.setDuration(previousSlide.getDuration() + diff);
         
         // Insert the slide into the model
-        var result = visualsModel.insertSlide(currentSlide, newSlide);
+        var result = visualsModel.insertSlide(previousSlide, newSlide);
         if (!result) {
             console.error("slide could not be inserted");
         };
@@ -164,51 +174,72 @@ var VisualsController = function(visuals_model, retimer_model) {
     //     pentimento.timeController.updateTime(duration);
     // };
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Adding of Visuals
-    ///////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Transforming of Visuals
+    // Modifying Visuals
     //
-    // Typically during a recording, these are the handlers for transforms to be applied to visuals
-    // Resizing or such actions are transformations which may happen during editing
+    // This section is primarily concerned with the modifying of the properties of
+    // a visual. Modifying visuals during recording of visuals usually manifests as a transform, 
+    // while modifying while in editing mode (i.e. not recording) usually directly changes the property.
     ///////////////////////////////////////////////////////////////////////////////
 
+    // Add a visual that has finished being drawn
+    this.addVisual = function(visual) {
+        visualsModel.addVisual(visual);
+    };
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Editing of Visuals
-    //
-    // This section is primarily concerned with the direct editing of the properties of
-    // a visual. Recording edits to a visual are transforms, which is in a later section
-    ///////////////////////////////////////////////////////////////////////////////
+    // Delete the selection during a recording.
+    // This sets the tDeletion property.
+    this.recordingDeleteSelection = function() {
 
-    this.editWidth = function(visuals, newWidth) {
-        var widthObjs = [];
-        for(var i in visuals) {
+        // Set the tDeletion for all visuals in the selection
+        var currentTime = self.currentVisualTime();
+        for(var i in self.selection.length) {
             var visual = visuals[i];
-            var widthObj = {};
-            widthObj.widthTrans = [];
-            widthObj.indices = [];
-            widthObj.width  = visual.getProperties().getWidth();
-            visual.getProperties().setWidth(newWidth);
-            var propTrans = visual.getPropertyTransforms();
-            for(var j in propTrans) {
-                if(propTrans[j].type=="width") {
-                    widthObj.widthTrans.push(propTrans[j]);
-                    widthObj.indices.push(j);
-                }
-            }
-            for(var j in widthObj.widthTrans) {
-                propTrans.splice(propTrans.indexOf(widthObj.widthTrans[j]), 1);
-            }
-            widthObjs.push(widthObj);
-        }
-    }
+            visual.setTDeletion(currentTime);
+        };
+    };
 
-    this.editColor = function(visuals, newColor) {
+    // Deletes the selection while in editing mode.
+    // This removes the visual entirely.
+    this.editingDeleteSelection = function() {
+
+    };
+
+    // Changes the width of the selection of visuals during recording
+    // This pushes a property transform onto the selected visuals
+    this.recoridingWidthSelection = function(newWidth) {
+
+    };
+
+    // Changes the width of the selection of visuals during editing
+    this.editingWidthSelection = function(newWidth) {
+        // TODO: the code below might not be correct
+        // var widthObjs = [];
+        // for(var i in self.selection.length) {
+        //     var visual = visuals[i];
+        //     var widthObj = {};
+        //     widthObj.widthTrans = [];
+        //     widthObj.indices = [];
+        //     widthObj.width  = visual.getProperties().getWidth();
+        //     visual.getProperties().setWidth(newWidth);
+        //     var propTrans = visual.getPropertyTransforms();
+        //     for(var j in propTrans) {
+        //         if(propTrans[j].type=="width") {
+        //             widthObj.widthTrans.push(propTrans[j]);
+        //             widthObj.indices.push(j);
+        //         }
+        //     }
+        //     for(var j in widthObj.widthTrans) {
+        //         propTrans.splice(propTrans.indexOf(widthObj.widthTrans[j]), 1);
+        //     }
+        //     widthObjs.push(widthObj);
+        // }
+    };
+
+    this.editingColor = function(visuals, newColor) {
         //TODO FILL
-    }
+    };
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -230,7 +261,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     self.context = self.canvas[0].getContext('2d');
 
     // Initialize other controllers
-    toolsController = new ToolsController(self, visualsModel);
+    toolsController = new ToolsController(self);
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller

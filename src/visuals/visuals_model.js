@@ -424,10 +424,10 @@ var Visual = function(tmin, props) {
     this.getPropertyTransformsIterator = function() { return new Iterator(propertyTransforms); }
     this.getSpatialTransformsIterator = function() { return new Iterator(spatialTransforms); }
 
-    //The semantic is that visuals are visible exactly ON their tMin, not later
-    //Therefore, when time hits tMin, the visual is visible
-    //Likewise, visuals are deleted ON their tDeletion, not later
-    //Therefore, when time his tDeletion, the visual is no longer visible
+    // The rule is that visuals are visible exactly ON their tMin, not later
+    // Therefore, when time hits tMin, the visual is visible
+    // Likewise, visuals are deleted ON their tDeletion, not later
+    // Therefore, when time his tDeletion, the visual is no longer visible
     this.isVisible = function(tVisual) {
         if (tMin > tVisual) { 
             return false;
@@ -438,7 +438,7 @@ var Visual = function(tmin, props) {
         return true;
     };
 };
-// Set the constructor in the prototype so child classes can access it
+// Set the constructor in the prototype so child classes can inherit from it
 Visual.prototype.constructor = Visual;
 
 var StrokeVisual = function(tmin, props) {
@@ -455,19 +455,11 @@ var StrokeVisual = function(tmin, props) {
         vertices.push(vertex);
     };
 
-    this.addProperty = function(property) {
-        self.getPropertyTransforms().push(property);
-    };
+    // this.addProperty = function(property) {
+    //     self.getPropertyTransforms().push(property);
+    // };
 };
 
-// TODO
-    // this.setTDeletion = function(visuals, time) {
-    //     for(var i in visuals) {
-    //         var visual = visuals[i];
-    //         var tdel = visual.getTDeletion();
-    //         visual.setTDeletion(time);
-    //     };
-    // };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Visual properties and transforms
