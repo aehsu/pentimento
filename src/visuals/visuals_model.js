@@ -96,7 +96,21 @@ var VisualsModel = function() {
     ///////////////////////////////////////////////////////////////////////////////
 
     this.addVisual = function(visual) {
-        self.getSlideAtTime(visual.getTMin()).getVisuals().push(visual);
+        var slide = self.getSlideAtTime(visual.getTMin());
+        slide.getVisuals().push(visual);
+    };
+
+    this.deleteVisual = function(visual) {
+        var slide = self.getSlideAtTime(visual.getTMin());
+        var visuals = slide.getVisuals();
+
+        var index = visuals.indexOf(visual);
+        if (index < 0) {
+            console.error('visual not found')
+            return;
+        };
+
+        visuals.splice(index, 1);
     };
 
     // Creates wrappers around the visuals that keeps track of their previous time

@@ -122,7 +122,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Get the slide at the current time
     this.currentSlide = function() {
-        return visualsModel.getSlideAtTime(currentVisualTime());
+        return visualsModel.getSlideAtTime(self.currentVisualTime());
     };
 
     this.addSlide = function() {
@@ -188,11 +188,9 @@ var VisualsController = function(visuals_model, retimer_model) {
         visualsModel.addVisual(visual);
     };
 
-    // Delete the selection during a recording.
-    // This sets the tDeletion property.
+    // Delete the visuals in the selection during a recording.
+    // This sets the tDeletion property for all visuals in the selection
     this.recordingDeleteSelection = function() {
-
-        // Set the tDeletion for all visuals in the selection
         var currentTime = self.currentVisualTime();
         for(var i in self.selection.length) {
             var visual = visuals[i];
@@ -200,10 +198,13 @@ var VisualsController = function(visuals_model, retimer_model) {
         };
     };
 
-    // Deletes the selection while in editing mode.
-    // This removes the visual entirely.
+    // Deletes all visuals in the selection while in editing mode.
+    // This removes the visuals entirely from all points in time.
     this.editingDeleteSelection = function() {
-
+        for(var i in self.selection.length) {
+            var visual = visuals[i];
+            visualsModel.deleteVisual(visual);
+        };
     };
 
     // Changes the width of the selection of visuals during recording

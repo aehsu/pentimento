@@ -12,6 +12,9 @@ var ToolsController = function(visuals_controller) {
     var recordingTool = null;
     var editingTool = null;
 
+    // Store whether we are in recording or editing mode
+    var inRecordingMode = false;
+
     // Point to keep track of the beginning of a selection rectangle
     var selectionBeginPoint = null;
 
@@ -23,7 +26,7 @@ var ToolsController = function(visuals_controller) {
     // DOM
     /////////////////////////////////////////////////////////////////////////////// 
 
-    // Containers for the different tools
+    // Containers for the different tools during recording and editing
     // Recording tools are used during a recording, and editing tools are used when not recording
     var recordingToolsContainerID = 'visualsRecordingTools';
     var editingToolsContainerID = 'visualsEditingTools';
@@ -51,11 +54,17 @@ var ToolsController = function(visuals_controller) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Activating and deactivating tools on recording and playback
+    //
+    // When state changes among the recording, editing, and playback states, 
+    // certain UI elements are hidden or disabled.
     /////////////////////////////////////////////////////////////////////////////// 
 
     this.startRecording = function() {
-        // Activate the current recording tool
-        recordingToolActivate(recordingTool);
+        // Set the mode to recording
+        inRecordingMode = true;
+
+        // Activate the current canvas recording tool
+        activateCanvasTool();
 
         // Show the recording tools
         $('#'+recordingToolsContainerID).removeClass(hiddenClass);
@@ -65,8 +74,11 @@ var ToolsController = function(visuals_controller) {
     };
 
     this.stopRecording = function() {
-        // Activate the current editing tool
-        editToolActivate(editingTool);
+        // Set the mode to editing
+        inRecordingMode = false;
+
+        // Activate the current canvas editing tool
+        activateCanvasTool();
 
         // Show the editing tools
         $('#'+editingToolsContainerID).removeClass(hiddenClass);
@@ -76,79 +88,134 @@ var ToolsController = function(visuals_controller) {
     };
 
     this.startPlayback = function() {
+        // TODO
         // Disable the tools UI
     };
 
     this.stopPlayback = function() {
+        // TODO
         // Enable the tools UI
         
     };
 
-    var recordingToolActivate = function(tool) {
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Tool Handling
+    //
+    // There is one main handler for when a tool button is clicked.
+    // It is responsible for switching among the tools and determining whether
+    // a recording or editing tool was used. It calls the appropriate function
+    // for the tool.
+    //
+    // There are certain things that need to be cleaned up during the transition
+    // from one tool to another.
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Handler for when there is a click on one of the tool buttons
+    var toolEventHandler = function(event) {
+        event.preventDefault();
+        event.stopPropagation(); 
+
+        // Clean up anything UI related from previous tools.
+        // TODO: this does not need to apply to every tool. 
+        //          there should be some sort of condition to check
         resetToolElements();
 
+        // Get the tool name through the attribute
+        var tool = $(event.target).attr(toolNameAttr);
+
+        // Perform different actions depending on what tool was used.
+        // There might be a direct call to the visuals controller,
+        // or another handler might be activated for sustained tools (as opposed to a one-time button)
+        // Certain tools have different actions depending on whether it is recording or editing.
         switch (tool) {
+
+            // For the canvas related tools, set the tool and then activate it
         	case penTool:
-                recordingTool = tool;  // save as active tool
-                visualsController.selection = [];  // remove selection when drawing
-                visualsController.canvas.on('mousedown', drawMouseDown);
-                break;
             case highlightTool:
-                recordingTool = tool;  // save as active tool
-                visualsController.selection = [];  // remove selection when drawing
-                visualsController.canvas.on('mousedown', drawMouseDown);
-                break;
             case selectTool:
-                recordingTool = tool;  // save as active tool
-                visualsController.canvas.on('mousedown', selectMouseDown);
+                // In recording mode, save the tool as the recording tool,
+                // and in editing mode, save the tool as the editing tool.
+                if (inRecordingMode) {
+                    recordingTool = tool;
+                } else {
+                    editingTool = tool;
+                };
+                // Activate the tool
+                activateCanvasTool();
                 break;
+
             case addSlideTool:
                 visualsController.addSlide();
                 break;
+
+            case deleteSlideTool:
+                visualsController.deleteSlide(visualsController.currentSlide());
+                break;
+
         	case widthTool:
-                strokeWidth = parseInt($('#'+recordingToolsContainerID+' .'+widthTool).val());
-        		break;
+                var newWidth = parseInt(event.target.value);
+                if (inRecordingMode) {
+                    strokeWidth = newWidth;
+                } else {
+                    visualsController.editingWidthSelection(newWidth);
+                };
+                break;
+
         	case deleteTool:
-                visualsController.recordingDeleteSelection();
+                if (inRecordingMode) {
+                    visualsController.recordingDeleteSelection();
+                } else {
+                    visualsController.editingDeleteSelection();
+                };
         		break;
+
+            case redrawTool:
+                // TODO
+                break;
+
         	default:
         		console.error('Unrecognized tool clicked, recording tools');
         		console.error(tool);
         };
     };
 
-    var editToolActivate = function(tool) {
+    // This activates a 'sustained' tool on the canvas. This is used for tools
+    // such as pen, highlight, and select.
+    // The tool that is registerd is the active tool for the current mode (recording/editing)
+    var activateCanvasTool = function() {
+
+        // Clear the selection
+        visualsController.selection = [];
+
+        // Clean up anything UI related from previous tools.
         resetToolElements();
 
-        switch(tool) {
+        // In recording mode, activate the recording tool,
+        // and in editing mode, activate the editing tool.
+        var toolToActivate = ( inRecordingMode ? recordingTool : editingTool );
+        console.log('tool to activate: ' + toolToActivate);
+
+        // Register the callback depending on which tool is active
+        switch (toolToActivate) {
+            case penTool:
+                visualsController.canvas.on('mousedown', drawMouseDown);
+                break;
+            case highlightTool:
+                visualsController.canvas.on('mousedown', drawMouseDown);
+                break;
             case selectTool:
-                editingTool = tool;
                 visualsController.canvas.on('mousedown', selectMouseDown);
                 break;
-        	case deleteTool:
-                visualsController.editingDeleteSelection();
-        		break;
-            case redrawTool:
-                // TODO
-                break;
-            case widthTool:
-                if (event.target.value === "" ) {
-                    return;
-                }
-                var newWidth = parseInt(event.target.value);
-                visualsController.editingWidthSelection(newWidth);
-                break;
-            case deleteSlideTool:
-                visualsController.deleteSlide(currentSlide());
-        	default:
-        		console.error('Unrecognized tool clicked, editing tools');
-        		console.error(tool);
-        }
-    }
+            default:
+                console.error('tool is not a canvas tool and cannot be made active: ' + tool);
+        };
+    };
 
     // Resets UI elements and handlers related to the tools.
     //Removes handlers from the previous tool, and reset the dimensions of the selection box.
     var resetToolElements = function() {
+
         // Removes the handlers from the previous tools
         visualsController.canvas.off('mousedown');
         visualsController.canvas.off('mousemove');
@@ -161,7 +228,9 @@ var ToolsController = function(visuals_controller) {
     ///////////////////////////////////////////////////////////////////////////////
     // Recording and Editing Tools
     //
-    // Tools that work in both recording and editing mode
+    // Tools that work in both recording and editing mode. 
+    // Some of the effects might be different depending on whether it is 
+    // recording or editing, but the overall handling logic is the same.
     /////////////////////////////////////////////////////////////////////////////// 
 
     var drawMouseDown = function(event) {
@@ -251,7 +320,7 @@ var ToolsController = function(visuals_controller) {
 
         // Iterate over the visuals of the slide to find ones that are within the bounding box at the current time
         // Add those visuals to the visuals controller's selection.
-        var visualsIter = currentSlide().getVisualsIterator();
+        var visualsIter = visualsController.currentSlide().getVisualsIterator();
         while(visualsIter.hasNext()) {
             var visual = visualsIter.next();
 
@@ -331,7 +400,6 @@ var ToolsController = function(visuals_controller) {
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     /////////////////////////////////////////////////////////////////////////////// 
@@ -342,32 +410,11 @@ var ToolsController = function(visuals_controller) {
     recordingTool = penTool;
     editingTool = selectTool;
 
-    // Simulate a recording end because that's what the state looks like when it is initialized
+    // Simulate a recording end because that's what the UI state looks like when it is initialized
     self.stopRecording();
 
-    // Register the handler for the recording tools
-    $('#'+recordingToolsContainerID+' .'+toolClass).click(function(event) {
-
-        event.stopPropagation(); 
-
-        // Get the tool name through the attribute
-        var tool = $(event.target).attr(toolNameAttr);
-        console.log(event);
-
-        recordingToolActivate(tool);
-    });
-
-    // Register the handler for the editing tools
-    $('#'+editingToolsContainerID+' .'+toolClass).click(function(event) {
-
-        event.stopPropagation(); 
-
-        // Get the tool name through the attribute
-        var tool = $(event.target).attr(toolNameAttr);
-        console.log(event);
-
-        editToolActivate(tool);
-    });
+    // Register the handler for the visuals tools
+    $('.'+toolClass).click(toolEventHandler);
 
     // Setup the handlers for the draggable selection box
     $('#'+selectionBoxID).draggable({
@@ -379,5 +426,4 @@ var ToolsController = function(visuals_controller) {
             console.log("drag stop")
         }
     });
-
 };
