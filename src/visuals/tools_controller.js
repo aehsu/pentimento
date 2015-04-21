@@ -96,6 +96,8 @@ var ToolsController = function(visuals_controller) {
         // TODO
         // Enable the tools UI
         
+        // Activate the tool
+        activateCanvasTool();
     };
 
 

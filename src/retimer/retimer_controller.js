@@ -46,6 +46,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var selectArea = function(event){
         console.log("SELECTING");
         selectedConstraints = [];
+
         var canvas = $('#'+constraintsCanvasID);
 
         canvas.removeLayer("selectedArea");
@@ -57,8 +58,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         selectionX = x;
         selectionY = y;
-
-        console.log("XY: " + x + ", " + y);
 
         canvas.drawPath({
             layer: true,
@@ -85,8 +84,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     }
 
     var selectionDrag = function(event){
-        console.log("DRAGGING");
-
         var canvas = $('#'+constraintsCanvasID);
 
         var x = event.pageX;
@@ -181,7 +178,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var y = event.pageY;
         x -= canvas.offset().left;
         y -= canvas.offset().top;
-        console.log(x + ", " + y);
 
         // Add the constraint to the model and refresh the view
         addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
@@ -189,21 +185,18 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
         canvas.unbind('mousedown', selectArea);
-        console.log("Off1");
     };
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
     var drawConstraint = function(constraint_num) {
         $('#'+constraintsCanvasID).unbind('mousedown', selectArea);
-        console.log("Off2");
         // $('#'+constraintsCanvasID).unbind('mousemove', selectionDrag);
         $('#'+constraintsCanvasID).on('mousedown', addArrowHandler);
     };
 
     // Refresh the canvas and redraw the constraints
     var redrawConstraints = function() {
-        console.log("REDRAWING??");
         if (!constraintsDivID) {
             console.log('constraints div has not been set');
         };
@@ -331,7 +324,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Refresh the view if the adding succeeded
         if (result) {
             redrawConstraints();
-            console.log("BACK ON1");
         };
     }
 
@@ -344,7 +336,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var constraintDragStart = function(layer) {
         $('#' + constraintsCanvasID).unbind('mousedown', selectArea);
         $('#' + constraintsCanvasID).unbind('mousemove', selectionDrag);
-        console.log("Off3");
         isDragTop = (layer.eventY < (constraintsHeight / 2));
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
         lastValidDragX = originalDragX;
@@ -455,7 +446,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraints();
-        console.log("BACK ON2");
 
         // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
@@ -487,7 +477,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         retimerModel.shiftConstraints(constraintsToShift, insertionDuration);
 
         redrawConstraints();
-        console.log("BACK ON3");
 
         insertionStartTime = -1;
     }
@@ -497,7 +486,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // If recording is an insertion
         if (currentTime < lectureController.getLectureModel().getLectureDuration()){
-            console.log("INSERTION");
             insertionStartTime = currentTime;
         }
     }
