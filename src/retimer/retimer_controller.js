@@ -14,6 +14,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Selection dragging
     var selectionX;
     var selectionY;
+    var selectedConstraints = [];
 
     // Constraint dragging
     var isDragTop;  // boolean indicating whether the top or bottom is being dragged
@@ -44,6 +45,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     ///////////////////////////////////////////////////////////////////////////////
     var selectArea = function(event){
         console.log("SELECTING");
+        selectedConstraints = [];
         var canvas = $('#'+constraintsCanvasID);
 
         canvas.removeLayer("selectedArea");
@@ -108,7 +110,62 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var endSelect = function(event){
         var canvas = $('#' + constraintsCanvasID);
         canvas.unbind('mousemove', selectionDrag);
+        selectConstraints();
     };
+
+    var selectConstraints = function(event){
+        var canvas = $('#'+constraintsCanvasID);
+        var x1 = canvas.getLayer('selectedArea').p1.x1;
+        var x2 = canvas.getLayer('selectedArea').p1.x2;
+
+        var constraints = retimerModel.getConstraintsIterator();
+
+        var constraint_num = 0;
+        var constraintLayer = constraintIDBase + constraint_num;
+
+        // Iterate through the constraints
+        while(constraints.hasNext()){
+            var constraint = constraints.next();
+            var tAud = constraint.getTAudio();
+            var xAud = audioController.millisecondsToPixels(tAud);
+            if (xAud > x1 && xAud < x2){
+                constraintLayer = constraintIDBase + constraint_num
+                selectedConstraints.push({layer: constraintLayer, constraint: constraint});
+            }
+            constraint_num ++;
+        };
+
+        canvas.removeLayer('selectedArea');
+        displaySelectedConstraints();
+        
+    }
+
+    var displaySelectedConstraints = function(event){
+        var canvas = $('#'+constraintsCanvasID);
+        var layer;
+        for(var i =0; i < selectedConstraints.length; i++){
+            layer = selectedConstraints[i].layer;
+            canvas.setLayer(layer, {
+                strokeStyle: 'red'
+            });
+        }
+        canvas.drawLayers();
+    }
+
+    var deleteConstraints = function(event){
+        var canvas = $('#'+constraintsCanvasID);
+        var layer;
+        var constraint;
+        for(var i =0; i < selectedConstraints.length; i++){
+            layer = selectedConstraints[i].layer;
+            constraint = selectedConstraints[i].constraint;
+            retimerModel.deleteConstraint(constraint);
+            canvas.removeLayer(layer);
+        }
+        canvas.drawLayers();
+    }
+
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -469,28 +526,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     });
 
     $('#'+deleteConstraintButtonID).click(function() {
-        var canvas = $('#'+constraintsCanvasID);
-        var x1 = canvas.getLayer('selectedArea').p1.x1;
-        var x2 = canvas.getLayer('selectedArea').p1.x2;
-
-        var constraints = retimerModel.getConstraintsIterator();
-
-        var constraint_num = 0;
-        var constraintLayer = constraintIDBase + constraint_num;
-        // Iterate through the constraints and shift them
-        while(constraints.hasNext()){
-            var constraint = constraints.next();
-            var tAud = constraint.getTAudio();
-            var xAud = audioController.millisecondsToPixels(tAud);
-            if (xAud > x1 && xAud < x2){
-                constraintLayer = constraintIDBase + constraint_num
-                retimerModel.deleteConstraint(constraint);
-                canvas.removeLayer(constraintLayer);
-            }
-            constraint_num ++;
-        };
-
-        canvas.drawLayers();
+        deleteConstraints();
     });
 
     ///////////////////////////////////////////////////////////////////////////////
