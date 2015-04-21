@@ -87,8 +87,8 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         canvas.attr('id', thumbnailIDBase+thumbOffset)
             .attr('width', thumbnail_width)
             .attr('height', thumbnailsHeight);
-        canvas.addClass(thumbnailClass);
         $('#'+thumbnailsDivID).append(canvas);
+        canvas.addClass(thumbnailClass);
 
         var context = canvas[0].getContext('2d');
 

@@ -191,22 +191,33 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Delete the visuals in the selection during a recording.
     // This sets the tDeletion property for all visuals in the selection
     this.recordingDeleteSelection = function() {
+        console.log('recording delete')
         var currentTime = self.currentVisualTime();
         for(var i in self.selection) {
             var visual = self.selection[i];
             visual.setTDeletion(currentTime);
         };
+
+        // Clear the selection and redraw to show the update
         self.selection = [];
+        self.drawVisuals(self.currentVisualTime());
     };
 
     // Deletes all visuals in the selection while in editing mode.
     // This removes the visuals entirely from all points in time.
     this.editingDeleteSelection = function() {
+        console.log('editing delete')
         for(var i in self.selection) {
             var visual = self.selection[i];
             visualsModel.deleteVisual(visual);
         };
+
+        // Clear the selection and redraw to show the update
         self.selection = [];
+        self.drawVisuals(self.currentVisualTime());
+
+        // Redraw the thumbnails as well
+        // TODO: find out a good way to signal the retimer controller
     };
 
     // Changes the width of the selection of visuals during recording

@@ -4,7 +4,7 @@
 }
 
 .retimer_controls{
-    border:1px solid #000000;
+    border: 1px solid #000000;
     display: inline-block;
 }
 
@@ -12,20 +12,23 @@
     height: 40px;
 }
 
+canvas.thumbnail {
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    border: 1px solid black;
+    margin: 0;
+    padding: 0;
+}
+
 #constraints {
     position: absolute;
     top: 0;
     left: 0;
-    margin: 0;
-    padding: 0;
-};
-
-.thumbnail {
     box-sizing:border-box;
     -moz-box-sizing:border-box;
     -webkit-box-sizing:border-box;
-    border:1px solid red;
-    background-color: #F5F5F5;
+    border: 1px solid black;
     margin: 0;
     padding: 0;
-}
+};
