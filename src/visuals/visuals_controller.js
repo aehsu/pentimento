@@ -192,19 +192,21 @@ var VisualsController = function(visuals_model, retimer_model) {
     // This sets the tDeletion property for all visuals in the selection
     this.recordingDeleteSelection = function() {
         var currentTime = self.currentVisualTime();
-        for(var i in self.selection.length) {
-            var visual = visuals[i];
+        for(var i in self.selection) {
+            var visual = self.selection[i];
             visual.setTDeletion(currentTime);
         };
+        self.selection = [];
     };
 
     // Deletes all visuals in the selection while in editing mode.
     // This removes the visuals entirely from all points in time.
     this.editingDeleteSelection = function() {
-        for(var i in self.selection.length) {
-            var visual = visuals[i];
+        for(var i in self.selection) {
+            var visual = self.selection[i];
             visualsModel.deleteVisual(visual);
         };
+        self.selection = [];
     };
 
     // Changes the width of the selection of visuals during recording
@@ -217,7 +219,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     this.editingWidthSelection = function(newWidth) {
         // TODO: the code below might not be correct
         // var widthObjs = [];
-        // for(var i in self.selection.length) {
+        // for(var i in self.selection) {
         //     var visual = visuals[i];
         //     var widthObj = {};
         //     widthObj.widthTrans = [];
