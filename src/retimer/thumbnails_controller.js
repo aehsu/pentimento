@@ -96,7 +96,6 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         renderer.drawCanvas(canvas, context, visuals_min, visuals_max)
     };
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     //

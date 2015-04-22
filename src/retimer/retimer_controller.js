@@ -108,6 +108,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         var canvas = $('#' + constraintsCanvasID);
         canvas.unbind('mousemove', selectionDrag);
         selectConstraints();
+
+        canvas.removeLayer('selectedArea');
+        displaySelectedConstraints();
     };
 
     var selectConstraints = function(event){
@@ -130,11 +133,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
                 selectedConstraints.push({layer: constraintLayer, constraint: constraint});
             }
             constraint_num ++;
-        };
-
-        canvas.removeLayer('selectedArea');
-        displaySelectedConstraints();
-        
+        };        
     }
 
     var displaySelectedConstraints = function(event){
@@ -237,6 +236,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Draw the constraint (using jcanvas)
         $('#'+constraintsCanvasID).drawLayers();
         $('#'+constraintsCanvasID).on('mousedown', selectArea);
+
+        drawTickMarks();
     };
 
     // Redraw an individual constraint
@@ -310,6 +311,33 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // When a user adds a constraint, add the constraint to the lecture
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
     var addConstraint = function(audio_time, constraint_type) {
+
+            // FORUMULAS
+        // // interp_factor = (curr_time-prev_time)/(next_time-prevX)
+        // // constraint_tVis = (next_time-prev_time)*interp_factor + prev_tVis
+        // // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
+
+        // // Make sure to convert this from the lecture duration to audio duration
+        // var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
+        // console.log("scale: " + audio_scale);
+        // var tAud = xVal * audio_scale;
+        // console.log("taud: " + tAud);
+        // var tVis = pentimento.lectureController.retimingController.getVisualTime(tAud);
+        // console.log("tvis: " + tVis);
+        // // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(curr_audio_time, "Audio");
+        // // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(curr_audio_time, "Audio");
+        // // var prevTime = prev_const.getTVisual();
+        // // var nextTime = next_const.getTVisual();
+        // // console.log(nextTime);
+        // // var prevX = 0;
+        // // var nextX = $('#retimer_constraints').width();
+        // // console.log(nextX);
+        // // var interp = (nextTime-prevTime)/(nextX-prevX);
+        // // console.log("interp: " + interp);
+        // // var tVis = interp*xVal;
+        // // var tAud = interp*xVal;
+        // var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
+        // pentimento.lectureController.retimingController.addConstraint(constraint);
 
         // Convert to visual time
         var visual_time = retimerModel.getVisualTime(audio_time);
@@ -447,6 +475,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Redraw the constraints to snap into place (redraw the whole canvas)
         redrawConstraints();
 
+        drawTickMarks();
+
         // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
 
@@ -500,6 +530,30 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Redraw the thumbnails
         thumbnailsController.drawThumbnails();
+    }
+
+
+    var drawTickMarks = function(){
+        console.log("Drawing!");
+        var canvas = $('#'+constraintsCanvasID);
+        
+        var max_time = lectureController.getLectureModel().getLectureDuration();
+        console.log("maxTime: " + max_time);
+
+        for(var i=0; i < max_time; i+=150){
+             var tVis = retimerModel.getVisualTime(i);
+             var xVis = audioController.millisecondsToPixels(tVis);
+             console.log("xVis: " + xVis);
+             canvas.drawLine({  // top handle
+                layer: true,
+                bringToFront: true,
+                strokeStyle: '#BDBDBD',
+                strokeWidth: 1,
+                rounded: true,
+                x1: xVis, y1: 0,
+                x2: xVis, y2: 10
+            });
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////
