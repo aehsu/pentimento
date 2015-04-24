@@ -1,7 +1,7 @@
 #visualsContainer {
     overflow: hidden;
     height: 510px;
-    margin: 0;
+    margin-top: 20px;
     padding: 0;
 }
 
@@ -10,7 +10,7 @@
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    width: 100px;
+    width: 15%;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -25,7 +25,7 @@
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    width: 100px;
+    width: 15%;
     height: 100%;
     margin: 0;
     padding: 0;
