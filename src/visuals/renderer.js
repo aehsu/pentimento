@@ -14,14 +14,32 @@ var Renderer = function(visuals_controller) {
         // Clear the context
         context.clearRect(0, 0, canvas.width(), canvas.height());
         
+        // Get the current transform
+        // TODO: uncomment the following line and remove the next line when ready
+        // var transformMatrix = getTransform(tMax);
+        var transformMatrix = dummyTransformMatrix;
+        
         // Determine the scale
         var xScale = canvas.width() / visualsController.getVisualsModel().getCanvasSize().width;
         var yScale = canvas.height() / visualsController.getVisualsModel().getCanvasSize().height;
         
-        // Set scale if necessary
+        // Re-scale transform matrix if necessary
         if (xScale !== 1 || yScale !== 1) {
+            transformMatrix.m11 *= xScale;
+            transformMatrix.m22 *= yScale;
+            transformMatrix.tx *= xScale;
+            transformMatrix.ty *= yScale;
+        }
+        
+        // Transform canvas if necessary
+        var isTransformNecessary = !isIdentityTransform(transformMatrix);
+        if (isTransformNecessary) {
             context.save();
-            context.scale(xScale, yScale);
+            context.setTransform(
+                transformMatrix.m11, transformMatrix.m12,
+                transformMatrix.m21, transformMatrix.m22,
+                transformMatrix.tx, transformMatrix.ty
+            );
         }
 
         var slide = visualsController.getVisualsModel().getSlideAtTime(tMax);
@@ -49,8 +67,8 @@ var Renderer = function(visuals_controller) {
             drawVisual(context, visual, tMax, selectedColor, visual.getProperties().getWidth()+1);
         };
         
-        // Restore scale if necessary
-        if (xScale !== 1 || yScale !== 1) {
+        // Restore canvas if necessary
+        if (isTransformNecessary) {
             context.restore();
         }
         
@@ -163,6 +181,81 @@ var Renderer = function(visuals_controller) {
             context.fill();
         }
     };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Transforms
+    ///////////////////////////////////////////////////////////////////////////////
+    
+    // Pre-allocated transform matrix object to avoid new object
+    // allocation every time getTransform is called
+    var dummyTransformMatrix = {
+        m11: 1,
+        m12: 0,
+        m21: 0,
+        m22: 1,
+        tx: 0,
+        ty: 0
+    };
+    
+    /**
+     * Return the interpolated transform matrix for the given time
+     * 
+     * Matrix of the form:
+     * | m11 m12 tx |
+     * | m21 m22 ty |
+     * 
+     * Though arguably we never use m12 and m21 (the "skew" factors),
+     * so we might revamp the form to just be:
+     * | xScale xTranslation |
+     * | yScale yTranslation |
+     */
+    function getTransform(tVisual) {
+        
+        // TODO: provide a method in visualsController to get a time-sorted list of transform matrices
+        var transformMatrices = null;
+        
+        var interpolStartMatrix = transformMatrices[0];
+        var interpolEndMatrix = transformMatrices[transformMatrices.length-1];
+        
+        // Determine the two bounding transform matrices (closest before/after tVisual)
+        for(var i in transformMatrices){
+            var matrix = transformMatrices[i];
+            
+            // TODO: provide method to fetch time of transform matrix
+            if (matrix.time <= tVisual & matrix.time > interpolStartMatrix.time) {
+                interpolStartMatrix = matrix;
+            }
+            if(matrix.time > tVisual & matrix.time < interpolEndMatrix.time) {
+                interpolEndMatrix = matrix;
+            }
+        }
+        
+        if (interpolEndMatrix.time !== interpolStartMatrix.time) {
+            var interpolFactor = (tVisual - interpolStartMatrix.time)/(interpolEndMatrix.time - interpolStartMatrix.time);
+            
+            // Interpolate between each field of the bounding matrices
+            for (var k in dummyTransformMatrix) {
+                dummyTransformMatrix[k] = interpolStartMatrix[k] + (interpolEndMatrix[k] - interpolStartMatrix[k]) * interpolFactor;
+            }
+        } else {
+            
+            // If the bounding matrices are simultaneous/the same, simply copy the earlier matrix
+            for (var k in dummyTransformMatrix) {
+                dummyTransformMatrix[k] = interpolStartMatrix[k];
+            }
+        }
+        
+        return dummyTransformMatrix;
+    }
+    
+    function isIdentityTransform(matrix) {
+        return matrix.m11 === 1
+            && matrix.m12 === 0
+            && matrix.m21 === 0
+            && matrix.m22 === 1
+            && matrix.tx === 0
+            && matrix.ty === 0;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
