@@ -26,4 +26,16 @@ var LectureModel = function() {
     this.getLectureDuration = function() {
         return Math.max(audioModel.getDuration(), retimerModel.getAudioTime(visualsModel.getDuration()));
     };
+
+    // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+        // TODO
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        // TODO
+    };
 };

@@ -48,6 +48,18 @@ var AudioModel = function() {
         };
         return duration;
     };
+
+    // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+        // TODO
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        // TODO
+    };
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -335,6 +347,18 @@ var AudioTrack = function() {
         };
         return timeEnd;
     };
+
+    // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+        // TODO
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        // TODO
+    };
 };
 
 
@@ -444,4 +468,17 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 
         return trackTime;
     };
+
+    // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+        // TODO
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        // TODO
+    };
+
 };
