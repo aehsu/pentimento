@@ -237,22 +237,27 @@ var RetimerModel = function() {
 	};
 
     // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-        
-        for (constraint in json_object) {
-            if (!json_object.hasOwnProperty(constraint)) {
-                //The current property is not a direct property of the json object
-                continue;
-            }
-            var new_const = new Constraint(constraint.tVis, constraint.tAud, constraint.constraintType);
+    this.loadFromJSON = function(json_object) { 
+
+        var json_constraints = json_object['constraints'];
+
+        // Reset the constraints array in case this is not a new track
+        constraints = [];
+
+        // The JSON object is an array containing the JSON constraint objects.
+        // Get the constraint object from JSON and add it to the array of constraints.
+        for (var i = 0; i < json_constraints.length; i++) {
+            var new_const = new Constraint(json_constraints[i].tVis, json_constraints[i].tAud, json_constraints[i].constraintType);
             self.addConstraint(new_const);
-        }
+        };       
     };
 
     // Saving the model to JSON
+    // Returns the JSON object.
     this.saveToJSON = function() {
-        var json_object = {};
+        var json_object = {
+            constraints: []
+        };
         
         var constraints = self.getConstraintsIterator();
         while(constraints.hasNext()) {
@@ -262,8 +267,10 @@ var RetimerModel = function() {
             var type = constraint.getType();
 
             var constraint_obj = {'tVis': tVis, 'tAud': tAud, 'constraintType': type};
-            json_object.push(constraint_obj);
+            json_object.constraints.push(constraint_obj);
         }
+
+        return json_object;
     };
 };
 

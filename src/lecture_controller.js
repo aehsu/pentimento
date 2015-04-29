@@ -147,10 +147,6 @@ var LectureController = function() {
         else { return false; }
     };
 
-    this.saveToFile = function() {
-        // TODO
-    };
-
     ///////////////////////////////////////////////////////////////////////////////
     // Getters
     //
@@ -328,6 +324,8 @@ var LectureController = function() {
 
     this.save = function(){
         // TODO get all the json stuff and create a file
+        console.log(JSON.stringify(lectureModel.saveToJSON()));
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////

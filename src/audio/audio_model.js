@@ -50,15 +50,35 @@ var AudioModel = function() {
     };
 
     // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-        // TODO
+    this.loadFromJSON = function(json_object) {
+        var json_tracks = json_object['audio_tracks'];
+
+        // Reset the tracks array in case this is not a new model
+        audio_tracks = [];
+
+        // The JSON object is an array containing the JSON track objects.
+        // Get the track object from JSON and add it to the array of tracks.
+        for (var i = 0; i < json_tracks.length; i++) {
+            var track = new AudioTrack();
+            track.loadFromJSON(json_tracks[i])
+            audio_tracks.push(track);
+        };
     };
 
-    // Saving the model to JSON
+    // Saving the model to JSON.
+    // Returns a JSON string
     this.saveToJSON = function() {
-        var json_object = {};
-        // TODO
+        var json_object = {
+            audio_tracks: []
+        };
+
+        // For each track, add it to the JSON audio tracks
+        for (var i = 0; i < audio_tracks.length; i++) {
+            var json_track = audio_tracks[i].saveToJSON();
+            json_object['audio_tracks'].push(json_track);
+        };
+
+        return json_object;
     };
 };
 
@@ -349,15 +369,35 @@ var AudioTrack = function() {
     };
 
     // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-        // TODO
+    this.loadFromJSON = function(json_object) {
+        var json_segments = json_object['audio_segments'];
+
+        // Reset the segments array in case this is not a new track
+        audio_segments = [];
+
+        // The JSON object is an array containing the JSON segment objects.
+        // Get the segment object from JSON and add it to the array of segments.
+        for (var i = 0; i < json_segments.length; i++) {
+            var segment = new AudioSegment(null, 0, 0);
+            segment.loadFromJSON(json_segments[i])
+            audio_segments.push(segment);
+        };
     };
 
-    // Saving the model to JSON
+    // Saving the model to JSON.
+    // Returns a JSON string
     this.saveToJSON = function() {
-        var json_object = {};
-        // TODO
+        var json_object = {
+            audio_segments: []
+        };
+
+        // For each segment, add it to the JSON audio segments
+        for (var i = 0; i < audio_segments.length; i++) {
+            var json_segment = audio_segments[i].saveToJSON();
+            json_object['audio_segments'].push(json_segment);
+        };
+
+        return json_object;
     };
 };
 
@@ -470,15 +510,27 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
     };
 
     // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-        // TODO
+    this.loadFromJSON = function(json_object) {
+        audio_clip = json_object['audio_clip'];
+        total_audio_length = json_object.total_audio_length;
+        self.audio_start_time = json_object.audio_start_time;
+        self.audio_end_time = json_object.audio_end_time;
+        self.start_time = json_object.start_time;
+        self.end_time = json_object.end_time;
     };
 
-    // Saving the model to JSON
+    // Saving the model to JSON.
+    // Returns a JSON object
     this.saveToJSON = function() {
-        var json_object = {};
-        // TODO
-    };
+        var json_object = {
+            audio_clip: null,
+            total_audio_length: total_audio_length,
+            audio_start_time: self.audio_start_time,
+            audio_end_time: self.audio_end_time,
+            start_time: self.start_time,
+            end_time: self.end_time
+        };
 
+        return json_object;
+    };
 };

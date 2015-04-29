@@ -28,14 +28,21 @@ var LectureModel = function() {
     };
 
     // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-        // TODO
+    this.loadFromJSON = function(json_object) {
+        // var json_object = JSON.parse(json_string);
+        var json_object = {
+            // audio_model: audioModel.l,
+            // retimer_model: 
+        };
     };
 
     // Saving the model to JSON
     this.saveToJSON = function() {
-        var json_object = {};
-        // TODO
+        var json_object = {
+            audio_model: audioModel.saveToJSON(),
+            retimer_model: retimerModel.saveToJSON()
+        };
+
+        return json_object;
     };
 };
