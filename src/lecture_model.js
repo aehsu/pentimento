@@ -29,11 +29,9 @@ var LectureModel = function() {
 
     // Loading the model from JSON
     this.loadFromJSON = function(json_object) {
-        // var json_object = JSON.parse(json_string);
-        var json_object = {
-            // audio_model: audioModel.l,
-            // retimer_model: 
-        };
+        visualsModel = VisualsModel.loadFromJSON(json_object['visuals_model']);
+        audioModel = AudioModel.loadFromJSON(json_object['audio_model']);
+        retimerModel = RetimerModel.loadFromJSON(json_object['retimer_model']);
     };
 
     // Saving the model to JSON

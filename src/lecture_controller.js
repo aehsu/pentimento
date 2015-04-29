@@ -5,6 +5,9 @@ var LectureController = function() {
 
     this.DEBUG = true;
 
+    // TODO: testing
+    var saveString = null;
+
     var lectureModel = null;
     var timeController = null;
     var visualsController = null;
@@ -40,6 +43,7 @@ var LectureController = function() {
     var startPlaybackButtonID = 'startPlayback';
     var stopPlaybackButtonID = 'stopPlayback';
     var saveButtonID = 'save';
+    var openButtonID = 'open';
 
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
@@ -69,6 +73,32 @@ var LectureController = function() {
 
     this.initFromFile = function() {
         // TODO
+
+        // Setup UI elements and state
+        setupUI();
+    };
+
+    this.save = function() {
+        // TODO get all the json stuff and create a file
+        saveString = JSON.stringify(lectureModel.saveToJSON());
+        console.log(saveString);
+    };
+
+    this.load = function(json_string) {
+        // Parse the string into a JSON object
+        var json_object = JSON.parse(json_string);
+
+        // Load the models
+        lectureModel.loadFromJSON(json_object);
+        console.log(JSON.stringify(lectureModel.saveToJSON()));
+
+        // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
+        timeController = new TimeController();
+
+        // Initialize the controllers with their respective models
+        visualsController = new VisualsController(lectureModel.getVisualsModel(), lectureModel.getRetimerModel());
+        audioController = new AudioController(lectureModel.getAudioModel());
+        retimerController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
 
         // Setup UI elements and state
         setupUI();
@@ -105,8 +135,17 @@ var LectureController = function() {
         // Save
         $('#'+saveButtonID).click(self.save);
 
+        // Open
+        $('#'+openButtonID).click(function() {
+            self.load(saveString);
+        });
+
         // Update the state of the buttons
         updateButtons();
+
+        // Draw the different controllers
+        // TODO
+        self.stopRecording();
     };
 
     // Updates the buttons to reflect the current state of recording or playback
@@ -320,13 +359,6 @@ var LectureController = function() {
     this.getPlaybackEndTime = function() {
         return endTime;
     };
-
-
-    this.save = function(){
-        // TODO get all the json stuff and create a file
-        console.log(JSON.stringify(lectureModel.saveToJSON()));
-
-    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Event Handlers and Tools

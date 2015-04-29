@@ -8,6 +8,11 @@ var AudioModel = function() {
     var self = this;
     var audio_tracks = [];
 
+    // Set audio tracks
+    this.setAudioTracks = function(audio_tracks_) {
+        audio_tracks = audio_tracks_;
+    };
+
     // Get the audio tracks
     this.getAudioTracks = function() {
         return audio_tracks;
@@ -49,22 +54,6 @@ var AudioModel = function() {
         return duration;
     };
 
-    // Loading the model from JSON
-    this.loadFromJSON = function(json_object) {
-        var json_tracks = json_object['audio_tracks'];
-
-        // Reset the tracks array in case this is not a new model
-        audio_tracks = [];
-
-        // The JSON object is an array containing the JSON track objects.
-        // Get the track object from JSON and add it to the array of tracks.
-        for (var i = 0; i < json_tracks.length; i++) {
-            var track = new AudioTrack();
-            track.loadFromJSON(json_tracks[i])
-            audio_tracks.push(track);
-        };
-    };
-
     // Saving the model to JSON.
     // Returns a JSON string
     this.saveToJSON = function() {
@@ -80,6 +69,24 @@ var AudioModel = function() {
 
         return json_object;
     };
+};
+// Loading the model from JSON
+AudioModel.loadFromJSON = function(json_object) {
+
+    var audio_model = new AudioModel();
+
+    // The JSON object is an array containing the JSON track objects.
+    // Get the track object from JSON and add it to the array of tracks.
+    var json_tracks = json_object['audio_tracks'];
+    var audio_tracks = [];
+    for (var i = 0; i < json_tracks.length; i++) {
+        var track = new AudioTrack();
+        track.loadFromJSON(json_tracks[i])
+        audio_tracks.push(track);
+    };
+    audio_model.setAudioTracks(audio_tracks);
+
+    return audio_model;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -523,7 +530,7 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
     // Returns a JSON object
     this.saveToJSON = function() {
         var json_object = {
-            audio_clip: null,
+            audio_clip: audio_clip,  // TODO
             total_audio_length: total_audio_length,
             audio_start_time: self.audio_start_time,
             audio_end_time: self.audio_end_time,

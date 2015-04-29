@@ -236,22 +236,6 @@ var RetimerModel = function() {
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(visualTime-prev.getTVisual())+prev.getTAudio();
 	};
 
-    // Loading the model from JSON
-    this.loadFromJSON = function(json_object) { 
-
-        var json_constraints = json_object['constraints'];
-
-        // Reset the constraints array in case this is not a new track
-        constraints = [];
-
-        // The JSON object is an array containing the JSON constraint objects.
-        // Get the constraint object from JSON and add it to the array of constraints.
-        for (var i = 0; i < json_constraints.length; i++) {
-            var new_const = new Constraint(json_constraints[i].tVis, json_constraints[i].tAud, json_constraints[i].constraintType);
-            self.addConstraint(new_const);
-        };       
-    };
-
     // Saving the model to JSON
     // Returns the JSON object.
     this.saveToJSON = function() {
@@ -273,11 +257,25 @@ var RetimerModel = function() {
         return json_object;
     };
 };
+RetimerModel.loadFromJSON = function(json_object) { 
+
+    var retimer_model = new RetimerModel();
+
+    // The JSON object is an array containing the JSON constraint objects.
+    // Get the constraint object from JSON and add it to the array of constraints.
+    var json_constraints = json_object['constraints'];
+    for (var i = 0; i < json_constraints.length; i++) {
+        var new_const = new Constraint(json_constraints[i].tVis, json_constraints[i].tAud, json_constraints[i].constraintType);
+        retimer_model.addConstraint(new_const);
+    };      
+
+    return retimer_model;
+}; 
 
 var ConstraintTypes = {
 	Manual: "Manual",
 	Automatic: "Automatic"
-}
+};
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;
