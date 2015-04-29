@@ -14,6 +14,7 @@ var VisualsModel = function() {
 
     var dirtyVisuals = [];
 
+    // Gets the size of the canvas where the visuals are being recorded
     this.getCanvasSize = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };
     };

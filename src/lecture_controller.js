@@ -39,6 +39,7 @@ var LectureController = function() {
     var stopRecordButtonID = 'stopRecord';
     var startPlaybackButtonID = 'startPlayback';
     var stopPlaybackButtonID = 'stopPlayback';
+    var saveButtonID = 'save';
 
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
@@ -100,6 +101,9 @@ var LectureController = function() {
 
         // Stop playback
         $('#'+stopPlaybackButtonID).click(self.stopPlayback);
+
+        // Save
+        $('#'+saveButtonID).click(self.save);
 
         // Update the state of the buttons
         updateButtons();
@@ -321,6 +325,10 @@ var LectureController = function() {
         return endTime;
     };
 
+
+    this.save = function(){
+        // TODO get all the json stuff and create a file
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Event Handlers and Tools
