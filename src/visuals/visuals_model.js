@@ -507,7 +507,7 @@ var VisualProperty = function(c, w) {
     this.getColor = function() { return color; }
     this.setColor = function(newColor) { color = newColor; }
     this.getWidth = function() { return width; }
-    this.setWidth  = function(newWidth) { width = Math.round(newWidth); }
+    this.setWidth  = function(newWidth) { width = newWidth; }
 };
 
 var VisualPropertyTransform = function(prop, newVal, time) {

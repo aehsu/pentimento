@@ -220,13 +220,13 @@ var VisualsController = function(visuals_model, retimer_model) {
         // TODO: find out a good way to signal the retimer controller
     };
 
-    // Scale/translate the visuals in the selection during a recording.
-    this.recordingScaleTranslateSelection = function(transform_matrix) {
+    // Transform the visuals in the selection during a recording.
+    this.recordingTransformSelection = function(transform_matrix) {
 
     };
 
-    // Scale/translate the visuals in the selection while in editing mode.
-    this.editingScaleTranslateSelection = function(transform_matrix) {
+    // Transform the visuals in the selection while in editing mode.
+    this.editingTransformSelection = function(transform_matrix) {
 
         // Apply the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {

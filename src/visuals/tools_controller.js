@@ -19,6 +19,9 @@ var ToolsController = function(visuals_controller) {
     var strokeColor = '#777';
     var strokeWidth = 2;
 
+    // Keep track of original dimensions during a transform
+    var originalTranslatePosition;  // { left, top }
+
     ///////////////////////////////////////////////////////////////////////////////
     // DOM
     /////////////////////////////////////////////////////////////////////////////// 
@@ -270,8 +273,6 @@ var ToolsController = function(visuals_controller) {
 
         selectionBeginPoint = getCanvasPoint(event);
 
-
-
         // The selection is reset each time the mouse clicks down so that a new
         // selection can be made.
         visualsController.selection = [];
@@ -356,18 +357,55 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvasOverlay.css('pointer-events', 'auto');
     };
 
-    // During recording, handle dragging or resizing the select box 
-    var selectBoxTransforming = function(event, ui) {
+    // During a drag, store the original UI element dimensions
+    var selectBoxStartTranslate = function(event, ui) {
+        var box = $('#'+selectionBoxID);
+        originalTranslatePosition = box.position();
+    };
+
+    // During recording, handle dragging the select box 
+    var selectBoxTranslating = function(event, ui) {
 
         // Only run the function during recording
         if (!lectureController.isRecording()) {
             return;
         };
 
+        // TODO: see selectBoxEndTranslate
     };
 
-    // While editing, handle finishing (stop) dragging or resizing the select box 
-    var selectBoxEndTransform = function(event, ui) {
+    // While editing, handle finishing (stop) dragging the select box 
+    var selectBoxEndTranslate = function(event, ui) {
+
+        // Only run the function during editing
+        if (lectureController.isRecording()) {
+            return;
+        };
+
+        // Get the selection box dimensions
+        var box = $('#'+selectionBoxID);
+        var new_position = box.position();
+
+        // Calculate the transform matrix
+        var transform_matrix = calculateTranslateMatrix(originalTranslatePosition, new_position);
+
+        // Apply the matrix to the selected visuals
+        visualsController.editingTransformSelection(transform_matrix);
+    };
+
+    // During recording, handle resizing the select box 
+    var selectBoxScaling = function(event, ui) {
+
+        // Only run the function during recording
+        if (!lectureController.isRecording()) {
+            return;
+        };
+
+        // TODO: see selectBoxEndScale
+    };
+
+    // While editing, handle finishing (stop) resizing the select box 
+    var selectBoxEndScale = function(event, ui) {
 
         // Only run the function during editing
         if (lectureController.isRecording()) {
@@ -375,10 +413,10 @@ var ToolsController = function(visuals_controller) {
         };
 
         // Calculate the transform matrix
-        var transform_matrix = calculateScaleTranslateMatrix(ui.originalPosition, ui.originalSize, ui.position, ui.size);
+        var transform_matrix = calculateScaleMatrix(ui.originalPosition, ui.originalSize, ui.position, ui.size);
 
         // Apply the matrix to the selected visuals
-        visualsController.editingScaleTranslateSelection(transform_matrix);
+        visualsController.editingTransformSelection(transform_matrix);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -413,11 +451,25 @@ var ToolsController = function(visuals_controller) {
         }
     }
 
+    // Given the original and new position of a box in the canvas, calculate and return the math.js matrix
+    // necessary to translate the box from the original to the new coordinates.
+    // The position is represented as { left, top }
+    var calculateTranslateMatrix = function(original_position, new_position) {
+
+        // The matrix necessary to translate is just derived from the difference between the new and old position
+        var translateMatrix = math.matrix([ [1, 0,  new_position.left - original_position.left],
+                                            [0, 1,  new_position.top - original_position.top],
+                                            [0, 0,  1] ]);
+        
+        return translateMatrix;
+    };
+
     // Given the original and new dimensions of a box in the canvas, calculate and return the math.js matrix
-    // necessary to transform the box from the original to the new coordinates.
+    // necessary to scale the box from the original to the new coordinates.
+    // A scale normally ends up translating, so the matrix returned by this function will negate that translation.
     // The position is represented as { left, top }
     // The size is represented as { width, height }
-    var calculateScaleTranslateMatrix = function(original_position, original_size, new_position, new_size) {
+    var calculateScaleMatrix = function(original_position, original_size, new_position, new_size) {
         // http://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
 
         // Calculate the matrix needed to scale the box to the new size
@@ -438,7 +490,7 @@ var ToolsController = function(visuals_controller) {
         var newBoxVertexArray = math.multiply(boxVertexArray, scaleMatrix).valueOf();
 
         // Figure out which corner is the anchor point by comparing the 4 corners and seeing which one didn't change.
-        // Find the amount the anchor point shifted after the box was scaled (newBoxVertexArray vs boxVertexArray)
+        // Find the amount the anchor point shifted after the box was scaled (newBoxVertexArray vs boxVertexArray).
         var shiftX;
         var shiftY;
         if (original_position.left === new_position.left && 
@@ -504,11 +556,12 @@ var ToolsController = function(visuals_controller) {
     // those are both interpreted as scaling and translating transforms.
     $('#'+selectionBoxID).draggable({
         containment: 'parent',
-        drag: selectBoxTransforming,
-        stop: selectBoxEndTransform
+        start: selectBoxStartTranslate,
+        drag: selectBoxTranslating,
+        stop: selectBoxEndTranslate
     }).resizable({
         containment: 'parent',
-        resize: selectBoxTransforming, 
-        stop: selectBoxEndTransform
+        resize: selectBoxScaling, 
+        stop: selectBoxEndScale
     });
 };
