@@ -328,6 +328,52 @@ var VisualsModel = function() {
         }
         return shifts;
     };
+
+        // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        
+        var slides = self.getSlidesIterator();
+
+        var visuals_obj = {};
+        var transforms_obj = {};
+
+        while(slides.hasNext()) {
+            var slide = slides.next();
+            var visuals = slide.getVisualsIterator();
+            while(visuals.hasNext()){
+                var visual = visuals.next();
+
+            }
+            
+        }
+    };
+
+    this.loadVertexFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+
+        var new_vertex = new Vertex(json_object.x, json_object.y, json_object.t, json_object.p);
+
+        return new_vertex;
+    };
+
+    // Saving the model to JSON
+    this.saveVertexToJSON = function(vertex) {
+        var json_object = {};
+
+        var x = vertex.getX();
+        var y = vertex.getY();
+        var t = vertex.getT();
+        var p = vertex.getP();
+
+        var vert_json = {'x': x, 'y': y, 't': t, 'p': p};
+        json_object.push(vert_json);
+    };
 };
 
 
