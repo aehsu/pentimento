@@ -235,6 +235,36 @@ var RetimerModel = function() {
         }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(visualTime-prev.getTVisual())+prev.getTAudio();
 	};
+
+    // Loading the model from JSON
+    this.loadFromJSON = function(json_string) {
+        var json_object = JSON.parse(json_string);
+        
+        for (constraint in json_object) {
+            if (!json_object.hasOwnProperty(constraint)) {
+                //The current property is not a direct property of the json object
+                continue;
+            }
+            var new_const = new Constraint(constraint.tVis, constraint.tAud, constraint.constraintType);
+            self.addConstraint(new_const);
+        }
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {};
+        
+        var constraints = self.getConstraintsIterator();
+        while(constraints.hasNext()) {
+            var constraint = constraints.next();
+            var tVis = constraint.getTVisual();
+            var tAud = constraint.getTAudio();
+            var type = constraint.getType();
+
+            var constraint_obj = {'tVis': tVis, 'tAud': tAud, 'constraintType': type};
+            json_object.push(constraint_obj);
+        }
+    };
 };
 
 var ConstraintTypes = {
