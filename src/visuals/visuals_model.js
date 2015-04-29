@@ -5,12 +5,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 "use strict";
 
-var VisualsModel = function() {
+var VisualsModel = function(canvas_width, canvas_height) {
 
     var self = this;        
     var slides = [ new Slide() ];  // Setup the visuals with one slide
-    var canvasWidth = 800;
-    var canvasHeight = 500;
+    var canvasWidth = canvas_width;
+    var canvasHeight = canvas_height;
 
     var dirtyVisuals = [];
 
@@ -32,6 +32,10 @@ var VisualsModel = function() {
     ///////////////////////////////////////////////////////////////////////////////
     // Slides
     ///////////////////////////////////////////////////////////////////////////////
+
+    this.setSlides = function(slides_) {
+        slides = slides_;
+    };
 
     this.getSlides = function() {
         return slides;
@@ -329,51 +333,33 @@ var VisualsModel = function() {
         return shifts;
     };
 
-        // Loading the model from JSON
-    this.loadFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-    };
-
-    // Saving the model to JSON
     this.saveToJSON = function() {
-        var json_object = {};
+        var json_object = {
+            slides: [],
+            canvas_width: canvasWidth,
+            canvas_height: canvasHeight
+        };
         
         var slides = self.getSlidesIterator();
-
-        var visuals_obj = {};
-        var transforms_obj = {};
-
         while(slides.hasNext()) {
-            var slide = slides.next();
-            var visuals = slide.getVisualsIterator();
-            while(visuals.hasNext()){
-                var visual = visuals.next();
+            var slide_json = slides.next().saveToJSON();
+            json_object['slides'].push(slide_json);
+        };
 
-            }
-            
-        }
+        return json_object;
     };
+};
+VisualsModel.loadFromJSON = function(json_object) {
+    var visuals_model = new VisualsModel(json_object['canvas_width'], json_object['canvas_height']);
 
-    this.loadVertexFromJSON = function(json_string) {
-        var json_object = JSON.parse(json_string);
-
-        var new_vertex = new Vertex(json_object.x, json_object.y, json_object.t, json_object.p);
-
-        return new_vertex;
+    var json_slides = json_object['slides'];
+    var slides = [];
+    for (var i = 0; i < json_slides.length; i++) {
+        slides.push(SlideTransform.loadFromJSON(json_slides[i]))
     };
+    visuals_model.setSlides(slides);
 
-    // Saving the model to JSON
-    this.saveVertexToJSON = function(vertex) {
-        var json_object = {};
-
-        var x = vertex.getX();
-        var y = vertex.getY();
-        var t = vertex.getT();
-        var p = vertex.getP();
-
-        var vert_json = {'x': x, 'y': y, 't': t, 'p': p};
-        json_object.push(vert_json);
-    };
+    return visuals_model;
 };
 
 
@@ -420,12 +406,51 @@ var Slide = function() {
 
     this.getVisualsIterator = function() { return new Iterator(visuals); }
     this.getTransformsIterator = function() { return new Iterator(transforms); }
+
+    this.saveToJSON = function() {
+        var json_object = {
+            visuals: [],
+            transforms: [],
+            duration: duration
+        };
+
+        for (var i = 0; i < visuals.length; i++) {
+            json_object['visuals'].push(visuals[i].saveToJSON());
+        };
+
+        for (var i = 0; i < transforms.length; i++) {
+            json_object['transforms'].push(transforms[i].saveToJSON());
+        };
+
+        return json_object;
+    };
+};
+Slide.loadFromJSON = function(json_object) {
+    var slide = new Slide();
+
+    var json_visuals = json_object['visuals'];
+    var visuals = [];
+    for (var i = 0; i < json_visuals.length; i++) {
+        visuals.push(Visual.loadFromJSON(json_visuals[i]))
+    };
+    slide.setVisuals(visuals);
+
+    var json_transforms = json_object['transforms'];
+    var transforms = [];
+    for (var i = 0; i < json_transforms.length; i++) {
+        transforms.push(SlideTransform.loadFromJSON(json_transforms[i]))
+    };
+    slide.setTransforms(transforms);
+
+    slide.setDuration(json_object['duration']);
+
+    return slide;
 };
 
-var SlideTransform = function(type, tmin, durate, mat) {
+var SlideTransform = function(tmin, duration_, mat) {
     var self = this;
     var tMin = tmin;
-    var duration = durate;
+    var duration = duration_;
     var matrix = mat;
 
     this.getTMin = function() { return tMin; }
@@ -434,6 +459,19 @@ var SlideTransform = function(type, tmin, durate, mat) {
     this.setTMin = function(newTMin) { tMin = Math.round(newTMin); }
     this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
+
+    this.saveToJSON = function() {
+        var json_object = {
+            tMin: tMin,
+            duration: duration,
+            matrix: matrix
+        };
+
+        return json_object;
+    };
+};
+SlideTransform.loadFromJSON = function(json_object) {
+    return new SlideTransform(json_object['tMin'], json_object['duration'], json_object['matrix']);
 };
 
 
@@ -508,6 +546,61 @@ var Visual = function(tmin, props) {
         return true;
     };
 };
+// Set the method in the prototype so child classes can inherit from it
+Visual.prototype.saveToJSON = function() {
+    var json_object = {
+        type: this.getType(),
+        hyperlink: this.getHyperlink(),
+        tDeletion: this.getTDeletion(),
+        propertyTransforms: [],
+        spatialTransforms: [],
+        tMin: this.getTMin(),
+        properties: this.getProperties().saveToJSON()
+    };
+
+    var property_transforms = this.getPropertyTransforms();
+    for (var i = 0; i < property_transforms.length; i++) {
+        json_object.propertyTransforms.push(property_transforms[i].saveToJSON());
+    };
+
+    var spatial_transforms = this.getSpatialTransforms();
+    for (var i = 0; i < spatial_transforms.length; i++) {
+        json_object.spatialTransforms.push(spatial_transforms[i].saveToJSON());
+    };
+
+    return json_object;
+};
+Visual.loadFromJSON = function(json_object) {
+
+    var new_visual = null;
+
+    // Initialize the child part
+    switch (json_object['type']) {
+        case VisualTypes.stroke:
+            new_visual = StrokeVisual.loadFromJSON(json_object);
+            break;
+        case VisualTypes.dot:
+            // TODO
+            break;
+        case VisualTypes.img:
+            // TODO
+            break;
+        default:
+            console.error('unrecognized type');
+    };
+
+    if (!new_visual) {
+        console.error('no visual loaded from JSON');
+    };
+
+    // Load the parent part (don't need to set type, tMin, properties)
+    new_visual.setHyperlink(json_object['hyperlink']);
+    new_visual.setTDeletion(json_object['tDeletion']);
+    new_visual.setPropertyTransforms(VisualPropertyTransform.loadFromJSON(json_object['propertyTransforms']));
+    new_visual.setSpatialTransforms(VisualSpatialTransform.loadFromJSON(json_object['spatialTransforms']));
+
+    return new_visual;
+};
 // Set the constructor in the prototype so child classes can inherit from it
 Visual.prototype.constructor = Visual;
 
@@ -539,6 +632,40 @@ var StrokeVisual = function(tmin, props) {
             vertices[i].setY(resultVertexArray[1]);
         };
     };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+
+        // Call parent method
+        var json_object = Visual.prototype.saveToJSON.call(self);
+
+        // Add the fields belonging to the child object
+        json_object = {
+            vertices: []
+        };
+
+        // Iterate over vertices and add them to the JSON 
+        for (var i = 0; i < vertices.length; i++) {
+            json_object['vertices'].push(vertices[i].saveToJSON());
+        };
+
+        return json_object;
+    };
+};
+StrokeVisual.loadFromJSON = function(json_object) {
+
+    // Load the child class attributes only
+    var stroke_visual = new StrokeVisual(json_object['tMin'], VisualProperty.loadFromJSON(json_object['properties']));
+
+    // Add the vertices
+    var json_verticies = json_object['vertices'];
+    var vertices = [];
+    for (var i = 0; i < json_verticies.length; i++) {
+        vertices.push(Vertex.loadFromJSON(json_verticies[i]))
+    };
+    stroke_visual.setVertices(vertices);
+
+    return stroke_visual;
 };
 
 
@@ -555,6 +682,19 @@ var VisualProperty = function(c, w) {
     this.setColor = function(newColor) { color = newColor; }
     this.getWidth = function() { return width; }
     this.setWidth  = function(newWidth) { width = newWidth; }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            c: color,
+            w: width
+        };
+
+        return json_object;
+    };
+};
+VisualProperty.loadFromJSON = function(json_object) {
+    return new VisualProperty(json_object.c, json_object.w);
 };
 
 var VisualPropertyTransform = function(prop, newVal, time) {
@@ -572,6 +712,24 @@ var VisualPropertyTransform = function(prop, newVal, time) {
     this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
     this.getTime = function() { return t; }
     this.setTime = function(newTime) { t = Math.round(newTime); }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            property: property.saveToJSON(),
+            value: value,
+            duration: duration,
+            t: t
+        };
+
+        return json_object;
+    };
+};
+VisualPropertyTransform.loadFromJSON = function(json_object) {
+    var visualPropertyTransform = new VisualPropertyTransform(VisualProperty.loadFromJSON(json_object['property']), json_object['value'],
+                                                                json_object['t']);
+    visualPropertyTransform.setDuration(json_object['duration']);
+    return visualPropertyTransform;
 };
 
 var VisualSpatialTransform = function(mat, time) {
@@ -586,6 +744,22 @@ var VisualSpatialTransform = function(mat, time) {
     this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
     this.getTime = function() { return time; }
     this.setTime = function(newTime) { t = Math.round(newTime); }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            matrix: matrix,
+            duration: duration,
+            t: t
+        };
+
+        return json_object;
+    };
+};
+VisualSpatialTransform.loadFromJSON = function(json_object) {
+    var visualSpatialTransform = new VisualSpatialTransform(json_object['matrix'], json_object['t']);
+    visualSpatialTransform.setDuration(json_object['duration']);
+    return visualSpatialTransform;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -614,4 +788,20 @@ var Vertex = function(myX, myY, myT, myP) {
     this.isVisible = function(tVisual) {
         return t <= tVisual;
     };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            x: x,
+            y: y,
+            t: t,
+            p: p
+        };
+
+        return json_object;
+    };
 };
+Vertex.loadFromJSON = function(json_object) {
+    return new Vertex(json_object.x, json_object.y, json_object.t, json_object.p);
+};
+

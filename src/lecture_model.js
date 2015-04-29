@@ -9,7 +9,7 @@ var LectureModel = function() {
 
     //
     this.init = function() {
-        visualsModel = new VisualsModel();
+        visualsModel = new VisualsModel(800, 500);
         audioModel = new AudioModel();
         retimerModel = new RetimerModel();
     };
@@ -39,6 +39,7 @@ var LectureModel = function() {
     // Saving the model to JSON
     this.saveToJSON = function() {
         var json_object = {
+            visuals_model: visualsModel.saveToJSON(),
             audio_model: audioModel.saveToJSON(),
             retimer_model: retimerModel.saveToJSON()
         };
