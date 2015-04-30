@@ -5,15 +5,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 "use strict";
 
-var VisualsModel = function() {
+var VisualsModel = function(canvas_width, canvas_height) {
 
     var self = this;        
     var slides = [ new Slide() ];  // Setup the visuals with one slide
-    var canvasWidth = 800;
-    var canvasHeight = 500;
+    var canvasWidth = canvas_width;
+    var canvasHeight = canvas_height;
 
     var dirtyVisuals = [];
 
+    // Gets the size of the canvas where the visuals are being recorded
     this.getCanvasSize = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };
     };
@@ -31,6 +32,10 @@ var VisualsModel = function() {
     ///////////////////////////////////////////////////////////////////////////////
     // Slides
     ///////////////////////////////////////////////////////////////////////////////
+
+    this.setSlides = function(slides_) {
+        slides = slides_;
+    };
 
     this.getSlides = function() {
         return slides;
@@ -76,12 +81,12 @@ var VisualsModel = function() {
 
     this.removeSlide = function(slide) {
         if (slides.length == 1) {
-            console.log("Only one slide left, cannot delete!");
+            console.error("Only one slide left, cannot delete!");
             return false;
         }
         var index = slides.indexOf(slide);
         if (index == -1) { 
-            console.log("slide does not exist");
+            console.error("slide does not exist");
             return false;
         };
 
@@ -208,18 +213,15 @@ var VisualsModel = function() {
         var currentSlide = self.getSlideAtTime(visuals[0].getTMin());
         shifts.reverse();
         
-        console.log("pre-DELETION visuals"); console.log(currentSlide.visuals);
-        console.log("DELETION shifts"); console.log(shifts);
-        
         for(var vis in visuals) { //remove the visuals from the slide
             var index = currentSlide.getVisuals().indexOf(visuals[vis]);
             currentSlide.getVisuals().splice(index, 1);
             indices.push(index);
-            if(index==-1) { console.log('error in deletion, a visual could not be found on the slide given'); }
+            if(index==-1) { 
+                console.error('error in deletion, a visual could not be found on the slide given'); 
+            }
         }
-        
-        console.log("post-DELETION visuals"); console.log(currentSlide.getVisuals());
-        
+            
         for(var sh in shifts) {
             var shift = shifts[sh];
             var visualIter = currentSlide.getVisualsIterator();
@@ -327,6 +329,34 @@ var VisualsModel = function() {
         }
         return shifts;
     };
+
+    this.saveToJSON = function() {
+        var json_object = {
+            slides: [],
+            canvas_width: canvasWidth,
+            canvas_height: canvasHeight
+        };
+        
+        var slides = self.getSlidesIterator();
+        while(slides.hasNext()) {
+            var slide_json = slides.next().saveToJSON();
+            json_object['slides'].push(slide_json);
+        };
+
+        return json_object;
+    };
+};
+VisualsModel.loadFromJSON = function(json_object) {
+    var visuals_model = new VisualsModel(json_object['canvas_width'], json_object['canvas_height']);
+
+    var json_slides = json_object['slides'];
+    var slides = [];
+    for (var i = 0; i < json_slides.length; i++) {
+        slides.push(Slide.loadFromJSON(json_slides[i]))
+    };
+    visuals_model.setSlides(slides);
+
+    return visuals_model;
 };
 
 
@@ -368,25 +398,77 @@ var Slide = function() {
     this.getTransforms = function() { return transforms; }
 
     this.setVisuals = function(newVisuals) { visuals = newVisuals; }
-    this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
+    this.setDuration = function(newDuration) { duration = newDuration; }
     this.setTransforms = function(newTransforms) { transforms = newTransforms; }
 
     this.getVisualsIterator = function() { return new Iterator(visuals); }
     this.getTransformsIterator = function() { return new Iterator(transforms); }
+
+    this.saveToJSON = function() {
+        var json_object = {
+            visuals: [],
+            transforms: [],
+            duration: duration
+        };
+
+        for (var i = 0; i < visuals.length; i++) {
+            json_object['visuals'].push(visuals[i].saveToJSON());
+        };
+
+        for (var i = 0; i < transforms.length; i++) {
+            json_object['transforms'].push(transforms[i].saveToJSON());
+        };
+
+        return json_object;
+    };
+};
+Slide.loadFromJSON = function(json_object) {
+    var slide = new Slide();
+
+    var json_visuals = json_object['visuals'];
+    var visuals = [];
+    for (var i = 0; i < json_visuals.length; i++) {
+        visuals.push(Visual.loadFromJSON(json_visuals[i]))
+    };
+    slide.setVisuals(visuals);
+
+    var json_transforms = json_object['transforms'];
+    var transforms = [];
+    for (var i = 0; i < json_transforms.length; i++) {
+        transforms.push(SlideTransform.loadFromJSON(json_transforms[i]))
+    };
+    slide.setTransforms(transforms);
+
+    slide.setDuration(json_object['duration']);
+
+    return slide;
 };
 
-var SlideTransform = function(type, tmin, durate, mat) {
+var SlideTransform = function(tmin, duration_, mat) {
     var self = this;
     var tMin = tmin;
-    var duration = durate;
+    var duration = duration_;
     var matrix = mat;
 
     this.getTMin = function() { return tMin; }
     this.getDuration = function() { return duration; }
     this.getMatrix = function() { return matrix; }
-    this.setTMin = function(newTMin) { tMin = Math.round(newTMin); }
-    this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
+    this.setTMin = function(newTMin) { tMin = newTMin; }
+    this.setDuration = function(newDuration) { duration = newDuration; }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
+
+    this.saveToJSON = function() {
+        var json_object = {
+            tMin: tMin,
+            duration: duration,
+            matrix: matrix
+        };
+
+        return json_object;
+    };
+};
+SlideTransform.loadFromJSON = function(json_object) {
+    return new SlideTransform(json_object['tMin'], json_object['duration'], json_object['matrix']);
 };
 
 
@@ -429,14 +511,23 @@ var Visual = function(tmin, props) {
 
     this.setType = function(newType) { type = newType; }
     this.setHyperlink = function(newHyperlink) { hyperlink = newHyperlink; }
-    this.setTDeletion = function(newTDeletion) { tDeletion = Math.round(newTDeletion); }
+    this.setTDeletion = function(newTDeletion) { tDeletion = newTDeletion; }
     this.setPropertyTransforms = function(newTransforms) { propertyTransforms = newTransforms; }
     this.setSpatialTransforms = function(newTransforms) { spatialTransforms = newTransforms; }
-    this.setTMin = function(newTMin) { tMin = Math.round(newTMin); }
+    this.setTMin = function(newTMin) { tMin = newTMin; }
     this.setProperties = function(newProperties) { properties = newProperties; }
 
     this.getPropertyTransformsIterator = function() { return new Iterator(propertyTransforms); }
     this.getSpatialTransformsIterator = function() { return new Iterator(spatialTransforms); }
+
+    // Apply a transform to the visual through all points in time.
+    // This is different from pushing a transform, which only applies it at the specified time.
+    // The transform is a math.js matrix.
+    // This method needs to be overridden by child classes.
+    this.applyTransform = function(transform) {
+        console.error('Visual.applyTransform() needs to be overridden by child class');
+        return;
+    };
 
     // The rule is that visuals are visible exactly ON their tMin, not later
     // Therefore, when time hits tMin, the visual is visible
@@ -451,6 +542,71 @@ var Visual = function(tmin, props) {
         }
         return true;
     };
+};
+// Set the method in the prototype so child classes can inherit from it
+Visual.prototype.saveToJSON = function() {
+    var json_object = {
+        type: this.getType(),
+        hyperlink: this.getHyperlink(),
+        tDeletion: this.getTDeletion(),
+        propertyTransforms: [],
+        spatialTransforms: [],
+        tMin: this.getTMin(),
+        properties: this.getProperties().saveToJSON()
+    };
+
+    var property_transforms = this.getPropertyTransforms();
+    for (var i = 0; i < property_transforms.length; i++) {
+        json_object.propertyTransforms.push(property_transforms[i].saveToJSON());
+    };
+
+    var spatial_transforms = this.getSpatialTransforms();
+    for (var i = 0; i < spatial_transforms.length; i++) {
+        json_object.spatialTransforms.push(spatial_transforms[i].saveToJSON());
+    };
+
+    return json_object;
+};
+Visual.loadFromJSON = function(json_object) {
+
+    var new_visual = null;
+
+    // Initialize the child part
+    switch (json_object['type']) {
+        case VisualTypes.stroke:
+            new_visual = StrokeVisual.loadFromJSON(json_object);
+            break;
+        case VisualTypes.dot:
+            // TODO
+            break;
+        case VisualTypes.img:
+            // TODO
+            break;
+        default:
+            console.error('unrecognized type: '+json_object['type']);
+    };
+
+    if (!new_visual) {
+        console.error('no visual loaded from JSON');
+    };
+
+    // Load the parent part (don't need to set type, tMin, properties)
+    new_visual.setHyperlink(json_object['hyperlink']);
+    new_visual.setTDeletion(json_object['tDeletion']);
+
+    var property_transforms = [];
+    for (var i = 0; i < json_object['propertyTransforms'].length; i++) {
+        property_transforms.push(VisualPropertyTransform.loadFromJSON(json_object['propertyTransforms'][i]))
+    };
+    new_visual.setPropertyTransforms(property_transforms);
+
+    var spatial_transforms = [];
+    for (var i = 0; i < json_object['spatialTransforms'].length; i++) {
+        spatial_transforms.push(VisualSpatialTransform.loadFromJSON(json_object['spatialTransforms'][i]))
+    };
+    new_visual.setSpatialTransforms(spatial_transforms);
+
+    return new_visual;
 };
 // Set the constructor in the prototype so child classes can inherit from it
 Visual.prototype.constructor = Visual;
@@ -472,6 +628,49 @@ var StrokeVisual = function(tmin, props) {
     // this.addProperty = function(property) {
     //     self.getPropertyTransforms().push(property);
     // };
+
+    // Overrides the parent applyTransform()
+    // Applies the transform to all the vertices in the stroke.
+    this.applyTransform = function(transformMatrix) {
+        for (var i = 0; i < vertices.length; i++) {
+            var vertexArray = [ vertices[i].getX(), vertices[i].getY(), 1 ];
+            var resultVertexArray = math.multiply(transformMatrix, vertexArray).valueOf();
+            vertices[i].setX(resultVertexArray[0]);
+            vertices[i].setY(resultVertexArray[1]);
+        };
+    };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+
+        // Call parent method
+        var json_object = Visual.prototype.saveToJSON.call(self);
+
+        // Add the fields belonging to the child object
+        json_object['vertices'] = [];
+
+        // Iterate over vertices and add them to the JSON 
+        for (var i = 0; i < vertices.length; i++) {
+            json_object['vertices'].push(vertices[i].saveToJSON());
+        };
+
+        return json_object;
+    };
+};
+StrokeVisual.loadFromJSON = function(json_object) {
+
+    // Load the child class attributes only
+    var stroke_visual = new StrokeVisual(json_object['tMin'], VisualProperty.loadFromJSON(json_object['properties']));
+
+    // Add the vertices
+    var json_verticies = json_object['vertices'];
+    var vertices = [];
+    for (var i = 0; i < json_verticies.length; i++) {
+        vertices.push(Vertex.loadFromJSON(json_verticies[i]))
+    };
+    stroke_visual.setVertices(vertices);
+
+    return stroke_visual;
 };
 
 
@@ -487,7 +686,20 @@ var VisualProperty = function(c, w) {
     this.getColor = function() { return color; }
     this.setColor = function(newColor) { color = newColor; }
     this.getWidth = function() { return width; }
-    this.setWidth  = function(newWidth) { width = Math.round(newWidth); }
+    this.setWidth  = function(newWidth) { width = newWidth; }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            c: color,
+            w: width
+        };
+
+        return json_object;
+    };
+};
+VisualProperty.loadFromJSON = function(json_object) {
+    return new VisualProperty(json_object.c, json_object.w);
 };
 
 var VisualPropertyTransform = function(prop, newVal, time) {
@@ -502,23 +714,57 @@ var VisualPropertyTransform = function(prop, newVal, time) {
     this.getValue = function() { return value; }
     this.setValue = function(newVal) { value = newVal; }
     this.getDuration = function() { return duration; }
-    this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
+    this.setDuration = function(newDuration) { duration = newDuration; }
     this.getTime = function() { return t; }
-    this.setTime = function(newTime) { t = Math.round(newTime); }
+    this.setTime = function(newTime) { t = newTime; }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            property: property.saveToJSON(),
+            value: value,
+            duration: duration,
+            t: t
+        };
+
+        return json_object;
+    };
+};
+VisualPropertyTransform.loadFromJSON = function(json_object) {
+    var visualPropertyTransform = new VisualPropertyTransform(VisualProperty.loadFromJSON(json_object['property']), json_object['value'],
+                                                                json_object['t']);
+    visualPropertyTransform.setDuration(json_object['duration']);
+    return visualPropertyTransform;
 };
 
 var VisualSpatialTransform = function(mat, time) {
     var self = this;
-    var matrix = mat;
+    var matrix = mat;  // math.js matrix
     var duration = 0;
     var t = time;
 
     this.getMatrix = function() { return matrix; }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
     this.getDuration = function() { return duration; }
-    this.setDuration = function(newDuration) { duration = Math.round(newDuration); }
+    this.setDuration = function(newDuration) { duration = newDuration; }
     this.getTime = function() { return time; }
-    this.setTime = function(newTime) { t = Math.round(newTime); }
+    this.setTime = function(newTime) { t = newTime; }
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            matrix: matrix,
+            duration: duration,
+            t: t
+        };
+
+        return json_object;
+    };
+};
+VisualSpatialTransform.loadFromJSON = function(json_object) {
+    var visualSpatialTransform = new VisualSpatialTransform(json_object['matrix'], json_object['t']);
+    visualSpatialTransform.setDuration(json_object['duration']);
+    return visualSpatialTransform;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -547,4 +793,20 @@ var Vertex = function(myX, myY, myT, myP) {
     this.isVisible = function(tVisual) {
         return t <= tVisual;
     };
+
+    // Saving the model to JSON
+    this.saveToJSON = function() {
+        var json_object = {
+            x: x,
+            y: y,
+            t: t,
+            p: p
+        };
+
+        return json_object;
+    };
 };
+Vertex.loadFromJSON = function(json_object) {
+    return new Vertex(json_object.x, json_object.y, json_object.t, json_object.p);
+};
+

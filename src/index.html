@@ -10,6 +10,7 @@
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/1.5.2/math.min.js"></script>
     <script type="text/javascript" src="external/jcanvas.min.js"></script>
     <script type="text/javascript" src="external/jquery.flot.min.js"></script>
     <script type="text/javascript" src="external/jquery.flot.time.min.js"></script>
@@ -71,8 +72,11 @@
             <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
         </table>
         
-        <input type="image" src="icons/undo.png" class="lecture-tool um-tool" data-toolname="undo" disabled="true">
-        <input type="image" src="icons/redo.png" class="lecture-tool um-tool" data-toolname="undo" disabled="true">
+        <input id="undo" type="image" src="icons/undo.png" class="lecture-tool um-tool" data-toolname="undo" disabled="true">
+        <input id="redo" type="image" src="icons/redo.png" class="lecture-tool um-tool" data-toolname="redo" disabled="true">
+
+        <input id="save" type="image" src="icons/save.png" class="lecture-tool" data-toolname="save">
+        <input id="open" type="image" src="icons/open.png" class="lecture-tool" data-toolname="open">
 
     </div>
 

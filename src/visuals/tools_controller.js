@@ -12,15 +12,15 @@ var ToolsController = function(visuals_controller) {
     var recordingTool = null;
     var editingTool = null;
 
-    // Store whether we are in recording or editing mode
-    var inRecordingMode = false;
-
     // Point to keep track of the beginning of a selection rectangle
     var selectionBeginPoint = null;
 
     // Pen attributes
     var strokeColor = '#777';
     var strokeWidth = 2;
+
+    // Keep track of original dimensions during a transform
+    var originalTranslatePosition;  // { left, top }
 
     ///////////////////////////////////////////////////////////////////////////////
     // DOM
@@ -60,8 +60,6 @@ var ToolsController = function(visuals_controller) {
     /////////////////////////////////////////////////////////////////////////////// 
 
     this.startRecording = function() {
-        // Set the mode to recording
-        inRecordingMode = true;
 
         // Activate the current canvas recording tool
         activateCanvasTool();
@@ -74,8 +72,6 @@ var ToolsController = function(visuals_controller) {
     };
 
     this.stopRecording = function() {
-        // Set the mode to editing
-        inRecordingMode = false;
 
         // Activate the current canvas editing tool
         activateCanvasTool();
@@ -95,9 +91,6 @@ var ToolsController = function(visuals_controller) {
     this.stopPlayback = function() {
         // TODO
         // Enable the tools UI
-        
-        // Activate the tool
-        activateCanvasTool();
     };
 
 
@@ -118,10 +111,9 @@ var ToolsController = function(visuals_controller) {
         event.preventDefault();
         event.stopPropagation(); 
 
-        // Clean up anything UI related from previous tools.
-        // TODO: this does not need to apply to every tool. 
-        //          there should be some sort of condition to check
-        resetToolElements();
+        // Reset the selection box
+        // Do not clear the selection itself because some tools use it
+        resetSelectionBox();
 
         // Get the tool name through the attribute
         var tool = $(event.target).attr(toolNameAttr);
@@ -138,7 +130,7 @@ var ToolsController = function(visuals_controller) {
             case selectTool:
                 // In recording mode, save the tool as the recording tool,
                 // and in editing mode, save the tool as the editing tool.
-                if (inRecordingMode) {
+                if (lectureController.isRecording()) {
                     recordingTool = tool;
                 } else {
                     editingTool = tool;
@@ -157,7 +149,7 @@ var ToolsController = function(visuals_controller) {
 
         	case widthTool:
                 var newWidth = parseInt(event.target.value);
-                if (inRecordingMode) {
+                if (lectureController.isRecording()) {
                     strokeWidth = newWidth;
                 } else {
                     visualsController.editingWidthSelection(newWidth);
@@ -165,7 +157,7 @@ var ToolsController = function(visuals_controller) {
                 break;
 
         	case deleteTool:
-                if (inRecordingMode) {
+                if (lectureController.isRecording()) {
                     visualsController.recordingDeleteSelection();
                 } else {
                     visualsController.editingDeleteSelection();
@@ -187,15 +179,18 @@ var ToolsController = function(visuals_controller) {
     // The tool that is registerd is the active tool for the current mode (recording/editing)
     var activateCanvasTool = function() {
 
-        // Clear the selection
+        // Clear the selection and its box
         visualsController.selection = [];
+        resetSelectionBox();
 
-        // Clean up anything UI related from previous tools.
-        resetToolElements();
+        // Removes the handlers from the previous tools
+        visualsController.canvas.off('mousedown');
+        visualsController.canvas.off('mousemove');
+        visualsController.canvas.off('mouseup');
 
         // In recording mode, activate the recording tool,
         // and in editing mode, activate the editing tool.
-        var toolToActivate = ( inRecordingMode ? recordingTool : editingTool );
+        var toolToActivate = ( lectureController.isRecording() ? recordingTool : editingTool );
         console.log('tool to activate: ' + toolToActivate);
 
         // Register the callback depending on which tool is active
@@ -214,19 +209,6 @@ var ToolsController = function(visuals_controller) {
         };
     };
 
-    // Resets UI elements and handlers related to the tools.
-    //Removes handlers from the previous tool, and reset the dimensions of the selection box.
-    var resetToolElements = function() {
-
-        // Removes the handlers from the previous tools
-        visualsController.canvas.off('mousedown');
-        visualsController.canvas.off('mousemove');
-        visualsController.canvas.off('mouseup');
-
-        // Reset the selection box
-        resetSelectionBox();
-    };
-
     ///////////////////////////////////////////////////////////////////////////////
     // Recording and Editing Tools
     //
@@ -235,6 +217,7 @@ var ToolsController = function(visuals_controller) {
     // recording or editing, but the overall handling logic is the same.
     /////////////////////////////////////////////////////////////////////////////// 
 
+    // DRAW: When the mouse is pressed down, activate the mouse move and mouse up handlers and start a new current visual
     var drawMouseDown = function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -248,6 +231,7 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvas.on('mouseup', drawMouseUp);
     };
 
+    // SELECT: When the mouse is down and moved, append a new vertext to the current visual
     var drawMouseMove = function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -256,6 +240,7 @@ var ToolsController = function(visuals_controller) {
         visualsController.currentVisual.appendVertex(getCanvasPoint(event));
     };
 
+    // DRAW: When the mouse is released, clear the handlers and add the completed visual
     var drawMouseUp = function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -281,16 +266,16 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvasOverlay.css('pointer-events', 'none');
     };
 
+    // SELECT: When the mouse is pressed down, activate the selection box and the mouse move and mouse up handlers
     var selectMouseDown = function(event) {
         event.preventDefault();
         event.stopPropagation();
 
         selectionBeginPoint = getCanvasPoint(event);
 
+        // The selection is reset each time the mouse clicks down so that a new
+        // selection can be made.
         visualsController.selection = [];
-
-        // The selection box is reset each time the mouse clicks down so that a new
-        // box can be drawn.
         resetSelectionBox();
 
         // Register mouse move and mouse up handlers
@@ -298,6 +283,7 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvas.on('mouseup', selectMouseUp);
     };
 
+    // SELECT: When the mouse is down and moved, update the dimensions of the selection box and select vertices
     var selectMouseMove = function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -314,7 +300,7 @@ var ToolsController = function(visuals_controller) {
                             .css('width', right - left)
                             .css('height', bottom - top);
 
-        // Clear the selection every time
+        // Clear the selection every time, but not the box
         visualsController.selection = [];
 
         // Get the current time
@@ -356,6 +342,7 @@ var ToolsController = function(visuals_controller) {
         // console.log(visualsController.selection);
     };
 
+    // SELECT: When the mouse is released, clear the handlers and turn on dragging and resizing of the box
     var selectMouseUp = function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -366,8 +353,70 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
 
-        // Turn on events for the overlay canvas to allow dragging of the div
+        // Turn on events for the overlay canvas to allow dragging and resizing of the div
         visualsController.canvasOverlay.css('pointer-events', 'auto');
+    };
+
+    // During a drag, store the original UI element dimensions
+    var selectBoxStartTranslate = function(event, ui) {
+        var box = $('#'+selectionBoxID);
+        originalTranslatePosition = box.position();
+    };
+
+    // During recording, handle dragging the select box 
+    var selectBoxTranslating = function(event, ui) {
+
+        // Only run the function during recording
+        if (!lectureController.isRecording()) {
+            return;
+        };
+
+        // TODO: see selectBoxEndTranslate
+    };
+
+    // While editing, handle finishing (stop) dragging the select box 
+    var selectBoxEndTranslate = function(event, ui) {
+
+        // Only run the function during editing
+        if (lectureController.isRecording()) {
+            return;
+        };
+
+        // Get the selection box dimensions
+        var box = $('#'+selectionBoxID);
+        var new_position = box.position();
+
+        // Calculate the transform matrix
+        var transform_matrix = calculateTranslateMatrix(originalTranslatePosition, new_position);
+
+        // Apply the matrix to the selected visuals
+        visualsController.editingTransformSelection(transform_matrix);
+    };
+
+    // During recording, handle resizing the select box 
+    var selectBoxScaling = function(event, ui) {
+
+        // Only run the function during recording
+        if (!lectureController.isRecording()) {
+            return;
+        };
+
+        // TODO: see selectBoxEndScale
+    };
+
+    // While editing, handle finishing (stop) resizing the select box 
+    var selectBoxEndScale = function(event, ui) {
+
+        // Only run the function during editing
+        if (lectureController.isRecording()) {
+            return;
+        };
+
+        // Calculate the transform matrix
+        var transform_matrix = calculateScaleMatrix(ui.originalPosition, ui.originalSize, ui.position, ui.size);
+
+        // Apply the matrix to the selected visuals
+        visualsController.editingTransformSelection(transform_matrix);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -402,6 +451,90 @@ var ToolsController = function(visuals_controller) {
         }
     }
 
+    // Given the original and new position of a box in the canvas, calculate and return the math.js matrix
+    // necessary to translate the box from the original to the new coordinates.
+    // The position is represented as { left, top }
+    var calculateTranslateMatrix = function(original_position, new_position) {
+
+        // The matrix necessary to translate is just derived from the difference between the new and old position
+        var translateMatrix = math.matrix([ [1, 0,  new_position.left - original_position.left],
+                                            [0, 1,  new_position.top - original_position.top],
+                                            [0, 0,  1] ]);
+        
+        return translateMatrix;
+    };
+
+    // Given the original and new dimensions of a box in the canvas, calculate and return the math.js matrix
+    // necessary to scale the box from the original to the new coordinates.
+    // A scale normally ends up translating, so the matrix returned by this function will negate that translation.
+    // The position is represented as { left, top }
+    // The size is represented as { width, height }
+    var calculateScaleMatrix = function(original_position, original_size, new_position, new_size) {
+        // http://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
+
+        // Calculate the matrix needed to scale the box to the new size
+        var widthRatio = new_size.width / original_size.width;
+        var heightRatio = new_size.height / original_size.height;
+        var scaleMatrix = math.matrix([ [widthRatio, 0, 0], 
+                                        [0, heightRatio, 0],
+                                        [0, 0, 1]]);
+
+        // Vertices of box starting from top left and moving clockwise
+        var boxVertexArray = [  [original_position.left,                        original_position.top,  1], 
+                                [original_position.left + original_size.width,  original_position.top,  1], 
+                                [original_position.left + original_size.width,  original_position.top + original_size.height,   1], 
+                                [original_position.left,                        original_position.top + original_size.height,   1]
+                            ];  
+
+        // Apply the scale matrix to the original box to get a purely scaled box
+        var newBoxVertexArray = math.multiply(boxVertexArray, scaleMatrix).valueOf();
+
+        // Figure out which corner is the anchor point by comparing the 4 corners and seeing which one didn't change.
+        // Find the amount the anchor point shifted after the box was scaled (newBoxVertexArray vs boxVertexArray).
+        var shiftX;
+        var shiftY;
+        if (original_position.left === new_position.left && 
+            original_position.top === new_position.top) {  // top left
+
+            shiftX = newBoxVertexArray[0][0] - boxVertexArray[0][0];
+            shiftY = newBoxVertexArray[0][1] - boxVertexArray[0][1];
+
+        } else if (original_position.left + original_size.width === new_position.left + new_size.width && 
+            original_position.top === new_position.top) {  // top right
+
+            shiftX = newBoxVertexArray[1][0] - boxVertexArray[1][0];
+            shiftY = newBoxVertexArray[1][1] - boxVertexArray[1][1];
+
+        } else if (original_position.left + original_size.width === new_position.left + new_size.width &&
+            original_position.top + original_size.height === new_position.top + new_size.height) {  // bottom right
+
+            shiftX = newBoxVertexArray[2][0] - boxVertexArray[2][0];
+            shiftY = newBoxVertexArray[2][1] - boxVertexArray[2][1];
+
+        } else if (original_position.left === new_position.left &&
+            new_position.top + new_size.height === new_position.top + new_size.height) {  // bottom left
+
+            shiftX = newBoxVertexArray[3][0] - boxVertexArray[3][0];
+            shiftY = newBoxVertexArray[3][1] - boxVertexArray[3][1];
+
+        } else {  // No corner stayed the same
+            console.error('no corner remained the same after scaling/translating');
+            console.error(original_position);
+            console.error(original_size);
+            console.error(new_position);
+            console.error(new_size);
+        };
+
+        // Calculate the translation matrix necessary to negate the anchor point shift.
+        // The shift occurs due to the scaling
+        var negateTranslationMatrix = math.matrix([ [1, 0, -shiftX], 
+                                                    [0, 1, -shiftY], 
+                                                    [0, 0, 1] ]);
+
+        // Multiply negateTranslationMatrix and scaleMatrix to get the final transform matrix
+        return math.multiply(negateTranslationMatrix, scaleMatrix);
+    };
+
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     /////////////////////////////////////////////////////////////////////////////// 
@@ -418,14 +551,17 @@ var ToolsController = function(visuals_controller) {
     // Register the handler for the visuals tools
     $('.'+toolClass).click(toolEventHandler);
 
-    // Setup the handlers for the draggable selection box
+    // Setup the handlers for the draggable and resizable selection box.
+    // The same set of handlers is used for dragging and resizing because
+    // those are both interpreted as scaling and translating transforms.
     $('#'+selectionBoxID).draggable({
         containment: 'parent',
-        stop: function(event, ui) {
-            // event.preventDefault();
-            // event.stopImmediatePropagation();
-            // $( event.toElement ).one('click', function(e){ e.stopImmediatePropagation(); } );
-            console.log("drag stop")
-        }
+        start: selectBoxStartTranslate,
+        drag: selectBoxTranslating,
+        stop: selectBoxEndTranslate
+    }).resizable({
+        containment: 'parent',
+        resize: selectBoxScaling, 
+        stop: selectBoxEndScale
     });
 };

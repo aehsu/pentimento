@@ -543,7 +543,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         for(var i=0; i < max_time; i+=150){
              var tVis = retimerModel.getVisualTime(i);
              var xVis = audioController.millisecondsToPixels(tVis);
-             console.log("xVis: " + xVis);
+             // console.log("xVis: " + xVis);
              canvas.drawLine({  // top handle
                 layer: true,
                 bringToFront: true,

@@ -235,12 +235,47 @@ var RetimerModel = function() {
         }
 		return (next.getTAudio()-prev.getTAudio())/(next.getTVisual()-prev.getTVisual())*(visualTime-prev.getTVisual())+prev.getTAudio();
 	};
+
+    // Saving the model to JSON
+    // Returns the JSON object.
+    this.saveToJSON = function() {
+        var json_object = {
+            constraints: []
+        };
+        
+        var constraints = self.getConstraintsIterator();
+        while(constraints.hasNext()) {
+            var constraint = constraints.next();
+            var tVis = constraint.getTVisual();
+            var tAud = constraint.getTAudio();
+            var type = constraint.getType();
+
+            var constraint_obj = {'tVis': tVis, 'tAud': tAud, 'constraintType': type};
+            json_object.constraints.push(constraint_obj);
+        }
+
+        return json_object;
+    };
 };
+RetimerModel.loadFromJSON = function(json_object) { 
+
+    var retimer_model = new RetimerModel();
+
+    // The JSON object is an array containing the JSON constraint objects.
+    // Get the constraint object from JSON and add it to the array of constraints.
+    var json_constraints = json_object['constraints'];
+    for (var i = 0; i < json_constraints.length; i++) {
+        var new_const = new Constraint(json_constraints[i].tVis, json_constraints[i].tAud, json_constraints[i].constraintType);
+        retimer_model.addConstraint(new_const);
+    };      
+
+    return retimer_model;
+}; 
 
 var ConstraintTypes = {
 	Manual: "Manual",
 	Automatic: "Automatic"
-}
+};
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;

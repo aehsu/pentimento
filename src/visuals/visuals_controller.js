@@ -220,6 +220,24 @@ var VisualsController = function(visuals_model, retimer_model) {
         // TODO: find out a good way to signal the retimer controller
     };
 
+    // Transform the visuals in the selection during a recording.
+    this.recordingTransformSelection = function(transform_matrix) {
+
+    };
+
+    // Transform the visuals in the selection while in editing mode.
+    this.editingTransformSelection = function(transform_matrix) {
+
+        // Apply the transform to the selected visuals
+        for (var i = 0; i < self.selection.length; i++) {
+            var visual = self.selection[i];
+            visual.applyTransform(transform_matrix);
+        };
+
+        // Redraw at the current time
+        self.drawVisuals(self.currentVisualTime());
+    };
+
     // Changes the width of the selection of visuals during recording
     // This pushes a property transform onto the selected visuals
     this.recoridingWidthSelection = function(newWidth) {
