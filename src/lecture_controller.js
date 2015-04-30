@@ -78,10 +78,154 @@ var LectureController = function() {
         setupUI();
     };
 
+    // Takes in blobs and and create and save a zip
+    var downloadZip = function(json_blob, audio_blobs, image_blobs) {
+        // Initialize the zip with a folder
+        var zip = new JSZip();
+        var audio_folder = zip.folder("audio");
+        var image_folder = zip.folder("img");
+
+        // After the total number of blobs have been added, 
+        // then the zip will be downloaded
+        var zip_blob_count = 0;
+        var zip_blob_total = 1+ audio_blobs.length + image_blobs.length;
+
+        // Function for adding a blob to the zip.
+        // The zip folder can be the zip itself or just one of the folders.
+        var addBlobToZip = function(zip_folder, file_name, blob) {
+
+            // Read the blob data as base64 binary.
+            // The onload() function is called after the data is loaded.
+            var reader = new FileReader();
+            reader.onload = function() {
+                console.log(file_name)
+                var dataUrl = reader.result;
+                var base64_data = dataUrl.split(',')[1];
+                
+                // Add the data to the zip when done
+                zip_folder.file(file_name, base64_data, {base64: true});
+
+                // Increment the count
+                zip_blob_count++;
+
+                // If all files are done, then download the zip
+                if (zip_blob_count === zip_blob_total) {
+                    downloadZip(zip);
+                };
+            };
+            reader.readAsDataURL(blob);
+        };
+
+        // Download the zip after it has been fully prepared.
+        var downloadZip = function() {
+            // Create the zip
+            var content = zip.generate({type:"blob"});
+
+            // use FileSaver.js to save
+            saveAs(content, "pentimento.zip");
+        };
+
+        // Add the model JSON blob
+        addBlobToZip(zip, "model.json", json_blob);
+
+        // Iterate over the audio blobs and add them to the zip.
+        for (var i = 0; i < audio_blobs.length; i++) {
+            addBlobToZip(audio_folder, i+".wav", audio_blobs[i]);
+        };
+
+        // Iterate over the image blobs and add them to the zip.
+        for (var i = 0; i < image_blobs.length; i++) {
+            // TODO: find some way to get the type of the image for the file extension
+            addBlobToZip(image_folder, i+".png", image_blobs[i]);
+        };
+
+        // NOTE: downloadZip() is called after the last addBlobToZip() finishes.
+    };
+
     this.save = function() {
-        // TODO get all the json stuff and create a file
+
+        // Convert the JSON form of the model into a blob
         saveString = JSON.stringify(lectureModel.saveToJSON());
-        console.log(saveString);
+        var json_blob = new Blob([saveString], {type: "application/json"});
+        var json_url = URL.createObjectURL(json_blob);
+        console.log(json_blob)
+
+        // Get all of the blobs from the audio model (iterate over segments)
+        var audio_urls = lectureModel.getAudioModel().getBlobURLs();
+        var audio_blobs = [];
+        for (var i = 0; i < audio_urls.length; i++) {
+            var xhr = new XMLHttpRequest();
+            // xhr.onprogress = calculateAndUpdateProgress;
+            xhr.open('GET', audio_urls[i], true);
+            xhr.responseType = "blob";
+            // When the blob is finished loading, increment the count and add the blob.
+            // After the last one has been loaded, download the zip
+            xhr.onload = function () {
+                var blob = xhr.response;
+                console.log(blob);
+
+                audio_blobs.push(blob);
+                                console.log(audio_blobs.length === audio_urls.length)
+
+                if (audio_blobs.length === audio_urls.length) {
+                    // Download all the blobs in a zip
+                    downloadZip(json_blob, audio_blobs, []);;
+                };
+            };
+            xhr.send(null);
+        };
+
+
+
+        // Returns a blob from the URL
+        var blobFromURL = function(blob_url) {
+
+        };
+
+
+        // var zipBlob = function(filename, blob, callback) {
+        //    // use a zip.BlobWriter object to write zipped data into a Blob object
+        //    zip.createWriter(new zip.BlobWriter("application/zip"), function(zipWriter) {
+        //       // use a BlobReader object to read the data stored into blob variable
+        //       zipWriter.add(filename, new zip.BlobReader(blob), function() {
+        //          // close the writer and calls callback function
+        //          zipWriter.close(callback);
+        //       });
+        //    }, onerror);
+        // }
+
+
+        // var onDownloadComplete = function(blobData){
+        //     if (count < fileURLs.length) {
+        //         blobToBase64(blobData, function(binaryData){
+        //                 // add downloaded file to zip:
+        //                 var fileName = fileURLs[count].substring(fileURLs[count].lastIndexOf('/')+1);
+        //                 zip.file(fileName, binaryData, {base64: true});
+        //                 if (count < fileURLs.length - 1){
+        //                     count++;
+        //                     downloadFile(fileURLs[count], onDownloadCompleted);
+        //                 }
+        //                 else {
+        //                     // all files have been downloaded, create the zip
+        //                     var content = zip.generate();
+
+        //                     // then trigger the download link:        
+        //                     var zipName = 'download.zip';
+        //                     var a = document.createElement('a'); 
+        //                     a.href = "data:application/zip;base64," + content;
+        //                     a.download = zipName;
+        //                     a.click();
+        //                 }
+        //             });
+        //     }
+        // }
+
+        // var calculateAndUpdateProgress = function(evt) {
+        //     if (evt.lengthComputable) {
+        //         log(evt);
+        //     }
+        // }
+
     };
 
     this.load = function(json_string) {

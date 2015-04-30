@@ -54,6 +54,26 @@ var AudioModel = function() {
         return duration;
     };
 
+    // Get an array of all the unique audio blob URLs
+    this.getBlobURLs = function() {
+        var unique_urls = [];
+
+        // Iterate over all segments in all tracks
+        for (var i = 0; i < audio_tracks.length; i++) {
+            var audio_segments = audio_tracks[i].getAudioSegments();
+            for (var j = 0; j < audio_segments.length; j++) {
+
+                // Push the URL if it is not in the array already
+                var url = audio_segments[j].audioResource();
+                if (unique_urls.indexOf() < 0) {
+                    unique_urls.push(url);
+                };
+            };
+        };
+
+        return unique_urls;
+    };
+
     // Saving the model to JSON.
     // Returns a JSON string
     this.saveToJSON = function() {
@@ -434,7 +454,7 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 	this.start_time = track_start_time;
 	this.end_time = track_start_time + audio_length;
 
-    // Get the audio resource needed for playback
+    // Get the URL of the audio resource blob needed for playback
     this.audioResource = function() {
         return audio_clip;
     };
