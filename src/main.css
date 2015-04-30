@@ -41,3 +41,31 @@ button {
     max-height: 40px;
     margin-top:10px;
 }
+
+/***** Example custom styling *****/
+
+label.open-file input[type="file"] {
+    position: fixed;
+    top: -1000px;
+}/*
+
+.open-file {
+    border: 2px solid #AAA;
+    border-radius: 4px;
+    padding: 2px 5px;
+    margin: 2px;
+    background: #DDD;
+    display: inline-block;
+}
+.open-file:hover {
+    background: #CCC;
+}
+.open-file:active {
+    background: #CCF;
+}
+.open-file :invalid + span {
+    color: #A44;
+}
+.open-file :valid + span {
+    color: #4A4;
+}*/
