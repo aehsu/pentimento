@@ -24,10 +24,12 @@ var Renderer = function(visuals_controller) {
         var yScale = canvas.height() / visualsController.getVisualsModel().getCanvasSize().height;
         
         // Re-scale transform matrix if necessary
-        if (xScale !== 1 || yScale !== 1) {
+        if (xScale !== 1) {
             for (var k in transformMatrix[0]) {
                 transformMatrix[0][k] *= xScale;
             }
+        }
+        if (yScale !== 1) {
             for (var k in transformMatrix[1]) {
                 transformMatrix[1][k] *= yScale;
             }
