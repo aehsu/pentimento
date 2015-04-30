@@ -17,7 +17,7 @@ var Renderer = function(visuals_controller) {
         // Get the current transform
         // TODO: uncomment the following line and remove the next line when ready
         // var transformMatrix = getTransformMatrix(visualsController.getSlideTransforms(), tMax);
-        var transformMatrix = dummyTransformMatrix;
+        var transformMatrix = identityMatrix;
         
         // Determine the scale
         var xScale = canvas.width() / visualsController.getVisualsModel().getCanvasSize().width;
@@ -213,6 +213,12 @@ var Renderer = function(visuals_controller) {
         [0,1,0],
         [0,0,1]
     ];
+
+    var identityMatrix = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
     
     /**
      * Return the interpolated transform matrix for the given time
@@ -224,6 +230,11 @@ var Renderer = function(visuals_controller) {
      * 
      */
     function getTransformMatrix(transforms, tVisual) {
+
+        // Return the identity if there are no transforms
+        if (transforms.length === 0) {
+            return identityMatrix;
+        };
         
         var interpolStartTransform = transforms[0];
         var interpolEndTransform = transforms[transforms.length-1];

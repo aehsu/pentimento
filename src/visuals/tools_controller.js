@@ -371,11 +371,6 @@ var ToolsController = function(visuals_controller) {
     // While editing, handle finishing (stop) dragging the select box 
     var selectBoxEndTranslate = function(event, ui) {
 
-        // Only run the function during editing
-        if (lectureController.isRecording()) {
-            return;
-        };
-
         // Get the selection box dimensions
         var box = $('#'+selectionBoxID);
         var new_position = box.position();
