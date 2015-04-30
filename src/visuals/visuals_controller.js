@@ -234,7 +234,7 @@ var VisualsController = function(visuals_model, retimer_model) {
             // and the actual position, so multiply the two matrices.
             console.log(visual.spatialTransformAtTime(current_time));
             var current_transform_matrix = visual.spatialTransformAtTime(current_time).getMatrix();
-            var total_transform_matrix = math.multiply(current_transform_matrix, transform_matrix);
+            var total_transform_matrix = math.multiply(transform_matrix, current_transform_matrix);
 
             // Create the spatial transform that will be pushed to the visuals
             var new_transform = new VisualSpatialTransform(total_transform_matrix.valueOf(), current_time);
