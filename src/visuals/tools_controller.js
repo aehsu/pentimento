@@ -48,6 +48,7 @@ var ToolsController = function(visuals_controller) {
     var deleteTool = 'delete';
     var redrawTool = 'redraw';
     var deleteSlideTool = 'delete-slide'; 
+    var colorTool = 'color'
 
     // Box used showing selection area
     var selectionBoxID = 'selectionBox';
@@ -155,6 +156,8 @@ var ToolsController = function(visuals_controller) {
                     visualsController.editingWidthSelection(newWidth);
                 };
                 break;
+            case colorTool:
+                break;
 
         	case deleteTool:
                 if (lectureController.isRecording()) {
@@ -167,6 +170,7 @@ var ToolsController = function(visuals_controller) {
             case redrawTool:
                 // TODO
                 break;
+
 
         	default:
         		console.error('Unrecognized tool clicked, recording tools');

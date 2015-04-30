@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="visuals/visuals.css">
     <link rel="stylesheet" type="text/css" href="audio/audio.css">
     <link rel="stylesheet" type="text/css" href="retimer/retimer.css" />
+    <link rel='stylesheet' href='external/spectrum/spectrum.css' />
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
@@ -18,6 +19,7 @@
     <script type="text/javascript" src="external/FileSaver.min.js"></script>
     <script type="text/javascript" src="external/wavesurfer.min.js"></script>
     <script type="text/javascript" src="external/RecordRTC.js"></script>
+    <script src='external/spectrum/spectrum.js'></script>
 
     <!--The entry point for the application is in lecture_controller.js-->
     <script type="text/javascript" src="compatibility.js"></script>
@@ -143,6 +145,10 @@
 
             <input type="image" src="icons/pen.png" class="visuals-tool" data-toolname="redraw"><br>
             <label class="ui-label">Redraw Selection</label><br>
+
+            <!-- <input type='color' id="color" class="visuals-tool" data-toolname="color" /><br> -->
+            <input type='color' id="color" /><br>
+            <label class="ui-label">Select Color</label><br>
 
             <img src="icons/width.png" class="visuals-tool"><br>
             <select data-toolname="width">
