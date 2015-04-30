@@ -16,7 +16,7 @@ var Renderer = function(visuals_controller) {
         
         // Get the current transform
         // TODO: uncomment the following line and remove the next line when ready
-        // var transformMatrix = getTransform(tMax);
+        // var transformMatrix = getTransformMatrix(tMax);
         var transformMatrix = dummyTransformMatrix;
         
         // Determine the scale
@@ -25,10 +25,12 @@ var Renderer = function(visuals_controller) {
         
         // Re-scale transform matrix if necessary
         if (xScale !== 1 || yScale !== 1) {
-            transformMatrix.m11 *= xScale;
-            transformMatrix.m22 *= yScale;
-            transformMatrix.tx *= xScale;
-            transformMatrix.ty *= yScale;
+            for (var k in transformMatrix[0]) {
+                transformMatrix[0][k] *= xScale;
+            }
+            for (var k in transformMatrix[1]) {
+                transformMatrix[1][k] *= yScale;
+            }
         }
         
         // Transform canvas if necessary
@@ -36,9 +38,9 @@ var Renderer = function(visuals_controller) {
         if (isTransformNecessary) {
             context.save();
             context.setTransform(
-                transformMatrix.m11, transformMatrix.m12,
-                transformMatrix.m21, transformMatrix.m22,
-                transformMatrix.tx, transformMatrix.ty
+                transformMatrix[0][0], transformMatrix[0][1],
+                transformMatrix[1][0], transformMatrix[1][1],
+                transformMatrix[0][2], transformMatrix[1][2]
             );
         }
 
@@ -187,59 +189,55 @@ var Renderer = function(visuals_controller) {
     ///////////////////////////////////////////////////////////////////////////////
     
     // Pre-allocated transform matrix object to avoid new object
-    // allocation every time getTransform is called
-    var dummyTransformMatrix = {
-        m11: 1,
-        m12: 0,
-        m21: 0,
-        m22: 1,
-        tx: 0,
-        ty: 0
-    };
+    // allocation every time getTransformMatrix is called
+    var dummyTransformMatrix = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
     
     /**
      * Return the interpolated transform matrix for the given time
      * 
      * Matrix of the form:
-     * | m11 m12 tx |
-     * | m21 m22 ty |
+     * | sx 0  tx |
+     * | 0  sy ty |
+     * | 0  0  1  |
      * 
-     * Though arguably we never use m12 and m21 (the "skew" factors),
-     * so we might revamp the form to just be:
-     * | xScale xTranslation |
-     * | yScale yTranslation |
      */
-    function getTransform(tVisual) {
+    function getTransformMatrix(tVisual) {
         
-        // TODO: provide a method in visualsController to get a time-sorted list of transform matrices
-        var transformMatrices = null;
+        // TODO: provide a method in visualsController to get a time-sorted list of slide transforms
+        var slideTransforms = visualsController.getSlideTransforms();
         
-        var interpolStartMatrix = transformMatrices[0];
-        var interpolEndMatrix = transformMatrices[transformMatrices.length-1];
+        var interpolStartTransform = slideTransforms[0];
+        var interpolEndTransform = slideTransforms[slideTransforms.length-1];
         
-        // Determine the two bounding transform matrices (closest before/after tVisual)
-        for(var i in transformMatrices){
-            var matrix = transformMatrices[i];
+        // Determine the two bounding transforms (closest before/after tVisual)
+        for(var i in slideTransforms){
+            var transform = slideTransforms[i];
             
-            // TODO: provide method to fetch time of transform matrix
-            if (matrix.time <= tVisual & matrix.time > interpolStartMatrix.time) {
-                interpolStartMatrix = matrix;
+            if (transform.getTime() <= tVisual & transform.getTime() > interpolStartTransform.getTime()) {
+                interpolStartTransform = transform;
             }
-            if(matrix.time > tVisual & matrix.time < interpolEndMatrix.time) {
-                interpolEndMatrix = matrix;
+            if (transform.getTime() > tVisual & transform.getTime() < interpolEndTransform.getTime()) {
+                interpolEndTransform = transform;
             }
         }
         
-        if (interpolEndMatrix.time !== interpolStartMatrix.time) {
-            var interpolFactor = (tVisual - interpolStartMatrix.time)/(interpolEndMatrix.time - interpolStartMatrix.time);
+        if (interpolEndTransform.getTime() !== interpolStartTransform.getTime()) {
+            var interpolFactor = (tVisual - interpolStartTransform.getTime())/(interpolEndTransform.getTime() - interpolStartTransform.getTime());
             
             // Interpolate between each field of the bounding matrices
+            var interpolStartMatrix = interpolStartTransform.getMatrix();
+            var interpolEndMatrix = interpolEndTransform.getMatrix();
             for (var k in dummyTransformMatrix) {
                 dummyTransformMatrix[k] = interpolStartMatrix[k] + (interpolEndMatrix[k] - interpolStartMatrix[k]) * interpolFactor;
             }
         } else {
             
             // If the bounding matrices are simultaneous/the same, simply copy the earlier matrix
+            var interpolStartMatrix = interpolStartTransform.getMatrix();
             for (var k in dummyTransformMatrix) {
                 dummyTransformMatrix[k] = interpolStartMatrix[k];
             }
@@ -249,12 +247,20 @@ var Renderer = function(visuals_controller) {
     }
     
     function isIdentityTransform(matrix) {
-        return matrix.m11 === 1
-            && matrix.m12 === 0
-            && matrix.m21 === 0
-            && matrix.m22 === 1
-            && matrix.tx === 0
-            && matrix.ty === 0;
+        for (var i in matrix) {
+            for (var j in matrix[i]) {
+                if (i === j) {
+                    if (matrix[i][j] !== 1) {
+                        return false;
+                    }
+                } else {
+                    if (matrix[i][j] !== 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////
