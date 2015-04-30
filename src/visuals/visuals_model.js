@@ -520,13 +520,20 @@ var Visual = function(tmin, props) {
     this.getPropertyTransformsIterator = function() { return new Iterator(propertyTransforms); }
     this.getSpatialTransformsIterator = function() { return new Iterator(spatialTransforms); }
 
-    // Apply a transform to the visual through all points in time.
+    // Apply a spatial transform to the visual through all points in time.
     // This is different from pushing a transform, which only applies it at the specified time.
     // The transform is a math.js matrix.
     // This method needs to be overridden by child classes.
-    this.applyTransform = function(transform) {
+    this.applySpatialTransform = function(transform) {
         console.error('Visual.applyTransform() needs to be overridden by child class');
         return;
+    };
+
+    // Push a spatial transform that has a time when it becomes active.
+    // The transform is row-major matrix stored as an array of arrays:
+    // [[1,2,3], [4,5,6], [7,8,9]]
+    this.pushSpatialTransform = function(transform) {
+        spatialTransforms.push(transform);
     };
 
     // The rule is that visuals are visible exactly ON their tMin, not later
@@ -631,7 +638,7 @@ var StrokeVisual = function(tmin, props) {
 
     // Overrides the parent applyTransform()
     // Applies the transform to all the vertices in the stroke.
-    this.applyTransform = function(transformMatrix) {
+    this.applySpatialTransform = function(transformMatrix) {
         for (var i = 0; i < vertices.length; i++) {
             var vertexArray = [ vertices[i].getX(), vertices[i].getY(), 1 ];
             var resultVertexArray = math.multiply(transformMatrix, vertexArray).valueOf();

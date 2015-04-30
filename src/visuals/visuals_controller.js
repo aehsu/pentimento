@@ -223,6 +223,17 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Transform the visuals in the selection during a recording.
     this.recordingTransformSelection = function(transform_matrix) {
 
+        // Create the spatial transform that will be pushed to the visuals
+        var transform = new VisualSpatialTransform(transform_matrix.valueOf(), self.currentVisualTime());
+
+        // Push the transform to the selected visuals
+        for (var i = 0; i < self.selection.length; i++) {
+            var visual = self.selection[i];
+            visual.pushSpatialTransform(transform);
+        };
+
+        // Redraw at the current time
+        self.drawVisuals(self.currentVisualTime());
     };
 
     // Transform the visuals in the selection while in editing mode.
@@ -231,7 +242,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         // Apply the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
             var visual = self.selection[i];
-            visual.applyTransform(transform_matrix);
+            visual.applySpatialTransform(transform_matrix);
         };
 
         // Redraw at the current time
@@ -240,7 +251,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Changes the width of the selection of visuals during recording
     // This pushes a property transform onto the selected visuals
-    this.recoridingWidthSelection = function(newWidth) {
+    this.recordingWidthSelection = function(newWidth) {
 
     };
 

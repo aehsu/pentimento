@@ -365,13 +365,7 @@ var ToolsController = function(visuals_controller) {
 
     // During recording, handle dragging the select box 
     var selectBoxTranslating = function(event, ui) {
-
-        // Only run the function during recording
-        if (!lectureController.isRecording()) {
-            return;
-        };
-
-        // TODO: see selectBoxEndTranslate
+        // TODO: continuous display of the transform
     };
 
     // While editing, handle finishing (stop) dragging the select box 
@@ -390,33 +384,30 @@ var ToolsController = function(visuals_controller) {
         var transform_matrix = calculateTranslateMatrix(originalTranslatePosition, new_position);
 
         // Apply the matrix to the selected visuals
-        visualsController.editingTransformSelection(transform_matrix);
+        if (lectureController.isRecording()) {
+            visualsController.recordingTransformSelection(transform_matrix);
+        } else {
+            visualsController.editingTransformSelection(transform_matrix);
+        };
     };
 
     // During recording, handle resizing the select box 
     var selectBoxScaling = function(event, ui) {
-
-        // Only run the function during recording
-        if (!lectureController.isRecording()) {
-            return;
-        };
-
-        // TODO: see selectBoxEndScale
+        // TODO: continuous display of the transform
     };
 
     // While editing, handle finishing (stop) resizing the select box 
     var selectBoxEndScale = function(event, ui) {
 
-        // Only run the function during editing
-        if (lectureController.isRecording()) {
-            return;
-        };
-
         // Calculate the transform matrix
         var transform_matrix = calculateScaleMatrix(ui.originalPosition, ui.originalSize, ui.position, ui.size);
 
         // Apply the matrix to the selected visuals
-        visualsController.editingTransformSelection(transform_matrix);
+        if (lectureController.isRecording()) {
+            visualsController.recordingTransformSelection(transform_matrix);
+        } else {
+            visualsController.editingTransformSelection(transform_matrix);
+        };
     };
 
     ///////////////////////////////////////////////////////////////////////////////
