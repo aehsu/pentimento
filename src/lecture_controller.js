@@ -44,6 +44,7 @@ var LectureController = function() {
     var stopPlaybackButtonID = 'stopPlayback';
     var saveButtonID = 'save';
     var openButtonID = 'open';
+    var fileOpenerID = 'file-opener'
 
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
@@ -99,8 +100,7 @@ var LectureController = function() {
             var reader = new FileReader();
             reader.onload = function() {
                 console.log(file_name)
-                var dataUrl = reader.result;
-                var base64_data = dataUrl.split(',')[1];
+                var base64_data =  reader.result.split(',')[1];
                 
                 // Add the data to the zip when done
                 zip_folder.file(file_name, base64_data, {base64: true});
@@ -280,8 +280,36 @@ var LectureController = function() {
         $('#'+saveButtonID).click(self.save);
 
         // Open
-        $('#'+openButtonID).click(function() {
-            self.load(saveString);
+        // $('#'+openButtonID).click(function() {
+        //     getFiles();
+        // });
+        $('#'+openButtonID).click();
+
+        $('#'+fileOpenerID).change(function(){
+            console.log("here?");
+            var files = this.files;
+            var len = files.length;
+
+            for (var i=0; i < len; i++) {
+                console.log("Filename: " + files[i].name);
+                console.log("Type: " + files[i].type);
+                console.log("Size: " + files[i].size + " bytes");
+                var reader = new FileReader();
+
+                reader.onload = function(){
+
+                    var data = reader.result;
+
+                    var new_zip = new JSZip();
+                    new_zip.load(data);
+                    console.log(new_zip.file('model.json').asText());
+                }
+                reader.readAsBinaryString(files[i]);
+
+                // get URL for audio blobs using: objectURL = URL.createObjectURL(blob);
+
+            }
+
         });
 
         // Update the state of the buttons
