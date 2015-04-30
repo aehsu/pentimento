@@ -16,7 +16,7 @@ var Renderer = function(visuals_controller) {
         
         // Get the current transform
         // TODO: uncomment the following line and remove the next line when ready
-        // var transformMatrix = getTransformMatrix(tMax);
+        // var transformMatrix = getTransformMatrix(visualsController.getSlideTransforms(), tMax);
         var transformMatrix = dummyTransformMatrix;
         
         // Determine the scale
@@ -37,7 +37,7 @@ var Renderer = function(visuals_controller) {
         var isTransformNecessary = !isIdentityTransform(transformMatrix);
         if (isTransformNecessary) {
             context.save();
-            context.setTransform(
+            context.transform(
                 transformMatrix[0][0], transformMatrix[0][1],
                 transformMatrix[1][0], transformMatrix[1][1],
                 transformMatrix[0][2], transformMatrix[1][2]
@@ -77,6 +77,19 @@ var Renderer = function(visuals_controller) {
     };
 
     var drawVisual = function(context, visual, tVisual, alternateColor, alternateWidth) {
+        
+        var transformMatrix = getTransformMatrix(visual.getSpatialTransforms(), tVisual);
+        
+        // Determine if transform is necessary
+        var isTransformNecessary = !isIdentityTransform(transformMatrix);
+        if (isTransformNecessary) {
+            context.save();
+            context.transform(
+                transformMatrix[0][0], transformMatrix[0][1],
+                transformMatrix[1][0], transformMatrix[1][1],
+                transformMatrix[0][2], transformMatrix[1][2]
+            );
+        }
 
         if (typeof alternateColor === 'undefined' ) {
             alternateColor = visual.getProperties().getColor();
@@ -86,7 +99,6 @@ var Renderer = function(visuals_controller) {
             alternateWidth = visual.getProperties().getWidth();
         };
 
-        //TODO SUPPORT FOR TRANSFORMS
         switch(visual.getType()) {
             case VisualTypes.stroke:
                 renderCalligraphicStroke(context, visual, tVisual, alternateColor, alternateWidth);
@@ -98,6 +110,10 @@ var Renderer = function(visuals_controller) {
             default:
                 console.error('unrecognized visual type: ' + visual.getType())
         };
+        
+        if (isTransformNecessary) {
+            context.restore();
+        }
     };
 
     var renderCalligraphicStroke = function(context, visual, tVisual, renderColor, renderWidth) {
@@ -205,17 +221,14 @@ var Renderer = function(visuals_controller) {
      * | 0  0  1  |
      * 
      */
-    function getTransformMatrix(tVisual) {
+    function getTransformMatrix(transforms, tVisual) {
         
-        // TODO: provide a method in visualsController to get a time-sorted list of slide transforms
-        var slideTransforms = visualsController.getSlideTransforms();
-        
-        var interpolStartTransform = slideTransforms[0];
-        var interpolEndTransform = slideTransforms[slideTransforms.length-1];
+        var interpolStartTransform = transforms[0];
+        var interpolEndTransform = transforms[transforms.length-1];
         
         // Determine the two bounding transforms (closest before/after tVisual)
-        for(var i in slideTransforms){
-            var transform = slideTransforms[i];
+        for(var i in transforms){
+            var transform = transforms[i];
             
             if (transform.getTime() <= tVisual & transform.getTime() > interpolStartTransform.getTime()) {
                 interpolStartTransform = transform;
