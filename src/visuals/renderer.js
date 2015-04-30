@@ -14,14 +14,36 @@ var Renderer = function(visuals_controller) {
         // Clear the context
         context.clearRect(0, 0, canvas.width(), canvas.height());
         
+        // Get the current transform
+        // TODO: uncomment the following line and remove the next line when ready
+        // var transformMatrix = getTransformMatrix(visualsController.getSlideTransforms(), tMax);
+        var transformMatrix = dummyTransformMatrix;
+        
         // Determine the scale
         var xScale = canvas.width() / visualsController.getVisualsModel().getCanvasSize().width;
         var yScale = canvas.height() / visualsController.getVisualsModel().getCanvasSize().height;
         
-        // Set scale if necessary
-        if (xScale !== 1 || yScale !== 1) {
+        // Re-scale transform matrix if necessary
+        if (xScale !== 1) {
+            for (var k in transformMatrix[0]) {
+                transformMatrix[0][k] *= xScale;
+            }
+        }
+        if (yScale !== 1) {
+            for (var k in transformMatrix[1]) {
+                transformMatrix[1][k] *= yScale;
+            }
+        }
+        
+        // Transform canvas if necessary
+        var isTransformNecessary = !isIdentityTransform(transformMatrix);
+        if (isTransformNecessary) {
             context.save();
-            context.scale(xScale, yScale);
+            context.transform(
+                transformMatrix[0][0], transformMatrix[0][1],
+                transformMatrix[1][0], transformMatrix[1][1],
+                transformMatrix[0][2], transformMatrix[1][2]
+            );
         }
 
         var slide = visualsController.getVisualsModel().getSlideAtTime(tMax);
@@ -49,14 +71,27 @@ var Renderer = function(visuals_controller) {
             drawVisual(context, visual, tMax, selectedColor, visual.getProperties().getWidth()+1);
         };
         
-        // Restore scale if necessary
-        if (xScale !== 1 || yScale !== 1) {
+        // Restore canvas if necessary
+        if (isTransformNecessary) {
             context.restore();
         }
         
     };
 
     var drawVisual = function(context, visual, tVisual, alternateColor, alternateWidth) {
+        
+        var transformMatrix = getTransformMatrix(visual.getSpatialTransforms(), tVisual);
+        
+        // Determine if transform is necessary
+        var isTransformNecessary = !isIdentityTransform(transformMatrix);
+        if (isTransformNecessary) {
+            context.save();
+            context.transform(
+                transformMatrix[0][0], transformMatrix[0][1],
+                transformMatrix[1][0], transformMatrix[1][1],
+                transformMatrix[0][2], transformMatrix[1][2]
+            );
+        }
 
         if (typeof alternateColor === 'undefined' ) {
             alternateColor = visual.getProperties().getColor();
@@ -66,7 +101,6 @@ var Renderer = function(visuals_controller) {
             alternateWidth = visual.getProperties().getWidth();
         };
 
-        //TODO SUPPORT FOR TRANSFORMS
         switch(visual.getType()) {
             case VisualTypes.stroke:
                 renderCalligraphicStroke(context, visual, tVisual, alternateColor, alternateWidth);
@@ -78,6 +112,10 @@ var Renderer = function(visuals_controller) {
             default:
                 console.error('unrecognized visual type: ' + visual.getType())
         };
+        
+        if (isTransformNecessary) {
+            context.restore();
+        }
     };
 
     var renderCalligraphicStroke = function(context, visual, tVisual, renderColor, renderWidth) {
@@ -163,6 +201,82 @@ var Renderer = function(visuals_controller) {
             context.fill();
         }
     };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Transforms
+    ///////////////////////////////////////////////////////////////////////////////
+    
+    // Pre-allocated transform matrix object to avoid new object
+    // allocation every time getTransformMatrix is called
+    var dummyTransformMatrix = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
+    
+    /**
+     * Return the interpolated transform matrix for the given time
+     * 
+     * Matrix of the form:
+     * | sx 0  tx |
+     * | 0  sy ty |
+     * | 0  0  1  |
+     * 
+     */
+    function getTransformMatrix(transforms, tVisual) {
+        
+        var interpolStartTransform = transforms[0];
+        var interpolEndTransform = transforms[transforms.length-1];
+        
+        // Determine the two bounding transforms (closest before/after tVisual)
+        for(var i in transforms){
+            var transform = transforms[i];
+            
+            if (transform.getTime() <= tVisual & transform.getTime() > interpolStartTransform.getTime()) {
+                interpolStartTransform = transform;
+            }
+            if (transform.getTime() > tVisual & transform.getTime() < interpolEndTransform.getTime()) {
+                interpolEndTransform = transform;
+            }
+        }
+        
+        if (interpolEndTransform.getTime() !== interpolStartTransform.getTime()) {
+            var interpolFactor = (tVisual - interpolStartTransform.getTime())/(interpolEndTransform.getTime() - interpolStartTransform.getTime());
+            
+            // Interpolate between each field of the bounding matrices
+            var interpolStartMatrix = interpolStartTransform.getMatrix();
+            var interpolEndMatrix = interpolEndTransform.getMatrix();
+            for (var k in dummyTransformMatrix) {
+                dummyTransformMatrix[k] = interpolStartMatrix[k] + (interpolEndMatrix[k] - interpolStartMatrix[k]) * interpolFactor;
+            }
+        } else {
+            
+            // If the bounding matrices are simultaneous/the same, simply copy the earlier matrix
+            var interpolStartMatrix = interpolStartTransform.getMatrix();
+            for (var k in dummyTransformMatrix) {
+                dummyTransformMatrix[k] = interpolStartMatrix[k];
+            }
+        }
+        
+        return dummyTransformMatrix;
+    }
+    
+    function isIdentityTransform(matrix) {
+        for (var i in matrix) {
+            for (var j in matrix[i]) {
+                if (i === j) {
+                    if (matrix[i][j] !== 1) {
+                        return false;
+                    }
+                } else {
+                    if (matrix[i][j] !== 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
