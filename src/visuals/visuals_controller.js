@@ -223,17 +223,27 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Transform the visuals in the selection during a recording.
     this.recordingTransformSelection = function(transform_matrix) {
 
-        // Create the spatial transform that will be pushed to the visuals
-        var transform = new VisualSpatialTransform(transform_matrix.valueOf(), self.currentVisualTime());
+        var current_time = self.currentVisualTime();
 
         // Push the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
             var visual = self.selection[i];
-            visual.pushSpatialTransform(transform);
+
+            // Get the final transform matrix that should be pushed.
+            // The provided transform is just the difference between the current transform matrix
+            // and the actual position, so multiply the two matrices.
+            console.log(visual.spatialTransformAtTime(current_time));
+            var current_transform_matrix = visual.spatialTransformAtTime(current_time).getMatrix();
+            var total_transform_matrix = math.multiply(current_transform_matrix, transform_matrix);
+
+            // Create the spatial transform that will be pushed to the visuals
+            var new_transform = new VisualSpatialTransform(total_transform_matrix.valueOf(), current_time);
+
+            visual.pushSpatialTransform(new_transform);
         };
 
         // Redraw at the current time
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals(current_time);
     };
 
     // Transform the visuals in the selection while in editing mode.

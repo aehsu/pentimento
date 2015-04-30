@@ -530,10 +530,44 @@ var Visual = function(tmin, props) {
     };
 
     // Push a spatial transform that has a time when it becomes active.
-    // The transform is row-major matrix stored as an array of arrays:
+    // This inserts the transform into the spatial transforms array so that 
+    // the transforms are ordered by time.
+    // The transform matrix is stored as row-major matrix (an array of arrays):
     // [[1,2,3], [4,5,6], [7,8,9]]
     this.pushSpatialTransform = function(transform) {
-        spatialTransforms.push(transform);
+        var insert_index = 0;
+        for (var i = 0; i < spatialTransforms.length; i++) {
+            if (transform.getTime() < spatialTransforms[i].getTime()) {
+                break;
+            };
+            insert_index = i + 1;
+        };
+        spatialTransforms.splice(insert_index, 0, transform);
+    };
+
+    // Returns the spatial transform at the given time (non-interpolated)
+    // The active one has a time just less than or equal to the specified time.
+    // Return the identity transform if there are no transforms active yet.
+    this.spatialTransformAtTime = function(time) {
+
+        // Get the index that should be used to indicate which matrix is active.
+        // It is 1 more than the index because the identity is technically the first transform.
+        var return_index = 0;
+        for (var i = 0; i < spatialTransforms.length; i++) {
+            if (time < spatialTransforms[i].getTime()) {
+                break;
+            };
+            return_index = i + 1;
+        };
+
+        if (return_index === 0) {
+            // When the return index is 0, that means there are no transforms active,
+            // so just return the identity at time 0. 
+            return new VisualSpatialTransform(math.eye(3).valueOf(), 0);
+        } else {
+            // Subtract 1 from the index because the identity matrix counts as the first matrix
+            return spatialTransforms[return_index-1];
+        };
     };
 
     // The rule is that visuals are visible exactly ON their tMin, not later
