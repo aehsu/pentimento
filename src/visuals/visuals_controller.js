@@ -290,10 +290,34 @@ var VisualsController = function(visuals_model, retimer_model) {
         // }
     };
 
-    this.editingColor = function(visuals, newColor) {
-        //TODO FILL
+    this.editingColor = function(newColor) {
+        console.log('newColor: ' + newColor)
+        for(var i in self.selection) {
+            var visual = self.selection[i];
+            console.log(visual.getProperties().getColor());
+            visual.getProperties().setColor(newColor);
+            console.log(visual.getProperties().getColor());
+        };
+
+        // Clear the selection and redraw to show the update
+        self.selection = [];
+        self.drawVisuals(self.currentVisualTime());
     };
 
+    this.recordingColor = function(newColor){
+        if(self.selection.length == 0){
+            console.log("change pen color for future strokes");
+        }
+        else{
+            for(var i in self.selection) {
+                var visual = self.selection[i];
+                var propertyTransforms = visual.getPropertyTransforms();
+                var newColorTransform = new VisualPropertyTransform(visual.getProperties().getColor(), newColor, self.currentVisualTime());
+                propertyTransforms.push(newColorTransform);
+                visual.setPropertyTransforms(propertyTransforms);
+            };
+        }
+    }
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     ///////////////////////////////////////////////////////////////////////////////
