@@ -40,8 +40,8 @@ var LectureController = function() {
     var startPlaybackButtonID = 'startPlayback';
     var stopPlaybackButtonID = 'stopPlayback';
     var saveButtonID = 'save';
-    var fileOpenerID = 'file-opener'
-
+    var fileOpenerID = 'file-opener';
+    var colorPickerID = 'color';
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
 
@@ -295,6 +295,9 @@ var LectureController = function() {
             }
             reader.readAsBinaryString(file);
         });
+
+        // Setup Color picker
+        $("." + colorPickerID).trigger("click");
 
         // Update the state of the buttons
         updateButtons();
