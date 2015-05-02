@@ -309,13 +309,19 @@ var VisualsController = function(visuals_model, retimer_model) {
             console.log("change pen color for future strokes");
         }
         else{
+            var currentTime = self.currentVisualTime();
             for(var i in self.selection) {
                 var visual = self.selection[i];
                 var propertyTransforms = visual.getPropertyTransforms();
-                var newColorTransform = new VisualPropertyTransform(visual.getProperties().getColor(), newColor, self.currentVisualTime());
+                var newColorTransform = new VisualPropertyTransform(visual.getProperties().getColor(), newColor, currentTime);
                 propertyTransforms.push(newColorTransform);
                 visual.setPropertyTransforms(propertyTransforms);
+
             };
+
+            // Clear the selection and redraw to show the update
+            self.selection = [];
+            self.drawVisuals(self.currentVisualTime());
         }
     }
     ///////////////////////////////////////////////////////////////////////////////

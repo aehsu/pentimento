@@ -177,6 +177,7 @@ var ToolsController = function(visuals_controller) {
                         if (lectureController.isRecording()) {
                             console.log("recording color change");
                             visualsController.recordingColor(color);
+                            strokeColor = color;
                         } else {
                             visualsController.editingColor(color);
                         };
