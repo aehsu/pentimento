@@ -81,10 +81,25 @@ var AudioModel = function() {
             audio_tracks: []
         };
 
+        // Get the audio URLS so that the segments' audio clip URL can be replaced
+        // with an index number instead. This index number will be used as the filename base.
+        var audio_blob_urls = self.getBlobURLs();
+
         // For each track, add it to the JSON audio tracks
         for (var i = 0; i < audio_tracks.length; i++) {
             var json_track = audio_tracks[i].saveToJSON();
             json_object['audio_tracks'].push(json_track);
+
+            // Also, process the segments in the track so that the
+            // audio clip is the index of the URL in the getBlobURLs() array.
+            var json_segments = json_track['audio_segments'];
+            for (var i = 0; i < json_segments.length; i++) {
+                var audio_index = audio_blob_urls.indexOf(json_segments[i]['audio_clip']);
+                if (audio_index < 0) {
+                    console.error('audio clip URL not found in array');
+                };
+                json_segments[i]['audio_clip'] = audio_index;
+            };
         };
 
         return json_object;
