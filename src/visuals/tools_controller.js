@@ -149,12 +149,15 @@ var ToolsController = function(visuals_controller) {
                 break;
 
         	case widthTool:
-                var newWidth = parseInt(event.target.value);
-                if (lectureController.isRecording()) {
-                    strokeWidth = newWidth;
-                } else {
-                    visualsController.editingWidthSelection(newWidth);
-                };
+                $('.' + widthTool).change(function(){
+                    var newWidth = parseInt(event.target.value);
+
+                    if (lectureController.isRecording()) {
+                        strokeWidth = newWidth;
+                    } else {
+                        visualsController.editingWidthSelection(newWidth);
+                    };
+                })
                 break;
             case colorTool:
                 console.log("???");

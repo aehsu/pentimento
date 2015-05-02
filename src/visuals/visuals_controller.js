@@ -267,36 +267,22 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Changes the width of the selection of visuals during editing
     this.editingWidthSelection = function(newWidth) {
-        // TODO: the code below might not be correct
-        // var widthObjs = [];
-        // for(var i in self.selection) {
-        //     var visual = visuals[i];
-        //     var widthObj = {};
-        //     widthObj.widthTrans = [];
-        //     widthObj.indices = [];
-        //     widthObj.width  = visual.getProperties().getWidth();
-        //     visual.getProperties().setWidth(newWidth);
-        //     var propTrans = visual.getPropertyTransforms();
-        //     for(var j in propTrans) {
-        //         if(propTrans[j].type=="width") {
-        //             widthObj.widthTrans.push(propTrans[j]);
-        //             widthObj.indices.push(j);
-        //         }
-        //     }
-        //     for(var j in widthObj.widthTrans) {
-        //         propTrans.splice(propTrans.indexOf(widthObj.widthTrans[j]), 1);
-        //     }
-        //     widthObjs.push(widthObj);
-        // }
+        console.log('newWidth: ' + newWidth)
+        for(var i in self.selection) {
+            var visual = self.selection[i];
+            visual.getProperties().setWidth(newWidth);
+        };
+
+        // Clear the selection and redraw to show the update
+        self.selection = [];
+        self.drawVisuals(self.currentVisualTime());
     };
 
     this.editingColor = function(newColor) {
         console.log('newColor: ' + newColor)
         for(var i in self.selection) {
             var visual = self.selection[i];
-            console.log(visual.getProperties().getColor());
             visual.getProperties().setColor(newColor);
-            console.log(visual.getProperties().getColor());
         };
 
         // Clear the selection and redraw to show the update
