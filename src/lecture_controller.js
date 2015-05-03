@@ -68,14 +68,50 @@ var LectureController = function() {
         setupUI();
     };
 
-    this.initFromFile = function() {
-        // TODO
+    // Saves the lecture to a zip file
+    var save = function() {
 
-        // Setup UI elements and state
-        setupUI();
+        // Convert the JSON form of the model into a blob
+        var save_string = JSON.stringify(lectureModel.saveToJSON());
+        var json_blob = new Blob([save_string], {type: "application/json"});
+        var json_url = URL.createObjectURL(json_blob);
+        console.log(json_blob);
+
+        // Get all of the blobs from the audio model (iterate over segments)
+        var audio_urls = lectureModel.getAudioModel().getBlobURLs();
+        var audio_blobs = [];
+        for (var i = 0; i < audio_urls.length; i++) {
+            var xhr = new XMLHttpRequest();
+            // xhr.onprogress = calculateAndUpdateProgress;
+            xhr.open('GET', audio_urls[i], true);
+            xhr.responseType = "blob";
+            // When the blob is finished loading, increment the count and add the blob.
+            // After the last one has been loaded, download the zip
+            xhr.onload = function () {
+                var blob = xhr.response;
+                console.log(blob);
+
+                audio_blobs.push(blob);
+
+                if (audio_blobs.length === audio_urls.length) {
+                    // Download all the blobs in a zip
+                    downloadZip(json_blob, audio_blobs, []);;
+                };
+            };
+            xhr.send(null);
+        };
+
+        // NOTE: downloadZip() is called after the last audio blob finishes loadings.
+        // TODO: this needs to be modified to do this after downloading image blobs
+
+        // Returns a blob from the URL
+        // var blobFromURL = function(blob_url) {
+
+        // };
     };
 
     // Takes in blobs and and create and save a zip to disk
+    // Helper method for save()
     var downloadZip = function(json_blob, audio_blobs, image_blobs) {
         // Initialize the zip with a folder
         var zip = new JSZip();
@@ -95,7 +131,7 @@ var LectureController = function() {
             // The onload() function is called after the data is loaded.
             var reader = new FileReader();
             reader.onload = function() {
-                console.log(file_name)
+                console.log(file_name);
                 var base64_data =  reader.result.split(',')[1];
                 
                 // Add the data to the zip when done
@@ -138,53 +174,12 @@ var LectureController = function() {
         // NOTE: saveZipToDisk() is called after the last addBlobToZip() finishes.
     };
 
-    var save = function() {
-
-        // Convert the JSON form of the model into a blob
-        saveString = JSON.stringify(lectureModel.saveToJSON());
-        var json_blob = new Blob([saveString], {type: "application/json"});
-        var json_url = URL.createObjectURL(json_blob);
-        console.log(json_blob)
-
-        // Get all of the blobs from the audio model (iterate over segments)
-        var audio_urls = lectureModel.getAudioModel().getBlobURLs();
-        var audio_blobs = [];
-        for (var i = 0; i < audio_urls.length; i++) {
-            var xhr = new XMLHttpRequest();
-            // xhr.onprogress = calculateAndUpdateProgress;
-            xhr.open('GET', audio_urls[i], true);
-            xhr.responseType = "blob";
-            // When the blob is finished loading, increment the count and add the blob.
-            // After the last one has been loaded, download the zip
-            xhr.onload = function () {
-                var blob = xhr.response;
-                console.log(blob);
-
-                audio_blobs.push(blob);
-
-                if (audio_blobs.length === audio_urls.length) {
-                    // Download all the blobs in a zip
-                    downloadZip(json_blob, audio_blobs, []);;
-                };
-            };
-            xhr.send(null);
-        };
-
-        // NOTE: downloadZip() is called after the last audio blob finishes loadings.
-        // TODO: this needs to be modified to do this after downloading image blobs
-
-        // Returns a blob from the URL
-        // var blobFromURL = function(blob_url) {
-
-        // };
-    };
-
     // Loads the lecture from a JSZip object
     var load = function(jszip) {
 
         // Parse the model.json text file into a JSON object
         var json_model_object = JSON.parse(jszip.file('model.json').asText());
-        console.log(json_model_object);
+        console.log(jszip.file('model.json').asText());
 
         // Convert the audio files into audio blobs, and then get the URLs for the blobs.
         // The order of the URLs must be the same as the order indicated in the file names.
@@ -238,7 +233,7 @@ var LectureController = function() {
         setupUI();
     };
 
-    // Setup UI handlers and current state. Draws all of the UI elements from all the controllers.
+    // Setup UI handlers and current state.
     var setupUI = function() {
 
         loadInputHandlers();
@@ -301,10 +296,6 @@ var LectureController = function() {
 
         // Update the state of the buttons
         updateButtons();
-
-        // Draw the different controllers
-        // TODO: use a dedicated method to do this
-        self.stopRecording();
     };
 
     // Updates the buttons to reflect the current state of recording or playback
@@ -588,9 +579,6 @@ var lectureController;
 
 // Objects and controllers should only be created after the document is ready
 $(document).ready(function() {
-
-    // Create undo manager
-    // var um = getUndoManager([ActionGroups.RecordingGroup, ActionGroups.SubSlideGroup, ActionGroups.VisualGroup, ActionGroups.EditGroup]);
 
     // Create and initialize the lecture controller
     lectureController = new LectureController();

@@ -205,54 +205,14 @@ var AudioTrackController = function(track, audioController) {
 
     // Insert a new segment into the track
     this.insertSegment = function(newSegment) {
-        // Insert the segment into the model and keep track of the segments
-        // that might have been created from the split.
         var insert_result = audioTrack.insertSegment(newSegment);
-
-        // Create, add, and draw the new controller
-        var newController = new AudioSegmentController(newSegment, self);
-        segmentControllers.push(newController);
-        newController.draw($('#'+trackID));
-
-        // If the insert did results in a split (returns object), remove the old controller
-        // for the segment that was split and add the new left and right segment controllers.
-        console.log('insert_result: ');
-        console.log(insert_result);
-        if (typeof insert_result === 'object') {
-
-            // Remove the segment that was split
-            self.removeSegment(insert_result.remove);
-
-            // Create, add, and draw the new controller for the left segment
-            var newLeftController = new AudioSegmentController(insert_result.left, self);
-            segmentControllers.push(newLeftController);
-            newLeftController.draw($('#'+trackID));
-
-            // Create, add, and draw the new controller for the right segment
-            var newRightController = new AudioSegmentController(insert_result.right, self);
-            segmentControllers.push(newRightController);
-            newRightController.draw($('#'+trackID));
-        };
+        audioController.draw();
     };
 
-    // Remove a segment from the track. Also removes its segment controller.
+    // Remove a segment from the track
     this.removeSegment = function(segment) {
-        // Removes the segment from the model
         audioTrack.removeSegment(segment);
-
-        // Removes the segment controller from the track controller
-        // Find the index of the segment controller to be removed.
-        for (var i = 0; i < segmentControllers.length; i++) {
-            if (segmentControllers[i].getAudioSegment() === segment) {
-                // Remove the element from the DOM
-                $('#'+segmentControllers[i].getID()).remove();
-
-                // Remove the segment controller from the segment controllers array
-                segmentControllers.splice(i, 1);
-
-                break;
-            };
-        };
+        audioController.draw();
     };
 
     // Start the playback of the track at the specified time interval
@@ -329,20 +289,28 @@ var AudioTrackController = function(track, audioController) {
     this.draw = function(jqParent) {
 
         // Create a new jquery track div
-        var new_track = $('<div></div>').attr({"id": trackID , "class": trackClass});
+        var jqTrack = $('<div></div>').attr({"id": trackID , "class": trackClass});
 
         // Add the track to the parent
-        jqParent.append(new_track);
+        jqParent.append(jqTrack);
 
-        // Iterate over all segments controllersfor that track and draw the segments.
-        // Add the draw segments to the track container.
-        for (var i = 0; i < segmentControllers.length; i++) {
-            console.log("Drawing segment  " + i);
-            var jqSegment = segmentControllers[i].draw(new_track);
-            new_track.append(jqSegment);
+        // Iterate over all audio segments in the track and create their controllers and
+        // use the controller to draw them.
+        segmentControllers = [];
+        for (var i = 0; i < audioTrack.getAudioSegments().length; i++) {
+            var segment = audioTrack.getAudioSegments()[i];
+
+            // Create and draw the new segment controller
+            var segment_controller = new AudioSegmentController(segment, self);
+            segmentControllers.push(segment_controller);
+
+            // Draw the segment into the parent and get the jquery object for that segment
+            var jqSegment = segment_controller.draw(jqTrack);
         };
 
-        return new_track;
+        self.refreshView();
+
+        return jqTrack;
     };
 
 };
