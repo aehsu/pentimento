@@ -17,23 +17,16 @@ var Renderer = function(visuals_controller) {
         // Get the current transform
         // TODO: uncomment the following line and remove the next line when ready
         // var transformMatrix = getTransformMatrix(visualsController.getSlideTransforms(), tMax);
-        var transformMatrix = identityMatrix;
+        var transformMatrix = dummyTransformMatrix;
         
         // Determine the scale
         var xScale = canvas.width() / visualsController.getVisualsModel().getCanvasSize().width;
         var yScale = canvas.height() / visualsController.getVisualsModel().getCanvasSize().height;
         
-        // Re-scale transform matrix if necessary
-        if (xScale !== 1) {
-            for (var k in transformMatrix[0]) {
-                transformMatrix[0][k] *= xScale;
-            }
-        }
-        if (yScale !== 1) {
-            for (var k in transformMatrix[1]) {
-                transformMatrix[1][k] *= yScale;
-            }
-        }
+        // Set scale if necessary
+        if (xScale !== 1 || yScale !== 1) {
+            context.scale(xScale, yScale);
+        };
         
         // Transform canvas if necessary
         var isTransformNecessary = !isIdentityTransform(transformMatrix);
@@ -213,12 +206,6 @@ var Renderer = function(visuals_controller) {
         [0,1,0],
         [0,0,1]
     ];
-
-    var identityMatrix = [
-        [1,0,0],
-        [0,1,0],
-        [0,0,1]
-    ];
     
     /**
      * Return the interpolated transform matrix for the given time
@@ -230,11 +217,6 @@ var Renderer = function(visuals_controller) {
      * 
      */
     function getTransformMatrix(transforms, tVisual) {
-
-        // Return the identity if there are no transforms
-        if (transforms.length === 0) {
-            return identityMatrix;
-        };
         
         var interpolStartTransform = transforms[0];
         var interpolEndTransform = transforms[transforms.length-1];
@@ -251,23 +233,25 @@ var Renderer = function(visuals_controller) {
             }
         }
         
-        if (interpolEndTransform.getTime() !== interpolStartTransform.getTime()) {
-            var interpolFactor = (tVisual - interpolStartTransform.getTime())/(interpolEndTransform.getTime() - interpolStartTransform.getTime());
+        // TODO: uncomment after transforms are working one the visuals side
+
+        // if (interpolEndTransform.getTime() !== interpolStartTransform.getTime()) {
+        //     var interpolFactor = (tVisual - interpolStartTransform.getTime())/(interpolEndTransform.getTime() - interpolStartTransform.getTime());
             
-            // Interpolate between each field of the bounding matrices
-            var interpolStartMatrix = interpolStartTransform.getMatrix();
-            var interpolEndMatrix = interpolEndTransform.getMatrix();
-            for (var k in dummyTransformMatrix) {
-                dummyTransformMatrix[k] = interpolStartMatrix[k] + (interpolEndMatrix[k] - interpolStartMatrix[k]) * interpolFactor;
-            }
-        } else {
+        //     // Interpolate between each field of the bounding matrices
+        //     var interpolStartMatrix = interpolStartTransform.getMatrix();
+        //     var interpolEndMatrix = interpolEndTransform.getMatrix();
+        //     for (var k in dummyTransformMatrix) {
+        //         dummyTransformMatrix[k] = interpolStartMatrix[k] + (interpolEndMatrix[k] - interpolStartMatrix[k]) * interpolFactor;
+        //     }
+        // } else {
             
-            // If the bounding matrices are simultaneous/the same, simply copy the earlier matrix
-            var interpolStartMatrix = interpolStartTransform.getMatrix();
-            for (var k in dummyTransformMatrix) {
-                dummyTransformMatrix[k] = interpolStartMatrix[k];
-            }
-        }
+        //     // If the bounding matrices are simultaneous/the same, simply copy the earlier matrix
+        //     var interpolStartMatrix = interpolStartTransform.getMatrix();
+        //     for (var k in dummyTransformMatrix) {
+        //         dummyTransformMatrix[k] = interpolStartMatrix[k];
+        //     }
+        // }
         
         return dummyTransformMatrix;
     }
