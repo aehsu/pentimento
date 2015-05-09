@@ -199,7 +199,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Delete the visuals in the selection during a recording.
     // This sets the tDeletion property for all visuals in the selection
     this.recordingDeleteSelection = function() {
-        console.log('recording delete')
         var currentTime = self.currentVisualTime();
 
         // Use the model to set the deletion time
@@ -213,7 +212,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Deletes all visuals in the selection while in editing mode.
     // This removes the visuals entirely from all points in time.
     this.editingDeleteSelection = function() {
-        console.log('editing delete')
 
         // Use the model to delete the visuals
         visualsModel.deleteVisuals(self.selection);
@@ -227,9 +225,11 @@ var VisualsController = function(visuals_model, retimer_model) {
     };
 
     // Transform the visuals in the selection during a recording.
-    this.recordingTransformSelection = function(transform_matrix) {
+    this.recordingSpatialTransformSelection = function(transform_matrix) {
 
         var current_time = self.currentVisualTime();
+
+        undoManager.beginGrouping();
 
         // Push the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
@@ -248,12 +248,16 @@ var VisualsController = function(visuals_model, retimer_model) {
             visual.pushSpatialTransform(new_transform);
         };
 
+        undoManager.endGrouping();
+
         // Redraw at the current time
         self.drawVisuals(current_time);
     };
 
     // Transform the visuals in the selection while in editing mode.
-    this.editingTransformSelection = function(transform_matrix) {
+    this.editingSpatialTransformSelection = function(transform_matrix) {
+
+        undoManager.beginGrouping();
 
         // Apply the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
@@ -261,61 +265,48 @@ var VisualsController = function(visuals_model, retimer_model) {
             visual.applySpatialTransform(transform_matrix);
         };
 
+        undoManager.endGrouping();
+
         // Redraw at the current time
         self.drawVisuals();
     };
 
-    // Changes the width of the selection of visuals during recording
+    // Changes the properties of the selection of visuals during recording
     // This pushes a property transform onto the selected visuals
-    this.recordingWidthSelection = function(newWidth) {
+    this.recordingPropertyTransformSelection = function(visual_property_transform) {
 
-    };
+        undoManager.beginGrouping();
 
-    // Changes the width of the selection of visuals during editing
-    this.editingWidthSelection = function(newWidth) {
-        console.log('newWidth: ' + newWidth)
         for(var i in self.selection) {
             var visual = self.selection[i];
-            visual.getProperties().setWidth(newWidth);
+            visual.pushPropertyTransform(visual_property_transform);
         };
 
-        // Clear the selection and redraw to show the update
+        undoManager.endGrouping();
+
+        // Redraw to show the update
         self.selection = [];
         self.drawVisuals();
     };
 
-    this.editingColor = function(newColor) {
-        console.log('newColor: ' + newColor)
+    // Changes the properties of the selection of visuals during editing
+    this.editingPropertyTransformSelection = function(property_name, new_value) {
+        console.log('hi')
+
+        undoManager.beginGrouping();
+
         for(var i in self.selection) {
             var visual = self.selection[i];
-            visual.getProperties().setColor(newColor);
+            visual.applyPropertyTransform(property_name, new_value);
         };
 
-        // Clear the selection and redraw to show the update
+        undoManager.endGrouping();
+
+        // Redraw to show the update
         self.selection = [];
         self.drawVisuals();
     };
 
-    this.recordingColor = function(newColor){
-        if(self.selection.length == 0){
-            console.log("change pen color for future strokes");
-        }
-        else{
-            var currentTime = self.currentVisualTime();
-            for(var i in self.selection) {
-                var visual = self.selection[i];
-                var propertyTransforms = visual.getPropertyTransforms();
-                var newColorTransform = new VisualPropertyTransform(visual.getProperties().getColor(), newColor, currentTime);
-                propertyTransforms.push(newColorTransform);
-                visual.setPropertyTransforms(propertyTransforms);
-
-            };
-
-            // Clear the selection and redraw to show the update
-            self.selection = [];
-            self.drawVisuals();
-        }
-    }
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
     ///////////////////////////////////////////////////////////////////////////////

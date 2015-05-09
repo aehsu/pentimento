@@ -45,7 +45,6 @@ var LectureController = function() {
     var redoDisabledButtonID = 'redo_inactive';
     var saveButtonID = 'save';
     var fileOpenerID = 'file-opener';
-    var colorPickerID = 'color';
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
 
@@ -519,9 +518,6 @@ var LectureController = function() {
 
         // Open button handler
         $('#'+fileOpenerID).change(load);
-
-        // Setup Color picker
-        $("." + colorPickerID).trigger("click");
     };
 
     // Updates the buttons to reflect the current state of recording or playback

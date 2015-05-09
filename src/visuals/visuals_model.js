@@ -530,7 +530,7 @@ var Visual = function(tmin, props) {
     // The transform is a math.js matrix.
     // This method needs to be overridden by child classes.
     this.applySpatialTransform = function(transform) {
-        console.error('Visual.applyTransform() needs to be overridden by child class');
+        console.error('Visual.applySpatialTransform() needs to be overridden by child class');
         return;
     };
 
@@ -548,6 +548,15 @@ var Visual = function(tmin, props) {
             insert_index = i + 1;
         };
         spatialTransforms.splice(insert_index, 0, transform);
+
+        undoManager.registerUndoAction(self, self.removeSpatialTransform, [transform.getTime()]);
+    };
+
+    // Remove the spatial transform that is active at the specified time
+    this.removeSpatialTransform = function(time) {
+        // TODO
+
+        undoManager.registerUndoAction(self, self.pushSpatialTransform, [transform]);
     };
 
     // Returns the spatial transform at the given time (non-interpolated)
@@ -575,24 +584,65 @@ var Visual = function(tmin, props) {
         };
     };
 
-    // Apply a property transform to the visual through all points in time.
+    // Change the properties of the visual through all points in time.
     // This is different from pushing a transform, which only applies it at the specified time.
-    this.applyPropertyTransform = function(transform) {
-        console.error('Visual.applyTransform() needs to be overridden by child class');
-        return;
+    this.applyPropertyTransform = function(property_name, new_value) {
+
+        var old_value;
+        switch (property_name) {
+            case 'color':
+                old_value = properties.getColor();
+                properties.setColor(new_value);
+                break;
+            case 'width':
+                old_value = properties.getWidth();
+                properties.setWidth(new_value);
+                break;
+            default:
+                console.error('invalid property name: ' + property_name);
+                return;
+        }
+
+        undoManager.registerUndoAction(self, self.applyPropertyTransform, [property_name, old_value]);
     };
 
     // Push a property transform that has a time when it becomes active.
-    // This inserts the property into the spatial transforms array so that 
+    // This inserts the property into the property transforms array so that they are ordered by time.
     this.pushPropertyTransform = function(transform) {
         var insert_index = 0;
-        for (var i = 0; i < spatialTransforms.length; i++) {
-            if (transform.getTime() < spatialTransforms[i].getTime()) {
+        for (var i = 0; i < propertyTransforms.length; i++) {
+            if (transform.getTime() < propertyTransforms[i].getTime()) {
                 break;
             };
             insert_index = i + 1;
         };
-        spatialTransforms.splice(insert_index, 0, transform);
+        propertyTransforms.splice(insert_index, 0, transform);
+    };
+
+    // Remove the property transform that is active at the specified time
+    this.removePropertyTransform = function(time) {
+        // TODO
+
+                // Get the index that should be used to indicate which matrix is active.
+        // It is 1 more than the index because the identity is technically the first transform.
+        var return_index = 0;
+        for (var i = 0; i < spatialTransforms.length; i++) {
+            if (time < spatialTransforms[i].getTime()) {
+                break;
+            };
+            return_index = i + 1;
+        };
+
+        if (return_index === 0) {
+            // When the return index is 0, that means there are no transforms active,
+            // so just return the identity at time 0. 
+            return new VisualSpatialTransform(math.eye(3).valueOf(), 0);
+        } else {
+            // Subtract 1 from the index because the identity matrix counts as the first matrix
+            return spatialTransforms[return_index-1];
+        };
+
+        undoManager.registerUndoAction(self, self.pushPropertyTransform, [transform]);
     };
 
     // The rule is that visuals are visible exactly ON their tMin, not later
@@ -691,10 +741,6 @@ var StrokeVisual = function(tmin, props) {
         vertices.push(vertex);
     };
 
-    // this.addProperty = function(property) {
-    //     self.getPropertyTransforms().push(property);
-    // };
-
     // Overrides the parent applyTransform()
     // Applies the transform to all the vertices in the stroke.
     this.applySpatialTransform = function(transformMatrix) {
@@ -704,6 +750,9 @@ var StrokeVisual = function(tmin, props) {
             vertices[i].setX(resultVertexArray[0]);
             vertices[i].setY(resultVertexArray[1]);
         };
+
+        // For the undo operation, apply the inverse transform
+        undoManager.registerUndoAction(self, self.applySpatialTransform, [math.inv(transformMatrix)]);
     };
 
     // Saving the model to JSON
@@ -768,28 +817,22 @@ VisualProperty.loadFromJSON = function(json_object) {
     return new VisualProperty(json_object.c, json_object.w);
 };
 
-var VisualPropertyTransform = function(prop, newVal, time) {
+var VisualPropertyTransform = function(property_name, new_val, time) {
     var self = this;
-    var property = prop;
-    var value = newVal;
-    var duration = 0;
+    var propertyName = property_name;
+    var value = new_val;
     var t = time;
 
-    this.getProperty = function() { return property; }
     //no setter for the property, users should instead just create a new transform for a different property
+    this.getPropertyName = function() { return propertyName; }
     this.getValue = function() { return value; }
-    this.setValue = function(newVal) { value = newVal; }
-    this.getDuration = function() { return duration; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
     this.getTime = function() { return t; }
-    this.setTime = function(newTime) { t = newTime; }
 
     // Saving the model to JSON
     this.saveToJSON = function() {
         var json_object = {
-            property: property.saveToJSON(),
+            property_name: propertyName,
             value: value,
-            duration: duration,
             t: t
         };
 
@@ -797,22 +840,23 @@ var VisualPropertyTransform = function(prop, newVal, time) {
     };
 };
 VisualPropertyTransform.loadFromJSON = function(json_object) {
-    var visualPropertyTransform = new VisualPropertyTransform(VisualProperty.loadFromJSON(json_object['property']), json_object['value'],
+    var visualPropertyTransform = new VisualPropertyTransform(VisualProperty.loadFromJSON(json_object['property_name']), json_object['value'],
                                                                 json_object['t']);
-    visualPropertyTransform.setDuration(json_object['duration']);
     return visualPropertyTransform;
 };
+VisualPropertyTransform.propertyNames = { 
+    color: 'color', 
+    width: 'width'
+};
+
 
 var VisualSpatialTransform = function(mat, time) {
     var self = this;
     var matrix = mat;  // math.js matrix
-    var duration = 0;
     var t = time;
 
     this.getMatrix = function() { return matrix; }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
-    this.getDuration = function() { return duration; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
     this.getTime = function() { return time; }
     this.setTime = function(newTime) { t = newTime; }
 
@@ -820,7 +864,6 @@ var VisualSpatialTransform = function(mat, time) {
     this.saveToJSON = function() {
         var json_object = {
             matrix: matrix,
-            duration: duration,
             t: t
         };
 
@@ -829,7 +872,6 @@ var VisualSpatialTransform = function(mat, time) {
 };
 VisualSpatialTransform.loadFromJSON = function(json_object) {
     var visualSpatialTransform = new VisualSpatialTransform(json_object['matrix'], json_object['t']);
-    visualSpatialTransform.setDuration(json_object['duration']);
     return visualSpatialTransform;
 };
 

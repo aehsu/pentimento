@@ -49,12 +49,6 @@ button {
     background-color: #FF6666;
 }
 
-.propertyTool{
-    height: 30px;
-    max-width: 100%;
-    margin-top:10px;
-}
-
 label.open-file input[type="file"] {
     position: fixed;
     top: -1000px;
