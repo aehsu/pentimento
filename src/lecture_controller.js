@@ -60,9 +60,11 @@ var LectureController = function() {
          // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
         timeController = new TimeController();
 
-        // Reset the undo manager
+        // Reset the undo manager and register the change listener to update buttons.
+        // onchange is called anytime an undo action is registered or performed.
         undoManager.clearUndo();
         undoManager.clearRedo();
+        undoManager.onchange = updateButtons;
 
         // Initialize the controllers with their respective models.
         // These controllers might register for time controller or undo manager callbacks, so they should be initialized
@@ -446,7 +448,8 @@ var LectureController = function() {
         audioController.draw();
         retimerController.redrawConstraints();
 
-        updateButtons();
+        // updateButtons() is already called because it is regisetered to the onchange for the undo manager,
+        // so there is no need to call it in draw().
     };
 
     ///////////////////////////////////////////////////////////////////////////////
