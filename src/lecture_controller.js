@@ -444,7 +444,7 @@ var LectureController = function() {
     // Redraw the views of all of the controllers
     var draw = function() {
         audioController.draw();
-        // TODO: retimer and visuals
+        retimerController.redrawConstraints();
 
         updateButtons();
     };
