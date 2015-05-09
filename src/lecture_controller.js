@@ -5,7 +5,7 @@ var LectureController = function() {
 
     this.DEBUG = true;
 
-    var lectureModel = null;
+    var lectureModel = new LectureModel();
     var timeController = null;
     var visualsController = null;
     var audioController = null;
@@ -39,6 +39,10 @@ var LectureController = function() {
     var stopRecordButtonID = 'stopRecord';
     var startPlaybackButtonID = 'startPlayback';
     var stopPlaybackButtonID = 'stopPlayback';
+    var undoButtonID = 'undo';
+    var redoButtonID = 'redo';
+    var undoDisabledButtonID = 'undo_inactive';
+    var redoDisabledButtonID = 'redo_inactive';
     var saveButtonID = 'save';
     var fileOpenerID = 'file-opener';
     var colorPickerID = 'color';
@@ -52,20 +56,26 @@ var LectureController = function() {
     /////////////////////////////////////////////////////////////////////////////// 
 
     this.init = function() {
-        // Create the lecture model, which initializes visuals, audio, and retimer models
-        lectureModel = new LectureModel();
-        lectureModel.init();
 
-        // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
+         // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
         timeController = new TimeController();
 
-        // Initialize the controllers with their respective models
+        // Reset the undo manager
+        undoManager.clearUndo();
+        undoManager.clearRedo();
+
+        // Initialize the controllers with their respective models.
+        // These controllers might register for time controller or undo manager callbacks, so they should be initialized
+        // after initializing the time controller and undo manager.
         visualsController = new VisualsController(lectureModel.getVisualsModel(), lectureModel.getRetimerModel());
         audioController = new AudioController(lectureModel.getAudioModel());
         retimerController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
 
-        // Setup UI elements and state
-        setupUI();
+        // Setup input
+        loadInputHandlers();
+
+        // Update the state of the buttons
+        updateButtons();
     };
 
     // Saves the lecture to a zip file
@@ -174,8 +184,34 @@ var LectureController = function() {
         // NOTE: saveZipToDisk() is called after the last addBlobToZip() finishes.
     };
 
+    // Callback for lecture loading button
+    var load = function() {
+        var files = this.files;
+
+        // Only one file should be selected
+        if (files.length !== 1) {
+            console.error('Only one file can be opened at a time');
+        };
+
+        var file = files[0];
+        console.log("Filename: " + file.name);
+        console.log("Type: " + file.type);
+        console.log("Size: " + file.size + " bytes");
+
+        // Use a file reader to read the zip file as a binary string,
+        // and load the information into a JSZip object so that it can be loaded into the lecture.
+        var reader = new FileReader();
+        reader.onload = function(){
+            var data = reader.result;
+            var new_zip = new JSZip();
+            new_zip.load(data);
+            openFile(new_zip);
+        }
+        reader.readAsBinaryString(file);
+    };
+
     // Loads the lecture from a JSZip object
-    var load = function(jszip) {
+    var openFile = function(jszip) {
 
         // Parse the model.json text file into a JSON object
         var json_model_object = JSON.parse(jszip.file('model.json').asText());
@@ -221,119 +257,8 @@ var LectureController = function() {
         // Load the models
         lectureModel.loadFromJSON(json_model_object);
 
-        // Create the time controller, which is responsible for handling the current lecture time (also known as audio time)
-        timeController = new TimeController();
-
-        // Initialize the controllers with their respective models
-        visualsController = new VisualsController(lectureModel.getVisualsModel(), lectureModel.getRetimerModel());
-        audioController = new AudioController(lectureModel.getAudioModel());
-        retimerController = new RetimerController(lectureModel.getRetimerModel(), visualsController, audioController);
-
-        // Setup UI elements and state
-        setupUI();
-    };
-
-    // Setup UI handlers and current state.
-    var setupUI = function() {
-
-        loadInputHandlers();
-
-        if (ie10TabletPointer()) {
-            console.log('Pointer Enabled Device');
-            self.pressure = true;
-            self.pressureColor = true;
-            self.pressureWidth = true;
-        } else {
-            console.log('Pointer Disabled Device');
-            self.pressure = false;
-            self.pressureColor = false;
-            self.pressureWidth = false;
-        };
-
-        // Start recording button handler
-        $('#'+startRecordButtonID).click(self.startRecording);
-
-        // Stop recording button handler
-        $('#'+stopRecordButtonID).click(self.stopRecording);
-
-        // Start playback button handler
-        $('#'+startPlaybackButtonID).click(self.startPlayback);
-
-        // Stop playback button handler
-        $('#'+stopPlaybackButtonID).click(self.stopPlayback);
-
-        // Save button handler
-        $('#'+saveButtonID).click(save);
-
-        // Open button handler
-        $('#'+fileOpenerID).change(function() {
-            var files = this.files;
-
-            // Only one file should be selected
-            if (files.length !== 1) {
-                console.error('Only one file can be opened at a time');
-            };
-
-            var file = files[0];
-            console.log("Filename: " + file.name);
-            console.log("Type: " + file.type);
-            console.log("Size: " + file.size + " bytes");
-
-            // Use a file reader to read the zip file as a binary string,
-            // and load the information into a JSZip object so that it can be loaded into the lecture.
-            var reader = new FileReader();
-            reader.onload = function(){
-                var data = reader.result;
-                var new_zip = new JSZip();
-                new_zip.load(data);
-                load(new_zip);
-            }
-            reader.readAsBinaryString(file);
-        });
-
-        // Setup Color picker
-        $("." + colorPickerID).trigger("click");
-
-        // Update the state of the buttons
-        updateButtons();
-    };
-
-    // Updates the buttons to reflect the current state of recording or playback
-    var updateButtons = function() {
-
-        // Hide/unhide the record start/stop buttons
-        if (self.isRecording()) {
-            $('#'+startRecordButtonID).addClass(hiddenClass);
-            $('#'+stopRecordButtonID).removeClass(hiddenClass);
-        } else {
-            $('#'+startRecordButtonID).removeClass(hiddenClass);
-            $('#'+stopRecordButtonID).addClass(hiddenClass);
-        };
-        if (self.isPlaying()) {
-            $('#'+startPlaybackButtonID).addClass(hiddenClass);
-            $('#'+stopPlaybackButtonID).removeClass(hiddenClass);
-        } else {
-            $('#'+startPlaybackButtonID).removeClass(hiddenClass);
-            $('#'+stopPlaybackButtonID).addClass(hiddenClass);
-        };
-
-        // Hide/unhide the playback start/stop buttons
-    };
-
-    // Returns true if this Internet Explorer 10 or greater, running on a device
-    // with msPointer events enabled (like the ms surface pro)
-    var ie10TabletPointer = function() {
-        var ie10 = /MSIE (\d+)/.exec(navigator.userAgent);
-
-        if (ie10 != null) {
-            var version = parseInt(ie10[1]);
-            if (version >= 10) { ie10 = true; }
-            else { ie10 = false; }
-        } else { ie10 = false; }
-
-        var pointer = navigator.msPointerEnabled ? true : false;
-        if (ie10 && pointer) { return true; }
-        else { return false; }
+        // Initialize the controller with the new model
+        self.init();
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -389,6 +314,9 @@ var LectureController = function() {
             return false;
         };
 
+        // Start the undo hierarchy
+        undoManager.beginGrouping();
+
         var beginTime = timeController.getBeginTime();
 
         // Notify controllers depending on the recording types 
@@ -430,6 +358,9 @@ var LectureController = function() {
             audioController.stopRecording(endTime);
         };
         retimerController.endRecording(endTime);
+
+        // End the undo hierarchy
+        undoManager.endGrouping();
 
         // Update the UI buttons
         updateButtons();
@@ -510,18 +441,137 @@ var LectureController = function() {
         return endTime;
     };
 
+    // Redraw the views of all of the controllers
+    var draw = function() {
+        audioController.draw();
+        // TODO: retimer and visuals
+
+        updateButtons();
+    };
+
     ///////////////////////////////////////////////////////////////////////////////
-    // Event Handlers and Tools
+    // Undo Manager
     //
-    // Button callbacks and general mouse and keyboard handlers for the entire lecture
+    // Callbacks for the undo manager buttons
     ///////////////////////////////////////////////////////////////////////////////
 
-    // Loads input handlers on the entire window
+    var undo = function() {
+        console.log('undo')
+        undoManager.undo();
+        draw();
+    };
+
+    var redo = function() {
+        console.log('redo')
+        undoManager.redo();
+        draw();
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Input Handlers and Tools
+    //
+    // Button callbacks and general mouse and keyboard handlers for the window and lecture tools
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // Loads input handlers for the lecture tools and the window
     var loadInputHandlers = function() {
         $(window).on('mousedown', mouseDownHandler);
         $(window).on('mouseup', mouseUpHandler);
         $(window).on('keydown', keyDownHandler);
         $(window).on('keyup', keyUpHandler);
+
+        if (ie10TabletPointer()) {
+            console.log('Pointer Enabled Device');
+            self.pressure = true;
+            self.pressureColor = true;
+            self.pressureWidth = true;
+        } else {
+            console.log('Pointer Disabled Device');
+            self.pressure = false;
+            self.pressureColor = false;
+            self.pressureWidth = false;
+        };
+
+        // Start recording button handler
+        $('#'+startRecordButtonID).click(self.startRecording);
+
+        // Stop recording button handler
+        $('#'+stopRecordButtonID).click(self.stopRecording);
+
+        // Start playback button handler
+        $('#'+startPlaybackButtonID).click(self.startPlayback);
+
+        // Stop playback button handler
+        $('#'+stopPlaybackButtonID).click(self.stopPlayback);
+
+        // Undo button handler
+        $('#'+undoButtonID).click(undo);
+
+        // Redo button handler
+        $('#'+redoButtonID).click(redo);
+
+        // Save button handler
+        $('#'+saveButtonID).click(save);
+
+        // Open button handler
+        $('#'+fileOpenerID).change(load);
+
+        // Setup Color picker
+        $("." + colorPickerID).trigger("click");
+    };
+
+    // Updates the buttons to reflect the current state of recording or playback
+    var updateButtons = function() {
+
+        // Hide/unhide the record start/stop buttons
+        if (self.isRecording()) {
+            $('#'+startRecordButtonID).addClass(hiddenClass);
+            $('#'+stopRecordButtonID).removeClass(hiddenClass);
+        } else {
+            $('#'+startRecordButtonID).removeClass(hiddenClass);
+            $('#'+stopRecordButtonID).addClass(hiddenClass);
+        };
+        if (self.isPlaying()) {
+            $('#'+startPlaybackButtonID).addClass(hiddenClass);
+            $('#'+stopPlaybackButtonID).removeClass(hiddenClass);
+        } else {
+            $('#'+startPlaybackButtonID).removeClass(hiddenClass);
+            $('#'+stopPlaybackButtonID).addClass(hiddenClass);
+        };
+
+        // Hide/unhide the playback start/stop buttons
+
+        // Enable or disable the undo/redo buttons
+        if (undoManager.canUndo()) {
+            $('#'+undoButtonID).removeClass(hiddenClass);
+            $('#'+undoDisabledButtonID).addClass(hiddenClass);
+        } else {
+            $('#'+undoButtonID).addClass(hiddenClass);
+            $('#'+undoDisabledButtonID).removeClass(hiddenClass);
+        };
+        if (undoManager.canRedo()) {
+            $('#'+redoButtonID).removeClass(hiddenClass);
+            $('#'+redoDisabledButtonID).addClass(hiddenClass);
+        } else {
+            $('#'+redoButtonID).addClass(hiddenClass);
+            $('#'+redoDisabledButtonID).removeClass(hiddenClass);
+        };
+    };
+
+    // Returns true if this Internet Explorer 10 or greater, running on a device
+    // with msPointer events enabled (like the ms surface pro)
+    var ie10TabletPointer = function() {
+        var ie10 = /MSIE (\d+)/.exec(navigator.userAgent);
+
+        if (ie10 != null) {
+            var version = parseInt(ie10[1]);
+            if (version >= 10) { ie10 = true; }
+            else { ie10 = false; }
+        } else { ie10 = false; }
+
+        var pointer = navigator.msPointerEnabled ? true : false;
+        if (ie10 && pointer) { return true; }
+        else { return false; }
     };
 
     var mouseDownHandler = function(evt) {
@@ -566,7 +616,6 @@ var LectureController = function() {
             self.altKey = false;
         }
     };
-
 };
 
 
@@ -574,11 +623,15 @@ var LectureController = function() {
 // Main: The single entry point for the entire application
 ///////////////////////////////////////////////////////////////////////////////
 
-// Define the global lecture controller object
+// Define the global lecture controller and undo manager objects
 var lectureController;
+var undoManager;
 
 // Objects and controllers should only be created after the document is ready
 $(document).ready(function() {
+
+    // Create the undo manager
+    undoManager = new UndoManager();
 
     // Create and initialize the lecture controller
     lectureController = new LectureController();

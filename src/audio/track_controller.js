@@ -62,9 +62,22 @@ var AudioTrackController = function(track, audioController) {
 
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Callback methods
-    ///////////////////////////////////////////////////////////////////////////////
+    // Managing audio methods
+    /////////////////////////////////////////////////////////////////////////////// 
 
+    // Insert a new segment into the track
+    this.insertSegment = function(newSegment) {
+        var insert_result = audioTrack.insertSegment(newSegment);
+        audioController.draw();
+    };
+
+    // Remove a segment from the track
+    this.removeSegment = function(segment) {
+        audioTrack.removeSegment(segment);
+        audioController.draw();
+    };
+
+    
     // Callback for when the segment UI div starts to be dragged.
     // Sets initial internal variables.
     this.segmentDragStart = function(event, ui, segmentController) {
@@ -194,25 +207,6 @@ var AudioTrackController = function(track, audioController) {
                 this.removeSegment(segmentControllers[i].getAudioSegment());
             };
         };
-        // Refresh the view to load any changes
-        // TODO: maybe not necessary
-    };
-
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Managing audio methods
-    /////////////////////////////////////////////////////////////////////////////// 
-
-    // Insert a new segment into the track
-    this.insertSegment = function(newSegment) {
-        var insert_result = audioTrack.insertSegment(newSegment);
-        audioController.draw();
-    };
-
-    // Remove a segment from the track
-    this.removeSegment = function(segment) {
-        audioTrack.removeSegment(segment);
-        audioController.draw();
     };
 
     // Start the playback of the track at the specified time interval

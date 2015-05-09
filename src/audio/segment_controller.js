@@ -80,10 +80,6 @@ var AudioSegmentController = function(segment, trackController) {
         return parentTrackController;
     };
 
-    // TODO change the parent track
-    // verify that the audio controller is the same
-
-
     ///////////////////////////////////////////////////////////////////////////////
     // Managing audio methods
     ///////////////////////////////////////////////////////////////////////////////

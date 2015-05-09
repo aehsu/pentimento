@@ -7,8 +7,7 @@ var LectureModel = function() {
     var audioModel = null;
     var retimerModel = null;
 
-    //
-    this.init = function() {
+    var init = function() {
         visualsModel = new VisualsModel(800, 500);
         audioModel = new AudioModel();
         retimerModel = new RetimerModel();
@@ -44,4 +43,7 @@ var LectureModel = function() {
 
         return json_object;
     };
+
+    // Initialize
+    init();
 };

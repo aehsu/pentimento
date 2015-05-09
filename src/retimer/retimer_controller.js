@@ -44,7 +44,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Selection/Deletion handling
     ///////////////////////////////////////////////////////////////////////////////
     var selectArea = function(event){
-        console.log("SELECTING");
         selectedConstraints = [];
 
         var canvas = $('#'+constraintsCanvasID);
@@ -197,7 +196,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Refresh the canvas and redraw the constraints
     var redrawConstraints = function() {
         if (!constraintsDivID) {
-            console.log('constraints div has not been set');
+            console.error('constraints div has not been set');
         };
 
         // Clear the plugin div
@@ -319,21 +318,15 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // // Make sure to convert this from the lecture duration to audio duration
         // var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
-        // console.log("scale: " + audio_scale);
         // var tAud = xVal * audio_scale;
-        // console.log("taud: " + tAud);
         // var tVis = pentimento.lectureController.retimingController.getVisualTime(tAud);
-        // console.log("tvis: " + tVis);
         // // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(curr_audio_time, "Audio");
         // // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(curr_audio_time, "Audio");
         // // var prevTime = prev_const.getTVisual();
         // // var nextTime = next_const.getTVisual();
-        // // console.log(nextTime);
         // // var prevX = 0;
         // // var nextX = $('#retimer_constraints').width();
-        // // console.log(nextX);
         // // var interp = (nextTime-prevTime)/(nextX-prevX);
-        // // console.log("interp: " + interp);
         // // var tVis = interp*xVal;
         // // var tAud = interp*xVal;
         // var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
@@ -399,7 +392,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // If the drag is valid, save the current dragged x position as the last valid x position
         // Else the drag is invalid, and set the dragged x position to the last valid position instead.
-        console.log('isValid: ' + isValid)
         if (isValid) {
             lastValidDragX = draggedX;
         } else {
@@ -534,16 +526,12 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
 
     var drawTickMarks = function(){
-        console.log("Drawing!");
         var canvas = $('#'+constraintsCanvasID);
-        
         var max_time = lectureController.getLectureModel().getLectureDuration();
-        console.log("maxTime: " + max_time);
 
         for(var i=0; i < max_time; i+=150){
              var tVis = retimerModel.getVisualTime(i);
              var xVis = audioController.millisecondsToPixels(tVis);
-             // console.log("xVis: " + xVis);
              canvas.drawLine({  // top handle
                 layer: true,
                 bringToFront: true,

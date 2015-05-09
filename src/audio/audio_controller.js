@@ -123,7 +123,12 @@ var AudioController = function(audio_model) {
 
     // Add a new track
     var addTrack = function() {
-        var newTrack = audioModel.createTrack();
+
+        // Create a new track in the model
+        var new_track = new AudioTrack();
+        audioModel.addTrack(new_track);
+
+        // Redraw
         self.draw();
     };
 
@@ -146,7 +151,7 @@ var AudioController = function(audio_model) {
         self.draw();
     };
 
-
+    // Change the active track index to refer to another track
     var changeActiveTrack = function(index) {
         // Make sure the index is a valid number
         if (index < 0 || index >= audioModel.getAudioTracks().length) {
@@ -517,9 +522,9 @@ var AudioController = function(audio_model) {
             plugin.draw();
         };
 
-        // If there are no audio tracks in the model, insert one
+        // If there are no audio tracks in the model, then error
         if (audioModel.getAudioTracks().length === 0) {
-            audioModel.createTrack();
+            console.error('no tracks when drawing');
         };
 
         // Iterate over all audio tracks and create their controllers and

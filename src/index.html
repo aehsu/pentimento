@@ -19,7 +19,9 @@
     <script type="text/javascript" src="external/FileSaver.min.js"></script>
     <script type="text/javascript" src="external/wavesurfer.min.js"></script>
     <script type="text/javascript" src="external/RecordRTC.js"></script>
-    <script src='external/spectrum/spectrum.js'></script>
+    <script type="text/javascript" src='external/spectrum/spectrum.js'></script>
+    <script type="text/javascript" src="external/UndoManager.js"></script>
+
 
     <!--The entry point for the application is in lecture_controller.js-->
     <script type="text/javascript" src="compatibility.js"></script>
@@ -27,10 +29,6 @@
     <script type="text/javascript" src="lecture_controller.js"></script>
     <script type="text/javascript" src="lecture_model.js"></script>
     <script type="text/javascript" src="time_controller.js"></script>
-
-    <script type="text/javascript" src="undo/errors.js"></script>
-    <script type="text/javascript" src="undo/helpers_and_globals.js"></script>
-    <script type="text/javascript" src="undo/undo.js"></script>
 
     <script type="text/javascript" src="visuals/visuals_model.js"></script>
     <script type="text/javascript" src="visuals/visuals_controller.js"></script>
@@ -76,11 +74,11 @@
             <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
         </table>
         
-        <input id="undo" type="image" src="icons/undo.png" class="lecture-tool um-tool hidden">
-        <input id="undo-inactive" type="image" src="icons/undo-inactive.png" class="lecture-tool um-tool" disabled="true">
+        <input id="undo" type="image" src="icons/undo.png" class="lecture-tool">
+        <input id="undo_inactive" type="image" src="icons/undo-inactive.png" class="lecture-tool hidden" disabled="true">
 
-        <input id="redo" type="image" src="icons/redo.png" class="lecture-tool um-tool hidden">
-        <input id="redo-inactive" type="image" src="icons/redo-inactive.png" class="lecture-tool um-tool" disabled="true">
+        <input id="redo" type="image" src="icons/redo.png" class="lecture-tool">
+        <input id="redo_inactive" type="image" src="icons/redo-inactive.png" class="lecture-tool hidden" disabled="true">
 
         <input id="save" type="image" src="icons/save.png" class="lecture-tool">
         

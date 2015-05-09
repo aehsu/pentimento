@@ -3,30 +3,43 @@
 //
 // Audio model contains all the tracks and segments that make up all of the audio data
 // All audio model data should be modified only through the class methods provided.
+// All methods that modify the audio also push the inverse action onto the undo manager.
 "use strict";
 var AudioModel = function() {
     var self = this;
-    var audio_tracks = [];
-
-    // Set audio tracks
-    this.setAudioTracks = function(audio_tracks_) {
-        audio_tracks = audio_tracks_;
-    };
+    var audio_tracks = [new AudioTrack()];  // Starts with one track
 
     // Get the audio tracks
     this.getAudioTracks = function() {
         return audio_tracks;
     };
 
-    // Create a new empty audio track and return it.
-    this.createTrack = function() {
-        var newTrack = new AudioTrack();
-        audio_tracks.push(newTrack);
-        return newTrack;
+    // Add the track to the end of the audio tracks
+    // Optionally take the index where the track should be inserted.
+    this.addTrack = function(track, insert_index) {
+
+        // Set the insert index to the end of the tracks if it was undefined
+        if (typeof insert_index === 'undefined') {
+            insert_index = audio_tracks.length;
+        };
+
+        // Check the bounds of the index
+        if (insert_index < 0 || insert_index > audio_tracks.length) {
+            return false;
+        };
+
+        // Splice the new track
+        audio_tracks.splice(insert_index, 0, track);
+
+        // For the undo action, remove the track
+        undoManager.registerUndoAction(self, self.removeTrack, [track]);
+
+        return true;
     };
 
     // Remove the specified audio track
     this.removeTrack = function(track) {
+
         // Check that there are at least two tracks, so that there will be at least
         // one track remaining after the delete.
         if (audio_tracks.length < 2) {
@@ -40,6 +53,9 @@ var AudioModel = function() {
         if (index > -1) {
             audio_tracks.splice(index, 1);
         };
+
+        // For the undo action, add the track
+        undoManager.registerUndoAction(self, self.addTrack, [track, index]);
 
         return (index > -1);
     };
@@ -131,11 +147,6 @@ var AudioTrack = function() {
     var self = this;
 	var audio_segments = [];
 
-    // Set the audio segments
-    this.setAudioSegments = function(segments) {
-        audio_segments = segments;
-    };
-
     // Get the audio segments
     this.getAudioSegments = function() {
         return audio_segments;
@@ -146,7 +157,13 @@ var AudioTrack = function() {
     // Returns true if the insert succeeds, unless a split occured.
     // If a split occurs, returns an object {left, right, remove} with the left and right side of the 
     // split segment, and the segment that was removed to become the left and right parts.
-    this.insertSegment = function(newSegment) {
+    this.insertSegment = function(new_segment, do_shift_split) {
+
+        // Use a grouping because many actions are performed in order to insert a segment.
+        // This method does not directly modify the audio segments. Instead, it uses
+        // othes modifying methods to perform those actions. By using a group, we can
+        // combine the undo for all of those actions.
+        undoManager.beginGrouping();
 
         // Iterate over all segments for the track to see if the new segment's start time
         // intersects any segments.
@@ -157,10 +174,10 @@ var AudioTrack = function() {
             var other_segment = audio_segments[i];
 
             // If the new segment's start time intersects a segment, then split the segment into left and right
-            if (newSegment.start_time > other_segment.start_time && 
-                newSegment.start_time < other_segment.end_time ) {
+            if (new_segment.start_time > other_segment.start_time && 
+                new_segment.start_time < other_segment.end_time ) {
 
-                var split_result = other_segment.splitSegment(newSegment.start_time);
+                var split_result = other_segment.splitSegment(new_segment.start_time);
                 if (!split_result) {
                     console.error('could not split segment');
                 };
@@ -172,8 +189,8 @@ var AudioTrack = function() {
                 // Do the insert manually instead of using the insert method because the insert method
                 // will also shift all the segments behind it, effictively shifting those segments multiple times.
                 self.removeSegment(intersect_segment);
-                audio_segments.push(left_segment);
-                audio_segments.push(right_segment);
+                addSegment(left_segment);
+                addSegment(right_segment);
 
                 // Stop searching segments after the intersection is found.
                 break;
@@ -185,13 +202,13 @@ var AudioTrack = function() {
             var shift_segment = audio_segments[i];
 
             // If the segment's end time is to the right of the inserted segment's begin time, then shift
-            if ( newSegment.start_time < shift_segment.end_time ) {
-                self.shiftSegment(shift_segment, newSegment.lengthInTrack(), false);
+            if ( new_segment.start_time < shift_segment.end_time ) {
+                self.shiftSegment(shift_segment, new_segment.lengthInTrack(), false);
             };
         };
 
         // Insert the new segment
-        audio_segments.push(newSegment);
+        addSegment(new_segment);
 
         // Return true if the insert succeeded, or return the relevant segments if an insert occured
         var returnValue;
@@ -201,7 +218,19 @@ var AudioTrack = function() {
             returnValue = { left: left_segment, right: right_segment, remove: intersect_segment };
         };
 
+        // End the grouping
+        undoManager.endGrouping();
+
         return returnValue;
+    };
+
+    // Add the segment to the audio segments array without checking for validity
+    var addSegment = function(segment) {
+
+        audio_segments.push(segment);
+
+        // For the undo action, remove the added segment
+        undoManager.registerUndoAction(self, self.removeSegment, [segment]);
     };
 
     // Remove the specified segment. 
@@ -211,11 +240,15 @@ var AudioTrack = function() {
         var index = audio_segments.indexOf(segment);
 
         // Remove the segment from the segments array if it exists
-        if (index > -1) {
-            audio_segments.splice(index, 1);
+        if (index < 0) {
+            return false;
         };
+        audio_segments.splice(index, 1);
 
-        return (index > -1);
+        // For the undo action, add the removed segment
+        undoManager.registerUndoAction(self, addSegment, [segment]);
+
+        return true;
     };
 
     // Returns whether the specified segment can be shifted to the left or right
@@ -288,6 +321,9 @@ var AudioTrack = function() {
         // Get the new times for the segment
         segment.start_time += shift_millisec;
         segment.end_time += shift_millisec;
+
+        // For the undo action, reverse shift the segment
+        undoManager.registerUndoAction(self, self.shiftSegment, [segment, -shift_millisec, false]);
 
         return true;
 	};

@@ -39,9 +39,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
 
         var audioMaxTime = lectureController.getLectureModel().getLectureDuration();
         var total_width = audioController.millisecondsToPixels(audioMaxTime);
-        console.log("totalWidth: " + total_width);
         if (total_width <= 0) {
-            console.log("no thumbnails to draw");
             return;
         };
 
@@ -49,10 +47,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         var original_width = visualsController.getVisualsModel().getCanvasSize().width;
         var scale = thumbnailsHeight / original_height;
         var thumbnail_width = Math.round(scale * original_width);
-        console.log("thumbnailWidth: " + thumbnail_width);
-
         var numThumbs = Math.ceil(total_width / thumbnail_width);
-        console.log("numThumbs: " + numThumbs);
 
         // Generate the thumbnail for each thumbnail in the sequence
         for(var thumbOffset = 0; thumbOffset < numThumbs; thumbOffset++){
