@@ -19,9 +19,6 @@ var ToolsController = function(visuals_controller) {
     var strokeColor = '#777';
     var strokeWidth = 2;
 
-    // Keep track of the previous spectrum color to fix the problem with double events being triggered.
-    var previousSpectrumColor
-
     // Keep track of original dimensions during a transform
     var originalTranslatePosition;  // { left, top }
 
@@ -410,43 +407,44 @@ var ToolsController = function(visuals_controller) {
 
     var widthChanged = function(new_width) {
 
-        if (lectureController.isRecording()) {
+        // Change the width of the drawing tool
+        strokeWidth = new_width;
 
-            // Change the width of the drawing tool
-            strokeWidth = new_width;
+        // Changes the width of the selection if there is a selection
+        if (visualsController.selection.length !== 0) {
 
-            // Changes the color of the selection if there is a selection
-            var transform = new VisualPropertyTransform('width', new_width, visualsController.currentVisualTime());
-            visualsController.recordingPropertyTransformSelection(transform);
+            if (lectureController.isRecording()) {
+                var transform = new VisualPropertyTransform('width', new_width, visualsController.currentVisualTime());
+                visualsController.recordingPropertyTransformSelection(transform);
 
-        } else {
-            visualsController.editingPropertyTransformSelection('width', new_width);
-        };
+            } else {
+                visualsController.editingPropertyTransformSelection('width', new_width);
+            };
+        }
 
-        // Reset the tool state
+        // Reset the tool state (clears selection rectangle)
         activateCanvasTool();
     };
 
     var colorChanged = function(new_spectrum_color) {
 
-        pre
-
+        // Change the color of the drawing tool
         var new_color = new_spectrum_color.toHexString();
+        strokeColor = new_color;
 
-        if (lectureController.isRecording()) {
+        // Changes the color of the selection if there is a selection
+        // This check needs to happen in order to fix the problem with double events being triggered.
+        if (visualsController.selection.length !== 0) {
 
-            // Change the color of the drawing tool
-            strokeColor = new_color;
+            if (lectureController.isRecording()) {
+                var transform = new VisualPropertyTransform('color', new_color, visualsController.currentVisualTime());
+                visualsController.recordingPropertyTransformSelection(transform);
+            } else {
+                visualsController.editingPropertyTransformSelection('color', new_color);
+            };
+        }
 
-            // Changes the color of the selection if there is a selection
-            var transform = new VisualPropertyTransform('color', new_color, visualsController.currentVisualTime());
-            visualsController.recordingPropertyTransformSelection(transform);
-
-        } else {
-            visualsController.editingPropertyTransformSelection('color', new_color);
-        };
-
-        // Reset the tool state
+        // Reset the tool state (clears selection rectangle)
         activateCanvasTool();
     }
 

@@ -291,7 +291,6 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Changes the properties of the selection of visuals during editing
     this.editingPropertyTransformSelection = function(property_name, new_value) {
-        console.log('hi')
 
         undoManager.beginGrouping();
 
