@@ -172,42 +172,38 @@ var VisualsModel = function(canvas_width, canvas_height) {
             var wrapper = {
                 visual: visual,
                 tMin: visual.getTMin(),
-                vertices_times: []
             };
 
             // Move tMin to infinity
             visual.setTMin(Number.POSITIVE_INFINITY); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
 
-            // Add the vertices times to the wrapper and then move them to infinity
-            var vertices = visual.getVertices();
-            for(var i in vertices) {
-                wrapper.vertices_times.push(vertices[i].getT());
-                vertices[i].setT(Number.POSITIVE_INFINITY);
-            };
-            
             // Add the wrapper to dirty visuals
             dirtyVisuals.push(wrapper);
 
         };  // end of iterating over visuals
     };
 
-    // Restore to the previous time plus the amount.
+    // Restore to the previous time and add the shift amount.
     // Used at the end of a recording during insertion to shift visuals forward.
-    this.cleanVisuals = function(amount) {
+    this.cleanVisuals = function(shift_amount) {
+
+        // Restore the original times from the wrapper
+        var visuals = [];
         for(var i in dirtyVisuals) {
             var dirtyWrapper = dirtyVisuals[i];
             var visual = dirtyWrapper.visual;
-            visual.setTMin(dirtyWrapper.tMin + amount);
-            var vertices = visual.getVertices();
-            for(var j in vertices) {
-                vertices[j].setT(dirtyWrapper.vertices_times[j] + amount);
-            };
-            //would have to re-enable transforms
+            visuals.push(visual);
+            visual.setTMin(dirtyWrapper.tMin);
         };
 
+        // Perform a shift on all of the visuals that were dirty
+        self.shiftVisuals(visuals, shift_amount);
+
+        // Clear the dirty visuals
         dirtyVisuals = [];
     };
 
+    // Shift the visual by an amount, which shifts all vertices and transforms
     var doShiftVisual = function(visual, amount) {
         visual.setTMin(visual.getTMin() + amount);
         var vertIter = visual.getVerticesIterator();
@@ -215,12 +211,16 @@ var VisualsModel = function(canvas_width, canvas_height) {
             var vert = vertIter.next();
             vert.setT(vert.getT() + amount);
         }
-        if(visual.getTDeletion()!=null) { visual.setTDeletion(visual.getTDeletion() + amount);}
+        if(visual.getTDeletion() != null) {
+            visual.setTDeletion(visual.getTDeletion() + amount);
+        }
+
         var propTransIter = visual.getPropertyTransformsIterator();
         while(propTransIter.hasNext()) {
             var propTrans = propTransIter.next();
             propTrans.setT(propTrans.getT() + amount);
         }
+
         var spatTransIter = visual.getSpatialTransformsIterator();
         while(spatTransIter.hasNext()) {
             var spatTrans = spatTransIter.next();
@@ -228,12 +228,13 @@ var VisualsModel = function(canvas_width, canvas_height) {
         }
     }
     
+    // Shift an array of visuals by the given amount (visuals time)
     this.shiftVisuals = function(visuals, amount) {
         if(visuals.length==0) { 
             return; 
         };
-        for(var vis in visuals) { 
-            doShiftVisual(visuals[vis], amount);
+        for(var i in visuals) { 
+            doShiftVisual(visuals[i], amount);
         };
 
         undoManager.registerUndoAction(self, self.shiftVisuals, [visuals, -amount]);
