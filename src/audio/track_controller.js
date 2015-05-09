@@ -145,8 +145,8 @@ var AudioTrackController = function(track, audioController) {
         // Crop amount should be positive if expanding, and negative if contracting
         var cropMilli = parentAudioController.pixelsToMilliseconds(ui.size.width - ui.originalSize.width);
         var cropResult = audioTrack.canCropSegment(audioSegment, cropMilli, cropLeftSide);
-        console.log("cropMilli: " + cropMilli);
-        console.log("cropResult: " + cropResult);
+        // console.log("cropMilli: " + cropMilli);
+        // console.log("cropResult: " + cropResult);
 
         // If the crop was valid, then update the last valid position and size.
         // Also update the wavesurfer container view to appear consistent with the crop

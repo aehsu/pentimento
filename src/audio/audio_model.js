@@ -322,7 +322,7 @@ var AudioTrack = function() {
         segment.start_time += shift_millisec;
         segment.end_time += shift_millisec;
 
-        // For the undo action, reverse shift the segment
+        // For the undo action, reverse shift the segment. Don't check for validity.
         undoManager.registerUndoAction(self, self.shiftSegment, [segment, -shift_millisec, false]);
 
         return true;
@@ -405,14 +405,17 @@ var AudioTrack = function() {
 	// Crop the specified segment by the specified number of milliseconds
 	// If a negative number is given for crop_millisec, then the crop will shrink the segment side
     // left_side is a bool indicating whether the left side is being cropped.
+    // 'check' is optional and defaults to true. If false, it will crop without checking for validity.
     // Returns true if the crop is valid.
     // Otherwise, return a crop millisecond of the greatest magnitude that would have produced a valid crop.
-	this.cropSegment = function(segment, crop_millisec, left_side) {
+	this.cropSegment = function(segment, crop_millisec, left_side, check) {
 
         // Check for validity of the crop
-        var cropResult = self.canCropSegment(segment, crop_millisec, left_side);
-        if (cropResult !== true) {
-            return cropResult;
+        if (check !== false) {
+            var cropResult = self.canCropSegment(segment, crop_millisec, left_side);
+            if (cropResult !== true) {
+                return cropResult;
+            };
         };
 
         // Get the new times for the segment
@@ -427,6 +430,10 @@ var AudioTrack = function() {
             segment.audio_end_time += crop_millisec;
         }
         console.log('segment after crop: ' + segment.start_time + " " + segment.end_time);
+
+        // For the undo action, reverse crop the segment. Don't check for validity.
+        undoManager.registerUndoAction(self, self.cropSegment, [segment, -crop_millisec, left_side, false]);
+
         return true;
 	};
 
