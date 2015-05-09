@@ -67,14 +67,19 @@ var VisualsModel = function(canvas_width, canvas_height) {
         return slides[slides.length - 1];
     }
     
-    this.insertSlide = function(prevSlide, newSlide) {
-        var index = slides.indexOf(prevSlide);
-        if (index < 0) {
-            console.error('prevSlide does not exist')
-            return false;
-        };
+    this.insertSlide = function(newSlide, insert_index) {
+        if (typeof insert_index === 'undefined') {
+            insert_index = slides.length;
+        }
 
-        slides.splice(index+1, 0, newSlide);
+        if (insert_index < 0 || insert_index > slides.length) {
+            console.error('slides insert index invalid');
+            return false;
+        }
+
+        slides.splice(index, 0, newSlide);
+
+        undoManager.registerUndoAction(self, self.removeSlide, [newSlide]);
 
         return true;
     };
@@ -92,6 +97,8 @@ var VisualsModel = function(canvas_width, canvas_height) {
 
         slides.splice(index, 1);
 
+        undoManager.registerUndoAction(self, self.insertSlide, [slide, index]);
+
         return true;
     };
 
@@ -100,22 +107,47 @@ var VisualsModel = function(canvas_width, canvas_height) {
     // Visuals
     ///////////////////////////////////////////////////////////////////////////////
 
-    this.addVisual = function(visual) {
-        var slide = self.getSlideAtTime(visual.getTMin());
-        slide.getVisuals().push(visual);
-    };
+    this.addVisuals = function(visuals) {
 
-    this.deleteVisual = function(visual) {
-        var slide = self.getSlideAtTime(visual.getTMin());
-        var visuals = slide.getVisuals();
-
-        var index = visuals.indexOf(visual);
-        if (index < 0) {
-            console.error('visual not found')
-            return;
+        for(var i in visuals) {
+            var visual = visuals[i];
+            var slide = self.getSlideAtTime(visual.getTMin());
+            slide.getVisuals().push(visual);
         };
 
-        visuals.splice(index, 1);
+        undoManager.registerUndoAction(self, self.deleteVisuals, [visuals]);
+    };
+
+    this.deleteVisuals = function(visuals) {
+
+        for(var i in visuals) {
+            var visual = visuals[i];
+            var slide = self.getSlideAtTime(visual.getTMin());
+
+            var index = slide.getVisuals().indexOf(visual);
+            if (index < 0) {
+                console.error('visual not found')
+                return;
+            };
+
+            slide.getVisuals().splice(index, 1);
+        };
+
+        undoManager.registerUndoAction(self, self.addVisuals, [visuals]);
+    };
+
+    // Visuals time can be null to indicate the lack of a deletion time
+    this.visualsSetTDeletion = function(visual, visuals_time) {
+
+        undoManager.beginGrouping();
+
+        for(var i in self.selection) {
+            var visual = self.selection[i];
+            undoManager.registerUndoAction(visual, visual.setTDeletion, [visual.getTDeletion()]);
+            visual.setTDeletion(visuals_time);
+        };
+
+        undoManager.endGrouping();
     };
 
     // Creates wrappers around the visuals that keeps track of their previous time
@@ -176,7 +208,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
         dirtyVisuals = [];
     };
 
-    function doShiftVisual(visual, amount) {
+    var doShiftVisual = function(visual, amount) {
         visual.setTMin(visual.getTMin() + amount);
         var vertIter = visual.getVerticesIterator();
         while(vertIter.hasNext()) {
@@ -203,37 +235,8 @@ var VisualsModel = function(canvas_width, canvas_height) {
         for(var vis in visuals) { 
             doShiftVisual(visuals[vis], amount);
         };
-    }
-    
-    
-    this.deleteVisuals = function(visuals) {
-        var indices = [];
-        var segments = segmentVisuals(visuals);
-        var shifts = getSegmentsShifts(segments);
-        var currentSlide = self.getSlideAtTime(visuals[0].getTMin());
-        shifts.reverse();
-        
-        for(var vis in visuals) { //remove the visuals from the slide
-            var index = currentSlide.getVisuals().indexOf(visuals[vis]);
-            currentSlide.getVisuals().splice(index, 1);
-            indices.push(index);
-            if(index==-1) { 
-                console.error('error in deletion, a visual could not be found on the slide given'); 
-            }
-        }
-            
-        for(var sh in shifts) {
-            var shift = shifts[sh];
-            var visualIter = currentSlide.getVisualsIterator();
-            while(visualIter.hasNext()) {
-                var visual = visualIter.next();
-                if(visual.getTMin() >= shift.tMin ) { doShiftVisual(visual, -1.0*shift.duration); } //visual.tMin-1.0*shift.duration
-            }
-        }
-        shifts.reverse();
-        //should we change the duration of the slide?!?
 
-        return shifts[0].tMin;
+        undoManager.registerUndoAction(self, self.shiftVisuals, [visuals, -amount]);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -389,17 +392,18 @@ var Iterator = function(array) {
 ///////////////////////////////////////////////////////////////////////////////
 
 var Slide = function() {
+    var self = this;
     var visuals = [];
-    var transforms = [];
     var duration = 0;  // milliseconds integer
     
     this.getVisuals = function() { return visuals; }
     this.getDuration = function() { return duration; }
-    this.getTransforms = function() { return transforms; }
-
     this.setVisuals = function(newVisuals) { visuals = newVisuals; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
-    this.setTransforms = function(newTransforms) { transforms = newTransforms; }
+
+    this.setDuration = function(newDuration) {
+        undoManager.registerUndoAction(self, self.setDuration, [duration]);
+        duration = newDuration;
+    }
 
     this.getVisualsIterator = function() { return new Iterator(visuals); }
     this.getTransformsIterator = function() { return new Iterator(transforms); }
@@ -568,6 +572,26 @@ var Visual = function(tmin, props) {
             // Subtract 1 from the index because the identity matrix counts as the first matrix
             return spatialTransforms[return_index-1];
         };
+    };
+
+    // Apply a property transform to the visual through all points in time.
+    // This is different from pushing a transform, which only applies it at the specified time.
+    this.applyPropertyTransform = function(transform) {
+        console.error('Visual.applyTransform() needs to be overridden by child class');
+        return;
+    };
+
+    // Push a property transform that has a time when it becomes active.
+    // This inserts the property into the spatial transforms array so that 
+    this.pushPropertyTransform = function(transform) {
+        var insert_index = 0;
+        for (var i = 0; i < spatialTransforms.length; i++) {
+            if (transform.getTime() < spatialTransforms[i].getTime()) {
+                break;
+            };
+            insert_index = i + 1;
+        };
+        spatialTransforms.splice(insert_index, 0, transform);
     };
 
     // The rule is that visuals are visible exactly ON their tMin, not later

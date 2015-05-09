@@ -38,13 +38,21 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Callback function of updateTime.
     // Draws to the canvas through the renderer
-    this.drawVisuals = function(time) {
-        // Convert the audio time to visuals time
-        var visualsTime = retimerModel.getVisualTime(time);
+    // The time is optional and is the audio time.
+    // If the time is not provided, the visuals will be drawn at the current time of the time controller.
+    this.drawVisuals = function(audio_time) {
+        // Convert the audio time to visuals time,
+        // or use the current time if undefined.
+        var visuals_time;
+        if (typeof audio_time !== 'undefined') {
+            visuals_time = retimerModel.getVisualTime(audio_time);
+        } else {
+            visuals_time = self.currentVisualTime();
+        };
 
         // Render the canvas
         var context = self.canvas[0].getContext('2d')
-        renderer.drawCanvas(self.canvas, context, 0, visualsTime);
+        renderer.drawCanvas(self.canvas, context, 0, visuals_time);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -185,7 +193,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Add a visual that has finished being drawn
     this.addVisual = function(visual) {
-        visualsModel.addVisual(visual);
+        visualsModel.addVisuals([visual]);
     };
 
     // Delete the visuals in the selection during a recording.
@@ -193,28 +201,26 @@ var VisualsController = function(visuals_model, retimer_model) {
     this.recordingDeleteSelection = function() {
         console.log('recording delete')
         var currentTime = self.currentVisualTime();
-        for(var i in self.selection) {
-            var visual = self.selection[i];
-            visual.setTDeletion(currentTime);
-        };
+
+        // Use the model to set the deletion time
+        visualsModel.visualsSetTDeletion(self.selection, currentTime);
 
         // Clear the selection and redraw to show the update
         self.selection = [];
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals();
     };
 
     // Deletes all visuals in the selection while in editing mode.
     // This removes the visuals entirely from all points in time.
     this.editingDeleteSelection = function() {
         console.log('editing delete')
-        for(var i in self.selection) {
-            var visual = self.selection[i];
-            visualsModel.deleteVisual(visual);
-        };
+
+        // Use the model to delete the visuals
+        visualsModel.deleteVisuals(self.selection);
 
         // Clear the selection and redraw to show the update
         self.selection = [];
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals();
 
         // Redraw the thumbnails as well
         // TODO: find out a good way to signal the retimer controller
@@ -256,7 +262,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         };
 
         // Redraw at the current time
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals();
     };
 
     // Changes the width of the selection of visuals during recording
@@ -275,7 +281,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         // Clear the selection and redraw to show the update
         self.selection = [];
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals();
     };
 
     this.editingColor = function(newColor) {
@@ -287,7 +293,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         // Clear the selection and redraw to show the update
         self.selection = [];
-        self.drawVisuals(self.currentVisualTime());
+        self.drawVisuals();
     };
 
     this.recordingColor = function(newColor){
@@ -307,7 +313,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
             // Clear the selection and redraw to show the update
             self.selection = [];
-            self.drawVisuals(self.currentVisualTime());
+            self.drawVisuals();
         }
     }
     ///////////////////////////////////////////////////////////////////////////////
