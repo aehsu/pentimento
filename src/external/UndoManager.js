@@ -1,5 +1,6 @@
 /**
  * UMD
+ * https://github.com/wvteijlingen/JS-UndoManager
  */
 (function (root, factory) {
 	if (typeof exports === 'object') {
