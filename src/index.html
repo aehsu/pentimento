@@ -187,52 +187,51 @@
         <br>
         <div id="audio_timeline"></div>
         <br>
-        <button id="play_pause_button" class="btn btn-primary">
-            Play
-        </button>
-        <button id="record_audio_button" class="btn btn-primary">
-            Record
-        </button>
-        <button id="zoom_in_button" class="btn btn-primary">
-            Zoom In
-        </button>
-        <button id="zoom_out_button" class="btn btn-primary">
-            Zoom Out
-        </button>
-        <button id="delete_segment_button" class="btn btn-primary">
-            Delete segment
-        </button>
-        <button id="insert_track_button" class="btn btn-primary">
-            Insert track
-        </button>
-        <button id="delete_track_button" class="btn btn-primary">
-            Delete track
-        </button>
-        <label>Current track:</track>
-        <select id="track_select"></select>
     </div>
     <br>
 
     <!--RETIMER controls-->
-    <div id="retimer_controls_container">
-        <div id="playback_controls" class="retimer_controls">
-            <input type="image" src="icons/recordAudio.png" id="retimer_record_Audio" class="retiming_button">
+    <div id="retimer-audio_controls_container">
+
+        <div id="audio_controls" class="retimer_controls center_buttons">
+            <input type="button" value="Zoom In" id="zoom_in_button" class="retiming_button audio_button">
+        <!--     <button id="zoom_in_button" class="retiming_button audio_button btn btn-primary">
+                Zoom In
+            </button> -->
+            <button id="zoom_out_button" class="retiming_button audio_button btn btn-primary">
+                Zoom Out
+            </button>
+            <button id="delete_segment_button" class="retiming_button audio_button btn btn-primary">
+                Delete segment
+            </button>
+            <button id="insert_track_button" class="retiming_button audio_button btn btn-primary">
+                Insert track
+            </button>
+            <button id="delete_track_button" class="retiming_button audio_button btn btn-primary">
+                Delete track
+            </button>
+            <label>Current track:</track>
+            <select id="track_select"></select>
+        </div>
+
+<!--         <div id="playback_controls" class="retimer_controls">
             <input type="image" src="icons/scratch.png" id="retimer_scratch" class="retiming_button">
             <input type="image" src="icons/media_playback_start.png" id="retimer_play" class="retiming_button">
             <input type="image" src="icons/media_playback_stop.png" id="retimer_stop" class="retiming_button">
             <input type="image" src="icons/media_skip_backward.png" id="retimer_skipback" class="retiming_button">
             <input type="image" src="icons/media_skip_forward.png" id="retimer_skipahead" class="retiming_button">
-        </div>
+        </div> -->
 
         <div id="retiming_controls" class="retimer_controls">
-            <input type="image" src="icons/beginLink.png" id="sync_start" class="retiming_button">
-            <input type="image" src="icons/endLink.png" id="sync_end" class="retiming_button">
+            <!-- <input type="image" src="icons/beginLink.png" id="sync_start" class="retiming_button">
+            <input type="image" src="icons/endLink.png" id="sync_end" class="retiming_button"> -->
             <input type="image" src="icons/link.png" id="sync" class="retiming_button">
             <input type="image" src="icons/trashLink.png" id="delete_sync" class="retiming_button">
-            <input type="image" src="icons/trashLink.png" id="reset_all_syncs" class="retiming_button">
+            <input type="image" src="icons/recordAudio.png" id="retimer_record_Audio" class="retiming_button">
+            <!-- <input type="image" src="icons/trashLink.png" id="reset_all_syncs" class="retiming_button"> -->
         </div>
 
-        <div id="deletion_controls" class="retimer_controls">
+<!--         <div id="deletion_controls" class="retimer_controls">
             <input type="image" src="icons/deleteAudio.png" class="retiming_button">
             <input type="image" src="icons/autoDeleteSilence.png" class="retiming_button">
             <input type="image" src="icons/trashAv.png" class="retiming_button">
@@ -252,7 +251,7 @@
 
         <div id="move_visuals" class="retimer_controls">
             <input type="image" src="icons/moveInTime.png" class="retiming_button">
-        </div>
+        </div> -->
 
         <div id="help" class="retimer_controls">
             <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
