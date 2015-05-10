@@ -14,6 +14,11 @@ var AudioModel = function() {
         return audio_tracks;
     };
 
+    // Set the audio tracks
+    this.setAudioTracks = function(tracks) {
+        audio_tracks = tracks;
+    };
+
     // Add the track to the end of the audio tracks
     // Optionally take the index where the track should be inserted.
     this.addTrack = function(track, insert_index) {
@@ -150,6 +155,11 @@ var AudioTrack = function() {
     // Get the audio segments
     this.getAudioSegments = function() {
         return audio_segments;
+    };
+
+    // Set the audio segments
+    this.setAudioSegments = function(segments) {
+        audio_segments = segments;
     };
 
     // Insert the provided segment.
@@ -487,7 +497,7 @@ AudioTrack.loadFromJSON = function(json_object) {
 
     // Create a new track and set the segments to the array created above.
     var track = new AudioTrack();
-    track.setAudioSegments(audio_segments)
+    track.setAudioSegments(audio_segments);
 
     return track;
 };

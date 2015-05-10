@@ -407,21 +407,15 @@ var Slide = function() {
     }
 
     this.getVisualsIterator = function() { return new Iterator(visuals); }
-    this.getTransformsIterator = function() { return new Iterator(transforms); }
 
     this.saveToJSON = function() {
         var json_object = {
             visuals: [],
-            transforms: [],
             duration: duration
         };
 
         for (var i = 0; i < visuals.length; i++) {
             json_object['visuals'].push(visuals[i].saveToJSON());
-        };
-
-        for (var i = 0; i < transforms.length; i++) {
-            json_object['transforms'].push(transforms[i].saveToJSON());
         };
 
         return json_object;
@@ -437,43 +431,9 @@ Slide.loadFromJSON = function(json_object) {
     };
     slide.setVisuals(visuals);
 
-    var json_transforms = json_object['transforms'];
-    var transforms = [];
-    for (var i = 0; i < json_transforms.length; i++) {
-        transforms.push(SlideTransform.loadFromJSON(json_transforms[i]))
-    };
-    slide.setTransforms(transforms);
-
     slide.setDuration(json_object['duration']);
 
     return slide;
-};
-
-var SlideTransform = function(tmin, duration_, mat) {
-    var self = this;
-    var tMin = tmin;
-    var duration = duration_;
-    var matrix = mat;
-
-    this.getTMin = function() { return tMin; }
-    this.getDuration = function() { return duration; }
-    this.getMatrix = function() { return matrix; }
-    this.setTMin = function(newTMin) { tMin = newTMin; }
-    this.setDuration = function(newDuration) { duration = newDuration; }
-    this.setMatrix = function(newMatrix) { matrix = newMatrix; }
-
-    this.saveToJSON = function() {
-        var json_object = {
-            tMin: tMin,
-            duration: duration,
-            matrix: matrix
-        };
-
-        return json_object;
-    };
-};
-SlideTransform.loadFromJSON = function(json_object) {
-    return new SlideTransform(json_object['tMin'], json_object['duration'], json_object['matrix']);
 };
 
 
