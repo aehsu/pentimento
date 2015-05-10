@@ -320,6 +320,9 @@ var LectureController = function() {
 
         var beginTime = timeController.getBeginTime();
 
+        // On undo, revert to the begin time
+        undoManager.registerUndoAction(self, changeTime, [beginTime]);
+
         // Notify controllers depending on the recording types 
         if (self.recordingTypeIsVisuals()) {  // visuals
             visualsController.startRecording(beginTime);
@@ -468,6 +471,18 @@ var LectureController = function() {
         console.log('redo')
         undoManager.redo();
         draw();
+    };
+
+    // When undoing or redoing a recording, the time should also revert back to 
+    // the previous time. This function helps achieve that by wrapping around
+    // a call to the time controller and the undo manager.
+    var changeTime = function(time) {
+
+        // Create an undo call to revert to the previous time
+        undoManager.registerUndoAction(self, changeTime, [timeController.getTime()]);
+
+        // Update the time
+        timeController.updateTime(time);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
