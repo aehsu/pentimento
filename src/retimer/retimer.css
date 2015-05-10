@@ -6,6 +6,14 @@
 .retimer_controls{
     border: 1px solid #000000;
     display: inline-block;
+    padding: 3px;
+    margin-bottom: 3px;
+}
+
+/*Images have extra padding added if inline-block display
+need to adjust the vertical-align property to fix*/
+.retimer_controls input[type=image]{
+    vertical-align: middle;
 }
 
 .retiming_button{
