@@ -14,6 +14,9 @@ var AudioController = function(audio_model) {
     // self can be used to refer to the object in different scopes (such as listeners)
     var self = this;
 
+    // Controller for updating the ticker
+    var tickerController = null;
+
     // Audio model containig the audio data
     var audioModel = null;
 
@@ -666,6 +669,9 @@ var AudioController = function(audio_model) {
 
     // Initializes the audio controller
     // Should only be called after the document is ready
+
+    // Setup the ticker controller
+    tickerController = new TickerController();
 
     // Set the audio model
     audioModel = audio_model;
