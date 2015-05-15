@@ -14,9 +14,6 @@ var AudioController = function(audio_model) {
     // self can be used to refer to the object in different scopes (such as listeners)
     var self = this;
 
-    // Controller for updating the ticker
-    var tickerController = null;
-
     // Audio model containig the audio data
     var audioModel = null;
 
@@ -445,6 +442,9 @@ var AudioController = function(audio_model) {
         var playhead = $('<div></div>').attr({'id': playheadID});
         $('#'+tracksContainerID).append(playhead);  
 
+        // The playhead overflows the tracks container
+        playhead.css('top', -$('#'+tracksContainerID).position().top);
+
         // Set the playhead to be draggable in the x-axis within the tracksContainer
         playhead.draggable({ axis: "x",
                             containment: '#'+tracksContainerID,
@@ -584,6 +584,9 @@ var AudioController = function(audio_model) {
 
         // Refresh the playhead position
         refreshPlayhead();
+
+        // Update the ticker time as well
+        updateTicker(currentTime);
     };
 
     // Updates the ticker display indicating the current time as a string
@@ -617,6 +620,40 @@ var AudioController = function(audio_model) {
 
         // Update the display
         $('#'+tickerID).val(min + ':' + sec + '.' + ms);
+    };
+
+    // When the timeline is clicked, update the playhead time to the clicked position.
+    var timelineClicked = function(event) {
+        var timeline = $('#'+timelineID);
+        var tracksContainer = $('#'+tracksContainerID);
+
+        // Clicking to update time is not allowed during a timing
+        if (lectureController.getTimeController().isTiming()) {
+            return;
+        }
+
+        // Get the position of the click within the audio timeline
+        var clickX = event.pageX - timeline.offset().left;
+        var clickY = event.pageY - timeline.offset().top;
+
+        // Calculate the position relative to the tracks container
+        // The position is restricted to the bounds of the tracks container
+        var x = clickX - tracksContainer.position().left;
+        var y = clickY - tracksContainer.position().top;
+        x = Math.max(x, 0);
+        x = Math.min(x, tracksContainer.width());
+        y = Math.max(y, 0);
+        y = Math.min(y, tracksContainer.height());
+
+        // The click position must be above 100px
+        // TODO: find a better system to prevent click interference between segments and other timeline
+        if (y > 100) {
+            return;
+        };
+
+        // Use the position to calculate and update the time that is represented by the click
+        var time = self.pixelsToMilliseconds(x);
+        lectureController.getTimeController().updateTime(time);
     };
 
 
@@ -670,9 +707,6 @@ var AudioController = function(audio_model) {
     // Initializes the audio controller
     // Should only be called after the document is ready
 
-    // Setup the ticker controller
-    tickerController = new TickerController();
-
     // Set the audio model
     audioModel = audio_model;
 
@@ -695,6 +729,9 @@ var AudioController = function(audio_model) {
 
     // Register callbacks with the time controller
     lectureController.getTimeController().addUpdateTimeCallback(updatePlayheadTime);
+
+    // Mousedown listener for audio timeline
+    $('#'+timelineID).click(timelineClicked);
 
     // Button listeners for zooming in and out
     var zoom_in_button = $('#'+zoomInButtonID);
