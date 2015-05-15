@@ -188,6 +188,9 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
 
+        visualsController.canvas.off('touchstart');
+        visualsController.canvas.off('touchmove');
+        visualsController.canvas.off('touchend');
         // In recording mode, activate the recording tool,
         // and in editing mode, activate the editing tool.
         var toolToActivate = ( lectureController.isRecording() ? recordingTool : editingTool );
@@ -197,12 +200,15 @@ var ToolsController = function(visuals_controller) {
         switch (toolToActivate) {
             case penTool:
                 visualsController.canvas.on('mousedown', drawMouseDown);
+                visualsController.canvas.on('touchstart', drawMouseDown);
                 break;
             case highlightTool:
                 visualsController.canvas.on('mousedown', drawMouseDown);
+                visualsController.canvas.on('touchstart', drawMouseDown);
                 break;
             case selectTool:
                 visualsController.canvas.on('mousedown', selectMouseDown);
+                visualsController.canvas.on('touchstart', selectMouseDown);
                 break;
             default:
                 console.error('tool is not a canvas tool and cannot be made active: ' + tool);
@@ -222,22 +228,50 @@ var ToolsController = function(visuals_controller) {
         event.preventDefault();
         event.stopPropagation();
 
-        // Create a new stroke visual and set it to the current visual
-        visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
-        visualsController.currentVisual.getVertices().push(getCanvasPoint(event));
+        // touch event
+        if(isNaN(event.pageX)){
+            var touches = event.originalEvent.changedTouches;
+
+            visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
+            
+            for (var i=0; i < touches.length; i++) {
+                visualsController.currentVisual.getVertices().push(getTouchPoint(touches[i].pageX, touches[i].pageY));
+            }
+        }
+        else{
+            // Create a new stroke visual and set it to the current visual
+            visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
+            visualsController.currentVisual.getVertices().push(getCanvasPoint(event));
+        }
+
 
         // Register mouse move and mouse up handlers
         visualsController.canvas.on('mousemove', drawMouseMove);
         visualsController.canvas.on('mouseup', drawMouseUp);
+
+        visualsController.canvas.on('touchmove', drawMouseMove);
+        visualsController.canvas.on('touchend', drawMouseUp);
     };
 
     // SELECT: When the mouse is down and moved, append a new vertext to the current visual
     var drawMouseMove = function(event) {
         event.preventDefault();
         event.stopPropagation();
-            
-        // Append a vertex to the current visual
-        visualsController.currentVisual.appendVertex(getCanvasPoint(event));
+
+        //touch event
+        if(isNaN(event.pageX)){
+            var touches = event.originalEvent.changedTouches;
+
+            for (var i=0; i < touches.length; i++) {
+                visualsController.currentVisual.appendVertex(getTouchPoint(touches[i].pageX, touches[i].pageY));
+            };
+        }
+        // mouse event
+        else{
+            // Append a vertex to the current visual
+            visualsController.currentVisual.appendVertex(getCanvasPoint(event));            
+        }
+
     };
 
     // DRAW: When the mouse is released, clear the handlers and add the completed visual
@@ -252,6 +286,9 @@ var ToolsController = function(visuals_controller) {
         // Unregister the mouse move and mouse up handlers
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
+
+        visualsController.canvas.off('touchmove');
+        visualsController.canvas.off('touchend');
     };
 
     // Reset the selection box so that it is not visible and that the UI is turned off
@@ -271,8 +308,17 @@ var ToolsController = function(visuals_controller) {
         event.preventDefault();
         event.stopPropagation();
 
-        selectionBeginPoint = getCanvasPoint(event);
+        if(isNaN(event.pageX)){
+            var touches = event.originalEvent.changedTouches;
 
+            for (var i=0; i < touches.length; i++) {
+                selectionBeginPoint = getTouchPoint(touches[i].pageX, touches[i].pageY);
+            };
+        }
+        else{
+            selectionBeginPoint = getCanvasPoint(event);
+        }
+        
         // The selection is reset each time the mouse clicks down so that a new
         // selection can be made.
         visualsController.selection = [];
@@ -281,6 +327,9 @@ var ToolsController = function(visuals_controller) {
         // Register mouse move and mouse up handlers
         visualsController.canvas.on('mousemove', selectMouseMove);
         visualsController.canvas.on('mouseup', selectMouseUp);
+
+        visualsController.canvas.on('touchmove', selectMouseMove);
+        visualsController.canvas.on('touchend', selectMouseUp);
     };
 
     // SELECT: When the mouse is down and moved, update the dimensions of the selection box and select vertices
@@ -289,7 +338,18 @@ var ToolsController = function(visuals_controller) {
         event.stopPropagation();
 
         // Update the dimensions of the selection box and make sure it is not hidden
-        var coord = getCanvasPoint(event);
+        var coord;
+
+        if(isNaN(event.pageX)){
+            var touches = event.originalEvent.changedTouches;
+
+            for (var i=0; i < touches.length; i++) {
+                coord = getTouchPoint(touches[i].pageX, touches[i].pageY);
+            };
+        } 
+        else{
+            coord = getCanvasPoint(event);
+        }
         var left = Math.min(coord.getX(), selectionBeginPoint.getX());
         var right = Math.max(coord.getX(), selectionBeginPoint.getX());
         var top = Math.min(coord.getY(), selectionBeginPoint.getY());
@@ -352,6 +412,9 @@ var ToolsController = function(visuals_controller) {
         // Unregister the mouse move and mouse up handlers
         visualsController.canvas.off('mousemove');
         visualsController.canvas.off('mouseup');
+
+        visualsController.canvas.off('touchmove');
+        visualsController.canvas.off('touchend');
 
         // Turn on events for the overlay canvas to allow dragging and resizing of the div
         visualsController.canvasOverlay.css('pointer-events', 'auto');
@@ -471,6 +534,18 @@ var ToolsController = function(visuals_controller) {
     var getCanvasPoint = function(event){
         var x = event.pageX - visualsController.canvas.offset().left;
         var y = event.pageY - visualsController.canvas.offset().top;
+        var t = visualsController.currentVisualTime();
+        
+        if(visualsController.pressure) {
+            return new Vertex(x, y, t, event.pressure);
+        } else {
+            return new Vertex(x, y, t);
+        }
+    }
+
+    var getTouchPoint = function(eventX, eventY){
+        var x = eventX - visualsController.canvas.offset().left;
+        var y = eventY - visualsController.canvas.offset().top;
         var t = visualsController.currentVisualTime();
         
         if(visualsController.pressure) {

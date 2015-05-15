@@ -51,9 +51,30 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var addArrowHandler = function(event) {
         var canvas = $('#'+constraintsCanvasID);
 
+        var x;
+        var y;
+
         // See where the user clicked to add the constraint
-        var x = event.pageX;
-        var y = event.pageY;
+        // touch events
+        if(isNaN(event.pageX)){   
+            var touches = event.originalEvent.changedTouches;
+            var xSum = 0
+            var ySum = 0
+
+            for (var i=0; i < touches.length; i++) {
+                xSum += touches[i].pageX
+                ySum += touches[i].pageY
+            };
+
+            x = xSum/touches.length;
+            y = ySum/touches.length;
+        }
+        // mouse events
+        else{
+            x = event.pageX;
+            y = event.pageY;
+        }
+
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
@@ -63,6 +84,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
         canvas.unbind('mousedown', selectArea);
+
+        canvas.unbind('touchstart', addArrowHandler);
+        canvas.unbind('touchstart', selectArea);
     };
 
     var drawTickMarks = function(){
@@ -90,6 +114,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         $('#'+constraintsCanvasID).unbind('mousedown', selectArea);
         // $('#'+constraintsCanvasID).unbind('mousemove', selectionDrag);
         $('#'+constraintsCanvasID).on('mousedown', addArrowHandler);
+
+        $('#'+constraintsCanvasID).on('touchstart', addArrowHandler);
+        $('#'+constraintsCanvasID).unbind('touchstart', selectArea);
     };
 
     // Refresh the canvas and redraw the constraints
@@ -134,6 +161,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Draw the constraint (using jcanvas)
         $('#'+constraintsCanvasID).drawLayers();
         $('#'+constraintsCanvasID).on('mousedown', selectArea);
+
+        $('#'+constraintsCanvasID).on('touchstart', selectArea);
 
         // Redraw the thumbnails to correspond to the new visual timing
         thumbnailsController.drawThumbnails();
@@ -264,8 +293,29 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         canvas.removeLayer("selectedArea");
 
-        var x = event.pageX;
-        var y = event.pageY;
+        var x;
+        var y;
+
+        // touch event
+        if(isNaN(event.pageX)){   
+            var touches = event.originalEvent.changedTouches;
+            var xSum = 0
+            var ySum = 0
+
+            for (var i=0; i < touches.length; i++) {
+                xSum += touches[i].pageX
+                ySum += touches[i].pageY
+            };
+
+            x = xSum/touches.length;
+            y = ySum/touches.length;
+        }
+        // mouse events
+        else{
+            x = event.pageX;
+            y = event.pageY;
+        }
+
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
@@ -294,13 +344,37 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         canvas.on('mousemove', selectionDrag);
         canvas.on('mouseup', endSelect);
+
+        canvas.on('touchmove', selectionDrag);
+        canvas.on('touchend', endSelect);
     }
 
     var selectionDrag = function(event){
         var canvas = $('#'+constraintsCanvasID);
 
-        var x = event.pageX;
-        var y = event.pageY;
+        var x;
+        var y;
+
+        // touch event
+        if(isNaN(event.pageX)){   
+            var touches = event.originalEvent.changedTouches;
+            var xSum = 0
+            var ySum = 0
+
+            for (var i=0; i < touches.length; i++) {
+                xSum += touches[i].pageX
+                ySum += touches[i].pageY
+            };
+
+            x = xSum/touches.length;
+            y = ySum/touches.length;
+        }
+        // mouse events
+        else{
+            x = event.pageX;
+            y = event.pageY;
+        }
+
         x -= canvas.offset().left;
         y -= canvas.offset().top;
 
@@ -320,6 +394,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var endSelect = function(event){
         var canvas = $('#' + constraintsCanvasID);
         canvas.unbind('mousemove', selectionDrag);
+        canvas.unbind('touchmove', selectionDrag);
         selectConstraints();
 
         canvas.removeLayer('selectedArea');
@@ -384,6 +459,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     var constraintDragStart = function(layer) {
         $('#' + constraintsCanvasID).unbind('mousedown', selectArea);
         $('#' + constraintsCanvasID).unbind('mousemove', selectionDrag);
+
+        $('#'+constraintsCanvasID).unbind('touchstart', selectArea);
+        $('#'+constraintsCanvasID).unbind('touchmove', selectionDrag);
+
         isDragTop = (layer.eventY < (constraintsHeight / 2));
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
         lastValidDragX = originalDragX;
