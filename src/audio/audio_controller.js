@@ -56,7 +56,10 @@ var AudioController = function(audio_model) {
     var timeline_zoom_factor = 1.5;
 
     // The minumum timeline display length in seconds
-    var minumum_timeline_seconds = 100;
+    var minumum_timeline_seconds = 10;
+
+    // The current timeline length is calculated when gradations refresh.
+    var timelineLengthSeconds = 0;
 
     // Interval durations for events and animations in milliseconds
     var playheadAnimationIntervalDuration = 10;
@@ -360,18 +363,22 @@ var AudioController = function(audio_model) {
     var refreshGradations = function() {
         var gradation_container = $('#'+gradationContainerID);
 
-        // Clear previous content
-        gradation_container.html('');
-
         // Calculate the length of the timeline in seconds.
         // This should be twice as long as the lecture length, or at least 100 seconds.
         // During a recording, the time controller cursor also counts as length.
         var lecture_length = lectureController.getLectureModel().getLectureDuration();
+
         if (lectureController.isRecording()) {
             lecture_length = Math.max(lectureController.getTimeController().getTime(), lecture_length);
         }
-        var timelineLengthSeconds = Math.max(2*lecture_length/1000, minumum_timeline_seconds);
+        var old_timeline_length = timelineLengthSeconds;
+        timelineLengthSeconds = Math.max(2*lecture_length/1000, minumum_timeline_seconds);
 
+        // During a recording, if the new timeline length is less than the old timeline length,
+        // then the old value of the timeline is used.
+        if (lectureController.isRecording() && timelineLengthSeconds < old_timeline_length) {
+            timelineLengthSeconds = old_timeline_length;
+        };
 
         // The width of the gradations container should fit the entire range of timelineLengthSeconds.
         // Plus the margin and border widths (2 each).
@@ -387,6 +394,31 @@ var AudioController = function(audio_model) {
         gradation_container.css('width', widthPixels);
         gradation_container.css('height', heightPixels);
 
+        // Update the axis to display the length
+        flotPlot.getAxes().xaxis.options.max = timelineLengthSeconds;
+
+        // Update the data so that the ticks are drawn correctly
+        var plot_data = [ [0, 0], [0, timelineLengthSeconds] ];
+        flotPlot.setData(plot_data);
+
+        // Redraw and resize flot to fit the parent container
+        flotPlot.resize();
+        flotPlot.setupGrid();
+        flotPlot.draw();
+    };
+
+    // Draw the graduation marks on the timeline
+    var drawGradations = function() { 
+        var timeline = $('#' + timelineID);
+        var gradation_scroll_parent = $('<div></div>');
+        var gradation_container = $('<div></div>');
+        gradation_container.attr('id', gradationContainerID);
+        timeline.append(gradation_container);
+
+        // Initialize with non-zero dummy values
+        gradation_container.css('width', 4000);
+        gradation_container.css('height', 4000);
+
         // Options for initializing flot
         // The range of the plot is set to timelineLengthSeconds
         var options = {
@@ -399,7 +431,7 @@ var AudioController = function(audio_model) {
             },
             xaxis: {
                 min: 0, // Min and Max refer to the range
-                max: timelineLengthSeconds,
+                max: 100,  // dummy value
                 tickFormatter: tickFormatter,
                 labelHeight: flotLabelHeight,
             },
@@ -418,26 +450,12 @@ var AudioController = function(audio_model) {
         };
 
         // Dummy data just for initiating the flot.
-        var plot_data = [ [0, 0], [0, timelineLengthSeconds] ];
+        var plot_data = [ [0, 0], [0, 100] ];
 
         // Use flot to draw the graduations
         flotPlot = $.plot(gradation_container, plot_data, options);
 
-        // Redraw and resize flot to fit the parent container
-        flotPlot.resize();
-        flotPlot.setupGrid();
-        flotPlot.draw();
-    };
-
-    // Draw the graduation marks on the timeline
-    var drawGradations = function() { 
-        var timeline = $('#' + timelineID);
-        var gradation_scroll_parent = $('<div></div>');
-        var gradation_container = $('<div></div>');
-        gradation_container.attr('id', gradationContainerID);
-        timeline.append(gradation_container);
-
-        // Resize the gradations (updating the size for time), which also draws
+        // Updatet the size of the plot and the axes
         refreshGradations();
     };
 
@@ -614,9 +632,12 @@ var AudioController = function(audio_model) {
             audio_timeline.scrollLeft(playhead_x + (flotGraphMargin + flotGraphBorder));
         };
 
-        // If the playheadTime exceeds the current timeline gradation length in seconds, then redraw the gradations
-        // if (playheadTime >= t)
-        refreshGradations();
+        // Update the timeline length if the current time is greater than the time.
+        // The length is updated by a factor of two, and the gradations are redrawn.
+        if (playheadTime/1000 + 1 >= timelineLengthSeconds) {
+            timelineLengthSeconds *= 2;
+            refreshGradations();
+        }
 
         // Update the ticker time as well
         updateTicker(currentTime);
