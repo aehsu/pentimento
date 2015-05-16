@@ -357,6 +357,8 @@ var AudioController = function(audio_model) {
         return topOffset;
     };
 
+    // Calculate the length in seconds to be disp
+
     // Draw the graduation marks on the timeline
     var drawGradations = function() { 
         var timeline = $('#' + timelineID);
@@ -573,6 +575,8 @@ var AudioController = function(audio_model) {
     // Update the current time (ms) of the audio timeline (the time indicated by the playhead)
     // Callback method
     var updatePlayheadTime = function(currentTime) {
+        var audio_timeline = $('#'+timelineID);
+
         // Check the time for valid bounds
         if (currentTime < 0) {
             console.error("Invalid playhead time: " + currentTime);
@@ -584,6 +588,23 @@ var AudioController = function(audio_model) {
 
         // Refresh the playhead position
         refreshPlayhead();
+
+        // Check to see if the playhead is in view and not hidden due to the scrolling.
+        // Calculate the visible region of the tracks container in pixels.
+        var scroll_offset_x = audio_timeline.scrollLeft();
+        var timeline_width = audio_timeline.width();
+        var min_vis_x = Math.max(scroll_offset_x - (flotGraphMargin + flotGraphBorder), 0);
+        var max_vis_x = min_vis_x + timeline_width - (flotGraphMargin + flotGraphBorder);
+
+        // Scroll the timeline to make sure the playhead is always in view.
+        // This is needed during calls to this function during a recording or playback timing.
+        // Change the scroll so that the playhead starts at the left
+        var playhead_x = $('#'+playheadID).position().left;
+        if (playhead_x < min_vis_x || playhead_x > max_vis_x) {
+            audio_timeline.scrollLeft(playhead_x + (flotGraphMargin + flotGraphBorder));
+        };
+
+        // If the recording exceeds the current timeline gradation length in seconds, then redraw the gradations
 
         // Update the ticker time as well
         updateTicker(currentTime);
@@ -762,7 +783,7 @@ var AudioController = function(audio_model) {
     var trackSelect = $('#'+trackSelectID);
     trackSelect.change(function() {
         var newActiveTrackIndex = (parseInt(trackSelect.val()) - 1);
-        console.log("new active track index: " + newActiveTrackIndex );
+        console.log("new active track index: " + newActiveTrackIndex);
         changeActiveTrack(newActiveTrackIndex);
     });
 
