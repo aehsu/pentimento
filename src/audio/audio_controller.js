@@ -56,7 +56,7 @@ var AudioController = function(audio_model) {
     var timeline_zoom_factor = 1.5;
 
     // The minumum timeline display length in seconds
-    var minumum_timeline_seconds = 10;
+    var minumum_timeline_seconds = 100;
 
     // The current timeline length is calculated when gradations refresh.
     var timelineLengthSeconds = 0;
