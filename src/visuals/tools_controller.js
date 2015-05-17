@@ -225,6 +225,7 @@ var ToolsController = function(visuals_controller) {
 
     // DRAW: When the mouse is pressed down, activate the mouse move and mouse up handlers and start a new current visual
     var drawMouseDown = function(event) {
+        console.log("touchdown");
         event.preventDefault();
         event.stopPropagation();
 
@@ -255,6 +256,7 @@ var ToolsController = function(visuals_controller) {
 
     // SELECT: When the mouse is down and moved, append a new vertext to the current visual
     var drawMouseMove = function(event) {
+        console.log('touchmove');
         event.preventDefault();
         event.stopPropagation();
 
@@ -276,6 +278,7 @@ var ToolsController = function(visuals_controller) {
 
     // DRAW: When the mouse is released, clear the handlers and add the completed visual
     var drawMouseUp = function(event) {
+        console.log('touchend');
         event.preventDefault();
         event.stopPropagation();
 
