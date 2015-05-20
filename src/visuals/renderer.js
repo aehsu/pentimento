@@ -85,13 +85,15 @@ var Renderer = function(visuals_controller) {
                 transformMatrix[0][2], transformMatrix[1][2]
             );
         }
+        
+        var defaultProperties = visual.getPropertiesAtTime(tVisual);
 
         if (typeof alternateColor === 'undefined' ) {
-            alternateColor = visual.getProperties().getColor();
+            alternateColor = defaultProperties.getColor();
         };
 
         if (typeof alternateWidth === 'undefined' ) {
-            alternateWidth = visual.getProperties().getWidth();
+            alternateWidth = defaultProperties.getWidth();
         };
 
         switch(visual.getType()) {
