@@ -41,6 +41,8 @@ var LectureModel = function() {
             retimer_model: retimerModel.saveToJSON()
         };
 
+        console.log(JSON.stringify(json_object));
+
         return json_object;
     };
 

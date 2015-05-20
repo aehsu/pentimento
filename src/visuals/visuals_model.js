@@ -77,7 +77,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
             return false;
         }
 
-        slides.splice(index, 0, newSlide);
+        slides.splice(insert_index, 0, newSlide);
 
         undoManager.registerUndoAction(self, self.removeSlide, [newSlide]);
 

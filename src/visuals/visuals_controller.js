@@ -155,6 +155,18 @@ var VisualsController = function(visuals_model, retimer_model) {
         if (!result) {
             console.error("slide could not be inserted");
         };
+
+        // Clear the canvas for a new slide
+        var context = self.canvas[0].getContext('2d');
+        var canvas_width = visualsModel.getCanvasSize().width;
+        var canvas_height = visualsModel.getCanvasSize().height;
+
+        console.log("widht: " + canvas_width);
+        context.clearRect(0, 0, canvas_width, canvas_height);
+
+        context.rect(0, 0, canvas_width, canvas_height);
+        context.fillStyle = "white";
+        context.fill();
     };
 
     // this.shiftSlideDuration = function(slide, amount) {
