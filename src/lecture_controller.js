@@ -48,7 +48,7 @@ var LectureController = function() {
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
 
-    ///////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////ac/////////////
     // Initialization
     //
     // The lecture controller can be initialized from scratch or from a saved file.
@@ -61,9 +61,12 @@ var LectureController = function() {
 
         // Reset the undo manager and register the change listener to update buttons.
         // onchange is called anytime an undo action is registered or performed.
-        undoManager.clearUndo();
-        undoManager.clearRedo();
-        undoManager.onchange = updateButtons;
+        
+        // undoManager.clearUndo();
+        // undoManager.clearRedo();
+
+        undoManager.addListener('actionDone', updateButtons);
+        undoManager.addListener('operationDone', updateButtons);
 
         // Initialize the controllers with their respective models.
         // These controllers might register for time controller or undo manager callbacks, so they should be initialized
@@ -316,12 +319,14 @@ var LectureController = function() {
         };
 
         // Start the undo hierarchy
-        undoManager.beginGrouping();
+        // undoManager.startHierarchy();
 
         var beginTime = timeController.getBeginTime();
 
         // On undo, revert to the begin time
-        undoManager.registerUndoAction(self, changeTime, [beginTime]);
+        undoManager.add(function(){
+            changeTime(beginTime);
+        });
 
         // Notify controllers depending on the recording types 
         if (self.recordingTypeIsVisuals()) {  // visuals
@@ -364,7 +369,8 @@ var LectureController = function() {
         retimerController.endRecording(endTime);
 
         // End the undo hierarchy
-        undoManager.endGrouping();
+        // TODO: Jonathan: is this a group?
+        // undoManager.endGrouping();
 
         // Update the UI buttons
         updateButtons();
@@ -479,7 +485,9 @@ var LectureController = function() {
     var changeTime = function(time) {
 
         // Create an undo call to revert to the previous time
-        undoManager.registerUndoAction(self, changeTime, [timeController.getTime()]);
+        undoManager.add(function(){
+            changeTime(timeController.getTime())
+        });
 
         // Update the time
         timeController.updateTime(time);
@@ -557,14 +565,14 @@ var LectureController = function() {
         // Hide/unhide the playback start/stop buttons
 
         // Enable or disable the undo/redo buttons
-        if (undoManager.canUndo()) {
+        if (undoManager.canUndo() !== false) {
             $('#'+undoButtonID).removeClass(hiddenClass);
             $('#'+undoDisabledButtonID).addClass(hiddenClass);
         } else {
             $('#'+undoButtonID).addClass(hiddenClass);
             $('#'+undoDisabledButtonID).removeClass(hiddenClass);
         };
-        if (undoManager.canRedo()) {
+        if (undoManager.canRedo() !== false) {
             $('#'+redoButtonID).removeClass(hiddenClass);
             $('#'+redoDisabledButtonID).addClass(hiddenClass);
         } else {
@@ -646,7 +654,8 @@ var undoManager;
 $(document).ready(function() {
 
     // Create the undo manager
-    undoManager = new UndoManager();
+    // undoManager = new UndoManager();
+    undoManager = getUndoManager([], true);
 
     // Create and initialize the lecture controller
     lectureController = new LectureController();

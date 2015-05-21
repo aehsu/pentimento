@@ -241,7 +241,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         var current_time = self.currentVisualTime();
 
-        undoManager.beginGrouping();
+        undoManager.startHierarchy('coalesce');
 
         // Push the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
@@ -260,7 +260,7 @@ var VisualsController = function(visuals_model, retimer_model) {
             visual.pushSpatialTransform(new_transform);
         };
 
-        undoManager.endGrouping();
+        undoManager.endHierarchy('coalesce');
 
         // Redraw at the current time
         self.drawVisuals(current_time);
@@ -269,7 +269,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Transform the visuals in the selection while in editing mode.
     this.editingSpatialTransformSelection = function(transform_matrix) {
 
-        undoManager.beginGrouping();
+        undoManager.startHierarchy('coalesce');
 
         // Apply the transform to the selected visuals
         for (var i = 0; i < self.selection.length; i++) {
@@ -277,7 +277,7 @@ var VisualsController = function(visuals_model, retimer_model) {
             visual.applySpatialTransform(transform_matrix);
         };
 
-        undoManager.endGrouping();
+        undoManager.endHierarchy('coalesce');
 
         // Redraw at the current time
         self.drawVisuals();
@@ -287,14 +287,14 @@ var VisualsController = function(visuals_model, retimer_model) {
     // This pushes a property transform onto the selected visuals
     this.recordingPropertyTransformSelection = function(visual_property_transform) {
 
-        undoManager.beginGrouping();
+        undoManager.startHierarchy('coalesce');
 
         for(var i in self.selection) {
             var visual = self.selection[i];
             visual.pushPropertyTransform(visual_property_transform);
         };
 
-        undoManager.endGrouping();
+        undoManager.endHierarchy('coalesce');
 
         // Redraw to show the update
         self.selection = [];
@@ -304,14 +304,14 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Changes the properties of the selection of visuals during editing
     this.editingPropertyTransformSelection = function(property_name, new_value) {
 
-        undoManager.beginGrouping();
+        undoManager.startHierarchy('coalesce');
 
         for(var i in self.selection) {
             var visual = self.selection[i];
             visual.applyPropertyTransform(property_name, new_value);
         };
 
-        undoManager.endGrouping();
+        undoManager.endHierarchy('coalesce');
 
         // Redraw to show the update
         self.selection = [];

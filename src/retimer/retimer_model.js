@@ -83,7 +83,9 @@ var RetimerModel = function() {
             constraint.setTVisual(oldTVisual);
         } else {
             // For the undo action, set the constraint's visual time to the old value.
-            undoManager.registerUndoAction(self, self.updateConstraintVisualsTime, [constraint, audioTimeCorrespondingToOldVisualsTime]);
+            undoManager.add(function(){
+                self.updateConstraintVisualsTime(constraint, audioTimeCorrespondingToOldVisualsTime)
+            });
         };
 
         // Return whether the update was valid
@@ -119,7 +121,9 @@ var RetimerModel = function() {
             constraint.setTAudio(oldTAudio);
         } else {
             // For the undo action, set the constraint's audio time to the old value.
-            undoManager.registerUndoAction(self, self.updateConstraintAudioTime, [constraint, oldTAudio]);
+            undoManager.add(function(){
+                self.updateConstraintAudioTime(constraint, oldTAudio);
+            });
         };
 
         // Return whether the update was valid
@@ -144,7 +148,9 @@ var RetimerModel = function() {
 		constraints.splice(index, 0, constraint);
 
         // For the undo action, delete the added constraint
-        undoManager.registerUndoAction(self, self.deleteConstraint, [constraint]);
+        undoManager.add(function(){
+            self.deleteConstraint(constraint);
+        });
 
 		return true;
 	}
@@ -155,7 +161,9 @@ var RetimerModel = function() {
 		constraints.splice(index, 1);
 
         // For the undo action, add the deleted constraint
-        undoManager.registerUndoAction(self, self.addConstraint, [constraint]);
+        undoManager.add(function(){
+            self.addConstraint(constraint);
+        });
 	};
 
 	this.shiftConstraints = function(constraints, amount) {
@@ -166,7 +174,9 @@ var RetimerModel = function() {
 		};
 
         // For the undo action, reverse shift the constraints
-        undoManager.registerUndoAction(self, self.shiftConstraints, [constraints, -amount]);
+        undoManager.add(function(){
+            self.shiftConstraints(constraints, -amount);
+        });
 	};
 
 	this.getConstraintsIterator = function() {
