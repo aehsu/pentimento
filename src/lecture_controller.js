@@ -483,10 +483,10 @@ var LectureController = function() {
     // the previous time. This function helps achieve that by wrapping around
     // a call to the time controller and the undo manager.
     var changeTime = function(time) {
-
         // Create an undo call to revert to the previous time
+	var lastTime = timeController.getTime();
         undoManager.add(function(){
-            changeTime(timeController.getTime())
+            changeTime(lastTime)
         });
 
         // Update the time
