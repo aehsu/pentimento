@@ -8,7 +8,7 @@ var LectureModel = function() {
     var retimerModel = null;
 
     var init = function() {
-        visualsModel = new VisualsModel(800, 500);
+        visualsModel = new VisualsModel(915, 500);
         audioModel = new AudioModel();
         retimerModel = new RetimerModel();
     };

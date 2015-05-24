@@ -124,8 +124,8 @@ div.segment_handle {
     height: 10px;
     border-style: ridge;
     border-width: 2px;
-    border-color: crimson;
-    background-color: darkorange;
+    border-color: #2E9AFE;
+    background-color: #2E9AFE;
     cursor: move;
     margin: 0;
     padding: 0;

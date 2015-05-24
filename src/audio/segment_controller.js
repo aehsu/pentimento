@@ -229,7 +229,7 @@ var AudioSegmentController = function(segment, trackController) {
         wavesurfer = Object.create(WaveSurfer);
         wavesurfer.init({
             container: ws_container[0],
-            waveColor: 'violet',
+            waveColor: '#848484',
             progressColor: 'purple',
             height: parseInt(ws_container.css('height')),
             minPxPerSec: 1
