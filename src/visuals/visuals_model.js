@@ -50,7 +50,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
         var tSlideStart = 0;
         var tSlideEnd = slide.getDuration();
         
-        if (time > tSlideStart && time <= tSlideEnd) {
+        if (time >= tSlideStart && time < tSlideEnd) {
             return slide;
         }
         
@@ -59,12 +59,16 @@ var VisualsModel = function(canvas_width, canvas_height) {
             tSlideStart = tSlideEnd;
             tSlideEnd += slide.getDuration();
             
-            if (time > tSlideStart && time <= tSlideEnd) {
+            if (time >= tSlideStart && time < tSlideEnd) {
                 return slide;
             }
         }
         
         return slides[slides.length - 1];
+    }
+    
+    this.getIndexOfSlide = function(slide) {
+        return slides.indexOf(slide);
     }
     
     this.insertSlide = function(newSlide, insert_index) {
@@ -625,6 +629,32 @@ var Visual = function(tmin, props) {
         undoManager.add(function(){
             self.pushPropertyTransform(transform);
         });
+    };
+
+    // Returns the properties at the given time (non-interpolated)
+    this.getPropertiesAtTime = function(time) {
+        
+        var result = new VisualProperty(properties.getColor(), properties.getWidth());
+
+        // Apply all property transforms until time.
+        for (var i = 0; i < propertyTransforms.length; i++) {
+            var propertyTransform = propertyTransforms[i];
+            
+            if (propertyTransform.getTime() < time) {
+                switch (propertyTransform.getPropertyName()) {
+                    case VisualPropertyTransform.propertyNames.color:
+                        result.setColor(propertyTransform.getValue());
+                        break;
+                    case VisualPropertyTransform.propertyNames.width:
+                        result.setWidth(propertyTransform.getValue());
+                        break;
+                }
+            } else {
+                break;
+            }
+        };
+
+        return result;
     };
 
     // The rule is that visuals are visible exactly ON their tMin, not later

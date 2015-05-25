@@ -141,6 +141,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
         // Get the previous slide and create a new slide
         var previousSlide = visualsModel.getSlideAtTime(slideBeginTime);
+        var previousSlideIndex = visualsModel.getIndexOfSlide(previousSlide);
 
         var newSlide = new Slide();
         if (!previousSlide) { 
@@ -151,7 +152,7 @@ var VisualsController = function(visuals_model, retimer_model) {
         previousSlide.setDuration(previousSlide.getDuration() + diff);
         
         // Insert the slide into the model
-        var result = visualsModel.insertSlide(previousSlide, newSlide);
+        var result = visualsModel.insertSlide(newSlide, previousSlideIndex + 1);
         if (!result) {
             console.error("slide could not be inserted");
         };
