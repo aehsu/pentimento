@@ -49,155 +49,154 @@
 
 <body>
 
-    <div id="lectureToolsContainer">
-        <input id="startRecord" type="image" src="icons/media_record.png" class="lecture-tool">
-        <input id="stopRecord" type="image" src="icons/media_playback_stop.png" class="lecture-tool">
+    <div id="main_recording_container">
 
-        <table>
-            <tr>
-                <td>
-                    <input type="checkbox" id="visuals_checkbox" checked><span class="ui-label">Visuals</span>
-                    <input type="checkbox" id="auto_record_checkbox"><span class="ui-label">Auto</span><br>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <input type="checkbox" id="audio_checkbox" checked><span class="ui-label">Audio</span>
-                </td>
-            </tr>
-        </table>
+        <div id="lectureToolsContainer">
+            <label class="ui-heading" id="lecture-tools-heading">Lecture Tools</label><br>
+            <hr width="80%">
 
-        <input id="startPlayback" type="image" src="icons/media_playback_start.png" class="lecture-tool">
-        <input id="stopPlayback" type="image" src="icons/pause.png" class="lecture-tool">
+            <input id="startRecord" type="image" src="icons/media_record.png" class="lecture-tool">
+            <input id="stopRecord" type="image" src="icons/media_playback_stop.png" class="lecture-tool"><br>
 
-        <table>
-            <tr><td><input type="checkbox"><span class="ui-label">No Pause</span></td></tr>
-            <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
-        </table>
-        
-        <input id="undo" type="image" src="icons/undo.png" class="lecture-tool">
-        <input id="undo_inactive" type="image" src="icons/undo-inactive.png" class="lecture-tool hidden" disabled="true">
+            <input type="checkbox" id="visuals_checkbox" checked><span class="ui-label">Visuals</span><br>
+            <input type="checkbox" id="audio_checkbox" checked><span class="ui-label">Audio</span><br>
 
-        <input id="redo" type="image" src="icons/redo.png" class="lecture-tool">
-        <input id="redo_inactive" type="image" src="icons/redo-inactive.png" class="lecture-tool hidden" disabled="true">
 
-        <input id="save" type="image" src="icons/save.png" class="lecture-tool">
-        
-        <label class="open-file">
-            <input id="file-opener" type="file" required/>
-            <span><img src="icons/open.png" class="lecture-tool"></span>
-        </label>
+            <input id="startPlayback" type="image" src="icons/media_playback_start.png" class="lecture-tool">
+            <input id="stopPlayback" type="image" src="icons/pause.png" class="lecture-tool"><br>
 
-        <button id="help_button" class="retiming_button audio_button btn btn-primary">
-            Help
-        </button>
+    <!--         <table>
+                <tr><td><input type="checkbox"><span class="ui-label">No Pause</span></td></tr>
+                <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
+            </table> -->
+            
+            <input id="undo" type="image" src="icons/undo.png" class="lecture-tool">
+            <input id="undo_inactive" type="image" src="icons/undo-inactive.png" class="lecture-tool hidden" disabled="true">
 
-        <!-- The help dialog is hidden until the help butotn is pressed -->
-        <div id="help_dialog">
-            <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
-            <p> Blue lines are boundaries of audio segments. Top is beginning, bottom is end. Drag to trim the segment and change when it starts or ends. </p>
-            <p> Select a time interval and delete its audio with the delete key. To delete both audio and visuals, use command delete. </p>
-        </div>
-    </div>
+            <input id="redo" type="image" src="icons/redo.png" class="lecture-tool">
+            <input id="redo_inactive" type="image" src="icons/redo-inactive.png" class="lecture-tool hidden" disabled="true"><br>
 
-    <!-- VISUALS (canvas and visuals tools) -->
-    <div id="visualsContainer">
+            <input id="save" type="image" src="icons/save.png" class="lecture-tool"><br>
+            
+            <label class="open-file">
+                <input id="file-opener" type="file" required/>
+                <span><img src="icons/open.png" class="lecture-tool"></span>
+            </label><br>
 
-        <!-- visuals recording tools -->
-        <div id="visualsRecordingTools">
-            <div id="recording-heading">
-                <label class="ui-heading" id="recording-tools-heading">Recording Tools</label><br>
+            <button id="help_button" class="lecture_button audio_button btn btn-primary">
+                Help
+            </button><br>
+
+            <!-- The help dialog is hidden until the help butotn is pressed -->
+            <div id="help_dialog">
+                <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
+                <p> Blue lines are boundaries of audio segments. Top is beginning, bottom is end. Drag to trim the segment and change when it starts or ends. </p>
+                <p> Select a time interval and delete its audio with the delete key. To delete both audio and visuals, use command delete. </p>
             </div>
 
-            <hr width="80%">
+            <input id="ticker" value="00:00.000" size="8" autocomplete="off" onfocus="this.blur()"></input>
 
-            <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
-            <label class="ui-label">Select</label><br>
-
-            <input type="image" src="icons/feather-2.png" class="visuals-tool" data-toolname="pen"><br>
-            <label class="ui-label">Pen</label><br>
-
-            <input type="image" src="icons/highlighter.png" class="visuals-tool" data-toolname="highlight"><br>
-            <label class="ui-label">Highlighter</label><br>
-
-            <input type='text' class="visuals-tool" data-toolname="color" /><br>
-            <label class="ui-label">Select Color</label><br>
-
-            <img src="icons/width.png" class="visuals-tool" disabled="true"><br>
-            <select class="visuals-tool" data-toolname="width">
-                <option value="2">2</option>
-                <option value="4">4</option>
-                <option value="6">6</option>
-                <option value="8">8</option>
-                <option value="10">10</option>
-                <option value="12">12</option>
-                <option value="14">14</option>
-                <option value="16">16</option>
-                <option value="18">18</option>
-                <option value="20">20</option>
-            </select><br>
-            <label class="ui-label">Stroke Width</label><br>
-
-            <input type="image" src="icons/delete-visuals.png" class="visuals-tool" data-toolname="delete"><br>
-            <label class="ui-label">Delete Visual</label><br>
-
-            <input type="image" src="icons/pageDown.png" class="visuals-tool" data-toolname="add-slide"><br>
-            <label class="ui-label">Add Slide</label><br>
         </div>
 
-        <!-- visuals editing tools -->
-        <div id="visualsEditingTools">
-            <label class="ui-heading">Editing Tools</label><br>
-
-            <hr width="80%">
-
-            <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
-            <label class="ui-label">Select</label><br>
-
-            <input type="image" src="icons/delete-visuals.png" class="visuals-tool" data-toolname="delete"><br>
-            <label class="ui-label">Delete Visual</label><br>
-
-            <input type="image" src="icons/pen.png" class="visuals-tool" data-toolname="redraw"><br>
-            <label class="ui-label">Redraw Selection</label><br>
-
-            <input type='text' class="visuals-tool" data-toolname="color" /><br>
-            <label class="ui-label">Select Color</label><br>
-
-            <img src="icons/width.png" class="visuals-tool" disabled="true"><br>
-            <select class="visuals-tool" data-toolname="width" >
-                <option value="2">2</option>
-                <option value="4">4</option>
-                <option value="6">6</option>
-                <option value="8">8</option>
-                <option value="10">10</option>
-                <option value="12">12</option>
-                <option value="14">14</option>
-                <option value="16">16</option>
-                <option value="18">18</option>
-                <option value="20">20</option>
-            </select><br>
-            <label class="ui-label">Stroke Width</label><br>
-
-            <input type="image" src="icons/trashPage.png" class="visuals-tool" data-toolname="delete-slide"><br>
-            <label class="ui-label">Delete Slide</label><br>
-
-            <input type="image" src="icons/scratch.png" class="visuals-tool" data-toolname="delete"><br>
-            <label class="ui-label">Delete Last Recording</label><br>
-        </div>
-
-        <!-- canvas -->
         <div id="sketchpadWrap">
             <canvas id="sketchpad"></canvas>
             <div id="sketchpadOverlay">
                 <div id="selectionBox"></div>
             </div>
         </div>
+
+        <!-- VISUALS (canvas and visuals tools) -->
+        <div id="visualsContainer">
+            <!-- canvas -->
+
+            <!-- visuals recording tools -->
+            <div id="visualsRecordingTools">
+                <div id="recording-heading">
+                    <label class="ui-heading" id="recording-tools-heading">Recording Tools</label><br>
+                </div>
+
+                <hr width="80%">
+
+                <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
+                <label class="ui-label">Select</label><br>
+
+                <input type="image" src="icons/feather-2.png" class="visuals-tool" data-toolname="pen"><br>
+                <label class="ui-label">Pen</label><br>
+
+                <input type="image" src="icons/highlighter.png" class="visuals-tool" data-toolname="highlight"><br>
+                <label class="ui-label">Highlighter</label><br>
+
+                <input type='text' class="visuals-tool" data-toolname="color" /><br>
+                <label class="ui-label">Select Color</label><br>
+
+                <img src="icons/width.png" class="visuals-tool" disabled="true"><br>
+                <select class="visuals-tool" data-toolname="width">
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                </select><br>
+                <label class="ui-label">Stroke Width</label><br>
+
+                <input type="image" src="icons/delete-visuals.png" class="visuals-tool" data-toolname="delete"><br>
+                <label class="ui-label">Delete Visual</label><br>
+
+                <input type="image" src="icons/pageDown.png" class="visuals-tool" data-toolname="add-slide"><br>
+                <label class="ui-label">Add Slide</label><br>
+            </div>
+
+            <!-- visuals editing tools -->
+            <div id="visualsEditingTools">
+                <label class="ui-heading">Editing Tools</label><br>
+
+                <hr width="80%">
+
+                <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
+                <label class="ui-label">Select</label><br>
+
+                <input type="image" src="icons/delete-visuals.png" class="visuals-tool" data-toolname="delete"><br>
+                <label class="ui-label">Delete Visual</label><br>
+
+                <input type="image" src="icons/pen.png" class="visuals-tool" data-toolname="redraw"><br>
+                <label class="ui-label">Redraw Selection</label><br>
+
+                <input type='text' class="visuals-tool" data-toolname="color" /><br>
+                <label class="ui-label">Select Color</label><br>
+
+                <img src="icons/width.png" class="visuals-tool" disabled="true"><br>
+                <select class="visuals-tool" data-toolname="width" >
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                </select><br>
+                <label class="ui-label">Stroke Width</label><br>
+
+                <input type="image" src="icons/trashPage.png" class="visuals-tool" data-toolname="delete-slide"><br>
+                <label class="ui-label">Delete Slide</label><br>
+
+                <input type="image" src="icons/scratch.png" class="visuals-tool" data-toolname="delete"><br>
+                <label class="ui-label">Delete Last Recording</label><br>
+            </div>
+
+        </div>
+
     </div>
 
     <!-- AUDIO (retimer views, thumbnail and constraints, are displayed as plugins in the audio timeline) -->
     <div id="audio_container">
-        <input id="ticker" value="00:00.000" size="10" autocomplete="off" onfocus="this.blur()"></input>
-        <br>
         <div id="audio_timeline"></div>
         <br>
     </div>

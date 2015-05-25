@@ -8,7 +8,11 @@ var LectureModel = function() {
     var retimerModel = null;
 
     var init = function() {
-        visualsModel = new VisualsModel(915, 500);
+
+        var totalWidth = $(window).width();
+        var sketchpadWidth = 0.85 * totalWidth;
+
+        visualsModel = new VisualsModel(sketchpadWidth, 500);
         audioModel = new AudioModel();
         retimerModel = new RetimerModel();
     };

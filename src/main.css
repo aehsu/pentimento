@@ -27,8 +27,18 @@ button {
 }
 
 #lectureToolsContainer {
-    height: 62px;
-    width: 600px;
+/*    height: 62px;
+    width: 600px;*/
+
+    float: left;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    width: 7%;
+    /*width: 85px;*/
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 #lectureToolsContainer table {
@@ -38,11 +48,22 @@ button {
 }
 
 .lecture-tool {
-    max-height: 40px;
-    margin-top:10px;
+    max-height: 35px;
+    margin-top:7px;
 }
+
 
 label.open-file input[type="file"] {
     position: fixed;
     top: -1000px;
 }
+
+.lecture-button{
+    height: 35px;
+    margin-top: 7px;
+}
+
+#ticker {
+    margin-top: 7px;
+    text-align: center
+};
