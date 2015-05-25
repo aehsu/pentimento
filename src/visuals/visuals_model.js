@@ -83,9 +83,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
 
         slides.splice(insert_index, 0, newSlide);
 
-        undoManager.add(function(){
-            self.removeSlide(newSlide);
-        });
+        undoManager.registerUndoAction(self, self.removeSlide, [newSlide]);
 
         return true;
     };
@@ -103,9 +101,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
 
         slides.splice(index, 1);
 
-        undoManager.add(function(){
-            self.insertSlide(slide, index);
-        });
+        undoManager.registerUndoAction(self, self.insertSlide, [slide, index]);
 
         return true;
     };
@@ -123,9 +119,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
             slide.getVisuals().push(visual);
         };
 
-        undoManager.add(function(){
-            self.deleteVisuals(visuals);
-        });
+        undoManager.registerUndoAction(self, self.deleteVisuals, [visuals]);
     };
 
     this.deleteVisuals = function(visuals) {
@@ -143,25 +137,21 @@ var VisualsModel = function(canvas_width, canvas_height) {
             slide.getVisuals().splice(index, 1);
         };
 
-        undoManager.add(function(){
-            self.addVisuals(visuals);
-        });
+        undoManager.registerUndoAction(self, self.addVisuals, [visuals]);
     };
 
     // Visuals time can be null to indicate the lack of a deletion time
     this.visualsSetTDeletion = function(visual, visuals_time) {
 
-        undoManager.startHierarchy('coalesce');
+        undoManager.beginGrouping();
 
         for(var i in self.selection) {
             var visual = self.selection[i];
-            undoManager.add(function(){
-                visual.setTDeletion(visual.getTDeletion());
-            });
+            undoManager.registerUndoAction(visual, visual.setTDeletion, [visual.getTDeletion()]);
             visual.setTDeletion(visuals_time);
         };
 
-        undoManager.endHierarchy('coalesce');
+        undoManager.endGrouping();
     };
 
     // Creates wrappers around the visuals that keeps track of their previous time
@@ -251,9 +241,7 @@ var VisualsModel = function(canvas_width, canvas_height) {
             doShiftVisual(visuals[i], amount);
         };
 
-        undoManager.add(function(){
-            self.shiftVisuals(visuals, -amount);
-        });
+        undoManager.registerUndoAction(self, self.shiftVisuals, [visuals, -amount]);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -418,9 +406,7 @@ var Slide = function() {
     this.setVisuals = function(newVisuals) { visuals = newVisuals; }
 
     this.setDuration = function(newDuration) {
-        undoManager.add(function(){
-            self.setDuration(duration);
-        });
+        undoManager.registerUndoAction(self, self.setDuration, [duration]);
         duration = newDuration;
     }
 
@@ -527,18 +513,14 @@ var Visual = function(tmin, props) {
         };
         spatialTransforms.splice(insert_index, 0, transform);
 
-        undoManager.add(function(){
-            self.removeSpatialTransform(transform.getTime());
-        });
+        undoManager.registerUndoAction(self, self.removeSpatialTransform, [transform.getTime()]);
     };
 
     // Remove the spatial transform that is active at the specified time
     this.removeSpatialTransform = function(time) {
         // TODO
 
-        undoManager.add(function(){
-            self.pushSpatialTransform(transform);
-        });
+        undoManager.registerUndoAction(self, self.pushSpatialTransform, [transform]);
     };
 
     // Returns the spatial transform at the given time (non-interpolated)
@@ -585,9 +567,7 @@ var Visual = function(tmin, props) {
                 return;
         }
 
-        undoManager.add(function(){
-            self.applyPropertyTransform(property_name, old_value);
-        });
+        undoManager.registerUndoAction(self, self.applyPropertyTransform, [property_name, old_value]);
     };
 
     // Push a property transform that has a time when it becomes active.
@@ -626,9 +606,7 @@ var Visual = function(tmin, props) {
             return spatialTransforms[return_index-1];
         };
 
-        undoManager.add(function(){
-            self.pushPropertyTransform(transform);
-        });
+        undoManager.registerUndoAction(self, self.pushPropertyTransform, [transform]);
     };
 
     // Returns the properties at the given time (non-interpolated)
@@ -764,9 +742,7 @@ var StrokeVisual = function(tmin, props) {
         };
 
         // For the undo operation, apply the inverse transform
-        undoManager.add(function(){
-            self.applySpatialTransform(math.inv(transformMatrix));
-        });
+        undoManager.registerUndoAction(self, self.applySpatialTransform, [math.inv(transformMatrix)]);
     };
 
     // Saving the model to JSON

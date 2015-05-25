@@ -2,29 +2,21 @@
 //TODO: think about cases where methods on stack refer to things that no longer exist. Is this possible, or will the things
 // be re-created before getting to that point on the stack?
 //TODO: API/HowTo PAGE
-
-var getUndoManager = function(groupTypes, debug) {
-    'use strict';
+"use strict";
+    
+var getUndoManager = function(debug) {
 
     if (isUndefined(debug)){
         debug = false; // keeps track of whether debug mode is on or off
     } 
 
-    var suppressWarnings = false; // if true, don't show debug warnings
-
     // Used to display a warning in the console, but only if debug mode is on.
     // msg - the message to display in the warning
     // The console text will read "WARNING: " followed by msg.
     var displayDebugWarning = function(msg) {
-        if (debug && !suppressWarnings) {
+        if (debug) {
             console.log("WARNING: " + msg);
         }
-    }
-
-    // the group titles are the same as the group types by default. These can be changed with the setGroupTitle function.
-    var groupTitles = {};
-    for (var i in groupTypes) {
-        groupTitles[groupTypes[i]] = groupTypes[i];
     }
 
     // These stacks hold objects that represent the actions that can be undone or redone.
@@ -46,113 +38,12 @@ var getUndoManager = function(groupTypes, debug) {
 
     var hierarchyOrder = []; // keeps track of the order groups are started in, to help prevent overlapping groups
 
-    var group; // used in a few for loops. Increased scope to prevent it having to be created and destroyed many times.
-
     // Holds the subscribed listeners for each event type. The keys are the valid event types.
-    var listeners = {
-        groupStatusChange: [],
-        operationDone: [],
-        actionDone: []
-    };
-
-    // Calls all the listeners subscribed to the specified event type.
-    var fireEvent = function(type) {
-        if (!(type in listeners)) {
-            throw invalidEventTypeError(type);  
-        }
-        // iterate through and call each listener subscribed to this event type
-        for (var i = 0; i < listeners[type].length; i++) {
-            listeners[type][i]();
-        }
-    };
-
-    // returns the next action object that can be undone
-    var getNextUndo = function() {
-        if (undoStack.length > 0) {
-            return undoStack[undoStack.length-1];
-        }
-        return null;
-    };
-    
-    // returns the next action object that can be redone
-    var getNextRedo = function() {
-        if (redoStack.length > 0) {
-            return redoStack[redoStack.length-1];
-        }
-        return null;
-    };
-
-    // Returns the title that should go on a group undo button.
-    // If all the actions in the group have the same title, that title is returned. 
-    // Otherwise, the group's name is returned.
-    // group - the name of the group to get the undo title for
-    var getGroupUndoTitle = function(group) { //TODO: tests
-        if (undoStack.length <= 0 || getNextUndo().atEndOfGroups.indexOf(group) === -1) {            
-                return group;
-        }   
-
-        var title = null;
-        var index = undoStack.length-1;
-        var atStart = false;
-        // iterate through each action in the group
-        while (!atStart) {
-            if (index < 0 || index >= undoStack.length) {
-                throw indexOutOfBoundsError(index); //TODO: test
-            }
-            if (undoStack[index].inGroups.indexOf(group) === -1) {
-                throw notInGroupError(group); //TODO: test
-            }
-            if (isNull(title)) {
-                title = undoStack[index].title; // set the title if it hasn't been set yet
-            }
-            else if (undoStack[index].title != title) {
-                title = groupTitles[group]; // if the titles aren't the same, return the default group title
-                break;
-            }
-            if (undoStack[index].atStartOfGroups.indexOf(group) !== -1) {
-                atStart = true; // the start of the group has been reached, can stop iterating
-            }
-            index--;
-        }
-        return title;
-    };
-
-    // Returns the title that should go on a group redo button.
-    // If all the actions in the group have the same title, that title is returned. 
-    // Otherwise, the group's name is returned.
-    // group - the name of the group to get the redo title for
-    var getGroupRedoTitle = function(group) { //TODO: tests, combine with getGroupUndoTitle?
-        if (redoStack.length <= 0 || getNextRedo().atStartOfGroups.indexOf(group) === -1) {
-                return null;
-        }   
-
-        var title = null;
-        var index = redoStack.length-1;
-        var atEnd = false;
-
-        // iterate through each action in the group
-        while (!atEnd) {
-            if (index < 0 || index >= redoStack.length) {
-                displayDebugWarning("While getting title, couldn't find end of group: " + group);
-                return title;
-            }
-            if (redoStack[index].inGroups.indexOf(group) === -1) {
-                throw notInGroupError(group); //TODO: test
-            }
-            if (isNull(title)) {
-                title = redoStack[index].title; // set the title if it hasn't been set yet
-            }
-            else if (redoStack[index].title != title) {
-                title = groupTitles[group]; // if the titles aren't the same, return the default group title
-                break;
-            }
-            if (redoStack[index].atEndOfGroups.indexOf(group) !== -1) {
-                atEnd = true; // the start of the group has been reached, can stop iterating
-            }
-            index--;
-        }
-        return title;
-    };
+    // var listeners = {
+    //     groupStatusChange: [],
+    //     operationDone: [],
+    //     actionDone: []
+    // };
 
     // Undoes the last action that was added to the undo stack.
     // hierMode - a boolean that is true when called from within a hierarchy-related function, should be falsy otherwise
@@ -165,7 +56,7 @@ var getUndoManager = function(groupTypes, debug) {
 
         // remove any groups started, but not populated, right before the undo
         for (var i in groupsJustStarted) {
-            group = groupsJustStarted[i];
+            var group = groupsJustStarted[i];
             var index = openGroups.indexOf(group);
             if (index !== -1) {
                 unorderedSplice(openGroups, index, 1);
@@ -298,7 +189,7 @@ var getUndoManager = function(groupTypes, debug) {
         // title: describes the actions just performed   
         add: function(inverse, title) {
             if (!title) {
-                title = "";
+                title = "no title";
             }
             if (undoing) { // if undoing, the action object should go on the redo stack
                 redoStack.push({
@@ -491,20 +382,6 @@ var getUndoManager = function(groupTypes, debug) {
             unorderedSplice(listeners[eventType], index, 1);
             return true;
         },
-        // Switches the debug mode.
-        // Returns a boolean indicating if it is now in debug mode.
-        toggleDebugMode: function() {
-            debug = !debug;
-            return debug;
-        },
-        // Limits the undo and redo stacks to a certain number of operations.
-        // maxLength - the length that the stacks should not exceed. When an operation pushes a stack past this length, 
-        // the oldest operation will be dropped.
-        setStackLimit: function(maxLength) {
-            //TODO
-
-            //TODO: lots of edge cases! (don't cut groups in half, etc)
-        },
         // Returns a boolean indicating if the specified group is currently open.
         isGroupOpen: function(group) {
             return (openGroups.indexOf(group) !== -1);
@@ -541,20 +418,6 @@ var getUndoManager = function(groupTypes, debug) {
                 return getGroupRedoTitle(group);
             }
             return false;
-        },
-        // Stops the undoManager from adding actions to the stacks. If a new action is performed or an old action is 
-        // redone while the undoManager is suspended, it cannot be undone. If an old action is undone while the 
-        // undoManager is suspended, it cannot be redone.
-        suspend: function() {
-            //TODO
-        },
-        // Allows the undoManager to continue adding actions to the stacks.
-        resume: function() {
-            //TODO
-        },
-        // Returns a boolean indicating whether the undoManager is currently suspended or not.
-        isSuspended: function() {
-            //TODO
         },
         // Adds to the action at the beginning of the group on the undoStack, if the group is currently open.
         // group - the name of the group that started with the action that will be added to.
@@ -595,32 +458,8 @@ var getUndoManager = function(groupTypes, debug) {
                 return getNextRedo().title;
             }
             return null;
-        },
-        // set the default title of a group
-        setGroupTitle: function(group, title) {
-            var index = groupTypes.indexOf(group);
-            if (index === -1) {
-                throw notGroupError(group);
-            }
-            groupTitles[group] = title;
-            return true;
-        },
-        // Switches the (boolean) value of suppressWarnings and returns the new value.
-        // (if suppressWarnings is true, debug messages will not be shown)
-        toggleWarningSuppression: function() {
-            suppressWarnings = !suppressWarnings;
-            return suppressWarnings;
         }
     };
-
-    if (debug) {
-        publicFunctions['undo'] = undo;
-        publicFunctions['redo'] = redo;
-    }
     
-    return publicFunctions;  // return the public functions
+    return publicFunctions;
 };
-
-
-// TODO debugger - when group gets renamed
-// option to set title when creating a group <-- this might change the get group title functions

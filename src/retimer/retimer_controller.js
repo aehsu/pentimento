@@ -246,7 +246,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
     var addConstraint = function(audio_time, constraint_type) {
 
-        // FORUMULAS
+            // FORUMULAS
         // // interp_factor = (curr_time-prev_time)/(next_time-prevX)
         // // constraint_tVis = (next_time-prev_time)*interp_factor + prev_tVis
         // // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
@@ -468,7 +468,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         lastValidDragX = originalDragX;
     };
 
-    // Dragging moves one end of the arrow while the other tip remains in place
+    // Dragging moves one of the arrow while the other tip remains in place
     var constraintDrag = function(layer) {
 
         // Get the constraint

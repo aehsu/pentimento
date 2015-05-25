@@ -37,9 +37,7 @@ var AudioModel = function() {
         audio_tracks.splice(insert_index, 0, track);
 
         // For the undo action, remove the track
-        undoManager.add(function(){
-            self.removeTrack(track);
-        });
+        undoManager.registerUndoAction(self, self.removeTrack, [track]);
 
         return true;
     };
@@ -62,9 +60,7 @@ var AudioModel = function() {
         };
 
         // For the undo action, add the track
-        undoManager.add(function(){
-            self.addTrack(track, index);
-        });
+        undoManager.registerUndoAction(self, self.addTrack, [track, index]);
 
         return (index > -1);
     };
@@ -177,7 +173,7 @@ var AudioTrack = function() {
         // This method does not directly modify the audio segments. Instead, it uses
         // othes modifying methods to perform those actions. By using a group, we can
         // combine the undo for all of those actions.
-        undoManager.startHierarchy('coalesce');
+        undoManager.beginGrouping();
 
         // Iterate over all segments for the track to see if the new segment's start time
         // intersects any segments.
@@ -233,7 +229,7 @@ var AudioTrack = function() {
         };
 
         // End the grouping
-        undoManager.endHierarchy('coalesce');
+        undoManager.endGrouping();
 
         return returnValue;
     };
@@ -244,9 +240,7 @@ var AudioTrack = function() {
         audio_segments.push(segment);
 
         // For the undo action, remove the added segment
-        undoManager.add(function(){
-            self.removeSegment(segment);
-        });
+        undoManager.registerUndoAction(self, self.removeSegment, [segment]);
     };
 
     // Remove the specified segment. 
@@ -262,9 +256,7 @@ var AudioTrack = function() {
         audio_segments.splice(index, 1);
 
         // For the undo action, add the removed segment
-        undoManager.add(function(){
-            addSegment(segment);
-        });
+        undoManager.registerUndoAction(self, addSegment, [segment]);
 
         return true;
     };
@@ -341,9 +333,7 @@ var AudioTrack = function() {
         segment.end_time += shift_millisec;
 
         // For the undo action, reverse shift the segment. Don't check for validity.
-        undoManager.add(function(){
-            self.shiftSegment(segment, -shift_millisec, false);
-        });
+        undoManager.registerUndoAction(self, self.shiftSegment, [segment, -shift_millisec, false]);
 
         return true;
 	};
@@ -452,9 +442,7 @@ var AudioTrack = function() {
         console.log('segment after crop: ' + segment.start_time + " " + segment.end_time);
 
         // For the undo action, reverse crop the segment. Don't check for validity.
-        undoManager.add(function(){
-            self.cropSegment(segment, -crop_millisec, left_side, false);
-        });
+        undoManager.registerUndoAction(self, self.cropSegment, [segment, -crop_millisec, left_side, false]);
 
         return true;
 	};
