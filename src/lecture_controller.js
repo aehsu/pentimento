@@ -110,7 +110,8 @@ var LectureController = function() {
                 downloadZip(json_blob, audio_blobs, []);
             };
         };
-        // Use the callback without an argument to start the chain.
+        
+        // Use the callback without an argument to start the chain of downloading.
         audio_download_callback();
 
         // NOTE: downloadZip() is called after the last audio blob finishes loadings.
