@@ -628,10 +628,10 @@ var AudioSegment = function(audio_resource, audio_length, track_start_time) {
 // Loading the model from JSON
 AudioSegment.loadFromJSON = function(json_object) {
     var segment = new AudioSegment(json_object['audio_clip'], json_object['total_audio_length'], 0);
-    self.audio_start_time = json_object['audio_start_time'];
-    self.audio_end_time = json_object['audio_end_time'];
-    self.start_time = json_object['start_time'];
-    self.end_time = json_object['end_time'];
+    segment.audio_start_time = json_object['audio_start_time'];
+    segment.audio_end_time = json_object['audio_end_time'];
+    segment.start_time = json_object['start_time'];
+    segment.end_time = json_object['end_time'];
 
     return segment;
 };
