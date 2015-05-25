@@ -89,24 +89,24 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         canvas.unbind('touchstart', selectArea);
     };
 
-    // var drawTickMarks = function(){
-    //     var canvas = $('#'+constraintsCanvasID);
-    //     var max_time = lectureController.getLectureModel().getLectureDuration();
+    var drawTickMarks = function(){
+        var canvas = $('#'+constraintsCanvasID);
+        var max_tVis = retimerModel.getVisualTime(lectureController.getLectureModel().getLectureDuration());
 
-    //     for(var i=0; i < max_time; i+=150){
-    //          var tVis = retimerModel.getVisualTime(i);
-    //          var xVis = audioController.millisecondsToPixels(tVis);
-    //          canvas.drawLine({  // top handle
-    //             layer: true,
-    //             bringToFront: true,
-    //             strokeStyle: '#BDBDBD',
-    //             strokeWidth: 1,
-    //             rounded: true,
-    //             x1: xVis, y1: 0,
-    //             x2: xVis, y2: 10
-    //         });
-    //     }
-    // }
+        for(var tVis = 0; tVis < max_tVis; tVis += 150) {
+             var tAud = retimerModel.getAudioTime(tVis);
+             var xAud = audioController.millisecondsToPixels(tAud);
+             canvas.drawLine({
+                layer: true,
+                bringToFront: true,
+                strokeStyle: '#BDBDBD',
+                strokeWidth: 1,
+                rounded: true,
+                x1: xAud, y1: 0,
+                x2: xAud, y2: 10
+            });
+        }
+    };
 
     // Draw the constraint on the constraints canvas (for manual/user added constraints)
     // constraint_num: unique id for each constraint added (incremented by the retimer)
@@ -167,7 +167,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Redraw the thumbnails to correspond to the new visual timing
         thumbnailsController.drawThumbnails();
 
-        // drawTickMarks();
+        drawTickMarks();
     };
 
     // Redraw an individual constraint
