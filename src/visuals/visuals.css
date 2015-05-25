@@ -6,12 +6,11 @@
 }
 
 #visualsRecordingTools {
-    float: right;
+    float: left;
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    width: 7%;
-    /*width: 85px;*/
+    width: 85px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -22,12 +21,11 @@
 }
 
 #visualsEditingTools {
-    float: right;
+    float: left;
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    width: 7%;
-    /*width: 85px;*/
+    width: 85px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -38,19 +36,17 @@
 }
 
 #sketchpadWrap {
-    position: absolute;
+    position: relative;
     float: left;
     display: inline-block;
     vertical-align: top;
     border: 1px solid black;
     margin: 0;
     padding: 0;
-    width: 85%;
-    overflow: hidden;
-    height: 500px;
 }
 
 #sketchpad {
+    position: absolute;
     float:left;
     display: inline-block;
     left: 0;

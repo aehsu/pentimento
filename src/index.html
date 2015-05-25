@@ -61,14 +61,8 @@
             <input type="checkbox" id="visuals_checkbox" checked><span class="ui-label">Visuals</span><br>
             <input type="checkbox" id="audio_checkbox" checked><span class="ui-label">Audio</span><br>
 
-
             <input id="startPlayback" type="image" src="icons/media_playback_start.png" class="lecture-tool">
             <input id="stopPlayback" type="image" src="icons/pause.png" class="lecture-tool"><br>
-
-    <!--         <table>
-                <tr><td><input type="checkbox"><span class="ui-label">No Pause</span></td></tr>
-                <tr><td><input type="checkbox"><span class="ui-label">Fast Replay</span></td></tr>
-            </table> -->
             
             <input id="undo" type="image" src="icons/undo.png" class="lecture-tool">
             <input id="undo_inactive" type="image" src="icons/undo-inactive.png" class="lecture-tool hidden" disabled="true">
@@ -98,23 +92,21 @@
 
         </div>
 
-        <div id="sketchpadWrap">
-            <canvas id="sketchpad"></canvas>
-            <div id="sketchpadOverlay">
-                <div id="selectionBox"></div>
-            </div>
-        </div>
-
         <!-- VISUALS (canvas and visuals tools) -->
         <div id="visualsContainer">
             <!-- canvas -->
+            <div id="sketchpadWrap">
+                <canvas id="sketchpad"></canvas>
+                <div id="sketchpadOverlay">
+                    <div id="selectionBox"></div>
+                </div>
+            </div>
 
             <!-- visuals recording tools -->
             <div id="visualsRecordingTools">
                 <div id="recording-heading">
                     <label class="ui-heading" id="recording-tools-heading">Recording Tools</label><br>
                 </div>
-
                 <hr width="80%">
 
                 <input type="image" src="icons/selection.png" class="visuals-tool" data-toolname="select"><br>
@@ -225,14 +217,6 @@
             <select id="track_select"></select>
         </div>
 
-<!--         <div id="playback_controls" class="retimer_controls">
-            <input type="image" src="icons/scratch.png" id="retimer_scratch" class="retiming_button">
-            <input type="image" src="icons/media_playback_start.png" id="retimer_play" class="retiming_button">
-            <input type="image" src="icons/media_playback_stop.png" id="retimer_stop" class="retiming_button">
-            <input type="image" src="icons/media_skip_backward.png" id="retimer_skipback" class="retiming_button">
-            <input type="image" src="icons/media_skip_forward.png" id="retimer_skipahead" class="retiming_button">
-        </div> -->
-
         <div id="retiming_controls" class="retimer_controls">
             <!-- <input type="image" src="icons/beginLink.png" id="sync_start" class="retiming_button">
             <input type="image" src="icons/endLink.png" id="sync_end" class="retiming_button"> -->
@@ -241,28 +225,6 @@
             <input type="image" src="icons/recordAudio.png" id="retimer_record_Audio" class="retiming_button">
             <!-- <input type="image" src="icons/trashLink.png" id="reset_all_syncs" class="retiming_button"> -->
         </div>
-
-<!--         <div id="deletion_controls" class="retimer_controls">
-            <input type="image" src="icons/deleteAudio.png" class="retiming_button">
-            <input type="image" src="icons/autoDeleteSilence.png" class="retiming_button">
-            <input type="image" src="icons/trashAv.png" class="retiming_button">
-        </div>
-
-        <div id="pause_controls" class="retimer_controls">
-            <input type="image" src="icons/addPause.png" class="retiming_button">
-            <input type="image" src="icons/trashPause.png" class="retiming_button">
-            <input type="image" src="icons/tick.png" class="retiming_button">
-            <input type="image" src="icons/trashTick.png" class="retiming_button">
-        </div>
-
-        <div id="temporal_deletion_controls" class="retimer_controls">
-            <input type="image" src="icons/trashPage.png" class="retiming_button">
-            <input type="image" src="icons/trashCursor.png" class="retiming_button">
-        </div>
-
-        <div id="move_visuals" class="retimer_controls">
-            <input type="image" src="icons/moveInTime.png" class="retiming_button">
-        </div> -->
     </div>
 
 </body>

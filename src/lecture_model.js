@@ -9,10 +9,7 @@ var LectureModel = function() {
 
     var init = function() {
 
-        var totalWidth = $(window).width();
-        var sketchpadWidth = 0.85 * totalWidth;
-
-        visualsModel = new VisualsModel(sketchpadWidth, 500);
+        visualsModel = new VisualsModel(915, 500);
         audioModel = new AudioModel();
         retimerModel = new RetimerModel();
     };

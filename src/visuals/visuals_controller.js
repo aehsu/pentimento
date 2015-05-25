@@ -16,6 +16,7 @@ var VisualsController = function(visuals_model, retimer_model) {
     var slideBeginTime = NaN;
 
     // DOM elements
+    var canvasContainerID = 'sketchpadWrap';
     var canvasID = 'sketchpad';
     var canvasOverlayID = 'sketchpadOverlay';  // Used for displaying HTML elements on top of the canvas
     this.canvas = null;
@@ -333,6 +334,8 @@ var VisualsController = function(visuals_model, retimer_model) {
                 .attr('height', visualsModel.getCanvasSize().height);
     self.canvasOverlay = $('#'+canvasOverlayID);
     self.canvasOverlay.css('width', visualsModel.getCanvasSize().width)
+                    .css('height', visualsModel.getCanvasSize().height);
+    $('#'+canvasContainerID).css('width', visualsModel.getCanvasSize().width)
                     .css('height', visualsModel.getCanvasSize().height);
 
     // Get the context from the canvas

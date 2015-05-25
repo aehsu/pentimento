@@ -1,19 +1,19 @@
 #audio_container {
     position: relative;
     margin: 0;
+    margin-left: 85px;
     padding: 0;
 }
 
 #audio_timeline {
     position: relative;
     height: 400px;
-    width: 86%;
+    width: 915px;
     border: 1px solid black;
     overflow-x: scroll;
     /*disable text selection*/
     -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
-    /*margin: 0;*/
-    margin-left: 7%;
+    margin: 0;
     padding: 0;
 }
 
@@ -187,6 +187,11 @@ wave canvas {
     cursor: e-resize;
 }
 
+
+#audio_controls {
+    margin-left: 85px;
+}
+
 .audio_button{
     background: #3498db;
     background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
@@ -221,8 +226,4 @@ wave canvas {
     display: inline-block;
     vertical-align: top;
     text-align: center;
-}
-
-#audio_controls{
-    margin-left: 20%;
 }
