@@ -91,36 +91,51 @@ var LectureController = function() {
         console.log(json_blob);
 
         // Get all of the blobs from the audio model (iterate over segments)
+        // Start with the loading the first blob and use a callback that will load the next blob.
+        // When all blobs are loaded, the zip should be downloaded.
         var audio_urls = lectureModel.getAudioModel().getBlobURLs();
         var audio_blobs = [];
-        for (var i = 0; i < audio_urls.length; i++) {
-            var xhr = new XMLHttpRequest();
-            // xhr.onprogress = calculateAndUpdateProgress;
-            xhr.open('GET', audio_urls[i], true);
-            xhr.responseType = "blob";
-            // When the blob is finished loading, increment the count and add the blob.
-            // After the last one has been loaded, download the zip
-            xhr.onload = function () {
-                var blob = xhr.response;
-                console.log(blob);
-
+        var audio_download_callback = function(blob) {
+            // Add the blob to the list of blobs
+            if (typeof blob !== 'undefined') {
                 audio_blobs.push(blob);
-
-                if (audio_blobs.length === audio_urls.length) {
-                    // Download all the blobs in a zip
-                    downloadZip(json_blob, audio_blobs, []);;
-                };
             };
-            xhr.send(null);
+
+            // If there are more blobs to download, then call the loadBlob function with the next URL.
+            // Else all the blobs are done loading, and the zip should be downloaded.
+            if (audio_blobs.length < audio_urls.length) {
+                var index = audio_blobs.length;
+                loadBlob(audio_urls[index], audio_download_callback);
+            } else {
+                downloadZip(json_blob, audio_blobs, []);
+            };
         };
+        // Use the callback without an argument to start the chain.
+        audio_download_callback();
 
         // NOTE: downloadZip() is called after the last audio blob finishes loadings.
-        // TODO: this needs to be modified to do this after downloading image blobs
+        // TODO: this needs to be modified to do this after downloading image blobs.
+        //          This can be done by creating an image download callback function and replacing the
+        //          downloadZip function in the audio_download_callback function with the image download callback.
+        //          The image download callback will then be responsible for calling download zip in the same manner as before.
+    };
 
-        // Returns a blob from the URL
-        // var blobFromURL = function(blob_url) {
+    // Helper method for loading a blob from a URL
+    // This method takes a callback that will be called when it is finished downloading.
+    // This callback should take the loaded blob as an argument: function(blob)
+    var loadBlob = function(url, callback) {
+        var xhr = new XMLHttpRequest();
+        // xhr.onprogress = calculateAndUpdateProgress;
+        xhr.open('GET', url, true);
+        xhr.responseType = "blob";
 
-        // };
+        // When the response is loaded, call the callback with the blob as an argument
+        xhr.onload = function () {
+            var blob = xhr.response;
+            console.log(blob);
+            callback(blob);
+        };
+        xhr.send(null);
     };
 
     // Takes in blobs and and create and save a zip to disk
