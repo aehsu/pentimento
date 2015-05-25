@@ -88,6 +88,16 @@
             <span><img src="icons/open.png" class="lecture-tool"></span>
         </label>
 
+        <button id="help_button" class="retiming_button audio_button btn btn-primary">
+            Help
+        </button>
+
+        <!-- The help dialog is hidden until the help butotn is pressed -->
+        <div id="help_dialog">
+            <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
+            <p> Blue lines are boundaries of audio segments. Top is beginning, bottom is end. Drag to trim the segment and change when it starts or ends. </p>
+            <p> Select a time interval and delete its audio with the delete key. To delete both audio and visuals, use command delete. </p>
+        </div>
     </div>
 
     <!-- VISUALS (canvas and visuals tools) -->
@@ -191,7 +201,6 @@
         <div id="audio_timeline"></div>
         <br>
     </div>
-    <br>
 
     <!--RETIMER controls-->
     <div id="retimer-audio_controls_container">
@@ -255,13 +264,6 @@
         <div id="move_visuals" class="retimer_controls">
             <input type="image" src="icons/moveInTime.png" class="retiming_button">
         </div> -->
-
-        <div id="help" class="retimer_controls">
-            <p> Vertical arrows are constraints between audio and visual time. Drag origin ellipses to change audio time. Drag arrowheds to change corresponding visual time. </p>
-            <p> Blue lines are boundaries of audio segments. Top is beginning, bottom is end. Drag to trim the segment and change when it starts or ends. </p>
-            <p> Select a time interval and delete its audio with the delete key. To delete both audio and visuals, use command delete. </p>
-        </div>
-
     </div>
 
 </body>

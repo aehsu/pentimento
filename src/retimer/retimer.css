@@ -3,6 +3,11 @@
     margin-bottom: 30px;
 }
 
+#retimer-audio_controls_container {
+    margin: 0;
+    padding: 0;
+}
+
 .retimer_controls{
     border: 1px solid #000000;
     display: inline-block;

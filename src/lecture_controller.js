@@ -47,6 +47,8 @@ var LectureController = function() {
     var fileOpenerID = 'file-opener';
     var recordingAudioCheckboxID = 'audio_checkbox';
     var recordingVisualsCheckboxID = 'visuals_checkbox';
+    var helpButtonID = 'help_button';
+    var helpDialogID = 'help_dialog';
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization
@@ -533,6 +535,21 @@ var LectureController = function() {
 
         // Open button handler
         $('#'+fileOpenerID).change(load);
+
+        // Help dialog which stays hidden initially
+        $('#'+helpDialogID).dialog({
+            title: "Guide",
+            modal: true, 
+            draggable: false,
+            resizable: false,
+            minWidth: 600
+        }).dialog('close');
+
+
+        // Help button handler which opens the help dialog
+        $('#'+helpButtonID).click(function() {
+            $('#'+helpDialogID).dialog('open');
+        });
     };
 
     // Updates the buttons to reflect the current state of recording or playback
