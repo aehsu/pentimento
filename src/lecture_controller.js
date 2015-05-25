@@ -318,7 +318,7 @@ var LectureController = function() {
             return false;
         };
 
-        // Start the undo hierarchy
+        // Start the undo hierarchy so that an undo after recording ends will undo the entire recording
         // undoManager.startHierarchy();
 
         var beginTime = timeController.getBeginTime();
@@ -368,8 +368,7 @@ var LectureController = function() {
         };
         retimerController.endRecording(endTime);
 
-        // End the undo hierarchy
-        // TODO: Jonathan: is this a group?
+        // End the undo hierarchy so that an undo will undo the entire recording
         // undoManager.endGrouping();
 
         // Update the UI buttons
