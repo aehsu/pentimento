@@ -232,7 +232,6 @@ var ToolsController = function(visuals_controller) {
         // touch event
         if(isNaN(event.pageX)){
             var touches = event.originalEvent.changedTouches;
-            co
 
             visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
             
