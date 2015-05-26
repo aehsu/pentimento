@@ -225,13 +225,14 @@ var ToolsController = function(visuals_controller) {
 
     // DRAW: When the mouse is pressed down, activate the mouse move and mouse up handlers and start a new current visual
     var drawMouseDown = function(event) {
-        console.log("touchdown");
+        console.log("touchdown: "+strokeColor);
         event.preventDefault();
         event.stopPropagation();
 
         // touch event
         if(isNaN(event.pageX)){
             var touches = event.originalEvent.changedTouches;
+            co
 
             visualsController.currentVisual = new StrokeVisual(visualsController.currentVisualTime(), new VisualProperty(strokeColor, strokeWidth));
             
@@ -496,7 +497,9 @@ var ToolsController = function(visuals_controller) {
 
         // Change the color of the drawing tool
         var new_color = new_spectrum_color.toHexString();
-        strokeColor = new_color;
+        if (lectureController.isRecording()) {
+            strokeColor = new_color;
+        };
 
         // Changes the color of the selection if there is a selection
         // This check needs to happen in order to fix the problem with double events being triggered.
@@ -512,6 +515,8 @@ var ToolsController = function(visuals_controller) {
 
         // Reset the tool state (clears selection rectangle)
         activateCanvasTool();
+
+        // TODO: manually hide Spectrum color picker here
     }
 
     ///////////////////////////////////////////////////////////////////////////////
