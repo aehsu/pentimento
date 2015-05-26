@@ -1,7 +1,7 @@
 #audio_container {
     position: relative;
     margin: 0;
-    margin-left: 0px;
+    margin-left: 10px;
     padding: 0;
 }
 
@@ -189,7 +189,7 @@ wave canvas {
 
 
 #audio_controls {
-    margin-left: 0px;
+    margin-left: 10px;
 }
 
 .audio_button{
