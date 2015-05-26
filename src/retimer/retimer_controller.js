@@ -528,6 +528,9 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
             x1: x1, y1: y1,
             x2: x2, y2: y2
         });
+
+        // Update the time so the visuals will be drawn at the current time
+        lectureController.getTimeController().updateTime(newTAud);
     };
 
     // When dragging stops, update the visuals or audio depending on whether the drag is top or bottom
