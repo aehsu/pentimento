@@ -1,14 +1,14 @@
 #audio_container {
     position: relative;
     margin: 0;
-    margin-left: 85px;
+    margin-left: 0px;
     padding: 0;
 }
 
 #audio_timeline {
     position: relative;
     height: 400px;
-    width: 915px;
+    width: 1000px;
     border: 1px solid black;
     overflow-x: scroll;
     /*disable text selection*/
@@ -189,7 +189,7 @@ wave canvas {
 
 
 #audio_controls {
-    margin-left: 85px;
+    margin-left: 0px;
 }
 
 .audio_button{
