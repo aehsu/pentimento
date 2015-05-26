@@ -466,6 +466,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         isDragTop = (layer.eventY < (constraintsHeight / 2));
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
         lastValidDragX = originalDragX;
+
+        $('#playhead').css('z-index', '-1000');
     };
 
     // Dragging moves one of the arrow while the other tip remains in place
@@ -572,6 +574,8 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
         // Redraw the constraints
         self.redrawConstraints();
+
+        $('#playhead').css('z-index', '1000');
     };
 
     // When dragging cancels (drag off the canvas), it should reset to its original value

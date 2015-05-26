@@ -485,8 +485,8 @@ var AudioController = function(audio_model) {
                             }
                         });      
 
-        // Make sure the playhead is always on bottom as to not interfere with other elements
-        playhead.css('z-index', '-100');
+        // Make sure the playhead is on top
+        playhead.css('z-index', '1000');
 
         // Refresh the playhead to update the position
         refreshPlayhead();
