@@ -467,6 +467,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         originalDragX = layer.x1;  // use the arrow's x1, not layer.x
         lastValidDragX = originalDragX;
 
+        // Shift playhead to the back so that it doesn't interfere with constraint dragging
         $('#playhead').css('z-index', '-1000');
     };
 
@@ -575,6 +576,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // Redraw the constraints
         self.redrawConstraints();
 
+        // Shift playhead to the front again (shifted to the back in constraintDragStart)
         $('#playhead').css('z-index', '1000');
     };
 
