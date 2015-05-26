@@ -64,7 +64,7 @@
 #playhead {
     position: absolute;
     height: 324px;
-    width: 4px;
+    width: 10px;
     background-color: blue;
     cursor: move;
     margin: 0;
