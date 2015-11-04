@@ -79,7 +79,8 @@ var VisualsController = function(visuals_model, retimer_model) {
         // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
         originSlide = visualsModel.getSlideAtTime(currentTime);
         originSlideDuration = originSlide.getDuration();
-        visualsModel.setDirtyVisuals(slideBeginTime);
+        // TODO move to recording controller
+        TimeManager.getVisualInstance().shiftAfterBy(slideBeginTime, 24*60*60*1000);
 
         // Signal the tools controller
         toolsController.startRecording();
@@ -94,7 +95,8 @@ var VisualsController = function(visuals_model, retimer_model) {
         currentSlide.setDuration(currentSlide.getDuration() + slideRecordDuration);
 
         // Restores the dirty visuals to their former places and adds a shift.
-        visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
+        var shiftAmount = originSlide.getDuration() - originSlideDuration;
+        TimeManager.getVisualInstance().shiftAfterBy(24*60*60*1000, -24*60*60*1000 + shiftAmount);
         
         // Reset recording variables
         slideBeginTime = NaN;
