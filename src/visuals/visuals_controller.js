@@ -3,11 +3,10 @@
 //um.add is called, it should have an updateVisuals inside of the function if necessary
 "use strict";
 
-var VisualsController = function(visuals_model, retimer_model) {
+var VisualsController = function(visuals_model, retimer_model, timeController) {
     var self = this;
     var visualsModel = null;
     var retimerModel = null;
-    var toolsController = null;
     var renderer = null;
 
     // Variables used for keeping track of recording information
@@ -61,7 +60,6 @@ var VisualsController = function(visuals_model, retimer_model) {
     //
     // Handlers for when recording begins and ends.
     // Includes helper functions for recording logic.
-    // Informs the tools controller of changes in recording status.
     ///////////////////////////////////////////////////////////////////////////////
 
     this.startRecording = function(currentTime) {
@@ -81,9 +79,6 @@ var VisualsController = function(visuals_model, retimer_model) {
         originSlideDuration = originSlide.getDuration();
         // TODO move to recording controller
         TimeManager.getVisualInstance().shiftAfterBy(slideBeginTime, 24*60*60*1000);
-
-        // Signal the tools controller
-        toolsController.startRecording();
     };
 
     this.stopRecording = function(currentTime) {
@@ -102,23 +97,6 @@ var VisualsController = function(visuals_model, retimer_model) {
         slideBeginTime = NaN;
         originSlide = null;
         originSlideDuration = null;
-
-        // Signal the tools controller
-        toolsController.stopRecording();
-    };
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Playback of Visuals
-    //
-    // Nothing needs to be done except letting the tools controller know
-    ///////////////////////////////////////////////////////////////////////////////
-
-    this.startPlayback = function(currentTime) {
-        toolsController.startPlayback();
-    };
-
-    this.stopPlayback = function(currentTime) {
-        toolsController.stopPlayback();
     };
 
 
@@ -128,7 +106,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Shortcut for the time controller time converted to visual time through the retimer
     this.currentVisualTime = function() {
-        return retimerModel.getVisualTime(lectureController.getTimeController().getTime());
+        return retimerModel.getVisualTime(timeController.getTime());
     };
 
     // Get the slide at the current time
@@ -343,12 +321,10 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Get the context from the canvas
     self.context = self.canvas[0].getContext('2d');
 
-    // Initialize other controllers
-    toolsController = new ToolsController(self);
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    lectureController.getTimeController().addUpdateTimeCallback(self.drawVisuals);
+    timeController.addUpdateTimeCallback(self.drawVisuals);
 
 };
 

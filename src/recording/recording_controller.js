@@ -1,6 +1,6 @@
 "use strict";
 
-var RecordingController = function(visualsController, audioController, retimerController, timeController, undoManager) {
+var RecordingController = function(visualsController, audioController, retimerController, toolsController, timeController, undoManager) {
     var self = {};
 
     var isRecording = false;
@@ -42,6 +42,9 @@ var RecordingController = function(visualsController, audioController, retimerCo
         };
         retimerController.beginRecording(beginTime);
 
+        // Signal the tools controller
+        toolsController.startRecording();
+
         // Execute the callback
         callback();
         return true;
@@ -73,6 +76,9 @@ var RecordingController = function(visualsController, audioController, retimerCo
             audioController.stopRecording(endTime);
         };
         retimerController.endRecording(endTime);
+
+        // Signal the tools controller
+        toolsController.stopRecording();
 
         // End the undo hierarchy so that an undo will undo the entire recording
         undoManager.endGrouping();
