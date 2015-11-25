@@ -259,6 +259,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         };
     };
 
+    this.pruneAutomaticConstraints = function() {
+        retimerModel.pruneConstraints(ConstraintTypes.Automatic);
+    };
+
     ///////////////////////////////////////////////////////////////////////////////
     // Selection/Deletion handling
     ///////////////////////////////////////////////////////////////////////////////

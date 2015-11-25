@@ -145,6 +145,52 @@ var RetimerModel = function() {
         undoManager.registerUndoAction(self, self.addConstraint, [constraint]);
 	};
 
+    /**
+     * Delete all constraints of type type, and which has both a preceding and anteceding constraint of any
+     * type, and whose presence is redundant to preserving the visual:audio playback ratio between its
+     * preceding and anteceding constraints.
+     *
+     * @param type type of constraint to prune; see ConstraintTypes
+     */
+    this.pruneConstraints = function(type) {
+        var constraintsToPrune = [];
+
+        // track 3 consecutive constraints, precious current next, to ensure we don't prune the ends
+        // (only the middle one, current, is considered for pruning)
+        var previous = undefined;
+        var current = undefined;
+        for (var i = 0; i < constraints.length; i++) {
+            // next = i, current = i-1, previous = i-2
+            var next = constraints[i];
+            if (previous) {
+                if (current) {
+                    // only check pruning conditions if matching type
+                    if (current.getType() === type) {
+                        var deltaVisualPrevious = current.getTVisual() - previous.getTVisual();
+                        var deltaAudioPrevious = current.getTAudio() - previous.getTAudio();
+                        var deltaVisualCurrent = next.getTVisual() - current.getTVisual();
+                        var deltaAudioCurrent = next.getTAudio() - current.getTAudio();
+                        // check identical visual:audio ratio between previous/current and current/next; if so, prune current
+                        if (Math.abs(deltaVisualCurrent/deltaAudioCurrent - deltaVisualPrevious/deltaAudioPrevious) < 0.0001) {
+                            constraintsToPrune.push(current);
+                        }
+                    }
+
+                    previous = current;
+                    current = next;
+                } else {
+                    current = next;
+                }
+            } else {
+                previous = next;
+            }
+        }
+
+        for (var i in constraintsToPrune) {
+            self.deleteConstraint(constraintsToPrune[i]);
+        }
+    };
+
 	this.getConstraintsIterator = function() {
         return new Iterator(constraints);
     };

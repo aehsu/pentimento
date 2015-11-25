@@ -98,6 +98,7 @@ var RecordingController = function(visualsController, audioController, retimerCo
 
         TimeManager.getAudioInstance().shiftAfterBy(24*60*60*1000, -24*60*60*1000 + recordDuration);
         retimerController.addConstraint(endTime, ConstraintTypes.Automatic);
+        retimerController.pruneAutomaticConstraints();
         retimerController.redrawConstraints();
 
         // Signal the tools controller
