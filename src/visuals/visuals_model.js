@@ -68,6 +68,15 @@ var VisualsModel = function(canvas_width, canvas_height) {
     this.getIndexOfSlide = function(slide) {
         return slides.indexOf(slide);
     }
+
+    this.getSlideBeginTime = function(slide) {
+        var index = self.getIndexOfSlide(slide);
+        var slideBeginTime = 0;
+        for (var i = 0; i < index; i++) {
+            slideBeginTime += slide.getDuration();
+        }
+        return slideBeginTime;
+    }
     
     this.insertSlide = function(newSlide, insert_index) {
         if (typeof insert_index === 'undefined') {

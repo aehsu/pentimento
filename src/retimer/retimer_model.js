@@ -11,19 +11,6 @@ var RetimerModel = function() {
         return constraints;
     };
 
-	this.makeConstraintDirty = function(constraint) {
-		constraint.setDisabled(true);
-		return constraint;
-	}
-
-	this.cleanConstraints = function(constraints, amount) {
-		for(var i in constraints) {
-			var constraint = constraints[i];
-			doShiftConstraint(constraint, amount);
-			constraint.setDisabled(false);
-		}
-	};
-
     // Check to see if the constraint is in a valid position
 	this.checkConstraint = function(constraint) {
 
@@ -158,17 +145,6 @@ var RetimerModel = function() {
         undoManager.registerUndoAction(self, self.addConstraint, [constraint]);
 	};
 
-	this.shiftConstraints = function(constraints, amount) {
-		for(var i = 0; i < constraints.length; i++) {
-			var constraint = constraints[i];
-            constraint.setTVisual(constraint.getTVisual()+amount);
-            constraint.setTAudio(constraint.getTAudio()+amount);
-		};
-
-        // For the undo action, reverse shift the constraints
-        undoManager.registerUndoAction(self, self.shiftConstraints, [constraints, -amount]);
-	};
-
 	this.getConstraintsIterator = function() {
         return new Iterator(constraints);
     };
@@ -292,22 +268,22 @@ var ConstraintTypes = {
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;
-    var tVis = tvis;
-    var tAud = taud;
+    var tVis = TimeManager.getVisualInstance().getAndRegisterTimeInstance(tvis);
+    var tAud = TimeManager.getAudioInstance().getAndRegisterTimeInstance(taud);
     var type = mytype;
     var disabled = false;
 
-    this.getTVisual = function() { return tVis; }
-    this.getTAudio = function() { return tAud; }
+    this.getTVisual = function() { return tVis.get(); }
+    this.getTAudio = function() { return tAud.get(); }
     this.getType = function() { return type; }
     this.getDisabled = function() { return disabled; }
 
     this.setTVisual = function(newTVis) { 
-        tVis = Math.round(newTVis);
+        tVis.set(Math.round(newTVis));
     };
 
     this.setTAudio = function(newTAud) {
-        tAud = Math.round(newTAud); 
+        tAud.set(Math.round(newTAud));
     };
 
     this.setType = function(newType) { type = newType; }

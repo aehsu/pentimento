@@ -39,9 +39,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
     // Canvas IDs
     var constraintIDBase = 'constraint_';
 
-    // Insertion begin time (-1 indictes no insertion is occurring)
-    var insertionStartTime = -1;
-
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
     ///////////////////////////////////////////////////////////////////////////////
@@ -79,7 +76,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         y -= canvas.offset().top;
 
         // Add the constraint to the model and refresh the view
-        addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
+        self.addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
@@ -244,7 +241,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // When a user adds a constraint, add the constraint to the lecture
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
-    var addConstraint = function(audio_time, constraint_type) {
+    this.addConstraint = function(audio_time, constraint_type) {
 
         // Convert to visual time
         var visual_time = retimerModel.getVisualTime(audio_time);
@@ -566,54 +563,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         layer.x2 = originalDragX;
         // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
-
-    // Dealing with insertions
-    var insertionShifting = function(insertionEndTime){
-        var insertionDuration = insertionEndTime - insertionStartTime;
-
-        var constraintsToShift = [];
-
-        var constraints = retimerModel.getConstraintsIterator();
-
-        // Iterate through the constraints and shift them
-        while(constraints.hasNext()){
-            var constraint = constraints.next();
-            if (constraint.getTAudio() > insertionStartTime){
-                constraintsToShift.push(constraint);
-            }
-        };
-
-        retimerModel.shiftConstraints(constraintsToShift, insertionDuration);
-
-        self.redrawConstraints();
-
-        insertionStartTime = -1;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Recording Handling
-    ///////////////////////////////////////////////////////////////////////////////
-
-    this.beginRecording = function(currentTime) {
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // If recording is an insertion
-        if (currentTime < globalState.getLectureDuration()){
-            insertionStartTime = currentTime;
-        }
-    }
-
-    this.endRecording = function(currentTime) {
-        // If recording is an insertion, shift things back after the insertion start time
-        if (insertionStartTime != -1){
-            insertionShifting(currentTime);
-        }
-
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // Redraw the constraints
-        self.redrawConstraints();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization

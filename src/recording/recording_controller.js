@@ -33,14 +33,26 @@ var RecordingController = function(visualsController, audioController, retimerCo
 
         // Notify controllers depending on the recording types 
         if (shouldRecordVisuals) {  // visuals
-            visualsController.startRecording(beginTime);
+
+            if (!visualsController.currentSlide()) {
+                console.error("there is no current slide");
+                return;
+            }
+
+            visualsController.selection = [];
+
+            TimeManager.getVisualInstance().shiftAfterBy(beginTime, 24*60*60*1000);
+
             isRecordingVisuals = true;
         };
+
         if (shouldRecordAudio) {  // audio
             audioController.startRecording(beginTime);
             isRecordingAudio = true;
         };
-        retimerController.beginRecording(beginTime);
+
+        TimeManager.getAudioInstance().shiftAfterBy(beginTime, 24*60*60*1000);
+        retimerController.addConstraint(beginTime, ConstraintTypes.Automatic);
 
         // Signal the tools controller
         toolsController.startRecording();
@@ -67,15 +79,26 @@ var RecordingController = function(visualsController, audioController, retimerCo
         isRecording = false;
 
         var endTime = timeController.getEndTime();
+        var recordDuration = endTime - timeController.getBeginTime();
 
         // Notify controllers depending on the recording types 
         if (isRecordingVisuals) {  // visuals
-            visualsController.stopRecording(endTime);
+            visualsController.selection  = [];
+
+            var currentSlide = visualsController.currentSlide();
+
+            currentSlide.setDuration(currentSlide.getDuration() + recordDuration);
+
+            TimeManager.getVisualInstance().shiftAfterBy(24*60*60*1000, -24*60*60*1000 + recordDuration);
         };
+
         if (isRecordingAudio) {  // audio
             audioController.stopRecording(endTime);
         };
-        retimerController.endRecording(endTime);
+
+        TimeManager.getAudioInstance().shiftAfterBy(24*60*60*1000, -24*60*60*1000 + recordDuration);
+        retimerController.addConstraint(endTime, ConstraintTypes.Automatic);
+        retimerController.redrawConstraints();
 
         // Signal the tools controller
         toolsController.stopRecording();
