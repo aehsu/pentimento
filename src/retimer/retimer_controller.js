@@ -5,13 +5,13 @@
 */
 "use strict";
 
-var RetimerController = function(retimer_model, visuals_controller, audio_controller) {
+var RetimerController = function(retimer_model, visuals_controller, audio_controller, timeController, globalState) {
 
     var self = this;
 
     var retimerModel = retimer_model;
     var audioController = audio_controller;
-    var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model);
+    var thumbnailsController = new ThumbnailsController(visuals_controller, audio_controller, retimer_model, globalState);
 
     // Selection dragging
     var selectionX;
@@ -38,9 +38,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // Canvas IDs
     var constraintIDBase = 'constraint_';
-
-    // Insertion begin time (-1 indictes no insertion is occurring)
-    var insertionStartTime = -1;
 
     ///////////////////////////////////////////////////////////////////////////////
     // Draw Methods
@@ -79,7 +76,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         y -= canvas.offset().top;
 
         // Add the constraint to the model and refresh the view
-        addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
+        self.addConstraint(audioController.pixelsToMilliseconds(x), ConstraintTypes.Manual);
 
         // Unbind the click event from the constraints canvas (so that clicking can be used for other functions)
         canvas.unbind('mousedown', addArrowHandler);    
@@ -91,7 +88,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     var drawTickMarks = function(){
         var canvas = $('#'+constraintsCanvasID);
-        var max_tVis = retimerModel.getVisualTime(lectureController.getLectureModel().getLectureDuration());
+        var max_tVis = retimerModel.getVisualTime(globalState.getLectureDuration());
 
         for(var tVis = 0; tVis < max_tVis; tVis += 150) {
              var tAud = retimerModel.getAudioTime(tVis);
@@ -130,7 +127,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         // $('#'+constraintsCanvasID).clearCanvas();
 
         // Calculate the width of the canvas based on the total lecture duration
-        var max_time = lectureController.getLectureModel().getLectureDuration();
+        var max_time = globalState.getLectureDuration();
         var new_width = audioController.millisecondsToPixels(max_time);
 
         // Create and add the new canvas
@@ -244,28 +241,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
 
     // When a user adds a constraint, add the constraint to the lecture
     // TODO: figure out if this is working properly with the interpolation (possible with getting the visual from audio)
-    var addConstraint = function(audio_time, constraint_type) {
-
-            // FORUMULAS
-        // // interp_factor = (curr_time-prev_time)/(next_time-prevX)
-        // // constraint_tVis = (next_time-prev_time)*interp_factor + prev_tVis
-        // // constraint_tAud = (next_time-prev_time)*interp_factor + prev_tAud
-
-        // // Make sure to convert this from the lecture duration to audio duration
-        // var audio_scale = pentimento.lectureController.getLectureDuration()/$('#retimer_constraints').width();
-        // var tAud = xVal * audio_scale;
-        // var tVis = pentimento.lectureController.retimingController.getVisualTime(tAud);
-        // // var prev_const = window.opener.pentimento.lectureController.retimingController.getPreviousConstraint(curr_audio_time, "Audio");
-        // // var next_const = window.opener.pentimento.lectureController.retimingController.getNextConstraint(curr_audio_time, "Audio");
-        // // var prevTime = prev_const.getTVisual();
-        // // var nextTime = next_const.getTVisual();
-        // // var prevX = 0;
-        // // var nextX = $('#retimer_constraints').width();
-        // // var interp = (nextTime-prevTime)/(nextX-prevX);
-        // // var tVis = interp*xVal;
-        // // var tAud = interp*xVal;
-        // var constraint = new Constraint(tVis, tAud, ConstraintTypes.Manual);
-        // pentimento.lectureController.retimingController.addConstraint(constraint);
+    this.addConstraint = function(audio_time, constraint_type) {
 
         // Convert to visual time
         var visual_time = retimerModel.getVisualTime(audio_time);
@@ -281,6 +257,10 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         if (result) {
             self.redrawConstraints();
         };
+    };
+
+    this.pruneAutomaticConstraints = function() {
+        retimerModel.pruneConstraints(ConstraintTypes.Automatic);
     };
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -533,7 +513,7 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         });
 
         // Update the time so the visuals will be drawn at the current time
-        lectureController.getTimeController().updateTime(newTAud);
+        timeController.updateTime(newTAud);
     };
 
     // When dragging stops, update the visuals or audio depending on whether the drag is top or bottom
@@ -587,54 +567,6 @@ var RetimerController = function(retimer_model, visuals_controller, audio_contro
         layer.x2 = originalDragX;
         // $('#' + constraintsCanvasID).on('mousedown', selectArea);
     };
-
-    // Dealing with insertions
-    var insertionShifting = function(insertionEndTime){
-        var insertionDuration = insertionEndTime - insertionStartTime;
-
-        var constraintsToShift = [];
-
-        var constraints = retimerModel.getConstraintsIterator();
-
-        // Iterate through the constraints and shift them
-        while(constraints.hasNext()){
-            var constraint = constraints.next();
-            if (constraint.getTAudio() > insertionStartTime){
-                constraintsToShift.push(constraint);
-            }
-        };
-
-        retimerModel.shiftConstraints(constraintsToShift, insertionDuration);
-
-        self.redrawConstraints();
-
-        insertionStartTime = -1;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Recording Handling
-    ///////////////////////////////////////////////////////////////////////////////
-
-    this.beginRecording = function(currentTime) {
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // If recording is an insertion
-        if (currentTime < lectureController.getLectureModel().getLectureDuration()){
-            insertionStartTime = currentTime;
-        }
-    }
-
-    this.endRecording = function(currentTime) {
-        // If recording is an insertion, shift things back after the insertion start time
-        if (insertionStartTime != -1){
-            insertionShifting(currentTime);
-        }
-
-        addConstraint(currentTime, ConstraintTypes.Automatic);
-
-        // Redraw the constraints
-        self.redrawConstraints();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Initialization

@@ -3,17 +3,11 @@
 //um.add is called, it should have an updateVisuals inside of the function if necessary
 "use strict";
 
-var VisualsController = function(visuals_model, retimer_model) {
+var VisualsController = function(visuals_model, retimer_model, timeController) {
     var self = this;
     var visualsModel = null;
     var retimerModel = null;
-    var toolsController = null;
     var renderer = null;
-
-    // Variables used for keeping track of recording information
-    var originSlide = null;
-    var originSlideDuration = null;
-    var slideBeginTime = NaN;
 
     // DOM elements
     var canvasContainerID = 'sketchpadWrap';
@@ -56,69 +50,6 @@ var VisualsController = function(visuals_model, retimer_model) {
         renderer.drawCanvas(self.canvas, context, 0, visuals_time);
     };
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // Recording of Visuals
-    //
-    // Handlers for when recording begins and ends.
-    // Includes helper functions for recording logic.
-    // Informs the tools controller of changes in recording status.
-    ///////////////////////////////////////////////////////////////////////////////
-
-    this.startRecording = function(currentTime) {
-
-        if (!visualsModel.getSlideAtTime(currentTime)) {
-            console.error("there is no current slide");
-            return;
-        }
-
-        self.selection  = [];
-
-        // slideBeginTime starts as the visuals time that recording began
-        slideBeginTime = retimerModel.getVisualTime(currentTime);
-
-        // Keep the origin slides and set visuals dirty so we can shift the visuals in these slides when recording ends
-        originSlide = visualsModel.getSlideAtTime(currentTime);
-        originSlideDuration = originSlide.getDuration();
-        visualsModel.setDirtyVisuals(slideBeginTime);
-
-        // Signal the tools controller
-        toolsController.startRecording();
-    };
-
-    this.stopRecording = function(currentTime) {
-        self.selection  = [];
-
-        var currentSlide = visualsModel.getSlideAtTime(currentTime);
-
-        var slideRecordDuration = retimerModel.getVisualTime(currentTime) - slideBeginTime;
-        currentSlide.setDuration(currentSlide.getDuration() + slideRecordDuration);
-
-        // Restores the dirty visuals to their former places and adds a shift.
-        visualsModel.cleanVisuals(originSlide.getDuration() - originSlideDuration);
-        
-        // Reset recording variables
-        slideBeginTime = NaN;
-        originSlide = null;
-        originSlideDuration = null;
-
-        // Signal the tools controller
-        toolsController.stopRecording();
-    };
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // Playback of Visuals
-    //
-    // Nothing needs to be done except letting the tools controller know
-    ///////////////////////////////////////////////////////////////////////////////
-
-    this.startPlayback = function(currentTime) {
-        toolsController.startPlayback();
-    };
-
-    this.stopPlayback = function(currentTime) {
-        toolsController.stopPlayback();
-    };
-
 
     ///////////////////////////////////////////////////////////////////////////////
     // Modifying Slides
@@ -126,7 +57,7 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     // Shortcut for the time controller time converted to visual time through the retimer
     this.currentVisualTime = function() {
-        return retimerModel.getVisualTime(lectureController.getTimeController().getTime());
+        return retimerModel.getVisualTime(timeController.getTime());
     };
 
     // Get the slide at the current time
@@ -136,13 +67,12 @@ var VisualsController = function(visuals_model, retimer_model) {
 
     this.addSlide = function() {
 
-        // Get the difference in time for when the slide began recording to the current time
-        var time = self.currentVisualTime();
-        var diff = time - slideBeginTime;
-
         // Get the previous slide and create a new slide
-        var previousSlide = visualsModel.getSlideAtTime(slideBeginTime);
+        var previousSlide = self.currentSlide();
         var previousSlideIndex = visualsModel.getIndexOfSlide(previousSlide);
+
+        // Get the difference in time for when the slide began recording to the current time
+        var diff = self.currentVisualTime() = visualsModel.getSlideBeginTime(previousSlide);
 
         var newSlide = new Slide();
         if (!previousSlide) { 
@@ -341,12 +271,10 @@ var VisualsController = function(visuals_model, retimer_model) {
     // Get the context from the canvas
     self.context = self.canvas[0].getContext('2d');
 
-    // Initialize other controllers
-    toolsController = new ToolsController(self);
     renderer = new Renderer(self);
 
     // Register callbacks for the time controller
-    lectureController.getTimeController().addUpdateTimeCallback(self.drawVisuals);
+    timeController.addUpdateTimeCallback(self.drawVisuals);
 
 };
 

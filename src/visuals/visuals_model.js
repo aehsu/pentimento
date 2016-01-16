@@ -12,8 +12,6 @@ var VisualsModel = function(canvas_width, canvas_height) {
     var canvasWidth = canvas_width;
     var canvasHeight = canvas_height;
 
-    var dirtyVisuals = [];
-
     // Gets the size of the canvas where the visuals are being recorded
     this.getCanvasSize = function() {
         return { 'width':canvasWidth, 'height':canvasHeight };
@@ -69,6 +67,15 @@ var VisualsModel = function(canvas_width, canvas_height) {
     
     this.getIndexOfSlide = function(slide) {
         return slides.indexOf(slide);
+    }
+
+    this.getSlideBeginTime = function(slide) {
+        var index = self.getIndexOfSlide(slide);
+        var slideBeginTime = 0;
+        for (var i = 0; i < index; i++) {
+            slideBeginTime += slide.getDuration();
+        }
+        return slideBeginTime;
     }
     
     this.insertSlide = function(newSlide, insert_index) {
@@ -153,96 +160,6 @@ var VisualsModel = function(canvas_width, canvas_height) {
 
         undoManager.endGrouping();
     };
-
-    // Creates wrappers around the visuals that keeps track of their previous time
-    // and the times of their vertices. Then move the visuals to positive infinity.
-    // Used at the end of a recording so that the visuals will not overlap with the ones being recorded.
-    // Only processes visuals in the current slide after the current time.
-    this.setDirtyVisuals = function(currentVisualTime) {
-
-        var currentSlide = self.getSlideAtTime(currentVisualTime);
-
-        // Iterate over all the visuals
-        var visuals_iterator = currentSlide.getVisualsIterator();
-        while (visuals_iterator.hasNext()) {
-            var visual = visuals_iterator.next();
-
-            // Only make the visual dirty if the time is greater than the current time
-            if(visual.getTMin() <= currentVisualTime) {
-                continue;
-            };
-
-            // Create the wrapper
-            var wrapper = {
-                visual: visual,
-                tMin: visual.getTMin(),
-            };
-
-            // Move tMin to infinity
-            visual.setTMin(Number.POSITIVE_INFINITY); //could alternatively say Number.MAX_VALUE or Number.MAX_SAFE_INTEGER
-
-            // Add the wrapper to dirty visuals
-            dirtyVisuals.push(wrapper);
-
-        };  // end of iterating over visuals
-    };
-
-    // Restore to the previous time and add the shift amount.
-    // Used at the end of a recording during insertion to shift visuals forward.
-    this.cleanVisuals = function(shift_amount) {
-
-        // Restore the original times from the wrapper
-        var visuals = [];
-        for(var i in dirtyVisuals) {
-            var dirtyWrapper = dirtyVisuals[i];
-            var visual = dirtyWrapper.visual;
-            visuals.push(visual);
-            visual.setTMin(dirtyWrapper.tMin);
-        };
-
-        // Perform a shift on all of the visuals that were dirty
-        self.shiftVisuals(visuals, shift_amount);
-
-        // Clear the dirty visuals
-        dirtyVisuals = [];
-    };
-
-    // Shift the visual by an amount, which shifts all vertices and transforms
-    var doShiftVisual = function(visual, amount) {
-        visual.setTMin(visual.getTMin() + amount);
-        var vertIter = visual.getVerticesIterator();
-        while(vertIter.hasNext()) {
-            var vert = vertIter.next();
-            vert.setT(vert.getT() + amount);
-        }
-        if(visual.getTDeletion() != null) {
-            visual.setTDeletion(visual.getTDeletion() + amount);
-        }
-
-        var propTransIter = visual.getPropertyTransformsIterator();
-        while(propTransIter.hasNext()) {
-            var propTrans = propTransIter.next();
-            propTrans.setT(propTrans.getT() + amount);
-        }
-
-        var spatTransIter = visual.getSpatialTransformsIterator();
-        while(spatTransIter.hasNext()) {
-            var spatTrans = spatTransIter.next();
-            spatTrans.setT(spatTrans.getT() + amount);
-        }
-    }
-    
-    // Shift an array of visuals by the given amount (visuals time)
-    this.shiftVisuals = function(visuals, amount) {
-        if(visuals.length==0) { 
-            return; 
-        };
-        for(var i in visuals) { 
-            doShiftVisual(visuals[i], amount);
-        };
-
-        undoManager.registerUndoAction(self, self.shiftVisuals, [visuals, -amount]);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////
     // Helper functions
@@ -467,23 +384,28 @@ var Visual = function(tmin, props) {
     var tDeletion = null;
     var propertyTransforms = [];
     var spatialTransforms = [];
-    var tMin = tmin;
+    var tMin = TimeManager.getVisualInstance().getAndRegisterTimeInstance(tmin);
     var properties = props;
 
     this.getType = function() { return type; }
     this.getHyperlink = function() { return hyperlink; }
-    this.getTDeletion = function() { return tDeletion; }
+    this.getTDeletion = function() { return tDeletion ? tDeletion.get() : null; }
     this.getPropertyTransforms = function() { return propertyTransforms; }
     this.getSpatialTransforms = function() { return spatialTransforms; }
-    this.getTMin = function() { return tMin; }
+    this.getTMin = function() { return tMin.get(); }
     this.getProperties = function() { return properties; }
 
     this.setType = function(newType) { type = newType; }
     this.setHyperlink = function(newHyperlink) { hyperlink = newHyperlink; }
-    this.setTDeletion = function(newTDeletion) { tDeletion = newTDeletion; }
+    this.setTDeletion = function(newTDeletion) {
+        if (tDeletion)
+            tDeletion.set(newTDeletion);
+        else
+            tDeletion = TimeManager.getVisualInstance().getAndRegisterTimeInstance(newTDeletion);
+    }
     this.setPropertyTransforms = function(newTransforms) { propertyTransforms = newTransforms; }
     this.setSpatialTransforms = function(newTransforms) { spatialTransforms = newTransforms; }
-    this.setTMin = function(newTMin) { tMin = newTMin; }
+    this.setTMin = function(newTMin) { tMin.set(newTMin); }
     this.setProperties = function(newProperties) { properties = newProperties; }
 
     this.getPropertyTransformsIterator = function() { return new Iterator(propertyTransforms); }
@@ -640,10 +562,10 @@ var Visual = function(tmin, props) {
     // Likewise, visuals are deleted ON their tDeletion, not later
     // Therefore, when time his tDeletion, the visual is no longer visible
     this.isVisible = function(tVisual) {
-        if (tMin > tVisual) { 
+        if (tMin.get() > tVisual) {
             return false;
         }
-        if (tDeletion != null && tDeletion <= tVisual) {
+        if (tDeletion != null && tDeletion.get() <= tVisual) {
             return false;
         }
         return true;
@@ -811,19 +733,19 @@ var VisualPropertyTransform = function(property_name, new_val, time) {
     var self = this;
     var propertyName = property_name;
     var value = new_val;
-    var t = time;
+    var t = TimeManager.getVisualInstance().getAndRegisterTimeInstance(time);
 
     //no setter for the property, users should instead just create a new transform for a different property
     this.getPropertyName = function() { return propertyName; }
     this.getValue = function() { return value; }
-    this.getTime = function() { return t; }
+    this.getTime = function() { return t.get(); }
 
     // Saving the model to JSON
     this.saveToJSON = function() {
         var json_object = {
             property_name: propertyName,
             value: value,
-            t: t
+            t: t.get()
         };
 
         return json_object;
@@ -843,18 +765,18 @@ VisualPropertyTransform.propertyNames = {
 var VisualSpatialTransform = function(mat, time) {
     var self = this;
     var matrix = mat;  // math.js matrix
-    var t = time;
+    var t = TimeManager.getVisualInstance().getAndRegisterTimeInstance(time);
 
     this.getMatrix = function() { return matrix; }
     this.setMatrix = function(newMatrix) { matrix = newMatrix; }
-    this.getTime = function() { return time; }
-    this.setTime = function(newTime) { t = newTime; }
+    this.getTime = function() { return t.get(); }
+    this.setTime = function(newTime) { t.set(newTime); }
 
     // Saving the model to JSON
     this.saveToJSON = function() {
         var json_object = {
             matrix: matrix,
-            t: t
+            t: t.get()
         };
 
         return json_object;
@@ -874,22 +796,22 @@ var Vertex = function(myX, myY, myT, myP) {
     var self = this;
     var x = myX;
     var y = myY;
-    var t = myT;
+    var t = TimeManager.getVisualInstance().getAndRegisterTimeInstance(myT);
     var p = myP;
 
     this.getX = function() { return x; }
     this.getY = function() { return y; }
-    this.getT = function() { return t; }
+    this.getT = function() { return t.get(); }
     this.getP = function() { return p; }
 
     this.setX = function(newX) { x = newX; }
     this.setY = function(newY) { y = newY; }
-    this.setT = function(newT) { t = newT; }
+    this.setT = function(newT) { t.set(newT); }
     this.setP = function(newP) { p = newP; }    
 
     // Returns a boolean indicating whether the vertex is visible at the given time
     this.isVisible = function(tVisual) {
-        return t <= tVisual;
+        return t.get() <= tVisual;
     };
 
     // Saving the model to JSON
@@ -897,7 +819,7 @@ var Vertex = function(myX, myY, myT, myP) {
         var json_object = {
             x: x,
             y: y,
-            t: t,
+            t: t.get(),
             p: p
         };
 

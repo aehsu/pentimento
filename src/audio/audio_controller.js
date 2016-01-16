@@ -5,7 +5,7 @@
 // Translates user input into actions that modify the audio model
 // Responsible for drawing the audio timeline and displaying updates
 "use strict";
-var AudioController = function(audio_model) {
+var AudioController = function(audio_model, timeController, globalState) {
 
     ///////////////////////////////////////////////////////////////////////////////
     // Member vars
@@ -170,7 +170,7 @@ var AudioController = function(audio_model) {
     this.startRecording = function(currentTime) {
 
         // This method can only be called if the time controller is recording and a recording is not currently in progress
-        if ( !lectureController.isRecording() || isAudioRecording ) {
+        if ( !globalState.isRecording() || isAudioRecording ) {
             console.error("Cannot begin recording");
             return;
         };
@@ -189,12 +189,12 @@ var AudioController = function(audio_model) {
     // End the recording (only applies if there is an ongoing recording)
     // Callback method registered to the time controller
     this.stopRecording = function(currentTime) {
-        var beginTime = lectureController.getTimeController().getBeginTime();
+        var beginTime = timeController.getBeginTime();
         var endTime = currentTime;
         console.log("End audio recording (" + beginTime + ", " + endTime + ")");
 
         // This method can only be called if the time controller is not recording and a recording is currently in progress
-        if ( lectureController.isRecording() || !isAudioRecording ) {
+        if ( globalState.isRecording() || !isAudioRecording ) {
             console.error("Cannot end recording");
             return;
         };
@@ -228,7 +228,7 @@ var AudioController = function(audio_model) {
         console.log("AudioController: Start playback");
 
         // This method can only be called if the time controller is playing and a recording is not currently in progress
-        if ( !lectureController.isPlaying() || isAudioRecording ) {
+        if ( !globalState.isPlaying() || isAudioRecording ) {
             console.error("Cannot begin playback");
             return;
         };
@@ -248,7 +248,7 @@ var AudioController = function(audio_model) {
         console.log("AudioController: Stop playback");
 
         // This method can only be called if the time controller is not playing and a recording is not currently in progress
-        if ( lectureController.isPlaying() || isAudioRecording ) {
+        if ( globalState.isPlaying() || isAudioRecording ) {
             console.error("Cannot end playback");
             return;
         };
@@ -366,17 +366,17 @@ var AudioController = function(audio_model) {
         // Calculate the length of the timeline in seconds.
         // This should be twice as long as the lecture length, or at least 100 seconds.
         // During a recording, the time controller cursor also counts as length.
-        var lecture_length = lectureController.getLectureModel().getLectureDuration();
+        var lecture_length = globalState.getLectureDuration();
 
-        if (lectureController.isRecording()) {
-            lecture_length = Math.max(lectureController.getTimeController().getTime(), lecture_length);
+        if (globalState.isRecording()) {
+            lecture_length = Math.max(timeController.getTime(), lecture_length);
         }
         var old_timeline_length = timelineLengthSeconds;
         timelineLengthSeconds = Math.max(2*lecture_length/1000, minumum_timeline_seconds);
 
         // During a recording, if the new timeline length is less than the old timeline length,
         // then the old value of the timeline is used.
-        if (lectureController.isRecording() && timelineLengthSeconds < old_timeline_length) {
+        if (globalState.isRecording() && timelineLengthSeconds < old_timeline_length) {
             timelineLengthSeconds = old_timeline_length;
         };
 
@@ -481,7 +481,7 @@ var AudioController = function(audio_model) {
                             drag: function() {
                                 // Update the time controller during dragging
                                 var newTrackTime = self.pixelsToMilliseconds($('#'+playheadID).position().left);
-                                lectureController.getTimeController().updateTime(newTrackTime);
+                                timeController.updateTime(newTrackTime);
                             }
                         });      
 
@@ -682,7 +682,7 @@ var AudioController = function(audio_model) {
         var tracksContainer = $('#'+tracksContainerID);
 
         // Clicking to update time is not allowed during a timing
-        if (lectureController.getTimeController().isTiming()) {
+        if (timeController.isTiming()) {
             return;
         }
 
@@ -707,7 +707,7 @@ var AudioController = function(audio_model) {
 
         // Use the position to calculate and update the time that is represented by the click
         var time = self.pixelsToMilliseconds(x);
-        lectureController.getTimeController().updateTime(time);
+        timeController.updateTime(time);
     };
 
 
@@ -782,7 +782,7 @@ var AudioController = function(audio_model) {
     );
 
     // Register callbacks with the time controller
-    lectureController.getTimeController().addUpdateTimeCallback(updatePlayheadTime);
+    timeController.addUpdateTimeCallback(updatePlayheadTime);
 
     // Mousedown listener for audio timeline
     $('#'+timelineID).click(timelineClicked);

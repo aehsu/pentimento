@@ -5,7 +5,7 @@
 */
 "use strict";
 
-var ThumbnailsController = function(visuals_controller, audio_controller, retimer_model) {
+var ThumbnailsController = function(visuals_controller, audio_controller, retimer_model, globalState) {
 
     var self = this;
     var visualsController = visuals_controller;
@@ -37,7 +37,7 @@ var ThumbnailsController = function(visuals_controller, audio_controller, retime
         // Clear the thumbnails div
         $('#'+thumbnailsDivID).html('');
 
-        var audioMaxTime = lectureController.getLectureModel().getLectureDuration();
+        var audioMaxTime = globalState.getLectureDuration();
         var total_width = audioController.millisecondsToPixels(audioMaxTime);
         if (total_width <= 0) {
             return;

@@ -11,19 +11,6 @@ var RetimerModel = function() {
         return constraints;
     };
 
-	this.makeConstraintDirty = function(constraint) {
-		constraint.setDisabled(true);
-		return constraint;
-	}
-
-	this.cleanConstraints = function(constraints, amount) {
-		for(var i in constraints) {
-			var constraint = constraints[i];
-			doShiftConstraint(constraint, amount);
-			constraint.setDisabled(false);
-		}
-	};
-
     // Check to see if the constraint is in a valid position
 	this.checkConstraint = function(constraint) {
 
@@ -158,16 +145,51 @@ var RetimerModel = function() {
         undoManager.registerUndoAction(self, self.addConstraint, [constraint]);
 	};
 
-	this.shiftConstraints = function(constraints, amount) {
-		for(var i = 0; i < constraints.length; i++) {
-			var constraint = constraints[i];
-            constraint.setTVisual(constraint.getTVisual()+amount);
-            constraint.setTAudio(constraint.getTAudio()+amount);
-		};
+    /**
+     * Delete all constraints of type type, and which has both a preceding and anteceding constraint of any
+     * type, and whose presence is redundant to preserving the visual:audio playback ratio between its
+     * preceding and anteceding constraints.
+     *
+     * @param type type of constraint to prune; see ConstraintTypes
+     */
+    this.pruneConstraints = function(type) {
+        var constraintsToPrune = [];
 
-        // For the undo action, reverse shift the constraints
-        undoManager.registerUndoAction(self, self.shiftConstraints, [constraints, -amount]);
-	};
+        // track 3 consecutive constraints, precious current next, to ensure we don't prune the ends
+        // (only the middle one, current, is considered for pruning)
+        var previous = undefined;
+        var current = undefined;
+        for (var i = 0; i < constraints.length; i++) {
+            // next = i, current = i-1, previous = i-2
+            var next = constraints[i];
+            if (previous) {
+                if (current) {
+                    // only check pruning conditions if matching type
+                    if (current.getType() === type) {
+                        var deltaVisualPrevious = current.getTVisual() - previous.getTVisual();
+                        var deltaAudioPrevious = current.getTAudio() - previous.getTAudio();
+                        var deltaVisualCurrent = next.getTVisual() - current.getTVisual();
+                        var deltaAudioCurrent = next.getTAudio() - current.getTAudio();
+                        // check identical visual:audio ratio between previous/current and current/next; if so, prune current
+                        if (Math.abs(deltaVisualCurrent/deltaAudioCurrent - deltaVisualPrevious/deltaAudioPrevious) < 0.0001) {
+                            constraintsToPrune.push(current);
+                        }
+                    }
+
+                    previous = current;
+                    current = next;
+                } else {
+                    current = next;
+                }
+            } else {
+                previous = next;
+            }
+        }
+
+        for (var i in constraintsToPrune) {
+            self.deleteConstraint(constraintsToPrune[i]);
+        }
+    };
 
 	this.getConstraintsIterator = function() {
         return new Iterator(constraints);
@@ -292,22 +314,22 @@ var ConstraintTypes = {
 
 var Constraint = function(tvis, taud, mytype) {
     var self = this;
-    var tVis = tvis;
-    var tAud = taud;
+    var tVis = TimeManager.getVisualInstance().getAndRegisterTimeInstance(tvis);
+    var tAud = TimeManager.getAudioInstance().getAndRegisterTimeInstance(taud);
     var type = mytype;
     var disabled = false;
 
-    this.getTVisual = function() { return tVis; }
-    this.getTAudio = function() { return tAud; }
+    this.getTVisual = function() { return tVis.get(); }
+    this.getTAudio = function() { return tAud.get(); }
     this.getType = function() { return type; }
     this.getDisabled = function() { return disabled; }
 
     this.setTVisual = function(newTVis) { 
-        tVis = Math.round(newTVis);
+        tVis.set(Math.round(newTVis));
     };
 
     this.setTAudio = function(newTAud) {
-        tAud = Math.round(newTAud); 
+        tAud.set(Math.round(newTAud));
     };
 
     this.setType = function(newType) { type = newType; }

@@ -3,7 +3,7 @@
 // The responsibility of actually modifying the visuals is delegated to the visuals controller.
 "use strict";
 
-var ToolsController = function(visuals_controller) {
+var ToolsController = function(visuals_controller, globalState) {
     var self = this;
 
     var visualsController = null;
@@ -131,7 +131,7 @@ var ToolsController = function(visuals_controller) {
             case selectTool:
                 // In recording mode, save the tool as the recording tool,
                 // and in editing mode, save the tool as the editing tool.
-                if (lectureController.isRecording()) {
+                if (globalState.isRecording()) {
                     recordingTool = tool;
                 } else {
                     editingTool = tool;
@@ -157,7 +157,7 @@ var ToolsController = function(visuals_controller) {
                 break;
 
         	case deleteTool:
-                if (lectureController.isRecording()) {
+                if (globalState.isRecording()) {
                     visualsController.recordingDeleteSelection();
                 } else {
                     visualsController.editingDeleteSelection();
@@ -193,7 +193,7 @@ var ToolsController = function(visuals_controller) {
         visualsController.canvas.off('touchend');
         // In recording mode, activate the recording tool,
         // and in editing mode, activate the editing tool.
-        var toolToActivate = ( lectureController.isRecording() ? recordingTool : editingTool );
+        var toolToActivate = ( globalState.isRecording() ? recordingTool : editingTool );
         console.log('tool to activate: ' + toolToActivate);
 
         // Register the callback depending on which tool is active
@@ -398,7 +398,7 @@ var ToolsController = function(visuals_controller) {
         };
 
         // If it is not during a recording, then we manually need to tell the controller to redraw
-        if (!lectureController.isRecording()) {
+        if (!globalState.isRecording()) {
             visualsController.drawVisuals(currentTime);
         };
 
@@ -445,7 +445,7 @@ var ToolsController = function(visuals_controller) {
         var transform_matrix = calculateTranslateMatrix(originalTranslatePosition, new_position);
 
         // Apply the matrix to the selected visuals
-        if (lectureController.isRecording()) {
+        if (globalState.isRecording()) {
             visualsController.recordingSpatialTransformSelection(transform_matrix);
         } else {
             visualsController.editingSpatialTransformSelection(transform_matrix);
@@ -464,7 +464,7 @@ var ToolsController = function(visuals_controller) {
         var transform_matrix = calculateScaleMatrix(ui.originalPosition, ui.originalSize, ui.position, ui.size);
 
         // Apply the matrix to the selected visuals
-        if (lectureController.isRecording()) {
+        if (globalState.isRecording()) {
             visualsController.recordingSpatialTransformSelection(transform_matrix);
         } else {
             visualsController.editingSpatialTransformSelection(transform_matrix);
@@ -479,7 +479,7 @@ var ToolsController = function(visuals_controller) {
         // Changes the width of the selection if there is a selection
         if (visualsController.selection.length !== 0) {
 
-            if (lectureController.isRecording()) {
+            if (globalState.isRecording()) {
                 var transform = new VisualPropertyTransform('width', new_width, visualsController.currentVisualTime());
                 visualsController.recordingPropertyTransformSelection(transform);
 
@@ -496,7 +496,7 @@ var ToolsController = function(visuals_controller) {
 
         // Change the color of the drawing tool
         var new_color = new_spectrum_color.toHexString();
-        if (lectureController.isRecording()) {
+        if (globalState.isRecording()) {
             strokeColor = new_color;
         };
 
@@ -504,7 +504,7 @@ var ToolsController = function(visuals_controller) {
         // This check needs to happen in order to fix the problem with double events being triggered.
         if (visualsController.selection.length !== 0) {
 
-            if (lectureController.isRecording()) {
+            if (globalState.isRecording()) {
                 var transform = new VisualPropertyTransform('color', new_color, visualsController.currentVisualTime());
                 visualsController.recordingPropertyTransformSelection(transform);
             } else {
